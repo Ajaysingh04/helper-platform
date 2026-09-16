@@ -1,70 +1,124 @@
-# Getting Started with Create React App
+# 🛠️ Helper - Fullstack On-Demand Home Services Platform & Super Admin Portal
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, full-stack on-demand home services web application built with **React**, **Node.js/Express**, and featuring a master **Super Admin Panel** with two-way data reactivity.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 📁 Project Structure
 
-### `npm start`
+```
+helper/
+├── frontend/                     # React Client Application
+│   ├── public/                   # Static assets & HTML shell
+│   ├── src/                      # Components, Pages, Admin, Context & CSS
+│   │   ├── components/           # Public UI & Super Admin components
+│   │   ├── context/              # DataContext (State + API sync)
+│   │   ├── css/                  # Curated styling & design system
+│   │   ├── App.js                # React Router v7 routes
+│   │   └── index.js              # React DOM entry
+│   ├── package.json              # Frontend dependencies
+│   └── .env                      # Frontend environment variables
+│
+├── backend/                      # Node.js + Express REST API Server
+│   ├── data/                     # Seed dataset & JSON persistent storage
+│   ├── routes/                   # Modular REST endpoints
+│   │   ├── servicesRoutes.js     # Services CRUD API
+│   │   ├── categoriesRoutes.js   # Categories CRUD API
+│   │   ├── bookingsRoutes.js     # Bookings & Orders API
+│   │   ├── providersRoutes.js    # Verified Providers API
+│   │   ├── usersRoutes.js        # Customer Accounts API
+│   │   ├── promotionsRoutes.js   # Hero Slider & Offers API
+│   │   ├── ticketsRoutes.js      # Support Tickets API
+│   │   ├── settingsRoutes.js     # Platform Settings API
+│   │   └── authRoutes.js         # Admin Authentication API
+│   ├── server.js                 # Express server bootstrap
+│   ├── package.json              # Backend dependencies
+│   └── .env                      # Backend configuration
+│
+├── .gitignore                    # Unified Git ignore rules
+├── package.json                  # Root runner scripts (concurrently dev runner)
+└── README.md                     # Project documentation
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚀 Quick Start Guide
 
-### `npm test`
+### 1. Install All Dependencies
+From the root project directory:
+```bash
+npm run install:all
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 2. Run Both Frontend & Backend Concurrently
+```bash
+npm run dev
+```
+- **Frontend App**: `http://localhost:3000`
+- **Super Admin Portal**: `http://localhost:3000/admin` (Default PIN: `admin123` or 1-Click Quick Unlock)
+- **Backend API**: `http://localhost:5000/api`
+- **API Health**: `http://localhost:5000/api/health`
 
-### `npm run build`
+### 3. Individual Run Commands
+- **Frontend Only**: `npm run client` (or `cd frontend && npm start`)
+- **Backend Only**: `npm run server` (or `cd backend && npm start`)
+- **Backend Dev (Nodemon)**: `npm run server:dev` (or `cd backend && npm run dev`)
+- **Run Tests**: `npm test`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 📡 Backend REST API Endpoints
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+| Resource | Method | Endpoint | Description |
+| :--- | :--- | :--- | :--- |
+| **Health** | `GET` | `/api/health` | Server uptime & status check |
+| **Services** | `GET` | `/api/services` | Get all services catalog |
+| **Services** | `POST` | `/api/services` | Add new service |
+| **Services** | `PUT` | `/api/services/:id` | Update service details & price |
+| **Services** | `DELETE` | `/api/services/:id` | Remove a service |
+| **Categories** | `GET` | `/api/categories` | Get all service categories |
+| **Categories** | `POST` | `/api/categories` | Add a new category |
+| **Bookings** | `GET` | `/api/bookings` | List all bookings (filter by status) |
+| **Bookings** | `POST` | `/api/bookings` | Register a new customer booking |
+| **Bookings** | `PUT` | `/api/bookings/:id` | Update booking status / assign provider |
+| **Providers** | `GET` | `/api/providers` | Get verified experts list |
+| **Providers** | `PUT` | `/api/providers/:id` | Update provider verification & contact |
+| **Users** | `GET` | `/api/users` | List customer accounts |
+| **Promotions** | `GET` | `/api/promotions` | Get homepage hero banner slides |
+| **Tickets** | `GET` | `/api/tickets` | List support & complaint tickets |
+| **Settings** | `GET` | `/api/settings` | Get platform operational settings |
+| **Auth** | `POST` | `/api/auth/verify-admin` | Verify admin PIN credentials |
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🐙 Step-by-Step Git Deployment Guide
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Step 1: Check Current Git Status
+From the root folder `C:\helper`:
+```bash
+git status
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Step 2: Stage All Clean Project Files
+```bash
+git add .
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Step 3: Create Your Initial Commit
+```bash
+git commit -m "feat: restructure fullstack architecture with frontend, backend Express REST API, and super admin panel"
+```
 
-## Learn More
+### Step 4: Link Your GitHub Repository
+1. Go to [GitHub](https://github.com/new) and create a new repository (e.g. `helper-platform`).
+2. Copy your GitHub repository URL (e.g. `https://github.com/YOUR_USERNAME/helper-platform.git`).
+3. Run:
+```bash
+git remote add origin https://github.com/YOUR_USERNAME/helper-platform.git
+git branch -M main
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Step 5: Push to GitHub
+```bash
+git push -u origin main
+```

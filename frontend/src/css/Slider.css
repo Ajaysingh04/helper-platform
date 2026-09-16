@@ -1,0 +1,204 @@
+/* ==========================================================================
+   SLIDER COMPONENT STYLES
+   ========================================================================== */
+
+.slider-wrapper {
+  width: 100%;
+  margin: 30px auto;
+  position: relative;
+  perspective: 1000px;
+}
+
+.slider-card-modern {
+  background: var(--surface-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 48px 60px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.slider-ambient-glow {
+  position: absolute;
+  top: -30%;
+  right: -10%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.1) 60%, transparent 80%);
+  border-radius: 50%;
+  filter: blur(50px);
+  pointer-events: none;
+  animation: floatSlow 8s ease-in-out infinite alternate;
+}
+
+.slider-content {
+  position: relative;
+  z-index: 2;
+  max-width: 780px;
+  animation: slideFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slider-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: var(--border-radius-full);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.slider-badge-icon {
+  font-size: 14px;
+}
+
+.slider-title {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  letter-spacing: -0.03em;
+}
+
+.slider-desc {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 26px;
+  max-width: 650px;
+}
+
+.slider-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ================= Arrow Buttons ================= */
+.slider-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(10px);
+  opacity: 0.6;
+}
+
+.slider-card-modern:hover .slider-nav-arrow {
+  opacity: 1;
+}
+
+.slider-nav-arrow:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+.prev-arrow {
+  left: 14px;
+}
+
+.next-arrow {
+  right: 14px;
+}
+
+/* ================= Progress Dot Indicators ================= */
+.slider-dots-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  position: relative;
+  z-index: 3;
+}
+
+.slider-pill-dot {
+  width: 12px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--border-color);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.slider-pill-dot.active {
+  width: 34px;
+  background: rgba(99, 102, 241, 0.25);
+}
+
+.dot-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  animation: dotTimer 5s linear infinite;
+  border-radius: 99px;
+}
+
+@keyframes dotTimer {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+@media (max-width: 768px) {
+  .slider-card-modern {
+    padding: 32px 20px;
+    min-height: auto;
+  }
+  .slider-title {
+    font-size: 24px;
+  }
+  .slider-desc {
+    font-size: 14px;
+  }
+  .slider-nav-arrow {
+    display: none;
+  }
+}
