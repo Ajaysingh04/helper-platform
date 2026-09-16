@@ -28,7 +28,7 @@ function Slider() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isPaused]);
+  }, [isPaused, slides.length]);
 
   const handlePrev = () => {
     setIndex((prev) => (prev - 1 + slides.length) % slides.length);
