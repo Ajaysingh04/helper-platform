@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import { DataContext } from "../context/DataContext";
+import { API_BASE } from "../apiConfig";
 import "../css/ContactUs.css";
 
 function ContactUs() {
@@ -37,7 +38,7 @@ function ContactUs() {
 
     // 1. Register with backend API (and triggers Nodemailer)
     try {
-      const res = await fetch("http://localhost:5000/api/contact", {
+      const res = await fetch(`${API_BASE}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submissionData)

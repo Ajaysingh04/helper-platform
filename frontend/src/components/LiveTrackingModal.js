@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
+import { SOCKET_URL } from "../apiConfig";
 import "../css/LiveTrackingModal.css";
 
 function LiveTrackingModal({ booking, onClose }) {
@@ -19,8 +20,7 @@ function LiveTrackingModal({ booking, onClose }) {
   useEffect(() => {
     if (!booking?._id && !booking?.id && !booking?.bookingCode) return;
 
-    const socketUrl = "http://localhost:5000";
-    const socket = io(socketUrl, {
+    const socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"]
     });
 

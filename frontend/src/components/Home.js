@@ -5,6 +5,7 @@ import LoginModal from "./LoginModal";
 import { DataContext } from "../context/DataContext";
 import { popularCategories } from "../data/popularCategoriesData";
 import LiveTrackingModal from "./LiveTrackingModal";
+import { API_BASE } from "../apiConfig";
 
 function Home() {
   const dataContext = useContext(DataContext);
@@ -62,7 +63,7 @@ function Home() {
 
     try {
       // Call Production Express Booking & Dispatch API
-      const res = await fetch("http://localhost:5000/api/bookings", {
+      const res = await fetch(`${API_BASE}/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

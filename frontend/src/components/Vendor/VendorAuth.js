@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { API_BASE } from "../../apiConfig";
 import "../../css/VendorAuth.css";
 
 const AVAILABLE_CATEGORIES = [
@@ -100,7 +101,7 @@ function VendorAuth({ defaultTab = "register" }) {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/providers/register", {
+      const response = await fetch(`${API_BASE}/providers/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,7 +153,7 @@ function VendorAuth({ defaultTab = "register" }) {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/providers/login", {
+      const response = await fetch(`${API_BASE}/providers/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

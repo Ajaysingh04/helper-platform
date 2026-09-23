@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import { API_BASE, SOCKET_URL } from "../../apiConfig";
 import "../../css/VendorDashboard.css";
 
 const CATEGORIES_LIST = [
@@ -70,7 +71,7 @@ function VendorDashboard() {
 
   // Connect Socket.IO
   useEffect(() => {
-    const socket = io("http://localhost:5000", {
+    const socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
       reconnectionAttempts: 5
     });
@@ -150,7 +151,7 @@ function VendorDashboard() {
   const fetchVendorBookings = async (vendorId) => {
     setLoadingBookings(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/providers/${vendorId}/bookings`);
+      const res = await fetch(`${API_BASE}/providers/${vendorId}/bookings`);
       const data = await res.json();
       if (data.success && data.data && data.data.length > 0) {
         setBookings(data.data);
@@ -212,7 +213,7 @@ function VendorDashboard() {
     localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
 
     try {
-      await fetch(`http://localhost:5000/api/providers/${vendor.id || vendor._id}`, {
+      await fetch(`${API_BASE}/providers/${vendor.id || vendor._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -244,7 +245,7 @@ function VendorDashboard() {
 
     try {
       const vendorId = vendor.id || vendor._id;
-      const res = await fetch(`http://localhost:5000/api/providers/${vendorId}`, {
+      const res = await fetch(`${API_BASE}/providers/${vendorId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedData)
@@ -320,7 +321,7 @@ function VendorDashboard() {
     setVerifyingOtpId(key);
     try {
       // Call backend Start OTP Verification Endpoint
-      const res = await fetch(`http://localhost:5000/api/bookings/${key}/verify-start-otp`, {
+      const res = await fetch(`${API_BASE}/bookings/${key}/verify-start-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ otp })
@@ -351,7 +352,7 @@ function VendorDashboard() {
     setCompletingJobId(key);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${key}/complete`, {
+      const res = await fetch(`${API_BASE}/bookings/${key}/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: "Work completed professionally" })
@@ -413,7 +414,7 @@ function VendorDashboard() {
 
     setWithdrawing(true);
     try {
-      const res = await fetch("http://localhost:5000/api/payments/withdraw", {
+      const res = await fetch(`${API_BASE}/payments/withdraw`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
