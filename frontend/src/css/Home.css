@@ -28,8 +28,8 @@ body.dark .nexora-home-wrapper {
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: radial-gradient(130% 120% at 80% 20%, #1e293b 0%, #0f172a 45%, #0a0f1d 100%);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #EEF2FF 100%);
+  border-bottom: 1px solid #E2E8F0;
 }
 
 body.dark .helper-hero-panoramic {
@@ -45,12 +45,12 @@ body.dark .helper-hero-panoramic {
   object-fit: cover;
   object-position: center right;
   z-index: 1;
-  /* Naturally bright, vibrant, crisp and clear */
-  filter: brightness(0.98) contrast(1.08) saturate(1.15);
+  /* Radiant, ultra-vibrant, commercial sunlit clarity */
+  filter: brightness(1.04) contrast(1.08) saturate(1.22);
   transition: filter 0.3s ease;
 }
 
-/* Ambient color glow accents matching Helper brand orange & verified blue */
+/* Ambient color glow accents matching Helper brand */
 .hero-ambient-glow-warm {
   position: absolute;
   top: -12%;
@@ -58,7 +58,7 @@ body.dark .helper-hero-panoramic {
   width: 520px;
   height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 107, 74, 0.22) 0%, rgba(255, 140, 0, 0.08) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 107, 74, 0.16) 0%, rgba(255, 140, 0, 0.05) 50%, transparent 70%);
   filter: blur(60px);
   z-index: 2;
   pointer-events: none;
@@ -71,22 +71,22 @@ body.dark .helper-hero-panoramic {
   width: 480px;
   height: 480px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.16) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 70%);
   filter: blur(60px);
   z-index: 2;
   pointer-events: none;
 }
 
-/* Luminous soft gradient scrim - lets the natural bright background shine while keeping text 100% crisp */
+/* Radiant daylight scrim in light mode; sleek cinematic scrim in dark mode */
 .hero-panoramic-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     90deg, 
-    rgba(15, 23, 42, 0.86) 0%, 
-    rgba(15, 23, 42, 0.70) 34%, 
-    rgba(15, 23, 42, 0.35) 58%, 
-    rgba(15, 23, 42, 0.05) 80%,
+    rgba(255, 255, 255, 0.96) 0%, 
+    rgba(255, 255, 255, 0.88) 36%, 
+    rgba(255, 255, 255, 0.42) 60%, 
+    rgba(255, 255, 255, 0.05) 84%,
     transparent 100%
   );
   z-index: 2;
@@ -96,10 +96,10 @@ body.dark .helper-hero-panoramic {
 body.dark .hero-panoramic-overlay {
   background: linear-gradient(
     90deg, 
-    rgba(10, 15, 28, 0.90) 0%, 
-    rgba(10, 15, 28, 0.75) 35%, 
-    rgba(10, 15, 28, 0.40) 60%, 
-    rgba(10, 15, 28, 0.08) 82%,
+    rgba(10, 15, 28, 0.92) 0%, 
+    rgba(10, 15, 28, 0.78) 35%, 
+    rgba(10, 15, 28, 0.42) 60%, 
+    rgba(10, 15, 28, 0.08) 84%,
     transparent 100%
   );
 }
@@ -122,11 +122,11 @@ body.dark .hero-panoramic-overlay {
   }
 
   .hero-panoramic-overlay {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.72) 100%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
   }
 
   body.dark .hero-panoramic-overlay {
-    background: linear-gradient(180deg, rgba(10, 15, 28, 0.9) 0%, rgba(10, 15, 28, 0.8) 100%);
+    background: linear-gradient(180deg, rgba(10, 15, 28, 0.92) 0%, rgba(10, 15, 28, 0.82) 100%);
   }
 }
 
@@ -190,17 +190,26 @@ body.dark .hero-panoramic-overlay {
   font-size: 11.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #FFA114;
+  color: #EA580C;
   text-transform: uppercase;
   font-family: 'Space Grotesk', sans-serif;
+}
+
+body.dark .live-pill-text {
+  color: #FFA114;
 }
 
 .live-pill-city {
   font-size: 11px;
   font-weight: 700;
-  color: #E2E8F0;
+  color: #475569;
   padding-left: 8px;
-  border-left: 1px solid rgba(255, 161, 20, 0.4);
+  border-left: 1px solid rgba(255, 77, 45, 0.35);
+}
+
+body.dark .live-pill-city {
+  color: #E2E8F0;
+  border-left-color: rgba(255, 161, 20, 0.4);
 }
 
 .hero-studio-headline {
@@ -209,34 +218,36 @@ body.dark .hero-panoramic-overlay {
   font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.04em;
-  color: #FFFFFF;
+  color: #0F172A;
   margin: 0 0 18px 0;
-  text-shadow: 0 3px 20px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 body.dark .hero-studio-headline {
   color: #FFFFFF;
+  text-shadow: 0 3px 20px rgba(0, 0, 0, 0.5);
 }
 
 .hero-gradient-highlight {
-  background: linear-gradient(135deg, #FF6B4A 0%, #FFA114 42%, #38BDF8 100%);
+  background: linear-gradient(135deg, #FF4D2D 0%, #EA580C 45%, #2563EB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
-  filter: drop-shadow(0 2px 10px rgba(255, 107, 74, 0.35));
+  filter: drop-shadow(0 2px 8px rgba(255, 77, 45, 0.25));
 }
 
 .hero-studio-subtitle {
   font-size: 16.5px;
   line-height: 1.6;
-  color: #E2E8F0;
+  color: #334155;
+  font-weight: 500;
   max-width: 540px;
   margin: 0 0 28px 0;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 body.dark .hero-studio-subtitle {
   color: #E2E8F0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 /* Studio Hero Search Form */
@@ -246,10 +257,10 @@ body.dark .hero-studio-subtitle {
   width: 100%;
   max-width: 540px;
   background: #FFFFFF;
-  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border: 2px solid #E2E8F0;
   border-radius: 999px;
   padding: 6px 8px 6px 20px;
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.35), 0 0 20px rgba(255, 107, 74, 0.15);
+  box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.12), 0 0 20px rgba(255, 77, 45, 0.1);
   transition: all 0.25s ease;
   margin-bottom: 22px;
 }
@@ -262,7 +273,7 @@ body.dark .hero-search-wrapper {
 
 .hero-search-wrapper:focus-within {
   border-color: #FF4D2D;
-  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.35), 0 20px 45px -8px rgba(255, 77, 45, 0.4);
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.25), 0 20px 45px -8px rgba(255, 77, 45, 0.35);
   transform: translateY(-2px);
 }
 
@@ -319,10 +330,14 @@ body.dark .hero-search-input {
 .quick-tags-label {
   font-size: 12px;
   font-weight: 700;
-  color: #CBD5E1;
+  color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-right: 4px;
+}
+
+body.dark .quick-tags-label {
+  color: #CBD5E1;
 }
 
 .quick-tags-list {
@@ -335,18 +350,25 @@ body.dark .hero-search-input {
 .quick-service-chip {
   padding: 7px 16px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
   font-size: 13px;
   font-weight: 600;
-  color: #FFFFFF;
+  color: #1E293B;
   text-decoration: none;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+body.dark .quick-service-chip {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
   backdrop-filter: blur(12px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
 }
 
 .quick-service-chip:hover {
@@ -364,12 +386,18 @@ body.dark .hero-search-input {
   flex-wrap: wrap;
   gap: 16px;
   padding: 14px 20px;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 16px;
-  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  width: 100%;
+}
+
+body.dark .hero-trust-bar {
+  background: rgba(15, 23, 42, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-  width: 100%;
+  backdrop-filter: blur(12px);
 }
 
 .trust-item {
@@ -390,23 +418,31 @@ body.dark .hero-search-input {
 .trust-text strong {
   font-size: 13px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #0F172A;
   line-height: 1.1;
+}
+
+body.dark .trust-text strong {
+  color: #FFFFFF;
 }
 
 .trust-text span {
   font-size: 11px;
+  color: #64748B;
+}
+
+body.dark .trust-text span {
   color: #CBD5E1;
 }
 
 .trust-divider {
   width: 1px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #E2E8F0;
 }
 
 body.dark .trust-divider {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* Right Visual Card */
