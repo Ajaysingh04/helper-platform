@@ -38,10 +38,46 @@ function Home() {
 
   // Dynamic Hero Banners - Auto-slide home 1, 2, 3, 4 every 2 seconds
   const defaultHeroSlides = [
-    { id: "slide-1", image: "/images/homepage_1.jpg", title: "Quality House Painting" },
-    { id: "slide-2", image: "/images/homepage_2.jpg", title: "Expert Plumbing Repairs" },
-    { id: "slide-3", image: "/images/homepage_3.jpg", title: "Certified Electricians" },
-    { id: "slide-4", image: "/images/homepage_4.jpg", title: "Professional Cleaning Services" }
+    {
+      id: "slide-1",
+      image: "/images/homepage_1.jpg",
+      title: "Everything Your Home Needs.",
+      highlight: "Delivered In 15 Mins.",
+      subtitle: "Book verified electricians, plumbers, cleaning experts & painters with guaranteed upfront rates and 30-day warranty.",
+      badge: "⚡ #1 ON-DEMAND HOME SERVICE PLATFORM",
+      ctaText: "Book Service Now ➔",
+      ctaLink: "/services"
+    },
+    {
+      id: "slide-2",
+      image: "/images/homepage_2.jpg",
+      title: "Certified Electricians & Diagnostics.",
+      highlight: "Instant 15-Min Response.",
+      subtitle: "Short circuit repair, wiring, switchboards, inverter & fan repairs by background-screened pros.",
+      badge: "🛡️ 100% VERIFIED BACKGROUND CHECK",
+      ctaText: "Book Electrician ➔",
+      ctaLink: "/category/electricians"
+    },
+    {
+      id: "slide-3",
+      image: "/images/homepage_3.jpg",
+      title: "Expert Plumbing & Sparkle Deep Clean.",
+      highlight: "Spotless Clean Guaranteed.",
+      subtitle: "Leak repairs, tap fittings, pipe drainage & hospital-grade deep sanitization. Trusted by 25,000+ homes.",
+      badge: "✨ 5-STAR HYGIENE & QUALITY GUARANTEE",
+      ctaText: "Explore Plumbers ➔",
+      ctaLink: "/category/plumbers"
+    },
+    {
+      id: "slide-4",
+      image: "/images/homepage_4.jpg",
+      title: "Luxury Home Painting & Renovation.",
+      highlight: "Flawless Finish On Time.",
+      subtitle: "Premium dust-free painting, waterproof coatings & carpentry by top-rated certified specialists.",
+      badge: "🏡 ARCHITECTURAL GRADE WORKMANSHIP",
+      ctaText: "Explore Services ➔",
+      ctaLink: "/services"
+    }
   ];
 
   const heroBanners = dataContext?.heroBanners || [];
@@ -332,6 +368,36 @@ function Home() {
                   e.currentTarget.src = `/images/homepage_${(idx % 4) + 1}.jpg`;
                 }}
               />
+              {/* Elegant Crystal Clear Text & CTA Overlay */}
+              <div className="hero-slide-overlay">
+                <div className="hero-slide-content">
+                  {slide.badge && (
+                    <div className="hero-slide-badge">
+                      <span className="hero-badge-dot" />
+                      <span>{slide.badge}</span>
+                    </div>
+                  )}
+                  <h2 className="hero-slide-headline">
+                    {slide.title}{" "}
+                    {slide.highlight && (
+                      <span className="hero-slide-highlight">{slide.highlight}</span>
+                    )}
+                  </h2>
+                  {slide.subtitle && (
+                    <p className="hero-slide-subtext">{slide.subtitle}</p>
+                  )}
+                  <div className="hero-slide-actions">
+                    <Link to={slide.ctaLink || "/services"} className="hero-slide-cta-btn">
+                      {slide.ctaText || "Book Service Now ➔"}
+                    </Link>
+                    <div className="hero-slide-perks">
+                      <span>✓ Upfront Pricing</span>
+                      <span>✓ 30-Day Guarantee</span>
+                      <span>✓ 15-Min Arrival</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
 
