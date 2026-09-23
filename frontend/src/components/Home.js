@@ -368,36 +368,6 @@ function Home() {
                   e.currentTarget.src = `/images/homepage_${(idx % 4) + 1}.jpg`;
                 }}
               />
-              {/* Elegant Crystal Clear Text & CTA Overlay */}
-              <div className="hero-slide-overlay">
-                <div className="hero-slide-content">
-                  {slide.badge && (
-                    <div className="hero-slide-badge">
-                      <span className="hero-badge-dot" />
-                      <span>{slide.badge}</span>
-                    </div>
-                  )}
-                  <h2 className="hero-slide-headline">
-                    {slide.title}{" "}
-                    {slide.highlight && (
-                      <span className="hero-slide-highlight">{slide.highlight}</span>
-                    )}
-                  </h2>
-                  {slide.subtitle && (
-                    <p className="hero-slide-subtext">{slide.subtitle}</p>
-                  )}
-                  <div className="hero-slide-actions">
-                    <Link to={slide.ctaLink || "/services"} className="hero-slide-cta-btn">
-                      {slide.ctaText || "Book Service Now ➔"}
-                    </Link>
-                    <div className="hero-slide-perks">
-                      <span>✓ Upfront Pricing</span>
-                      <span>✓ 30-Day Guarantee</span>
-                      <span>✓ 15-Min Arrival</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           ))}
 
