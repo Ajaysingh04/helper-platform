@@ -1,28 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 /* ==========================================================================
-   HELPER DESIGN SYSTEM & GLOBAL STYLES
+   HELPER DESIGN SYSTEM & GLOBAL STYLES (Beew Studio / 5U AI Inspired)
    ========================================================================== */
 
 :root {
-  /* Brand Gradients & Accents */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: #818cf8;
-  --primary-glow: rgba(99, 102, 241, 0.35);
-  --secondary: #8b5cf6;
-  --secondary-hover: #7c3aed;
-  --accent: #06b6d4;
-  --accent-glow: rgba(6, 182, 212, 0.3);
+  /* Signature 5U AI Coral / Flame Orange */
+  --coral: #FF4D2D;
+  --coral-hover: #e53e1f;
+  --coral-light: #fff1ee;
+  --coral-glow: rgba(255, 77, 45, 0.32);
+  --coral-border: rgba(255, 77, 45, 0.25);
+
+  /* Brand Accents */
+  --primary: #FF4D2D;
+  --primary-hover: #e53e1f;
+  --primary-light: #ff785e;
+  --primary-glow: rgba(255, 77, 45, 0.3);
+  --secondary: #6366f1;
+  --secondary-hover: #4f46e5;
+  --accent: #0ea5e9;
   --success: #10b981;
-  --success-glow: rgba(16, 185, 129, 0.3);
   --warning: #f59e0b;
   --danger: #ef4444;
 
-  /* Theme Backgrounds & Glass Surfaces (Default: High-End Sleek Light/Glass) */
-  --bg-color: #f8fafc;
-  --bg-gradient: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                      radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
-                      radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 60%),
-                      #f8fafc;
+  /* Theme Backgrounds & Surfaces (Luxury Light Canvas) */
+  --bg-color: #F8F9FB;
+  --bg-gradient: #F8F9FB;
+  --surface-color: #ffffff;
+  --surface-solid: #ffffff;
+  --surface-card: #ffffff;
+  --surface-card-hover: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.85);
+  --surface-input: #F1F3F6;
+  --bg-dark-contrast: #0B0F19;
+  --surface-dark-card: #121826;
+  
+  /* Text Colors */
+  --text-main: #0B0F19;
+  --text-muted: #525866;
+  --text-dim: #868C98;
+  --text-inverse: #ffffff;
+
+  /* Borders & Dividers */
+  --border-color: #E2E4E9;
+  --border-light: #ECEEF2;
+  --border-focus: #FF4D2D;
+  --border-radius-sm: 8px;
+  --border-radius: 16px;
+  --border-radius-lg: 24px;
+  --border-radius-xl: 32px;
+  --border-radius-full: 9999px;
   --surface-color: rgba(255, 255, 255, 0.85);
   --surface-solid: #ffffff;
   --surface-card: rgba(255, 255, 255, 0.9);
@@ -309,3 +337,116 @@ button, input, textarea, select {
 .animate-float {
   animation: floatSlow 6s ease-in-out infinite;
 }
+
+/* ================= Beew Studio / 5U AI Signature Components ================= */
+.btn-coral {
+  background: #FF4D2D;
+  color: #ffffff !important;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 18px rgba(255, 77, 45, 0.35);
+  text-decoration: none;
+}
+
+.btn-coral:hover {
+  transform: translateY(-2px);
+  background: #e63e1f;
+  box-shadow: 0 8px 28px rgba(255, 77, 45, 0.48);
+}
+
+.btn-ghost-dark {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid #D0D5DD;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-ghost-dark:hover {
+  background: #ffffff;
+  border-color: #98A2B3;
+  transform: translateY(-1px);
+}
+
+.pill-tag-coral {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background: #FFF1EE;
+  border: 1px solid rgba(255, 77, 45, 0.28);
+  color: #FF4D2D;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pill-news-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #FFFFFF;
+  border: 1px solid #E4E7EC;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.pill-news-badge:hover {
+  border-color: #D0D5DD;
+  transform: translateY(-1px);
+}
+
+.pill-news-tag {
+  background: #FFF1EE;
+  color: #FF4D2D;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Orbit Motion */
+@keyframes orbitRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbitCounterRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+

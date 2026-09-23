@@ -1,6 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
 import Profile from "./ProfileComponent/Profile";
-import Search from "./Search";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import "../css/Header.css";
@@ -55,90 +54,107 @@ function Header() {
 
   return (
     <>
-      <header className={`header ${scrolled ? "scrolled" : ""}`}>
-        <div className="header-container container-wrapper">
+      <header className={`header-floating-wrapper ${scrolled ? "scrolled" : ""}`}>
+        <div className="header-pill-bar nexora-header-bar">
           
-          {/* Brand Logo & Profile Quick Access */}
+          {/* Brand Logo: HELPER GO */}
           <div className="header-left">
-            <Link to="/" className="app-logo-link">
-              <div className="logo-badge">
-                <span className="logo-sparkle">✨</span>
+            <Link to="/" className="nexora-logo-link">
+              <div className="nexora-brand-mark">
+                <span className="nexora-brand-text">HELPER</span>
+                <span className="nexora-go-badge">GO ➔</span>
               </div>
-              <h2 className="app-name">
-                Helper<span className="dot">.</span>
-              </h2>
+              <span className="nexora-sub-tag">EVERYTHING YOU NEED, ONE PLACE</span>
             </Link>
           </div>
 
-          {/* Center Search Bar */}
-          <div className="header-center">
-            <Search />
-          </div>
+          {/* Center Navigation Links */}
+          <nav className={`header-nav ${mobileNavOpen ? "mobile-open" : ""}`}>
+            <Link to="/" className={`nav-link ${isActive("/")}`} onClick={() => setMobileNavOpen(false)}>
+              <span>HOME</span>
+            </Link>
+            <Link to="/about" className={`nav-link ${isActive("/about")}`} onClick={() => setMobileNavOpen(false)}>
+              <span>ABOUT US</span>
+            </Link>
+            <Link to="/services" className={`nav-link ${isActive("/services")}`} onClick={() => setMobileNavOpen(false)}>
+              <span>SERVICES</span>
+            </Link>
+            <Link to="/categories" className={`nav-link ${isActive("/categories")}`} onClick={() => setMobileNavOpen(false)}>
+              <span>CATEGORIES</span>
+            </Link>
+            <Link to="/contact" className={`nav-link ${isActive("/contact")}`} onClick={() => setMobileNavOpen(false)}>
+              <span>CONTACT</span>
+            </Link>
+          </nav>
 
-          {/* Right Navigation & Controls */}
+          {/* Right Section: Location Pill + Cart + Account */}
           <div className="header-right">
-            <nav className={`header-nav ${mobileNavOpen ? "mobile-open" : ""}`}>
-              <Link to="/" className={`nav-link ${isActive("/")}`} onClick={() => setMobileNavOpen(false)}>
-                <span>Home</span>
-              </Link>
-              <Link to="/services" className={`nav-link ${isActive("/services")}`} onClick={() => setMobileNavOpen(false)}>
-                <span>Services</span>
-              </Link>
-              <Link to="/about" className={`nav-link ${isActive("/about")}`} onClick={() => setMobileNavOpen(false)}>
-                <span>About</span>
-              </Link>
-              <Link to="/contact" className={`nav-link ${isActive("/contact")}`} onClick={() => setMobileNavOpen(false)}>
-                <span>Contact</span>
-              </Link>
-              <Link to="/admin" className={`nav-link ${isActive("/admin")}`} onClick={() => setMobileNavOpen(false)} style={{ color: "#ef4444", fontWeight: 700 }}>
-                <span>⚡ Admin</span>
-              </Link>
-            </nav>
+            {/* Location Selector Pill */}
+            <div className="header-location-pill" title="Current Service Location">
+              <span className="loc-pin-icon">📍</span>
+              <span className="loc-text">Musakhedi, Indore, Madhya Pra...</span>
+            </div>
 
-            <div className="header-actions">
-              {/* Theme Toggle Button */}
-              <button
-                className="theme-toggle-btn"
-                onClick={toggleTheme}
-                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                aria-label="Toggle Theme"
-              >
-                {isDark ? "☀️" : "🌙"}
-              </button>
+            {/* Shopping Cart Icon */}
+            <Link to="/services" className="header-cart-btn" title="View Cart">
+              <span className="cart-icon">🛒</span>
+              <span className="cart-badge-dot"></span>
+            </Link>
 
-              {/* Profile / Account Button */}
+            {/* Account / Sign In */}
+            <div className="profile-container">
               {isLoggedIn ? (
-                <div className="user-profile-btn" onClick={() => setDrawerOpen(true)}>
-                  <div className="user-avatar-mini">
-                    <span>👤</span>
+                <div className="profile-logged-wrap" onClick={() => setDrawerOpen(!drawerOpen)}>
+                  <div className="profile-avatar-circle">
+                    <span>A</span>
                   </div>
-                  <span className="user-name-text">My Account</span>
                 </div>
               ) : (
                 <button
-                  className="login-header-btn"
+                  type="button"
+                  className="nexora-account-btn"
                   onClick={() => navigate("/login")}
                 >
-                  <span>Sign In</span>
-                  <span className="arrow-icon">→</span>
+                  <span className="account-user-icon">👤</span>
+                  <div className="account-btn-text">
+                    <span className="acc-label">ACCOUNT</span>
+                    <span className="acc-action">Sign In</span>
+                  </div>
                 </button>
               )}
-
-              {/* Mobile Hamburger Toggle */}
-              <button
-                className="mobile-menu-toggle"
-                onClick={() => setMobileNavOpen(!mobileNavOpen)}
-                aria-label="Toggle Menu"
-              >
-                {mobileNavOpen ? "✕" : "☰"}
-              </button>
             </div>
+
+            {/* Theme Toggle */}
+            <button
+              type="button"
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              <span>{isDark ? "☀️" : "🌙"}</span>
+            </button>
+
+            {/* Mobile Menu Toggle */}
+            <button 
+              type="button" 
+              className="mobile-nav-toggle"
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              aria-label="Toggle navigation menu"
+            >
+              <span>{mobileNavOpen ? "✕" : "☰"}</span>
+            </button>
           </div>
+
         </div>
       </header>
 
-      {/* Profile drawer */}
-      <Profile isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      {/* Slide-in Profile Drawer */}
+      <Profile
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        toggleTheme={toggleTheme}
+        isDark={isDark}
+      />
     </>
   );
 }

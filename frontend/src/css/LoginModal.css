@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LOGIN MODAL STYLES
+   PINTEREST-STYLE LOGIN MODAL (YETI MASCOT + WHITE SPLIT CARD)
    ========================================================================== */
 
 .login-modal-overlay {
@@ -8,9 +8,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 2100;
   display: flex;
   align-items: center;
@@ -18,172 +18,371 @@
   padding: 20px;
 }
 
-.login-modal-content {
-  background: var(--surface-solid);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  padding: 38px 40px;
-  width: 100%;
-  max-width: 440px;
+.pin-modal-card {
   position: relative;
-  box-shadow: var(--shadow-xl);
-  animation: modalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  background: #FFFFFF;
+  border-radius: 32px;
+  padding: 14px;
+  width: 100%;
+  max-width: 880px;
+  display: flex;
+  align-items: stretch;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
 }
 
-.login-modal-close {
+.pin-modal-close {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
+  top: 20px;
+  right: 20px;
+  background: #F1F5F9;
   border: none;
-  font-size: 18px;
-  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  color: #64748B;
   cursor: pointer;
-  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: all 0.2s;
 }
 
-.login-modal-close:hover {
-  color: var(--text-main);
+.pin-modal-close:hover {
+  background: #E2E8F0;
+  color: #0F172A;
 }
 
-.login-modal-header {
+/* Left: Artwork Column */
+.pin-modal-artwork {
+  flex: 1 1 46%;
+  max-width: 46%;
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #89BFE9;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.pin-modal-yeti-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+}
+
+.pin-modal-overlay-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+}
+
+.pin-modal-text-box {
+  position: relative;
+  z-index: 2;
+  padding: 24px;
+}
+
+.pin-modal-tag {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #FFFFFF;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.pin-modal-text-box h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* Right: Form Column */
+.pin-modal-form-wrap {
+  flex: 1 1 54%;
+  max-width: 54%;
+  padding: 28px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #FFFFFF;
+}
+
+.pin-modal-head {
   text-align: center;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
-.modal-logo-badge {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+.pin-brand-badge-mini {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 20px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
-}
-
-.login-modal-header h2 {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-main);
-  margin-bottom: 4px;
-}
-
-.login-modal-header p {
-  font-size: 13.5px;
-  color: var(--text-muted);
-}
-
-.login-modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.modal-input-group label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-main);
-  margin-bottom: 5px;
-}
-
-.modal-input-group input {
-  width: 100%;
-  background: var(--surface-input);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 11px 14px;
-  font-size: 14px;
-  color: var(--text-main);
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.modal-input-group input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
-
-.modal-location-group label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-main);
-  margin-bottom: 5px;
-}
-
-.location-box-mini {
-  background: var(--surface-input);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 10px;
-}
-
-.location-detect-btn-mini {
-  width: 100%;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px dashed rgba(99, 102, 241, 0.3);
-  color: var(--primary);
-  padding: 8px;
-  border-radius: var(--border-radius-sm);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+  border: 1px solid #7DD3FC;
   margin-bottom: 6px;
 }
 
-.or-manual-wrap-mini {
-  display: flex;
-  gap: 6px;
+.pin-modal-subbrand {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #0F172A;
+  margin-bottom: 8px;
 }
 
-.or-manual-wrap-mini input {
-  flex: 1;
-  background: var(--surface-solid);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  padding: 6px 10px;
-  font-size: 12px;
-  color: var(--text-main);
-  outline: none;
+.pin-modal-head h2 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  margin: 0 0 4px 0;
 }
 
-.or-manual-wrap-mini button {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 0 12px;
-  border-radius: var(--border-radius-sm);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
+.pin-modal-head p {
+  font-size: 12.5px;
+  color: #64748B;
+  margin: 0;
 }
 
-.modal-submit-btn {
+/* Form Groups */
+.pin-modal-form {
   width: 100%;
-  padding: 12px;
-  margin-top: 6px;
 }
 
-.modal-quick-skip {
-  text-align: center;
-  margin-top: 14px;
+.pin-modal-group {
+  margin-bottom: 14px;
+  text-align: left;
 }
 
-.modal-quick-skip button {
+.pin-modal-group label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 5px;
+}
+
+.pin-modal-group input {
+  width: 100%;
+  padding: 11px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: #0F172A;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.pin-modal-group input:focus {
+  background: #FFFFFF;
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.pin-modal-pwd-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pin-modal-pwd-toggle {
+  position: absolute;
+  right: 12px;
   background: none;
   border: none;
-  color: var(--text-muted);
-  font-size: 13px;
   cursor: pointer;
-  font-weight: 500;
+  color: #64748B;
+  font-size: 14px;
 }
 
-.modal-quick-skip button:hover {
-  color: var(--primary);
+.pin-modal-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -2px;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+
+.pin-modal-meta label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.pin-modal-meta a {
+  color: #64748B;
+  text-decoration: none;
+}
+
+.pin-modal-meta a:hover {
+  color: #000000;
   text-decoration: underline;
+}
+
+.pin-modal-btn-signin {
+  width: 100%;
+  padding: 12px;
+  background: #000000;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pin-modal-btn-signin:hover {
+  background: #1E293B;
+}
+
+.pin-modal-btn-google {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  background: #FFFFFF;
+  color: #1E293B;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pin-modal-footer {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: #64748B;
+}
+
+.pin-modal-footer span {
+  color: #000000;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+@media (max-width: 768px) {
+  .login-modal-overlay {
+    padding: 12px;
+  }
+
+  .pin-modal-card {
+    flex-direction: column;
+    max-width: 440px;
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 24px;
+    padding: 10px;
+  }
+
+  .pin-modal-close {
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .pin-modal-artwork {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    min-height: 190px;
+    height: 190px;
+    border-radius: 18px;
+  }
+
+  .pin-modal-yeti-img {
+    object-position: center 20%;
+  }
+
+  .pin-modal-text-box {
+    padding: 16px;
+  }
+
+  .pin-modal-text-box h3 {
+    font-size: 22px;
+  }
+
+  .pin-modal-form-wrap {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    padding: 18px 12px 14px;
+    box-sizing: border-box;
+  }
+
+  .pin-modal-head h2 {
+    font-size: 20px;
+  }
+
+  .pin-modal-group input {
+    font-size: 16px; /* Prevents iOS input auto-zoom */
+    padding: 11px 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pin-modal-card {
+    padding: 8px;
+    border-radius: 20px;
+  }
+
+  .pin-modal-artwork {
+    min-height: 160px;
+    height: 160px;
+    border-radius: 14px;
+  }
+
+  .pin-modal-text-box h3 {
+    font-size: 19px;
+  }
+
+  .pin-modal-form-wrap {
+    padding: 14px 6px 10px;
+  }
+
+  .pin-modal-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
 }

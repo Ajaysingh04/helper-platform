@@ -1,31 +1,12 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
+import { popularCategories } from "../data/popularCategoriesData";
 
 export const DataContext = createContext();
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-// Initial Default Data
-const initialCategories = [
-  { id: 1, name: "Restaurants", icon: "🍽️", path: "restaurants", count: "140+ Places", tag: "Food" },
-  { id: 2, name: "Hotels", icon: "🏨", path: "hotels", count: "85+ Stays", tag: "Travel" },
-  { id: 3, name: "Beauty & Spa", icon: "💆‍♀️", path: "beauty-spa", count: "120+ Salons", tag: "Wellness" },
-  { id: 4, name: "Home Decor", icon: "🛋️", path: "home-decor", count: "65+ Studios", tag: "Home" },
-  { id: 5, name: "Wedding Planner", icon: "💍", path: "wedding-planning", count: "40+ Planners", tag: "Events" },
-  { id: 6, name: "Education & Tutor", icon: "🎓", path: "education", count: "210+ Tutors", tag: "Study" },
-  { id: 7, name: "Rent & Hire", icon: "🔑", path: "rent-hire", count: "90+ Rentals", tag: "Rental" },
-  { id: 8, name: "Hospitals & Care", icon: "🏥", path: "hospitals", count: "55+ Centers", tag: "Health" },
-  { id: 9, name: "Contractors", icon: "👷", path: "contractors", count: "80+ Builders", tag: "Repairs" },
-  { id: 10, name: "Pet Care & Shops", icon: "🐾", path: "pet-shops", count: "45+ Clinics", tag: "Pets" },
-  { id: 11, name: "PG & Hostels", icon: "🛏️", path: "pg-hostels", count: "110+ Rooms", tag: "Living" },
-  { id: 12, name: "Real Estate Agent", icon: "🏘️", path: "estate-agent", count: "75+ Brokers", tag: "Living" },
-  { id: 13, name: "Dentists & Clinics", icon: "🦷", path: "dentists", count: "60+ Doctors", tag: "Health" },
-  { id: 14, name: "Gym & Fitness", icon: "🏋️", path: "gym", count: "95+ Centers", tag: "Wellness" },
-  { id: 15, name: "Loans & Finance", icon: "💰", path: "loans", count: "30+ Advisors", tag: "Finance" },
-  { id: 16, name: "Event Organisers", icon: "🎉", path: "event-organisers", count: "50+ Teams", tag: "Events" },
-  { id: 17, name: "Driving Schools", icon: "🚗", path: "driving-schools", count: "40+ Trainers", tag: "Auto" },
-  { id: 18, name: "Packers & Movers", icon: "🚚", path: "packers-movers", count: "85+ Shifters", tag: "Logistics" },
-  { id: 19, name: "Courier Service", icon: "📦", path: "courier-service", count: "120+ Hubs", tag: "Logistics" }
-];
+// Initial Default Data with 85 Popular Categories
+const initialCategories = popularCategories;
 
 const initialServices = [
   { id: 1, name: "Electrician", icon: "💡", desc: "Short circuits, wiring, switchboards, inverter & fan repairs.", price: "₹249", tag: "Repairs", popular: true, bookings: "1.2k", rating: 4.9 },
@@ -41,11 +22,142 @@ const initialServices = [
 ];
 
 const initialProviders = [
-  { id: 101, name: "The Grand Cuisine", category: "Restaurants", contact: "+91 98765 11111", rating: 4.9, status: "Active", verified: true, jobsDone: 142, distance: "0.5 km", address: "Commercial Hub, New Delhi", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600" },
-  { id: 102, name: "Spice Route Gourmet", category: "Restaurants", contact: "+91 98765 22222", rating: 4.8, status: "Active", verified: true, jobsDone: 98, distance: "1.2 km", address: "Galleria Tower, New Delhi", image: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600" },
-  { id: 103, name: "Apex Electrical Solutions", category: "Electrician", contact: "+91 98765 33333", rating: 4.9, status: "Active", verified: true, jobsDone: 340, distance: "1.5 km", address: "Sector 14, Metro Zone", image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600" },
-  { id: 104, name: "ProClean Sanitization Hub", category: "Home Cleaner", contact: "+91 98765 44444", rating: 4.7, status: "Active", verified: true, jobsDone: 215, distance: "2.1 km", address: "Ring Road, Central City", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=600" },
-  { id: 105, name: "Rapid Flow Plumbing Works", category: "Plumber", contact: "+91 98765 55555", rating: 4.8, status: "Active", verified: false, jobsDone: 88, distance: "3.0 km", address: "North Avenue, City Center", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=600" }
+  { 
+    id: 101, 
+    name: "Ramesh Sharma", 
+    shopName: "Sharma Express Electricals", 
+    category: "Electrician", 
+    contact: "+91 98765 11001", 
+    rating: 4.9, 
+    status: "Active", 
+    verified: true, 
+    jobsDone: 420, 
+    distance: "1.1 km", 
+    hourlyRate: "₹249/hr",
+    address: "Sector 62, Noida", 
+    experience: "8+ Years Exp",
+    badges: ["Govt Certified", "Top Rated"],
+    image: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400" 
+  },
+  { 
+    id: 102, 
+    name: "Manoj Kumar", 
+    shopName: "Rapid Flow Plumbing Works", 
+    category: "Plumber", 
+    contact: "+91 98765 22002", 
+    rating: 4.8, 
+    status: "Active", 
+    verified: true, 
+    jobsDone: 310, 
+    distance: "1.8 km", 
+    hourlyRate: "₹199/hr",
+    address: "Sector 18, Noida", 
+    experience: "6+ Years Exp",
+    badges: ["Leak Specialist", "Instant Dispatch"],
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" 
+  },
+  { 
+    id: 103, 
+    name: "Arvind Verma", 
+    shopName: "CoolTech AC & Jet Services", 
+    category: "Appliances", 
+    contact: "+91 98765 33003", 
+    rating: 4.9, 
+    status: "Active", 
+    verified: true, 
+    jobsDone: 530, 
+    distance: "2.3 km", 
+    hourlyRate: "₹399/hr",
+    address: "Sector 50, Noida", 
+    experience: "10+ Years Exp",
+    badges: ["Jet Foam Clean", "PCB Expert"],
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" 
+  },
+  { 
+    id: 104, 
+    name: "Sunita & Team", 
+    shopName: "ProClean Deep Sanitization", 
+    category: "Cleaning", 
+    contact: "+91 98765 44004", 
+    rating: 4.9, 
+    status: "Active", 
+    verified: true, 
+    jobsDone: 680, 
+    distance: "1.5 km", 
+    hourlyRate: "₹499/hr",
+    address: "Indirapuram, Ghaziabad", 
+    experience: "5+ Years Exp",
+    badges: ["Eco Clean Tech", "Police Verified"],
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400" 
+  },
+  { 
+    id: 105, 
+    name: "Chef Vikram Singh", 
+    shopName: "Gourmet Home Dining Co.", 
+    category: "Daily Help", 
+    contact: "+91 98765 55005", 
+    rating: 4.8, 
+    status: "Active", 
+    verified: true, 
+    jobsDone: 290, 
+    distance: "2.8 km", 
+    hourlyRate: "₹399/hr",
+    address: "Sector 137, Noida", 
+    experience: "7+ Years Exp",
+    badges: ["North & Continental", "Hygienic Safe"],
+    image: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=400" 
+  },
+  { 
+    id: 106, 
+    name: "Suresh Suthar", 
+    shopName: "Precision Woodcraft & Locks", 
+    category: "Repairs", 
+    contact: "+91 98765 66006", 
+    rating: 4.8, 
+    status: "Active", 
+    verified: true, 
+    jobsDone: 340, 
+    distance: "3.2 km", 
+    hourlyRate: "₹299/hr",
+    address: "Mayur Vihar, Delhi", 
+    experience: "9+ Years Exp",
+    badges: ["Modular Furniture", "Instant Fix"],
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400" 
+  },
+  { 
+    id: 107, 
+    name: "Rajesh Painter", 
+    shopName: "ColorCraft Waterproofing & Walls", 
+    category: "Home Decor", 
+    contact: "+91 98765 77007", 
+    rating: 4.7, 
+    status: "Active", 
+    verified: true, 
+    jobsDone: 210, 
+    distance: "3.5 km", 
+    hourlyRate: "₹599/hr",
+    address: "Sector 76, Noida", 
+    experience: "12+ Years Exp",
+    badges: ["Asian Paints Certified", "Dust-Free"],
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400" 
+  },
+  { 
+    id: 108, 
+    name: "Deepak Yadav", 
+    shopName: "SafeDrive Verified Chauffeurs", 
+    category: "Daily Help", 
+    contact: "+91 98765 88008", 
+    rating: 4.9, 
+    status: "Active", 
+    verified: true, 
+    jobsDone: 510, 
+    distance: "1.4 km", 
+    hourlyRate: "₹349/hr",
+    address: "Sector 62, Noida", 
+    experience: "8+ Years Exp",
+    badges: ["Zero Incident Record", "Commercial Lic"],
+    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=400" 
+  }
 ];
 
 const initialBookings = [
@@ -78,17 +190,25 @@ const initialSettings = {
   platformCommission: "12%",
   serviceRadius: "20 km",
   supportHotline: "+91 98765 43210",
-  supportEmail: "support@helper.com",
+  supportEmail: "ajayworkon04@gmail.com",
   maintenanceMode: false,
   instantBookingEnabled: true,
   taxPercent: "5%"
 };
 
 export const DataProvider = ({ children }) => {
-  // Load or initialize state with localStorage fallback
+  // Load state with localStorage fallback (clearing stale category caches)
   const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem("helper_categories");
-    return saved ? JSON.parse(saved) : initialCategories;
+    try {
+      const saved = localStorage.getItem("helper_categories");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 80 && parsed[0]?.name === "Body Massage Centres") {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return initialCategories;
   });
 
   const [services, setServices] = useState(() => {
@@ -127,176 +247,381 @@ export const DataProvider = ({ children }) => {
   });
 
   const [isApiOnline, setIsApiOnline] = useState(false);
+  const [dbStatusText, setDbStatusText] = useState("Checking...");
 
-  // Probe Backend API Health & sync optionally
-  useEffect(() => {
-    fetch(`${API_BASE}/health`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === "ok") {
-          setIsApiOnline(true);
-        }
-      })
-      .catch(() => {
+  // Sync to backend on mount & fetch latest data
+  const fetchAllFromBackend = useCallback(async () => {
+    try {
+      const healthRes = await fetch(`${API_BASE}/health`).then(r => r.json()).catch(() => null);
+      if (healthRes && healthRes.status === "ok") {
+        setIsApiOnline(true);
+        setDbStatusText(healthRes.database || "Online");
+
+        // Concurrently fetch all collections
+        const [catRes, srvRes, prvRes, bkgRes, sldRes, usrRes, tktRes, stgRes] = await Promise.allSettled([
+          fetch(`${API_BASE}/categories`).then(r => r.json()),
+          fetch(`${API_BASE}/services`).then(r => r.json()),
+          fetch(`${API_BASE}/providers`).then(r => r.json()),
+          fetch(`${API_BASE}/bookings`).then(r => r.json()),
+          fetch(`${API_BASE}/promotions`).then(r => r.json()),
+          fetch(`${API_BASE}/users`).then(r => r.json()),
+          fetch(`${API_BASE}/tickets`).then(r => r.json()),
+          fetch(`${API_BASE}/settings`).then(r => r.json())
+        ]);
+
+        if (catRes.status === "fulfilled" && catRes.value?.data?.length) setCategories(catRes.value.data);
+        if (srvRes.status === "fulfilled" && srvRes.value?.data?.length) setServices(srvRes.value.data);
+        if (prvRes.status === "fulfilled" && prvRes.value?.data?.length) setProviders(prvRes.value.data);
+        if (bkgRes.status === "fulfilled" && bkgRes.value?.data?.length) setBookings(bkgRes.value.data);
+        if (sldRes.status === "fulfilled" && sldRes.value?.data?.length) setSlides(sldRes.value.data);
+        if (usrRes.status === "fulfilled" && usrRes.value?.data?.length) setUsers(usrRes.value.data);
+        if (tktRes.status === "fulfilled" && tktRes.value?.data?.length) setTickets(tktRes.value.data);
+        if (stgRes.status === "fulfilled" && stgRes.value?.data) setSettings(stgRes.value.data);
+      } else {
         setIsApiOnline(false);
-      });
+        setDbStatusText("Offline / Local Cache");
+      }
+    } catch (e) {
+      console.warn("Backend sync notice:", e);
+      setIsApiOnline(false);
+      setDbStatusText("Offline");
+    }
   }, []);
 
-  // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem("helper_categories", JSON.stringify(categories));
-  }, [categories]);
+    fetchAllFromBackend();
+  }, [fetchAllFromBackend]);
 
-  useEffect(() => {
-    localStorage.setItem("helper_services", JSON.stringify(services));
-  }, [services]);
-
-  useEffect(() => {
-    localStorage.setItem("helper_providers", JSON.stringify(providers));
-  }, [providers]);
-
-  useEffect(() => {
-    localStorage.setItem("helper_bookings", JSON.stringify(bookings));
-  }, [bookings]);
-
-  useEffect(() => {
-    localStorage.setItem("helper_slides", JSON.stringify(slides));
-  }, [slides]);
-
-  useEffect(() => {
-    localStorage.setItem("helper_users", JSON.stringify(users));
-  }, [users]);
-
-  useEffect(() => {
-    localStorage.setItem("helper_tickets", JSON.stringify(tickets));
-  }, [tickets]);
-
-  useEffect(() => {
-    localStorage.setItem("helper_settings", JSON.stringify(settings));
-  }, [settings]);
+  // Sync state changes to localStorage for offline cache
+  useEffect(() => { localStorage.setItem("helper_categories", JSON.stringify(categories)); }, [categories]);
+  useEffect(() => { localStorage.setItem("helper_services", JSON.stringify(services)); }, [services]);
+  useEffect(() => { localStorage.setItem("helper_providers", JSON.stringify(providers)); }, [providers]);
+  useEffect(() => { localStorage.setItem("helper_bookings", JSON.stringify(bookings)); }, [bookings]);
+  useEffect(() => { localStorage.setItem("helper_slides", JSON.stringify(slides)); }, [slides]);
+  useEffect(() => { localStorage.setItem("helper_users", JSON.stringify(users)); }, [users]);
+  useEffect(() => { localStorage.setItem("helper_tickets", JSON.stringify(tickets)); }, [tickets]);
+  useEffect(() => { localStorage.setItem("helper_settings", JSON.stringify(settings)); }, [settings]);
 
   // ================= CRUD ACTION DISPATCHERS =================
   // Services
-  const addService = (newServ) => {
-    const item = { ...newServ, id: Date.now(), rating: 4.8, bookings: "New" };
+  const addService = async (newServ) => {
+    const item = { ...newServ, id: `s${Date.now()}`, rating: 4.8, bookings: "New" };
     setServices(prev => [item, ...prev]);
+
+    try {
+      await fetch(`${API_BASE}/services`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item)
+      });
+    } catch (err) {
+      console.warn("Backend addService error:", err);
+    }
   };
 
-  const updateService = (id, updatedFields) => {
+  const updateService = async (id, updatedFields) => {
     setServices(prev => prev.map(s => s.id === id ? { ...s, ...updatedFields } : s));
+
+    try {
+      await fetch(`${API_BASE}/services/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields)
+      });
+    } catch (err) {
+      console.warn("Backend updateService error:", err);
+    }
   };
 
-  const deleteService = (id) => {
+  const deleteService = async (id) => {
     setServices(prev => prev.filter(s => s.id !== id));
+
+    try {
+      await fetch(`${API_BASE}/services/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Backend deleteService error:", err);
+    }
   };
 
   // Categories
-  const addCategory = (newCat) => {
-    const item = { ...newCat, id: Date.now(), count: "10+ Pros", path: newCat.name.toLowerCase().replace(/\s+/g, '-') };
+  const addCategory = async (newCat) => {
+    const item = { 
+      ...newCat, 
+      id: `${Date.now()}`, 
+      count: newCat.count || "10+ Pros", 
+      path: newCat.path || newCat.name.toLowerCase().replace(/\s+/g, '-') 
+    };
     setCategories(prev => [item, ...prev]);
+
+    try {
+      await fetch(`${API_BASE}/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item)
+      });
+    } catch (err) {
+      console.warn("Backend addCategory error:", err);
+    }
   };
 
-  const updateCategory = (id, updatedFields) => {
+  const updateCategory = async (id, updatedFields) => {
     setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updatedFields } : c));
+
+    try {
+      await fetch(`${API_BASE}/categories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields)
+      });
+    } catch (err) {
+      console.warn("Backend updateCategory error:", err);
+    }
   };
 
-  const deleteCategory = (id) => {
+  const deleteCategory = async (id) => {
     setCategories(prev => prev.filter(c => c.id !== id));
+
+    try {
+      await fetch(`${API_BASE}/categories/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Backend deleteCategory error:", err);
+    }
   };
 
   // Providers
-  const addProvider = (newProv) => {
-    const item = { ...newProv, id: Date.now(), jobsDone: 0, rating: 5.0, verified: true, status: "Active" };
+  const addProvider = async (newProv) => {
+    const item = { ...newProv, id: newProv.id || `prv_${Date.now()}`, rating: parseFloat(newProv.rating) || 4.9, verified: true, status: "Active" };
     setProviders(prev => [item, ...prev]);
+
+    try {
+      const res = await fetch(`${API_BASE}/providers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item)
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      console.warn("Backend addProvider error:", err);
+      return { success: false, message: err.message };
+    }
   };
 
-  const updateProvider = (id, updatedFields) => {
-    setProviders(prev => prev.map(p => p.id === id ? { ...p, ...updatedFields } : p));
+  const updateProvider = async (id, updatedFields) => {
+    setProviders(prev => prev.map(p => (String(p.id) === String(id) || String(p._id) === String(id)) ? { ...p, ...updatedFields } : p));
+
+    try {
+      const res = await fetch(`${API_BASE}/providers/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields)
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      console.warn("Backend updateProvider error:", err);
+      return { success: false, message: err.message };
+    }
   };
 
-  const deleteProvider = (id) => {
-    setProviders(prev => prev.filter(p => p.id !== id));
+  const deleteProvider = async (id) => {
+    setProviders(prev => prev.filter(p => String(p.id) !== String(id) && String(p._id) !== String(id)));
+
+    try {
+      await fetch(`${API_BASE}/providers/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Backend deleteProvider error:", err);
+    }
   };
 
   // Bookings
-  const addBooking = (bookingData) => {
+  const addBooking = async (bookingData) => {
+    const tempId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
     const item = {
-      id: `BK-${Math.floor(1000 + Math.random() * 9000)}`,
-      customerName: bookingData.name || "Customer",
+      id: tempId,
+      customerName: bookingData.name || bookingData.customerName || "Customer",
       phone: bookingData.phone || "+91 98765 00000",
       service: bookingData.service || "General Service",
       price: bookingData.price || "₹299",
       status: "Pending",
-      date: "Just now",
+      date: bookingData.date || "Just now",
       address: bookingData.address || "Local Delivery Area",
-      provider: "Auto Assigned"
+      provider: bookingData.provider || "Auto Assigned"
     };
     setBookings(prev => [item, ...prev]);
+
+    try {
+      const res = await fetch(`${API_BASE}/bookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item)
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setBookings(prev => prev.map(b => b.id === tempId ? { ...item, ...data.data } : b));
+      }
+    } catch (err) {
+      console.warn("Backend addBooking error:", err);
+    }
     return item;
   };
 
-  const updateBookingStatus = (id, newStatus, assignedProvider = null) => {
+  const updateBookingStatus = async (id, newStatus, assignedProvider = null) => {
+    const updates = { 
+      status: newStatus, 
+      ...(assignedProvider ? { assignedProvider, provider: assignedProvider } : {}) 
+    };
+
     setBookings(prev => prev.map(b => {
       if (b.id === id) {
-        return { 
-          ...b, 
-          status: newStatus, 
-          ...(assignedProvider ? { provider: assignedProvider } : {}) 
-        };
+        return { ...b, ...updates };
       }
       return b;
     }));
+
+    try {
+      await fetch(`${API_BASE}/bookings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+      });
+    } catch (err) {
+      console.warn("Backend updateBookingStatus error:", err);
+    }
   };
 
-  const deleteBooking = (id) => {
+  const deleteBooking = async (id) => {
     setBookings(prev => prev.filter(b => b.id !== id));
+
+    try {
+      await fetch(`${API_BASE}/bookings/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Backend deleteBooking error:", err);
+    }
   };
 
   // Promo Slides
-  const addSlide = (newSlide) => {
-    const item = { ...newSlide, id: Date.now(), active: true };
+  const addSlide = async (newSlide) => {
+    const item = { ...newSlide, id: `sl${Date.now()}`, active: true };
     setSlides(prev => [item, ...prev]);
+
+    try {
+      await fetch(`${API_BASE}/promotions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item)
+      });
+    } catch (err) {
+      console.warn("Backend addSlide error:", err);
+    }
   };
 
-  const updateSlide = (id, updatedFields) => {
+  const updateSlide = async (id, updatedFields) => {
     setSlides(prev => prev.map(sl => sl.id === id ? { ...sl, ...updatedFields } : sl));
+
+    try {
+      await fetch(`${API_BASE}/promotions/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields)
+      });
+    } catch (err) {
+      console.warn("Backend updateSlide error:", err);
+    }
   };
 
-  const deleteSlide = (id) => {
+  const deleteSlide = async (id) => {
     setSlides(prev => prev.filter(sl => sl.id !== id));
+
+    try {
+      await fetch(`${API_BASE}/promotions/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Backend deleteSlide error:", err);
+    }
   };
 
   // Users
-  const updateUserStatus = (id, status) => {
+  const updateUserStatus = async (id, status) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, status } : u));
+
+    try {
+      await fetch(`${API_BASE}/users/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+    } catch (err) {
+      console.warn("Backend updateUserStatus error:", err);
+    }
   };
 
-  const deleteUser = (id) => {
+  const deleteUser = async (id) => {
     setUsers(prev => prev.filter(u => u.id !== id));
+
+    try {
+      await fetch(`${API_BASE}/users/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Backend deleteUser error:", err);
+    }
   };
 
   // Tickets
-  const resolveTicket = (id) => {
+  const resolveTicket = async (id) => {
     setTickets(prev => prev.map(t => t.id === id ? { ...t, status: "Resolved" } : t));
+
+    try {
+      await fetch(`${API_BASE}/tickets/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Resolved" })
+      });
+    } catch (err) {
+      console.warn("Backend resolveTicket error:", err);
+    }
   };
 
-  const addTicket = (ticketData) => {
+  const addTicket = async (ticketData) => {
     const item = {
-      id: `TKT-${Math.floor(100 + Math.random() * 900)}`,
+      id: `TK-${Math.floor(100 + Math.random() * 900)}`,
       ...ticketData,
       status: "Open",
       date: "Just now"
     };
     setTickets(prev => [item, ...prev]);
+
+    try {
+      await fetch(`${API_BASE}/tickets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item)
+      });
+    } catch (err) {
+      console.warn("Backend addTicket error:", err);
+    }
   };
 
   // Settings
-  const updateSettings = (newSettings) => {
+  const updateSettings = async (newSettings) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
+
+    try {
+      await fetch(`${API_BASE}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSettings)
+      });
+    } catch (err) {
+      console.warn("Backend updateSettings error:", err);
+    }
   };
 
   // Reset to Defaults
-  const resetAllData = () => {
+  const resetAllData = async () => {
+    try {
+      await fetch(`${API_BASE}/settings/reset`, { method: "POST" });
+    } catch (err) {
+      console.warn("Backend reset error:", err);
+    }
     setCategories(initialCategories);
     setServices(initialServices);
     setProviders(initialProviders);
@@ -311,6 +636,8 @@ export const DataProvider = ({ children }) => {
   return (
     <DataContext.Provider value={{
       isApiOnline,
+      dbStatusText,
+      refreshData: fetchAllFromBackend,
       categories, addCategory, updateCategory, deleteCategory,
       services, addService, updateService, deleteService,
       providers, addProvider, updateProvider, deleteProvider,

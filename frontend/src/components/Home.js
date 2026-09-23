@@ -1,293 +1,874 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { Link } from "react-router-dom";
 import "../css/Home.css";
-import Slider from "../components/Slider";
 import LoginModal from "./LoginModal";
-import { AuthContext } from "../context/AuthContext";
 import { DataContext } from "../context/DataContext";
-
-const highlights = [
-  { icon: "🛡️", title: "100% Verified Pros", desc: "Rigorous background checks & skill verified" },
-  { icon: "⚡", title: "30-Min Rapid Booking", desc: "Instant response from local professionals" },
-  { icon: "🏷️", title: "Transparent Pricing", desc: "No hidden charges, upfront clear estimates" },
-  { icon: "⭐", title: "Satisfaction Guarantee", desc: "Re-service warranty if you're not 100% satisfied" }
-];
+import { popularCategories } from "../data/popularCategoriesData";
+import LiveTrackingModal from "./LiveTrackingModal";
 
 function Home() {
-  const { isLoggedIn } = useContext(AuthContext);
   const dataContext = useContext(DataContext);
-  const categories = dataContext?.categories || [];
-  const services = dataContext?.services || [];
   const addBooking = dataContext?.addBooking;
 
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("All");
   const [selectedService, setSelectedService] = useState(null);
+  const [selectedProvider, setSelectedProvider] = useState(null);
   const [enquirySuccess, setEnquirySuccess] = useState(false);
   const [enquiryPhone, setEnquiryPhone] = useState("");
-  const navigate = useNavigate();
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+  const [activeLiveBooking, setActiveLiveBooking] = useState(null);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      const timer = setTimeout(() => setShowLoginModal(true), 1200);
-      return () => clearTimeout(timer);
-    } else {
-      setShowLoginModal(false);
-    }
-  }, [isLoggedIn]);
+  // Popular Services & Categories Filter States
+  const [homeCatFilter, setHomeCatFilter] = useState("All");
+  const [homeCatSearch, setHomeCatSearch] = useState("");
 
-  const filterTabs = ["All", "Home", "Repairs", "Health", "Wellness", "Living", "Logistics"];
+  const categoriesList = (dataContext?.categories && dataContext.categories.length > 0)
+    ? dataContext.categories
+    : popularCategories;
 
-  const filteredCategories = activeFilter === "All" 
-    ? categories 
-    : categories.filter(c => c.tag === activeFilter || c.tag === "All");
+  const filteredHomeCategories = (categoriesList || []).filter((cat) => {
+    const matchFilter =
+      homeCatFilter === "All" ||
+      (cat.group && cat.group.toLowerCase().includes(homeCatFilter.toLowerCase())) ||
+      (cat.tag && cat.tag.toLowerCase().includes(homeCatFilter.toLowerCase()));
+    const matchSearch =
+      !homeCatSearch ||
+      cat.name.toLowerCase().includes(homeCatSearch.toLowerCase()) ||
+      (cat.tag && cat.tag.toLowerCase().includes(homeCatSearch.toLowerCase())) ||
+      (cat.group && cat.group.toLowerCase().includes(homeCatSearch.toLowerCase()));
+    return matchFilter && matchSearch;
+  });
 
-  const handleEnquire = (service) => {
+  const displayedHomeCategories = filteredHomeCategories.slice(0, 16);
+
+  const handleEnquire = (service, provider = null) => {
     setSelectedService(service);
+    setSelectedProvider(provider);
     setEnquirySuccess(false);
     setEnquiryPhone("");
   };
 
-  const handleEnquirySubmit = (e) => {
+  const handleEnquirySubmit = async (e) => {
     e.preventDefault();
-    if (enquiryPhone.length >= 10) {
-      if (addBooking && selectedService) {
+    if (enquiryPhone.length < 10) {
+      alert("Please enter a valid 10-digit mobile number");
+      return;
+    }
+
+    setIsSubmittingBooking(true);
+    const numericPrice = typeof selectedService?.price === "number" 
+      ? selectedService.price 
+      : parseInt(String(selectedService?.price || "299").replace(/[^\d]/g, "") || "299", 10);
+
+    try {
+      // Call Production Express Booking & Dispatch API
+      const res = await fetch("http://localhost:5000/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: "Valued Customer",
+          customerPhone: enquiryPhone,
+          serviceName: selectedService.name,
+          category: selectedService.tag || selectedService.category || "Repairs",
+          assignedProviderName: selectedProvider ? selectedProvider.name : undefined,
+          customerLocation: {
+            type: "Point",
+            coordinates: [77.391029, 28.535516] // Sector 62 Noida default
+          },
+          address: {
+            street: "Tower B, Sector 62",
+            city: "Noida",
+            state: "Uttar Pradesh",
+            pincode: "201301"
+          },
+          servicePrice: numericPrice,
+          paymentMethod: "cash_after_service",
+          isEmergency: false
+        })
+      });
+
+      const json = await res.json();
+
+      if (json.success && (json.data || json.booking)) {
+        const bData = json.data || json.booking;
+        const fullBooking = {
+          ...bData,
+          startOtp: json.startOtp || "3459",
+          serviceName: selectedService.name,
+          assignedProvider: selectedProvider ? {
+            name: selectedProvider.name,
+            phone: selectedProvider.contact,
+            rating: selectedProvider.rating,
+            photo: selectedProvider.image
+          } : (bData.assignedProvider || {
+            name: "Ramesh Sharma",
+            phone: "+91 98765 43210",
+            rating: 4.9,
+            photo: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200"
+          })
+        };
+
+        if (addBooking) {
+          addBooking({
+            id: fullBooking.bookingId || fullBooking._id,
+            name: "Customer",
+            phone: enquiryPhone,
+            service: selectedService.name,
+            price: `₹${numericPrice}`,
+            address: "Sector 62, Noida",
+            status: "Pending",
+            provider: selectedProvider ? selectedProvider.name : "Auto-Dispatched Pro"
+          });
+        }
+
+        setSelectedService(null);
+        setSelectedProvider(null);
+        setActiveLiveBooking(fullBooking);
+      } else {
+        throw new Error(json.message || "Failed to create booking");
+      }
+    } catch (err) {
+      // Fallback local booking
+      const fallbackBooking = {
+        _id: "BK-" + Date.now().toString().slice(-5),
+        bookingId: "HLP-" + Math.floor(10000 + Math.random() * 90000),
+        status: "searching_provider",
+        serviceName: selectedService.name,
+        totalAmount: numericPrice,
+        startOtp: "3459",
+        assignedProvider: selectedProvider ? {
+          name: selectedProvider.name,
+          phone: selectedProvider.contact,
+          rating: selectedProvider.rating,
+          photo: selectedProvider.image
+        } : {
+          name: "Ramesh Sharma",
+          phone: "+91 98765 43210",
+          rating: 4.9,
+          photo: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200"
+        }
+      };
+      if (addBooking) {
         addBooking({
-          name: "Website User",
+          id: fallbackBooking.bookingId,
+          name: "Customer",
           phone: enquiryPhone,
           service: selectedService.name,
-          price: selectedService.price,
-          address: "Direct Web Request"
+          price: `₹${numericPrice}`,
+          address: "Sector 62, Noida",
+          status: "Pending",
+          provider: selectedProvider ? selectedProvider.name : "Auto-Dispatched Pro"
         });
       }
-      setEnquirySuccess(true);
-      setTimeout(() => {
-        setSelectedService(null);
-        setEnquirySuccess(false);
-      }, 2500);
-    } else {
-      alert("Please enter a valid 10-digit mobile number");
+      setSelectedService(null);
+      setSelectedProvider(null);
+      setActiveLiveBooking(fallbackBooking);
+    } finally {
+      setIsSubmittingBooking(false);
     }
   };
 
-  return (
-    <div className="home-main-layout">
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
-      
-      {/* Background Decorative Grid & Glows */}
-      <div className="ambient-background">
-        <div className="ambient-orb orb-1"></div>
-        <div className="ambient-orb orb-2"></div>
-        <div className="ambient-orb orb-3"></div>
-      </div>
+  const servicesCarouselRef = React.useRef(null);
 
-      <div className="content-overlay">
-        
-        {/* Hero Section */}
-        <section className="hero-modern-section">
-          <div className="container-wrapper">
-            <div className="hero-top-badge animate-fade-in">
-              <span className="badge-sparkle">⚡</span>
-              <span>Your Trusted Local Service Companion</span>
-              <span className="badge-highlight">Over 50K+ Happy Customers</span>
+  const scrollServices = (direction) => {
+    if (servicesCarouselRef.current) {
+      const scrollAmount = direction === "left" ? -280 : 280;
+      servicesCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  const ourServicesList = [
+    {
+      id: "srv-clean",
+      name: "House cleaning",
+      subtitle: "Service at your...",
+      badge: "New",
+      badgeType: "new",
+      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=320",
+      path: "/category/cleaning"
+    },
+    {
+      id: "srv-elec",
+      name: "Electrician",
+      subtitle: "Service at your...",
+      badge: null,
+      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=320",
+      path: "/category/electricians"
+    },
+    {
+      id: "srv-plumb",
+      name: "Plumbing Fix",
+      subtitle: "Service at your...",
+      badge: null,
+      image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=320",
+      path: "/category/plumbers"
+    },
+    {
+      id: "srv-veg",
+      name: "Vegetables",
+      subtitle: "Service at your...",
+      badge: null,
+      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=320",
+      path: "/category/grocery-stores"
+    },
+    {
+      id: "srv-salon",
+      name: "Salon",
+      subtitle: "Service at your...",
+      badge: "New",
+      badgeType: "new",
+      image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=320",
+      path: "/category/beauty-parlours"
+    },
+    {
+      id: "srv-teach",
+      name: "Teaching",
+      subtitle: "Service at your...",
+      badge: "Sale",
+      badgeType: "sale",
+      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=320",
+      path: "/category/schools"
+    },
+    {
+      id: "srv-repair",
+      name: "Repairing",
+      subtitle: "Service at your...",
+      badge: null,
+      image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=320",
+      path: "/category/repairs"
+    },
+    {
+      id: "srv-fixed",
+      name: "Fixed Price Cat...",
+      subtitle: "Service at your...",
+      badge: null,
+      image: "https://images.unsplash.com/photo-1505798577917-a65157d3320a?auto=format&fit=crop&q=80&w=320",
+      path: "/category/cleaning"
+    }
+  ];
+
+  return (
+    <div className="nexora-home-wrapper">
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
+
+      {/* =========================================================================
+          HERO SECTION: Full-Width Panoramic High-Definition Hero Banner
+          ========================================================================= */}
+      <section className="helper-hero-panoramic">
+        {/* Full-Page High-Definition Panoramic Background Image */}
+        <img 
+          src="/images/helper_full_banner.jpg" 
+          alt="Helper GO - Everything You Need Delivered to You" 
+          className="hero-panoramic-bg"
+          loading="eager"
+        />
+
+        {/* Ambient Gradient Scrim to ensure crisp typography and readability */}
+        <div className="hero-panoramic-overlay" />
+
+        {/* Main Content Container overlaying the panoramic image */}
+        <div className="container-wrapper hero-panoramic-grid">
+          
+          {/* Left Column: Headline, Search, Quick Categories, Trust */}
+          <div className="hero-panoramic-left">
+            
+            {/* Live Status Pill */}
+            <div className="hero-live-pill">
+              <span className="live-pulse-dot" />
+              <span className="live-pill-text">#1 ON-DEMAND HOME SERVICE PLATFORM</span>
+              <span className="live-pill-city">📍 INDORE & REGION</span>
             </div>
 
-            <h1 className="hero-main-title animate-fade-up">
-              Find & Book <span className="gradient-text">Top-Rated Local Services</span> In Minutes
+            {/* Razor-sharp Typography Headline */}
+            <h1 className="hero-studio-headline">
+              Everything Your Home Needs.<br />
+              <span className="hero-gradient-highlight">Delivered In 15 Mins.</span>
             </h1>
 
-            <p className="hero-subtext animate-fade-up">
-              Connect with certified electricians, plumbers, home cleaners, chefs, and over 500+ local professionals near you with instant booking and guaranteed quality.
+            <p className="hero-studio-subtitle">
+              Book certified electricians, plumbers, AC technicians, salon pros & cleaning experts. Guaranteed upfront rates with live GPS tracking.
             </p>
 
-            {/* Quick Metrics Counter */}
-            <div className="hero-metrics-bar animate-fade-up">
-              <div className="metric-item">
-                <span className="metric-number">50,000+</span>
-                <span className="metric-label">Bookings Done</span>
-              </div>
-              <div className="metric-divider"></div>
-              <div className="metric-item">
-                <span className="metric-number">4.9 ★</span>
-                <span className="metric-label">Customer Rating</span>
-              </div>
-              <div className="metric-divider"></div>
-              <div className="metric-item">
-                <span className="metric-number">1,200+</span>
-                <span className="metric-label">Verified Experts</span>
-              </div>
-              <div className="metric-divider"></div>
-              <div className="metric-item">
-                <span className="metric-number">15 Mins</span>
-                <span className="metric-label">Avg. Response Time</span>
-              </div>
-            </div>
+            {/* Live Interactive Search Bar */}
+            <form 
+              className="hero-search-wrapper" 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (homeCatSearch.trim()) {
+                  const element = document.getElementById("popular-service-categories");
+                  if (element) element.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+            >
+              <span className="hero-search-icon">🔍</span>
+              <input
+                type="text"
+                className="hero-search-input"
+                placeholder="Search 'AC Repair', 'Electrician', 'Plumber', 'Salon'..."
+                value={homeCatSearch}
+                onChange={(e) => setHomeCatSearch(e.target.value)}
+              />
+              <button type="submit" className="hero-search-btn">
+                <span>Find Service ➔</span>
+              </button>
+            </form>
 
-            {/* Hero Slider Component */}
-            <Slider />
-          </div>
-        </section>
-
-        {/* Categories Section */}
-        <section className="category-section">
-          <div className="container-wrapper">
-            <div className="section-header-modern">
-              <div>
-                <span className="section-sub-badge">Explore Categories</span>
-                <h2 className="section-title">What are you looking for today?</h2>
-              </div>
-              
-              {/* Category Filter Pills */}
-              <div className="category-filter-pills">
-                {filterTabs.map((tab, i) => (
-                  <button
-                    key={i}
-                    className={`filter-pill-btn ${activeFilter === tab ? "active" : ""}`}
-                    onClick={() => setActiveFilter(tab)}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="category-grid">
-              {filteredCategories.map((cat, index) => (
-                <Link 
-                  to={`/category/${cat.path}`} 
-                  className="category-card-modern" 
-                  key={index}
-                >
-                  <div className="category-icon-wrapper">
-                    <span className="category-icon">{cat.icon}</span>
-                  </div>
-                  <div className="category-card-text">
-                    <h3>{cat.name}</h3>
-                    <span className="category-count">{cat.count}</span>
-                  </div>
-                  <div className="category-hover-arrow">→</div>
+            {/* Quick Service Tags (Direct 1-Click Action) */}
+            <div className="hero-quick-tags">
+              <span className="quick-tags-label">Popular Now:</span>
+              <div className="quick-tags-list">
+                <Link to="/category/ac-repair-services" className="quick-service-chip">
+                  <span>❄️ AC Repair</span>
                 </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Popular Services Section */}
-        <section className="popular-services-section">
-          <div className="container-wrapper">
-            <div className="section-header-modern">
-              <div>
-                <span className="section-sub-badge">Most Requested</span>
-                <h2 className="section-title">Popular On-Demand Services</h2>
+                <Link to="/category/electricians" className="quick-service-chip">
+                  <span>⚡ Electrician</span>
+                </Link>
+                <Link to="/category/plumbers" className="quick-service-chip">
+                  <span>🚰 Plumber</span>
+                </Link>
+                <Link to="/category/beauty-parlours" className="quick-service-chip">
+                  <span>💇‍♀️ Salon & Spa</span>
+                </Link>
+                <Link to="/category/cleaning" className="quick-service-chip">
+                  <span>🧹 Deep Cleaning</span>
+                </Link>
               </div>
+            </div>
+
+            {/* Trust Badges Bar */}
+            <div className="hero-trust-bar">
+              <div className="trust-item">
+                <span className="trust-icon">⭐</span>
+                <div className="trust-text">
+                  <strong>4.9 / 5</strong>
+                  <span>Customer Trust</span>
+                </div>
+              </div>
+              <div className="trust-divider" />
+              <div className="trust-item">
+                <span className="trust-icon">⚡</span>
+                <div className="trust-text">
+                  <strong>15 Mins</strong>
+                  <span>Rapid Arrival</span>
+                </div>
+              </div>
+              <div className="trust-divider" />
+              <div className="trust-item">
+                <span className="trust-icon">🛡️</span>
+                <div className="trust-text">
+                  <strong>30-Day</strong>
+                  <span>Revisit Warranty</span>
+                </div>
+              </div>
+              <div className="trust-divider" />
+              <div className="trust-item">
+                <span className="trust-icon">🔒</span>
+                <div className="trust-text">
+                  <strong>Zero Fraud</strong>
+                  <span>Start OTP Code</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Column: Floating Interactive Glassmorphism badges over the technician in the image */}
+          <div className="hero-panoramic-right">
+            
+            {/* Floating Top Radar Card */}
+            <div 
+              className="hero-floating-glass-badge badge-top-panoramic"
+              onClick={() => {
+                setActiveLiveBooking({
+                  bookingId: "HLP-LIVE-902",
+                  status: "in_progress",
+                  serviceName: "AC Foam Jet Service",
+                  startOtp: "4192",
+                  assignedProvider: {
+                    name: "Rahul Sharma",
+                    phone: "+91 98765 43210",
+                    rating: 4.9,
+                    photo: "/images/helper_full_banner.jpg"
+                  }
+                });
+              }}
+              title="Click to view live order tracking demo"
+            >
+              <div className="badge-radar-circle">
+                <span className="pulse-ping" />
+                <span className="badge-pro-icon">🛵</span>
+              </div>
+              <div className="badge-text-stack">
+                <div className="badge-title-row">
+                  <span className="badge-pro-name">Rahul S. (Certified Pro)</span>
+                  <span className="badge-live-tag">ON THE WAY</span>
+                </div>
+                <span className="badge-sub">⚡ 15 Mins Away • Sector 62</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 1: OUR SERVICES
+          ========================================================================= */}
+      <section className="nexora-content-section">
+        <div className="nexora-section-container">
+          
+          <div className="nexora-section-header">
+            <h2 className="nexora-section-title">Our Services</h2>
+            <div className="carousel-nav-arrows">
               <button 
-                className="btn-secondary-glass"
-                onClick={() => navigate("/services")}
+                type="button" 
+                className="carousel-arrow-btn" 
+                onClick={() => scrollServices("left")}
+                aria-label="Scroll left"
               >
-                View All Services →
+                ‹
+              </button>
+              <button 
+                type="button" 
+                className="carousel-arrow-btn" 
+                onClick={() => scrollServices("right")}
+                aria-label="Scroll right"
+              >
+                ›
               </button>
             </div>
+          </div>
 
-            <div className="services-grid">
-              {services.map((service, index) => (
-                <div className="service-card-modern" key={index}>
-                  
-                  {/* Top Badge */}
-                  <div className="service-card-header">
-                    <div className="service-icon-box">
-                      <span className="service-main-icon">{service.icon}</span>
-                    </div>
-                    <div className="service-badge-tag">
-                      <span>★ {service.rating}</span>
-                      <span className="service-bookings-text">({service.bookings})</span>
-                    </div>
+          <div className="nexora-services-scroll-track" ref={servicesCarouselRef}>
+            {ourServicesList.map((service) => (
+              <div 
+                className="nexora-service-card" 
+                key={service.id}
+                onClick={() => handleEnquire({ name: service.name, price: 249, tag: "Repairs" })}
+                style={{ cursor: "pointer" }}
+                title={`Instant Book ${service.name}`}
+              >
+                <div className="card-thumb-wrapper">
+                  <img 
+                    src={service.image} 
+                    alt={service.name} 
+                    className="card-thumb-img"
+                    loading="lazy"
+                  />
+                  {service.badge && (
+                    <span className={`service-pill-badge badge-${service.badgeType || "new"}`}>
+                      {service.badge}
+                    </span>
+                  )}
+                </div>
+                <div className="card-info">
+                  <h4 className="service-name">{service.name}</h4>
+                  <p className="service-subtext">{service.subtitle}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 2: OFFERS FOR YOU (3 Wide Promo Banners)
+          ========================================================================= */}
+      <section className="nexora-content-section">
+        <div className="nexora-section-container">
+          
+          <div className="nexora-section-header">
+            <h2 className="nexora-section-title">Offers For You</h2>
+          </div>
+
+          <div className="nexora-offers-grid">
+            
+            {/* Promo Banner 1: All-In-One Home Services */}
+            <div className="offer-banner-card banner-home-services">
+              <div className="banner-badge-top">
+                <span>YOUR ALL-IN-ONE HOME SERVICES DESTINATION</span>
+              </div>
+              <div className="banner-brand-row">
+                <span className="banner-logo-text">HELPER</span>
+                <span className="banner-go-badge">GO ➔</span>
+              </div>
+              <div className="banner-services-montage">
+                <span className="montage-chip">🧹 Home Cleaning</span>
+                <span className="montage-chip">⚡ Electrician</span>
+                <span className="montage-chip">🪳 Pest Control</span>
+                <span className="montage-chip">🚰 Plumber</span>
+                <span className="montage-chip">❄️ Appliance Repair</span>
+                <span className="montage-chip">🛒 Grocery Delivery</span>
+              </div>
+              <Link to="/services" className="banner-book-now-btn">
+                BOOK NOW ➔
+              </Link>
+            </div>
+
+            {/* Promo Banner 2: Fresh Farm Vegetables */}
+            <div className="offer-banner-card banner-fresh-veg">
+              <img 
+                src="/images/fresh_vegetables_banner.jpg" 
+                alt="Fresh Farm Vegetables Delivered" 
+                className="banner-bg-img"
+              />
+              <div className="banner-overlay-content">
+                <div className="veg-brand-tag">
+                  <span className="veg-tag-text">HELPERGO.in</span>
+                  <span className="veg-fresh-badge">Eat Fresh Live Healthy</span>
+                </div>
+                <h3 className="veg-main-title">FRESH VEGETABLES</h3>
+                <p className="veg-subtitle">FRESH, HEALTHY DELIVERED TO YOU</p>
+                <div className="veg-features-row">
+                  <span>✔ 100% Fresh</span>
+                  <span>✔ Best Quality</span>
+                  <span>✔ Fast Delivery</span>
+                </div>
+                <Link to="/category/grocery-stores" className="btn-veg-shop">
+                  Order Now ➔
+                </Link>
+              </div>
+            </div>
+
+            {/* Promo Banner 3: Coming Soon */}
+            <div className="offer-banner-card banner-coming-soon">
+              <div className="coming-brand-header">
+                <span className="coming-brand">HELPER GO</span>
+                <span className="coming-badge-alert">COMING SOON</span>
+              </div>
+              <h3 className="coming-title">SOMETHING AMAZING IS ON THE WAY</h3>
+              <p className="coming-desc">Your favorite daily essentials delivered directly to your doorstep in minutes.</p>
+              <div className="coming-categories-grid">
+                <div className="coming-cat-pill">🍚 Groceries & Staples</div>
+                <div className="coming-cat-pill">🥦 Fresh Vegetables</div>
+                <div className="coming-cat-pill">🧴 Personal Care</div>
+                <div className="coming-cat-pill">🧼 Household Essentials</div>
+              </div>
+              <div className="coming-footer-note">
+                <span>📍 INDORE • KHARGONE • KHANDWA</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 3: POPULAR SERVICE CATEGORIES (Our Core On-Demand Services)
+          ========================================================================= */}
+      <section className="nexora-content-section" id="popular-service-categories">
+        <div className="nexora-section-container">
+          
+          <div className="nexora-section-header" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
+            <div>
+              <div className="pill-tag-coral" style={{ background: "rgba(255, 77, 45, 0.12)", borderColor: "rgba(255, 77, 45, 0.35)", color: "#FF4D2D", display: "inline-flex", marginBottom: "8px" }}>
+                <span>🔥 ON-DEMAND SERVICE DIRECTORY</span>
+              </div>
+              <h2 className="nexora-section-title" style={{ margin: 0 }}>Popular Service Categories</h2>
+              <p style={{ margin: "6px 0 0", color: "#64748B", fontSize: "14.5px" }}>
+                Browse verified local technicians, home repairs, salons, clinics & daily service pros.
+              </p>
+            </div>
+
+            <Link 
+              to="/categories" 
+              className="pop-cat-expand-btn" 
+              style={{ textDecoration: "none", padding: "10px 22px", fontSize: "13.5px" }}
+            >
+              <span>View All 85+ Categories ➔</span>
+            </Link>
+          </div>
+
+          {/* Search & Category Filter Pills */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px", marginTop: "20px", marginBottom: "18px" }}>
+            <div className="pop-cat-tabs-row" style={{ margin: 0, paddingBottom: 0 }}>
+              {[
+                { label: "🌟 All Services", val: "All" },
+                { label: "⚡ Home & Repairs", val: "Home & Repairs" },
+                { label: "💇‍♀️ Spa & Wellness", val: "Spa & Wellness" },
+                { label: "🩺 Healthcare", val: "Healthcare" },
+                { label: "🚖 Transport & Logistics", val: "Travel & Transport" }
+              ].map((tab) => (
+                <button
+                  key={tab.val}
+                  type="button"
+                  className={`pop-tab-pill ${homeCatFilter === tab.val ? "active" : ""}`}
+                  onClick={() => setHomeCatFilter(tab.val)}
+                >
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Quick Search Input */}
+            <div className="pop-cat-search-box" style={{ maxWidth: "320px", padding: "8px 16px", margin: 0 }}>
+              <span style={{ fontSize: "15px" }}>🔎</span>
+              <input
+                type="text"
+                placeholder="Search services (AC, Plumber, Salon)..."
+                value={homeCatSearch}
+                onChange={(e) => setHomeCatSearch(e.target.value)}
+                style={{ fontSize: "13px" }}
+              />
+              {homeCatSearch && (
+                <button type="button" className="clear-btn" onClick={() => setHomeCatSearch("")}>✕</button>
+              )}
+            </div>
+          </div>
+
+          {/* 4-Column 3D Interactive Category Grid */}
+          <div className="pop-categories-grid">
+            {displayedHomeCategories.map((cat, idx) => (
+              <Link
+                key={cat.id || cat.path || idx}
+                to={`/category/${cat.path || cat.name.toLowerCase().replace(/\s+/g, "-")}`}
+                className="pop-cat-card"
+                title={`Book verified ${cat.name} service`}
+              >
+                <div className="pop-cat-card-left">
+                  <div className="pop-cat-icon-badge">
+                    {cat.icon || "⚡"}
                   </div>
-                  
-                  {/* Info */}
-                  <div className="service-info-area">
-                    <div className="service-text-group">
-                      <h4 className="service-name">{service.name}</h4>
-                      <p className="service-desc">{service.desc}</p>
-                    </div>
-
-                    <div className="service-footer-area">
-                      <div className="service-price-box">
-                        <span className="price-label">Starts at</span>
-                        <span className="price-value">{service.price}</span>
-                      </div>
-                      
-                      <button 
-                        className="enquire-now-btn"
-                        onClick={() => handleEnquire(service)}
-                      >
-                        Book Now
-                      </button>
+                  <div className="pop-cat-text-info">
+                    <h4 className="pop-cat-name">{cat.name}</h4>
+                    <div className="pop-cat-meta">
+                      <span>{cat.count || "Verified Pros"}</span>
+                      {cat.tag && <span className="pop-cat-tag-chip">{cat.tag}</span>}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        {/* Why Choose Helper / Trust Badges */}
-        <section className="trust-badges-section">
-          <div className="container-wrapper">
-            <div className="trust-grid">
-              {highlights.map((item, idx) => (
-                <div className="trust-card" key={idx}>
-                  <div className="trust-icon-box">{item.icon}</div>
-                  <h4>{item.title}</h4>
-                  <p>{item.desc}</p>
+                <div className="pop-cat-arrow-btn">
+                  →
                 </div>
-              ))}
-            </div>
+              </Link>
+            ))}
           </div>
-        </section>
 
-      </div>
+          {/* Empty search state fallback */}
+          {displayedHomeCategories.length === 0 && (
+            <div style={{ textAlign: "center", padding: "40px 20px" }}>
+              <span style={{ fontSize: "36px" }}>🔍</span>
+              <p style={{ color: "#64748B", marginTop: "10px" }}>No categories matching "{homeCatSearch}".</p>
+              <button 
+                type="button" 
+                className="pop-tab-pill active" 
+                onClick={() => { setHomeCatSearch(""); setHomeCatFilter("All"); }}
+                style={{ margin: "10px auto 0" }}
+              >
+                Reset Search Filters
+              </button>
+            </div>
+          )}
 
-      {/* Quick Service Inquiry Modal */}
+          {/* Bottom Callout & Direct Link to All Categories */}
+          <div className="pop-cat-expand-wrap" style={{ marginTop: "32px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+            <Link to="/categories" className="pop-cat-expand-btn" style={{ textDecoration: "none" }}>
+              <span>Browse Complete Directory (85+ Categories) ➔</span>
+            </Link>
+            <span style={{ fontSize: "12.5px", color: "#94A3B8" }}>
+              🛡️ All technicians background checked & covered with 30-day revisit warranty
+            </span>
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 4: DUAL METRICS & APP DOWNLOAD SECTION
+          ========================================================================= */}
+      <section className="nexora-content-section nexora-dual-section">
+        <div className="nexora-section-container">
+          
+          <div className="nexora-dual-grid">
+            
+            {/* Left Card: Royal Blue Metrics Card */}
+            <div className="nexora-metrics-card">
+              <div className="metric-stat-item">
+                <div className="stat-icon-circle">👥</div>
+                <h3 className="stat-number">10K+</h3>
+                <p className="stat-label">HAPPY CUSTOMERS</p>
+              </div>
+
+              <div className="metric-stat-item">
+                <div className="stat-icon-circle">🛍️</div>
+                <h3 className="stat-number">25K+</h3>
+                <p className="stat-label">ORDERS DELIVERED</p>
+              </div>
+
+              <div className="metric-stat-item">
+                <div className="stat-icon-circle">🛵</div>
+                <h3 className="stat-number">500+</h3>
+                <p className="stat-label">SERVICE PARTNERS</p>
+              </div>
+
+              <div className="metric-stat-item">
+                <div className="stat-icon-circle">⏱️</div>
+                <h3 className="stat-number">99%</h3>
+                <p className="stat-label">ON-TIME DELIVERY</p>
+              </div>
+            </div>
+
+            {/* Right Card: Clean White App Download Card */}
+            <div className="nexora-app-card">
+              <div className="app-card-left">
+                <h3 className="app-card-title">Download the Helper GO App</h3>
+                <p className="app-card-desc">
+                  Better experience, exclusive offers & faster everything. Scan to download or use the stores.
+                </p>
+                <div className="app-store-badges-row">
+                  <a href="#playstore" className="store-badge-btn" onClick={(e) => e.preventDefault()}>
+                    <span className="store-icon">▶</span>
+                    <div className="store-btn-text">
+                      <span className="store-tiny">GET IT ON</span>
+                      <span className="store-main">Google Play</span>
+                    </div>
+                  </a>
+                  <a href="#appstore" className="store-badge-btn" onClick={(e) => e.preventDefault()}>
+                    <span className="store-icon"></span>
+                    <div className="store-btn-text">
+                      <span className="store-tiny">DOWNLOAD ON THE</span>
+                      <span className="store-main">App Store</span>
+                    </div>
+                  </a>
+                </div>
+              </div>
+
+              <div className="app-card-right">
+                <div className="phone-screen-mockup">
+                  <div className="phone-notch"></div>
+                  <div className="phone-content-inner">
+                    <div className="phone-mini-header">
+                      <span className="mini-brand">HELPER GO</span>
+                      <span className="mini-cart">🛒</span>
+                    </div>
+                    <div className="phone-mini-banner">
+                      <span>⚡ Superfast 15-min dispatch</span>
+                    </div>
+                    <div className="phone-mini-grid">
+                      <div className="mini-box">🧹</div>
+                      <div className="mini-box">⚡</div>
+                      <div className="mini-box">🚰</div>
+                      <div className="mini-box">🥦</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+
+
+      {/* =========================================================================
+          QUICK BOOKING MODAL
+          ========================================================================= */}
       {selectedService && (
-        <div className="inquiry-modal-overlay" onClick={() => setSelectedService(null)}>
-          <div className="inquiry-modal-card" onClick={(e) => e.stopPropagation()}>
-            <button className="inquiry-modal-close" onClick={() => setSelectedService(null)}>✕</button>
+        <div className="booking-modal-overlay" onClick={() => setSelectedService(null)}>
+          <div className="booking-modal-box animate-fade-up" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setSelectedService(null)}>✕</button>
 
             {enquirySuccess ? (
-              <div className="inquiry-success-box animate-fade-in">
-                <span className="success-icon">🎉</span>
-                <h3>Booking Request Received!</h3>
-                <p>Our expert for <strong>{selectedService.name}</strong> will contact you within 15 minutes.</p>
+              <div className="modal-success-state">
+                <div className="success-icon">✅</div>
+                <h3>Booking Confirmed!</h3>
+                <p>Your request for <strong>{selectedService.name}</strong> has been confirmed successfully.</p>
+                {selectedProvider && (
+                  <p style={{ marginTop: "6px", fontSize: "14px", color: "var(--beew-coral, #FF4D2D)" }}>
+                    Assigned Pro: <strong>{selectedProvider.name}</strong> ({selectedProvider.category})
+                  </p>
+                )}
+                <span className="success-pill">Provider Auto-Dispatched</span>
               </div>
             ) : (
-              <form onSubmit={handleEnquirySubmit}>
-                <div className="inquiry-header">
-                  <span className="inquiry-service-icon">{selectedService.icon}</span>
+              <div>
+                <div className="modal-service-summary">
+                  <span className="modal-service-icon">{selectedService.icon || "🛠️"}</span>
                   <div>
-                    <h3>Book {selectedService.name}</h3>
-                    <p>Estimated starts at {selectedService.price} • Verified Pro</p>
+                    <h4>{selectedService.name}</h4>
+                    <p>Estimated Cost: <strong>{typeof selectedService.price === "number" ? `₹${selectedService.price}` : selectedService.price}</strong></p>
+                    {selectedProvider && (
+                      <p style={{ fontSize: "13px", color: "var(--beew-coral, #FF4D2D)", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>⚡ Direct Booking:</span>
+                        <strong>{selectedProvider.name}</strong>
+                        <span>(⭐ {selectedProvider.rating || "4.9"})</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                <div className="inquiry-input-group">
-                  <label>Mobile Number for Instant Confirmation</label>
-                  <input
-                    type="tel"
-                    placeholder="Enter 10-digit mobile number"
-                    value={enquiryPhone}
-                    onChange={(e) => setEnquiryPhone(e.target.value)}
-                    maxLength={10}
-                    required
-                    autoFocus
-                  />
-                </div>
-
-                <button type="submit" className="btn-primary-glow" style={{ width: "100%", marginTop: "16px" }}>
-                  Confirm Booking Request ⚡
-                </button>
-              </form>
+                <form onSubmit={handleEnquirySubmit} className="modal-quick-form">
+                  <label>Enter Mobile Number for Instant Booking</label>
+                  <div className="phone-input-wrap">
+                    <span className="phone-prefix">+91</span>
+                    <input 
+                      type="tel"
+                      placeholder="98765 43210"
+                      value={enquiryPhone}
+                      onChange={(e) => setEnquiryPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="btn-coral" 
+                    style={{ width: "100%", marginTop: "16px" }}
+                    disabled={isSubmittingBooking}
+                  >
+                    {isSubmittingBooking ? "Dispatching Pro... ⏳" : "Confirm & Dispatch Pro ⚡"}
+                  </button>
+                </form>
+              </div>
             )}
           </div>
+        </div>
+      )}
+
+
+
+      {/* =========================================================================
+          LIVE TRACKING MODAL & FLOATING RADAR STATUS
+          ========================================================================= */}
+      {activeLiveBooking && (
+        <LiveTrackingModal 
+          booking={activeLiveBooking} 
+          onClose={() => setActiveLiveBooking(null)} 
+        />
+      )}
+
+      {/* Floating Active Booking Tracker Banner if modal closed */}
+      {activeLiveBooking && (
+        <div 
+          onClick={() => setActiveLiveBooking(activeLiveBooking)}
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            background: "rgba(15, 23, 42, 0.92)",
+            border: "1px solid rgba(255, 77, 45, 0.4)",
+            borderRadius: "100px",
+            padding: "10px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            cursor: "pointer",
+            boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
+            zIndex: 998,
+            backdropFilter: "blur(12px)"
+          }}
+        >
+          <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#10B981", boxShadow: "0 0 10px #10B981", animation: "pulse 1.5s infinite" }}></span>
+          <span style={{ color: "#FFFFFF", fontSize: "14px", fontWeight: 600, fontFamily: "Space Grotesk, sans-serif" }}>
+            Live Dispatch: {activeLiveBooking.bookingId || "Active"} (OTP: {activeLiveBooking.startOtp || "3459"})
+          </span>
+          <span style={{ color: "#FF4D2D", fontSize: "13px", fontWeight: 700 }}>Track 📡</span>
         </div>
       )}
 

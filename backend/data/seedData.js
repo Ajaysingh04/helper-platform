@@ -1,13 +1,6 @@
-const initialCategories = [
-  { id: "1", name: "Plumbing", icon: "🔧", count: "120+ Pros", active: true },
-  { id: "2", name: "Electrical", icon: "⚡", count: "95+ Pros", active: true },
-  { id: "3", name: "Cleaning", icon: "🧹", count: "210+ Pros", active: true },
-  { id: "4", name: "Painting", icon: "🎨", count: "80+ Pros", active: true },
-  { id: "5", name: "Carpentry", icon: "🪚", count: "65+ Pros", active: true },
-  { id: "6", name: "Appliance Repair", icon: "❄️", count: "110+ Pros", active: true },
-  { id: "7", name: "Gardening", icon: "🌿", count: "45+ Pros", active: true },
-  { id: "8", name: "Pest Control", icon: "🐜", count: "50+ Pros", active: true }
-];
+const popularCategories = require("./popularCategoriesData");
+
+const initialCategories = popularCategories;
 
 const initialServices = [
   {
@@ -96,56 +89,9 @@ const initialServices = [
   }
 ];
 
-const initialProviders = [
-  {
-    id: "p1",
-    name: "Rajesh Sharma",
-    category: "Plumbing",
-    experience: "8+ Years",
-    rating: 4.9,
-    jobsCompleted: 640,
-    verified: true,
-    phone: "+91 98765 43210",
-    location: "Sector 18, Noida",
-    avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    id: "p2",
-    name: "Amit Verma",
-    category: "Electrical",
-    experience: "6+ Years",
-    rating: 4.8,
-    jobsCompleted: 512,
-    verified: true,
-    phone: "+91 98123 45678",
-    location: "Indirapuram, Ghaziabad",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    id: "p3",
-    name: "Sunil Kumar",
-    category: "Cleaning",
-    experience: "5+ Years",
-    rating: 4.9,
-    jobsCompleted: 820,
-    verified: true,
-    phone: "+91 98989 12345",
-    location: "South Ex, Delhi",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    id: "p4",
-    name: "Manoj Carpenter",
-    category: "Carpentry",
-    experience: "10+ Years",
-    rating: 4.7,
-    jobsCompleted: 430,
-    verified: false,
-    phone: "+91 98711 22334",
-    location: "Cyber City, Gurugram",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80"
-  }
-];
+const seedProviders = require("./seedProvidersData");
+
+const initialProviders = seedProviders;
 
 const initialBookings = [
   {

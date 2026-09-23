@@ -1,305 +1,676 @@
 /* ==========================================================================
-   LOGIN PAGE STYLES
+   PINTEREST-INSPIRED WELCOME SCREEN DESIGN (FULLY RESPONSIVE)
    ========================================================================== */
 
-.login-page-wrapper {
-  position: relative;
-  min-height: calc(100vh - 80px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 0;
-  overflow: hidden;
-}
-
-.login-content-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 2;
-}
-
-.login-glass-card {
-  background: var(--surface-card);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  padding: 42px 48px;
+/* Full Viewport Sky Background with Soft Drifting Clouds */
+.pin-login-page-wrapper {
+  min-height: 100vh;
   width: 100%;
-  max-width: 480px;
-  box-shadow: var(--shadow-xl);
-}
-
-.login-card-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.login-brand-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  text-decoration: none;
-}
-
-.login-brand-logo h2 {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text-main);
-}
-
-.login-brand-logo h2 span {
-  color: var(--primary);
-}
-
-.login-card-header h3 {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-main);
-  margin-bottom: 4px;
-}
-
-.login-card-header p {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-/* Auth Tab Switch */
-.auth-tab-switch {
-  display: flex;
-  background: var(--surface-input);
-  border-radius: var(--border-radius);
-  padding: 4px;
-  margin-bottom: 20px;
-}
-
-.auth-tab {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 9px;
-  border-radius: var(--border-radius-sm);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.auth-tab.active {
-  background: var(--surface-solid);
-  color: var(--text-main);
-  box-shadow: var(--shadow-xs);
-}
-
-/* Social Buttons */
-.social-auth-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.social-btn {
-  background: var(--surface-input);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 10px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-main);
-  cursor: pointer;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  transition: all var(--transition-fast);
+  padding: 32px 16px;
+  background: linear-gradient(180deg, #87BBE7 0%, #B2D5F0 38%, #DCECF8 72%, #F1F7FC 100%);
+  overflow-x: hidden;
+  box-sizing: border-box;
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.social-btn:hover {
-  background: var(--surface-solid);
-  border-color: var(--primary);
-  transform: translateY(-2px);
-}
-
-.auth-divider-line {
-  position: relative;
-  text-align: center;
-  margin: 20px 0;
-}
-
-.auth-divider-line::before {
-  content: "";
+/* Ambient Cloud Layers */
+.sky-cloud {
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--border-color);
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  filter: blur(40px);
+  z-index: 1;
 }
 
-.auth-divider-line span {
+.sky-cloud-1 {
+  width: 550px;
+  height: 350px;
+  top: -60px;
+  left: -80px;
+  opacity: 0.8;
+  animation: floatCloudSlow 25s ease-in-out infinite alternate;
+}
+
+.sky-cloud-2 {
+  width: 650px;
+  height: 400px;
+  top: 15%;
+  right: -100px;
+  opacity: 0.75;
+  animation: floatCloudSlow 30s ease-in-out infinite alternate-reverse;
+}
+
+.sky-cloud-3 {
+  width: 700px;
+  height: 300px;
+  bottom: -40px;
+  left: 20%;
+  opacity: 0.9;
+}
+
+@keyframes floatCloudSlow {
+  0% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(18px) translateX(25px); }
+  100% { transform: translateY(0px) translateX(0px); }
+}
+
+/* Center Floating Card */
+.pin-login-card-container {
   position: relative;
-  background: var(--surface-solid);
-  padding: 0 12px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
+  z-index: 10;
+  width: 100%;
+  max-width: 980px;
+  background: #FFFFFF;
+  border-radius: 36px;
+  padding: 16px;
+  box-shadow: 
+    0 30px 80px rgba(35, 85, 135, 0.18),
+    0 12px 30px rgba(0, 0, 0, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  box-sizing: border-box;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
 }
 
-/* Form Groups */
-.login-form-modern {
+.pin-login-card-container:hover {
+  box-shadow: 
+    0 35px 95px rgba(35, 85, 135, 0.22),
+    0 16px 36px rgba(0, 0, 0, 0.06);
+}
+
+/* --------------------------------------------------------------------------
+   LEFT COLUMN: 3D YETI ARTWORK
+   -------------------------------------------------------------------------- */
+.pin-login-artwork-col {
+  flex: 1 1 48%;
+  max-width: 48%;
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #89BFE9;
+  min-height: 560px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  justify-content: flex-end;
+  box-sizing: border-box;
 }
 
-.login-input-group label {
+.yeti-mascot-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pin-login-artwork-col:hover .yeti-mascot-img {
+  transform: scale(1.035);
+}
+
+/* Bottom Shadow Vignette for Text */
+.yeti-artwork-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg, 
+    rgba(0, 0, 0, 0) 35%, 
+    rgba(0, 0, 0, 0.25) 65%, 
+    rgba(0, 0, 0, 0.72) 100%
+  );
+  pointer-events: none;
+}
+
+/* Monumental Typography: EXPLORE. LEARN. GROW. */
+.yeti-typography-box {
+  position: relative;
+  z-index: 2;
+  padding: 32px 28px;
+}
+
+.yeti-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #FFFFFF;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.yeti-big-heading {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+  margin: 0;
+}
+
+.yeti-big-heading span {
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   RIGHT COLUMN: FORM & LOGIN CARD
+   -------------------------------------------------------------------------- */
+.pin-login-form-col {
+  flex: 1 1 52%;
+  max-width: 52%;
+  padding: 36px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+/* Top Mini Mascot Logo */
+.pin-form-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.pin-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+  border: 1px solid #7DD3FC;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+}
+
+.pin-brand-badge svg {
+  width: 24px;
+  height: 24px;
+}
+
+.pin-brand-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #0F172A;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.pin-form-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  margin: 0 0 6px 0;
+}
+
+.pin-form-subtitle {
+  font-size: 13.5px;
+  color: #64748B;
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* Form Styles */
+.pin-form-body {
+  width: 100%;
+}
+
+.pin-input-group {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.pin-input-label {
   display: block;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-main);
+  font-weight: 700;
+  color: #0F172A;
   margin-bottom: 6px;
 }
 
-.login-input-group input {
-  width: 100%;
-  background: var(--surface-input);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 12px 14px;
-  font-size: 14px;
-  color: var(--text-main);
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.login-input-group input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
-
-.password-input-wrap {
+.pin-input-field-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
-.password-input-wrap input {
-  padding-right: 44px;
+.pin-input-field {
+  width: 100%;
+  padding: 13px 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #0F172A;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+  -webkit-appearance: none;
 }
 
-.pwd-toggle-btn {
+.pin-input-field::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.pin-input-field:focus {
+  background: #FFFFFF;
+  border-color: #000000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.pin-password-toggle {
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 14px;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 15px;
-  color: var(--text-muted);
-}
-
-/* Location Selector */
-.login-location-group label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-main);
-  margin-bottom: 6px;
-}
-
-.location-box-modern {
-  background: var(--surface-input);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 12px;
-}
-
-.location-active-badge {
+  color: #64748B;
+  font-size: 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--success);
+  justify-content: center;
+  padding: 6px;
 }
 
-.location-detect-btn {
-  width: 100%;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px dashed rgba(99, 102, 241, 0.35);
-  color: var(--primary);
-  padding: 9px;
-  border-radius: var(--border-radius-sm);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 8px;
-  transition: all var(--transition-fast);
+.pin-password-toggle:hover {
+  color: #0F172A;
 }
 
-.location-detect-btn:hover {
-  background: rgba(99, 102, 241, 0.2);
-}
-
-.location-err-text {
-  color: var(--danger);
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-.or-manual-wrap {
+/* Meta Row: Remember Me & Forgot Password */
+.pin-form-meta-row {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -2px;
+  margin-bottom: 18px;
+  font-size: 12.5px;
   gap: 8px;
 }
 
-.or-manual-wrap input {
-  flex: 1;
-  background: var(--surface-solid);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  padding: 7px 10px;
-  font-size: 12.5px;
-  color: var(--text-main);
-  outline: none;
+.pin-remember-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
 }
 
-.or-manual-wrap button {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 0 14px;
-  border-radius: var(--border-radius-sm);
-  font-size: 12.5px;
+.pin-remember-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  accent-color: #000000;
+  cursor: pointer;
+}
+
+.pin-forgot-link {
+  color: #64748B;
+  text-decoration: none;
   font-weight: 600;
-  cursor: pointer;
+  transition: color 0.2s;
+  white-space: nowrap;
 }
 
-.login-submit-btn {
-  width: 100%;
-  padding: 13px;
-  margin-top: 8px;
-}
-
-.login-card-footer {
-  text-align: center;
-  margin-top: 24px;
-  font-size: 13.5px;
-  color: var(--text-muted);
-}
-
-.switch-auth-link {
-  color: var(--primary);
-  font-weight: 700;
-  cursor: pointer;
+.pin-forgot-link:hover {
+  color: #000000;
   text-decoration: underline;
 }
 
-@media (max-width: 540px) {
-  .login-glass-card {
-    padding: 30px 20px;
+/* Primary Sign In Button (Black Solid) */
+.pin-btn-signin {
+  width: 100%;
+  min-height: 48px;
+  padding: 13.5px;
+  background: #000000;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.pin-btn-signin:hover {
+  background: #1E293B;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.pin-btn-signin:active {
+  transform: translateY(0);
+}
+
+/* Google Social Button */
+.pin-btn-google {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 12px;
+  padding: 12px;
+  background: #FFFFFF;
+  color: #1E293B;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.pin-btn-google:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+.google-icon-svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Switch Auth Method Pill (Password vs Mobile OTP) */
+.pin-otp-toggle-wrap {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.pin-otp-toggle-btn {
+  background: none;
+  border: none;
+  color: #64748B;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.pin-otp-toggle-btn:hover {
+  color: #FF4D2D;
+  background: rgba(255, 77, 45, 0.08);
+}
+
+/* Footer Switch to Sign Up */
+.pin-form-footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #64748B;
+}
+
+.pin-switch-link {
+  font-weight: 700;
+  color: #000000;
+  cursor: pointer;
+  margin-left: 5px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.pin-switch-link:hover {
+  color: #FF4D2D;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   BREAKPOINTS & RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* Medium Laptops & Tablets Landscape (861px - 1024px) */
+@media (max-width: 1024px) {
+  .pin-login-card-container {
+    max-width: 890px;
+    padding: 14px;
+    border-radius: 30px;
+  }
+
+  .pin-login-artwork-col {
+    min-height: 520px;
+    border-radius: 24px;
+  }
+
+  .yeti-big-heading {
+    font-size: 32px;
+  }
+
+  .pin-login-form-col {
+    padding: 28px 32px;
+  }
+
+  .pin-form-title {
+    font-size: 26px;
+  }
+}
+
+/* Tablets Portrait & Large Phones (641px - 860px) */
+@media (max-width: 860px) {
+  .pin-login-page-wrapper {
+    padding: 24px 14px;
+  }
+
+  .pin-login-card-container {
+    flex-direction: column;
+    max-width: 520px;
+    padding: 12px;
+    border-radius: 28px;
+    margin: 0 auto;
+  }
+
+  .pin-login-artwork-col {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    min-height: 250px;
+    height: 250px;
+    border-radius: 22px;
+  }
+
+  .yeti-mascot-img {
+    object-position: center 20%;
+  }
+
+  .yeti-typography-box {
+    padding: 20px 22px;
+  }
+
+  .yeti-tag-pill {
+    font-size: 10px;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+  }
+
+  .yeti-big-heading {
+    font-size: 26px;
+    line-height: 1.1;
+  }
+
+  .pin-login-form-col {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    padding: 26px 20px 20px;
+  }
+
+  .pin-form-title {
+    font-size: 24px;
+  }
+
+  .pin-form-subtitle {
+    font-size: 13px;
+  }
+}
+
+/* Standard Mobile Phones (381px - 640px) */
+@media (max-width: 640px) {
+  .pin-login-page-wrapper {
+    padding: 16px 10px;
+    align-items: flex-start;
+  }
+
+  .pin-login-card-container {
+    max-width: 100%;
+    border-radius: 24px;
+    padding: 10px;
+    box-shadow: 0 16px 45px rgba(35, 85, 135, 0.16);
+  }
+
+  .pin-login-artwork-col {
+    min-height: 210px;
+    height: 210px;
+    border-radius: 18px;
+  }
+
+  .yeti-mascot-img {
+    object-position: center 18%;
+  }
+
+  .yeti-typography-box {
+    padding: 16px 18px;
+  }
+
+  .yeti-big-heading {
+    font-size: 22px;
+  }
+
+  .pin-login-form-col {
+    padding: 22px 12px 16px;
+  }
+
+  .pin-form-header {
+    margin-bottom: 18px;
+  }
+
+  .pin-brand-badge {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 6px;
+  }
+
+  .pin-form-title {
+    font-size: 22px;
+  }
+
+  .pin-form-subtitle {
+    font-size: 12.5px;
+  }
+
+  .pin-input-field {
+    font-size: 16px; /* Prevents auto-zoom in mobile Safari */
+    padding: 12px 14px;
+  }
+
+  .pin-input-label {
+    font-size: 12.5px;
+  }
+
+  .pin-form-meta-row {
+    font-size: 12px;
+  }
+
+  .pin-btn-signin {
+    min-height: 46px;
+    font-size: 14.5px;
+  }
+
+  .pin-btn-google {
+    min-height: 44px;
+    font-size: 13.5px;
+  }
+}
+
+/* Extra Small Phones (<= 380px, e.g. iPhone SE, Galaxy Fold 320px) */
+@media (max-width: 380px) {
+  .pin-login-page-wrapper {
+    padding: 10px 6px;
+  }
+
+  .pin-login-card-container {
+    border-radius: 20px;
+    padding: 8px;
+  }
+
+  .pin-login-artwork-col {
+    min-height: 180px;
+    height: 180px;
+    border-radius: 14px;
+  }
+
+  .yeti-typography-box {
+    padding: 12px 14px;
+  }
+
+  .yeti-tag-pill {
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+
+  .yeti-big-heading {
+    font-size: 19px;
+  }
+
+  .pin-login-form-col {
+    padding: 16px 8px 12px;
+  }
+
+  .pin-form-title {
+    font-size: 20px;
+  }
+
+  .pin-form-meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .pin-forgot-link {
+    align-self: flex-end;
   }
 }

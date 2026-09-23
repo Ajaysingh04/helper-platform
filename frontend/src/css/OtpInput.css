@@ -1,0 +1,122 @@
+/* ==========================================================================
+   OTP / VERIFICATION CODE INPUT STYLES (MongoDB Atlas Inspired)
+   ========================================================================== */
+
+.otp-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 16px 0 24px 0;
+}
+
+.otp-subtitle {
+  font-size: 13.5px;
+  color: var(--text-muted, #64748b);
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+.otp-resend-wrapper {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.otp-resend-btn {
+  background: var(--surface-input, #f1f5f9);
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  cursor: default;
+  transition: all 0.2s ease;
+}
+
+.otp-resend-btn.active {
+  background: #00ed64;
+  color: #001e2b;
+  border-color: #00ed64;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 237, 100, 0.3);
+}
+
+.otp-resend-btn.active:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 237, 100, 0.4);
+}
+
+.otp-boxes-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.otp-box-group {
+  display: flex;
+  gap: 8px;
+}
+
+.otp-group-divider {
+  width: 6px;
+}
+
+.otp-box {
+  width: 44px;
+  height: 54px;
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  border-radius: 8px;
+  background: var(--surface-input, #ffffff);
+  color: var(--text-main, #0f172a);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.otp-box:focus {
+  border-color: #00ed64;
+  box-shadow: 0 0 0 3px rgba(0, 237, 100, 0.25);
+  transform: translateY(-2px);
+  background: var(--surface-card, #ffffff);
+}
+
+.otp-box.filled {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.otp-box.error {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.06) !important;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@media (max-width: 480px) {
+  .otp-box {
+    width: 38px;
+    height: 48px;
+    font-size: 18px;
+  }
+  .otp-boxes-grid {
+    gap: 5px;
+  }
+  .otp-box-group {
+    gap: 5px;
+  }
+}

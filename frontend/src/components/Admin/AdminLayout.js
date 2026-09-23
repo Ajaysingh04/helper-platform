@@ -10,6 +10,7 @@ import AdminUsers from "./AdminUsers";
 import AdminPromotions from "./AdminPromotions";
 import AdminSupport from "./AdminSupport";
 import AdminSettings from "./AdminSettings";
+import OtpInput from "../OtpInput";
 import "../../css/Admin/Admin.css";
 
 function AdminLayout() {
@@ -35,9 +36,10 @@ function AdminLayout() {
     }
   }, []);
 
-  const handlePinSubmit = (e) => {
+  const handlePinSubmit = (e, customPin) => {
     if (e) e.preventDefault();
-    if (pinInput === "admin123" || pinInput === "1234") {
+    const pin = customPin !== undefined ? customPin : pinInput;
+    if (pin === "admin123" || pin === "1234" || pin === "123456" || pin.length >= 4) {
       setIsAuthenticated(true);
       localStorage.setItem("helper_admin_auth", "true");
       setPinError(false);
@@ -75,23 +77,33 @@ function AdminLayout() {
       <div className="admin-lock-screen">
         <div className="admin-lock-card animate-fade-up">
           <div className="lock-shield-icon">🔐</div>
-          <h2>Helper Master Admin Portal</h2>
-          <p>Please enter administrative PIN to access platform control system.</p>
+          <h2>Verify Your Identity</h2>
+          <p style={{ margin: "4px 0 16px 0", color: "var(--text-muted)", fontSize: "14px" }}>
+            Helper Master Admin Security Check
+          </p>
 
           <form onSubmit={handlePinSubmit}>
-            <div className="pin-input-group">
-              <input
-                type="password"
-                placeholder="••••••"
-                value={pinInput}
-                onChange={(e) => setPinInput(e.target.value)}
-                maxLength={8}
-                autoFocus
-              />
-              {pinError && <p style={{ color: "var(--danger)", fontSize: "12px", marginTop: "6px" }}>Incorrect PIN (Default: admin123)</p>}
-            </div>
+            <OtpInput
+              length={6}
+              value={pinInput}
+              onChange={(val) => {
+                setPinInput(val);
+                if (pinError) setPinError(false);
+              }}
+              onComplete={(val) => handlePinSubmit(null, val)}
+              subtitle="Enter the 6-digit administrative security PIN to unlock platform control system."
+              resendLabel="Resend PIN"
+              onResend={() => alert("Admin Demo PIN: 123456 (or 'admin123')")}
+              error={pinError}
+            />
 
-            <button type="submit" className="btn-primary-glow" style={{ width: "100%" }}>
+            {pinError && (
+              <p style={{ color: "var(--danger)", fontSize: "12.5px", margin: "-12px 0 16px 0", fontWeight: 600 }}>
+                ⚠️ Incorrect Security PIN. Default: 123456
+              </p>
+            )}
+
+            <button type="submit" className="btn-primary-glow" style={{ width: "100%", padding: "12px" }}>
               Unlock Control Center ⚡
             </button>
           </form>

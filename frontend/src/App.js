@@ -18,30 +18,41 @@ import Help from "./components/SettingComponent/Help";
 import Profile from "./components/ProfileComponent/Profile";
 import Explore from "./components/PopularServices/Explore";
 import CategoryPage from "./components/CategoryPage";
+import CategoriesPage from "./components/CategoriesPage";
 import ItemDetailsPage from "./components/ItemDetailsPage";
 import LoginPage from "./components/LoginPage";
+import GrowBusiness from "./components/GrowBusiness";
 import Footer from "./components/Footer";
 import AdminLayout from "./components/Admin/AdminLayout";
+import ScrollToTop from "./components/ScrollToTop";
+import VendorAuth from "./components/Vendor/VendorAuth";
+import VendorDashboard from "./components/Vendor/VendorDashboard";
 
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
 
-  if (isAdminRoute) {
-    return (
-      <Routes>
-        <Route path="/admin/*" element={<AdminLayout />} />
-      </Routes>
-    );
-  }
-
   return (
-    <div style={{ width: "100%", display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Header />
+    <>
+      <ScrollToTop />
+      {isAdminRoute ? (
+        <Routes>
+          <Route path="/admin/*" element={<AdminLayout />} />
+        </Routes>
+      ) : (
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+          <Header />
 
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/grow-business" element={<GrowBusiness />} />
+        <Route path="/advertise" element={<GrowBusiness />} />
+        <Route path="/free-listing" element={<GrowBusiness />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/vendor" element={<VendorAuth defaultTab="login" />} />
+        <Route path="/vendor/login" element={<VendorAuth defaultTab="login" />} />
+        <Route path="/vendor/register" element={<VendorAuth defaultTab="register" />} />
+        <Route path="/vendor/dashboard" element={<VendorDashboard />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />
         <Route path="/contact" element={<ContactUs />} />
@@ -55,12 +66,15 @@ function AppContent() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/category/:name" element={<CategoryPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/details/:id" element={<ItemDetailsPage />} />
         <Route path="/admin/*" element={<AdminLayout />} />
       </Routes>
       
       <Footer />
     </div>
+      )}
+    </>
   );
 }
 

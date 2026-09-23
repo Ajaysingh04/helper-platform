@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { realData } from "./CategoryPage";
+import { realData, categoryItemsRegistry } from "./CategoryPage";
 import "../css/ItemDetailsPage.css";
 
 function ItemDetailsPage() {
@@ -21,7 +21,8 @@ function ItemDetailsPage() {
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
   useEffect(() => {
-    const foundItem = realData.find((data) => data.id === parseInt(id));
+    const registryItem = categoryItemsRegistry.get(String(id));
+    const foundItem = registryItem || realData.find((data) => data.id === parseInt(id));
     if (foundItem) {
       setItem(foundItem);
     } else {

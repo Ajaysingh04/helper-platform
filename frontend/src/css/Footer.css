@@ -1,11 +1,170 @@
 /* ==========================================================================
-   FOOTER STYLES
+   NEXORA GO FOOTER STYLES
    ========================================================================== */
 
+.nexora-footer-wrapper {
+  background: #FFFFFF;
+  border-top: 1px solid #E2E8F0;
+  padding: 48px 24px 28px;
+  margin-top: 60px;
+  width: 100%;
+}
+
+body.dark .nexora-footer-wrapper {
+  background: #0B0F19;
+  border-color: #1E293B;
+}
+
+.nexora-footer-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.nexora-footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.nexora-footer-brand {
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nexora-footer-about {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #64748B;
+}
+
+body.dark .nexora-footer-about {
+  color: #94A3B8;
+}
+
+.nexora-footer-support {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.support-heading {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #0F172A;
+  text-transform: uppercase;
+}
+
+body.dark .support-heading {
+  color: #FFFFFF;
+}
+
+.support-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.support-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #475569;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+body.dark .support-link {
+  color: #CBD5E1;
+}
+
+.support-link:hover {
+  color: #2563EB;
+}
+
+.support-icon {
+  font-size: 14px;
+}
+
+.footer-quick-portals {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.footer-quick-portals a {
+  color: #64748B;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.footer-quick-portals a:hover {
+  color: #2563EB;
+}
+
+.dot-sep {
+  color: #CBD5E1;
+  font-size: 10px;
+}
+
+/* Footer Bottom Bar */
+.nexora-footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #F1F5F9;
+  padding-top: 22px;
+  font-size: 12.5px;
+  color: #94A3B8;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+body.dark .nexora-footer-bottom {
+  border-color: #1E293B;
+  color: #64748B;
+}
+
+.copyright-text {
+  margin: 0;
+}
+
+.legal-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.legal-links a {
+  color: #94A3B8;
+  text-decoration: none;
+  font-size: 12.5px;
+  transition: color 0.2s;
+}
+
+.legal-links a:hover {
+  color: #2563EB;
+}
+
+.pipe-sep {
+  color: #CBD5E1;
+}
+
+/* ================= Legacy / Alternative Footer ================= */
 .footer-modern {
   background: var(--surface-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-color);
   padding: 60px 0 30px;
   margin-top: auto;
@@ -15,8 +174,8 @@
 
 /* Newsletter Box */
 .footer-newsletter-card {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: linear-gradient(135deg, rgba(255, 77, 45, 0.06) 0%, rgba(255, 120, 94, 0.06) 100%);
+  border: 1px solid rgba(255, 77, 45, 0.2);
   border-radius: var(--border-radius-lg);
   padding: 32px 40px;
   display: flex;

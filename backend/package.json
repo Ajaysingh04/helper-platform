@@ -6,12 +6,17 @@
   "scripts": {
     "start": "node server.js",
     "build": "echo 'Backend ready'",
-    "dev": "nodemon server.js"
+    "dev": "nodemon --ignore 'data/*' server.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.1",
+    "nodemailer": "^10.0.10",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

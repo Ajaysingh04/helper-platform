@@ -3,91 +3,70 @@ import { Link } from "react-router-dom";
 import "../css/Footer.css";
 
 function Footer() {
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth"
+    });
+  };
+
   return (
-    <footer className="footer-modern">
-      <div className="container-wrapper">
+    <footer className="nexora-footer-wrapper">
+      <div className="nexora-footer-container">
         
-        {/* Top Newsletter / Banner Area */}
-        <div className="footer-newsletter-card">
-          <div className="newsletter-text">
-            <h3>Stay Updated with Exclusive Discounts</h3>
-            <p>Subscribe to our weekly newsletter for service updates & seasonal discount coupons.</p>
-          </div>
-          <div className="newsletter-form">
-            <input type="email" placeholder="Enter your email address..." />
-            <button className="btn-primary-glow">Subscribe ⚡</button>
-          </div>
-        </div>
-
-        {/* Main Columns Grid */}
-        <div className="footer-columns-grid">
+        {/* Main Footer Top Row */}
+        <div className="nexora-footer-top">
           
-          {/* Brand Info */}
-          <div className="footer-col brand-col">
-            <Link to="/" className="footer-brand-logo">
-              <div className="logo-badge">✨</div>
-              <h2>Helper<span>.</span></h2>
+          {/* Left: Brand info */}
+          <div className="nexora-footer-brand">
+            <Link to="/" className="nexora-logo-link" onClick={scrollToTop}>
+              <div className="nexora-brand-mark">
+                <span className="nexora-brand-text">HELPER</span>
+                <span className="nexora-go-badge">GO ➔</span>
+              </div>
+              <span className="nexora-sub-tag">EVERYTHING YOU NEED, ONE PLACE</span>
             </Link>
-            <p className="footer-desc-text">
-              The premier on-demand network connecting you with trusted local service experts in minutes. Fast, transparent & guaranteed.
+            <p className="nexora-footer-about">
+              Helper is your one-stop destination for all home services. From electrical repairs to premium salon services, we bring the experts to your doorstep.
             </p>
-            <div className="footer-social-icons">
-              <a href="#twitter" aria-label="Twitter" className="social-link">𝕏</a>
-              <a href="#facebook" aria-label="Facebook" className="social-link">f</a>
-              <a href="#instagram" aria-label="Instagram" className="social-link">📷</a>
-              <a href="#linkedin" aria-label="LinkedIn" className="social-link">in</a>
+          </div>
+
+          {/* Right: Support & Services */}
+          <div className="nexora-footer-support">
+            <h4 className="support-heading">SUPPORT & SERVICES</h4>
+            <div className="support-items-list">
+              <a href="mailto:helperplatform@gmail.com" className="support-link">
+                <span className="support-icon">✉️</span>
+                <span>helperplatform@gmail.com</span>
+              </a>
+              <a href="tel:9808058107" className="support-link">
+                <span className="support-icon">📞</span>
+                <span>9808058107</span>
+              </a>
             </div>
-          </div>
-
-          {/* Quick Links */}
-          <div className="footer-col">
-            <h4>Popular Services</h4>
-            <ul className="footer-nav-list">
-              <li><Link to="/category/electrician">Electrician Services</Link></li>
-              <li><Link to="/category/plumber">Plumbing & Sanitary</Link></li>
-              <li><Link to="/category/home-cleaner">Full Home Cleaning</Link></li>
-              <li><Link to="/category/ac-repair">AC Repair & Refill</Link></li>
-              <li><Link to="/category/chef">Home Cooks & Chefs</Link></li>
-            </ul>
-          </div>
-
-          {/* Company Links */}
-          <div className="footer-col">
-            <h4>Company & Legal</h4>
-            <ul className="footer-nav-list">
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/services">All Services</Link></li>
-              <li><Link to="/contact">Contact Support</Link></li>
-              <li><Link to="/help">Help Center & FAQ</Link></li>
-              <li><Link to="/security">Privacy & Terms</Link></li>
-              <li><Link to="/admin" style={{ color: "#ef4444", fontWeight: 700 }}>⚡ Master Admin Portal</Link></li>
-            </ul>
-          </div>
-
-          {/* Contact Direct */}
-          <div className="footer-col">
-            <h4>Direct Contact</h4>
-            <div className="footer-direct-contact">
-              <p>📍 Tech Hub Sector 62, New Delhi</p>
-              <p>📞 +91 98765 43210</p>
-              <p>✉️ support@helper.com</p>
-            </div>
-            <div className="footer-badge-app">
-              <span>🛡️ 100% Quality & Safety Insured</span>
+            
+            {/* Quick access links for admin & partner */}
+            <div className="footer-quick-portals">
+              <Link to="/vendor" onClick={scrollToTop}>Partner Hub</Link>
+              <span className="dot-sep">•</span>
+              <Link to="/services" onClick={scrollToTop}>Services</Link>
+              <span className="dot-sep">•</span>
+              <Link to="/admin" onClick={scrollToTop}>Admin</Link>
             </div>
           </div>
 
         </div>
 
-        {/* Bottom Copyright */}
-        <div className="footer-bottom-bar">
-          <p>© {new Date().getFullYear()} Helper Inc. Crafted with passion by Ajay Singh Banafer.</p>
-          <div className="footer-bottom-links">
-            <Link to="/security">Security</Link>
-            <span>•</span>
-            <Link to="/help">Privacy Policy</Link>
-            <span>•</span>
-            <Link to="/contact">Support</Link>
+        {/* Bottom Copyright Bar */}
+        <div className="nexora-footer-bottom">
+          <p className="copyright-text">
+            © 2026 Helper Platform. All rights reserved.
+          </p>
+          <div className="legal-links">
+            <Link to="/security" onClick={scrollToTop}>Privacy Policy</Link>
+            <span className="pipe-sep">|</span>
+            <Link to="/security" onClick={scrollToTop}>Terms of Service</Link>
           </div>
         </div>
 

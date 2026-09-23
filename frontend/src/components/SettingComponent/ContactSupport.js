@@ -20,7 +20,9 @@ function ContactSupport() {
         {/* Email Support */}
         <div className="contact-card">
           <h4>📧 Email Support</h4>
-          <p style={{ fontWeight: 700, color: "var(--primary)" }}>support@helper.com</p>
+          <p style={{ fontWeight: 700, color: "var(--primary)" }}>
+            <a href="mailto:ajayworkon04@gmail.com" style={{ color: "inherit" }}>ajayworkon04@gmail.com</a>
+          </p>
           <p>Average response within 2 hours</p>
         </div>
 

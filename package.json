@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "Fullstack On-Demand Home Services Platform & Super Admin Portal",
   "scripts": {
-    "dev": "concurrently --kill-others-on-fail \"npm run server\" \"npm run client\"",
+    "dev": "concurrently --kill-others-on-fail \"npm run server:dev\" \"npm run client\"",
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "client": "npm start --prefix frontend",
     "server": "npm start --prefix backend",

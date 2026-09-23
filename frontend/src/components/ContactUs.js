@@ -10,8 +10,11 @@ function ContactUs() {
   const [category, setCategory] = useState("General Inquiry");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [lastSubmission, setLastSubmission] = useState(null);
+  const [deliveryStatus, setDeliveryStatus] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name || !email || !mobile || !message) {
@@ -19,6 +22,43 @@ function ContactUs() {
       return;
     }
 
+    setLoading(true);
+
+    const submissionData = {
+      name,
+      email,
+      phone: mobile,
+      mobile: mobile,
+      category,
+      message
+    };
+
+    setLastSubmission(submissionData);
+
+    // 1. Register with backend API (and triggers Nodemailer)
+    try {
+      const res = await fetch("http://localhost:5000/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submissionData)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.emailSent) {
+          setDeliveryStatus("sent");
+        } else {
+          setDeliveryStatus("logged");
+        }
+      } else {
+        // Backend not reloaded yet
+        setDeliveryStatus("needs_restart");
+      }
+    } catch (apiErr) {
+      console.warn("Backend contact registration error:", apiErr);
+      setDeliveryStatus("needs_restart");
+    }
+
+    // 2. Add to local DataContext tickets for Super Admin
     if (dataContext?.addTicket) {
       dataContext.addTicket({
         name,
@@ -29,17 +69,17 @@ function ContactUs() {
       });
     }
 
+    setLoading(false);
     setSubmitted(true);
     setName("");
     setEmail("");
     setMobile("");
     setMessage("");
-    setTimeout(() => setSubmitted(false), 4000);
   };
 
   const contactCards = [
     { icon: "📞", title: "Customer Helpline", value: "+91 98765 43210", sub: "Mon-Sun: 8am - 10pm" },
-    { icon: "✉️", title: "Support Email", value: "support@helper.com", sub: "Response within 2 hours" },
+    { icon: "✉️", title: "Support Email", value: "ajayworkon04@gmail.com", sub: "Direct Admin Inbox" },
     { icon: "🏢", title: "Headquarters", value: "Tech Hub Tower, New Delhi", sub: "Sector 62, Metro Corridor" }
   ];
 
@@ -47,121 +87,191 @@ function ContactUs() {
     <div className="contact-page-wrapper">
       <div className="container-wrapper">
         
-        {/* Header */}
-        <div className="contact-header-section">
-          <span className="contact-sub-tag">Get in Touch</span>
-          <h1 className="contact-main-heading">We're Here to Help You 24/7</h1>
-          <p className="contact-subtext">Have a question or feedback? Reach out to our dedicated support team.</p>
+        {/* Studio Header */}
+        <div className="contact-studio-header">
+          <div className="pill-tag-coral animate-fade-in">
+            <span>24/7 INTELLIGENT DISPATCH & SUPPORT</span>
+          </div>
+
+          <h1 className="contact-studio-title animate-fade-up">
+            Let’s Talk Dispatch.<br />
+            We’re Here Around the Clock.
+          </h1>
+
+          <p className="contact-studio-subtitle animate-fade-up">
+            Connect with our core team for immediate emergency repair dispatch, corporate partnerships, or service feedback.
+          </p>
         </div>
 
-        {/* Contact Info Cards */}
-        <div className="contact-cards-row">
-          {contactCards.map((card, idx) => (
-            <div className="contact-info-card" key={idx}>
-              <div className="info-icon-box">{card.icon}</div>
-              <h3>{card.title}</h3>
-              <p className="card-main-val">{card.value}</p>
-              <span className="card-sub-val">{card.sub}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Main Form & FAQ Section */}
-        <div className="contact-main-grid">
+        {/* Studio Split Layout */}
+        <div className="contact-studio-split">
           
-          {/* Form */}
-          <div className="contact-form-card">
-            <h2>Send us a Message</h2>
-            <p className="form-lead">Fill out the form below and our team will get back to you swiftly.</p>
-
-            {submitted ? (
-              <div className="contact-success-box animate-fade-in">
-                <span className="success-emoji">🎉</span>
-                <h3>Message Sent Successfully!</h3>
-                <p>Thank you for contacting us. A support representative will respond shortly.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="contact-form-modern">
-                <div className="form-dual-row">
-                  <div className="contact-input-wrap">
-                    <label>Your Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. John Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="contact-input-wrap">
-                    <label>Mobile Number</label>
-                    <input
-                      type="tel"
-                      placeholder="10-digit mobile"
-                      value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
-                      required
-                    />
+          {/* Left Column: Direct Fast-Reach Cards */}
+          <div className="contact-left-col">
+            
+            <div className="contact-bento-cards-stack">
+              {contactCards.map((card, idx) => (
+                <div className="contact-channel-card" key={idx}>
+                  <div className="channel-icon-bubble">{card.icon}</div>
+                  <div className="channel-meta">
+                    <span className="channel-label">{card.title}</span>
+                    <strong className="channel-val">{card.value}</strong>
+                    <span className="channel-sub">{card.sub}</span>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="form-dual-row">
+            {/* Live Operational Status Box */}
+            <div className="dispatch-live-status-box">
+              <div className="status-indicator-row">
+                <span className="live-pulse-dot" />
+                <span className="status-text">DISPATCH ENGINE ACTIVE</span>
+              </div>
+              <p>Average technician response window currently at <strong>24 minutes</strong> across all active service zones.</p>
+            </div>
+
+          </div>
+
+          {/* Right Column: High-End Inquiry Form */}
+          <div className="contact-right-col">
+            <div className="contact-studio-form-card">
+              
+              <div className="form-header-bar">
+                <h3>Send Direct Inquiry</h3>
+                <span className="form-sub-pill">FAST ROUTING</span>
+              </div>
+
+              {submitted ? (
+                <div className="contact-success-box animate-fade-in">
+                  <span className="success-emoji">🎉</span>
+                  <h3>Inquiry Dispatched Successfully!</h3>
+                  {deliveryStatus === "sent" ? (
+                    <div className="delivery-status-alert success">
+                      ✅ <strong>Direct Email Dispatched!</strong> Copy has been routed to <strong>ajayworkon04@gmail.com</strong> via SMTP.
+                    </div>
+                  ) : deliveryStatus === "needs_restart" ? (
+                    <div className="delivery-status-alert warning">
+                      ⚠️ <strong>Logged to Database!</strong> Terminal restart needed for automatic SMTP. You can also click <strong>Open in Gmail</strong> below for immediate transmission!
+                    </div>
+                  ) : (
+                    <p className="success-desc">
+                      Thank you! Your inquiry has been registered into our system for <strong>ajayworkon04@gmail.com</strong>.
+                    </p>
+                  )}
+
+                  {lastSubmission && (
+                    <div className="instant-email-actions">
+                      <p>Send an instant copy directly from your email app:</p>
+                      <div className="instant-btn-row">
+                        <a
+                          href={`https://mail.google.com/mail/?view=cm&fs=1&to=ajayworkon04@gmail.com&su=${encodeURIComponent(`[Helper Inquiry] ${lastSubmission.category} - ${lastSubmission.name}`)}&body=${encodeURIComponent(`Customer Name: ${lastSubmission.name}\nMobile: ${lastSubmission.phone}\nEmail: ${lastSubmission.email}\nTopic: ${lastSubmission.category}\n\nMessage:\n${lastSubmission.message}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-coral-sm"
+                        >
+                          📧 Open in Gmail
+                        </a>
+
+                        <a
+                          href={`mailto:ajayworkon04@gmail.com?subject=${encodeURIComponent(`[Helper Inquiry] ${lastSubmission.category} - ${lastSubmission.name}`)}&body=${encodeURIComponent(`Customer Name: ${lastSubmission.name}\nMobile: ${lastSubmission.phone}\nEmail: ${lastSubmission.email}\nTopic: ${lastSubmission.category}\n\nMessage:\n${lastSubmission.message}`)}`}
+                          className="btn-ghost-dark-sm"
+                        >
+                          📨 Open Mail App
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  <button 
+                    type="button" 
+                    className="btn-ghost-dark" 
+                    style={{ marginTop: "24px", width: "100%" }}
+                    onClick={() => setSubmitted(false)}
+                  >
+                    Send Another Message
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="contact-form-modern">
+                  
+                  {/* Topic Pill Selector */}
+                  <div className="topic-selector-group">
+                    <label className="input-label">Select Inquiry Topic</label>
+                    <div className="topic-pill-chips">
+                      {["General Inquiry", "Booking Help", "Become a Partner", "Feedback"].map((t) => (
+                        <button
+                          type="button"
+                          key={t}
+                          className={`topic-chip ${category === t ? "active" : ""}`}
+                          onClick={() => setCategory(t)}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-dual-row">
+                    <div className="contact-input-wrap">
+                      <label className="input-label">Your Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Ajay Singh"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        className="studio-input"
+                      />
+                    </div>
+                    <div className="contact-input-wrap">
+                      <label className="input-label">Mobile Number</label>
+                      <input
+                        type="tel"
+                        placeholder="10-digit mobile"
+                        value={mobile}
+                        onChange={(e) => setMobile(e.target.value)}
+                        required
+                        className="studio-input"
+                      />
+                    </div>
+                  </div>
+
                   <div className="contact-input-wrap">
-                    <label>Email Address</label>
+                    <label className="input-label">Email Address</label>
                     <input
                       type="email"
                       placeholder="name@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      className="studio-input"
                     />
                   </div>
+
                   <div className="contact-input-wrap">
-                    <label>Topic / Query</label>
-                    <select value={category} onChange={(e) => setCategory(e.target.value)}>
-                      <option value="General Inquiry">General Inquiry</option>
-                      <option value="Booking Help">Booking Assistance</option>
-                      <option value="Become a Partner">Join as Service Partner</option>
-                      <option value="Feedback">Feedback / Suggestions</option>
-                    </select>
+                    <label className="input-label">Your Message or Issue Details</label>
+                    <textarea
+                      rows={4}
+                      placeholder="Please describe what assistance you need, preferred service time, or questions..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      required
+                      className="studio-textarea"
+                    ></textarea>
                   </div>
-                </div>
 
-                <div className="contact-input-wrap">
-                  <label>Your Message</label>
-                  <textarea
-                    rows={4}
-                    placeholder="How can we assist you today?"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    required
-                  ></textarea>
-                </div>
-
-                <button type="submit" className="btn-primary-glow contact-submit-btn">
-                  <span>Send Message</span>
-                  <span>⚡</span>
-                </button>
-              </form>
-            )}
-          </div>
-
-          {/* Quick FAQs */}
-          <div className="contact-faq-card">
-            <h2>Frequently Asked Questions</h2>
-            <div className="faq-items-list">
-              <div className="faq-item">
-                <h4>⏱️ How fast will an expert arrive?</h4>
-                <p>Most on-demand services arrive within 30 to 45 minutes of booking confirmation.</p>
-              </div>
-              <div className="faq-item">
-                <h4>🛡️ Are service professionals verified?</h4>
-                <p>Yes, 100% of our pros undergo strict background checks, skill verification, and identity audits.</p>
-              </div>
-              <div className="faq-item">
-                <h4>💳 What payment methods are supported?</h4>
-                <p>You can pay safely after work completion using UPI (GPay, PhonePe, Paytm), Cards, or Cash.</p>
-              </div>
+                  <button 
+                    type="submit" 
+                    className="btn-coral contact-submit-full" 
+                    disabled={loading}
+                    style={{ opacity: loading ? 0.7 : 1 }}
+                  >
+                    <span>{loading ? "DISPATCHING TO INBOX..." : "SEND INQUIRY"}</span>
+                    <span>{loading ? "⏳" : "⚡"}</span>
+                  </button>
+                </form>
+              )}
             </div>
           </div>
 

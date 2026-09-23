@@ -47,7 +47,7 @@ class DBStore {
   }
 
   getById(collection, id) {
-    return (this.data[collection] || []).find((item) => item.id === id);
+    return (this.data[collection] || []).find((item) => String(item.id) === String(id) || String(item._id) === String(id));
   }
 
   // Setters / CRUD
@@ -60,7 +60,7 @@ class DBStore {
 
   update(collection, id, updates) {
     if (!this.data[collection]) return null;
-    const index = this.data[collection].findIndex((item) => item.id === id);
+    const index = this.data[collection].findIndex((item) => String(item.id) === String(id) || String(item._id) === String(id));
     if (index !== -1) {
       this.data[collection][index] = { ...this.data[collection][index], ...updates };
       this.save();
@@ -72,7 +72,7 @@ class DBStore {
   delete(collection, id) {
     if (!this.data[collection]) return false;
     const initialLength = this.data[collection].length;
-    this.data[collection] = this.data[collection].filter((item) => item.id !== id);
+    this.data[collection] = this.data[collection].filter((item) => String(item.id) !== String(id) && String(item._id) !== String(id));
     if (this.data[collection].length !== initialLength) {
       this.save();
       return true;
