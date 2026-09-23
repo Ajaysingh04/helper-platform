@@ -39,6 +39,20 @@ function Home() {
   // Dynamic Hero Banners - Auto-slide home banners with animated cinematic feel
   const defaultHeroSlides = [
     {
+      id: "slide-experts",
+      image: "/images/homepage_5_wide.jpg",
+      mobileImage: "/images/homepage_5.jpg",
+      title: "All Verified Experts.",
+      highlight: "One Trusted Platform.",
+      subtitle: "Over 100+ on-demand home, technical, medical & emergency services delivered in 15 mins by police-verified professionals.",
+      badge: "🛡️ 50,000+ POLICE-VERIFIED SPECIALISTS",
+      ctaText: "Find Your Expert",
+      ctaLink: "/services",
+      perk1: "* 100% Police-verified & certified specialists",
+      perk2: "* Upfront pricing with 30-day rework warranty",
+      perk3: "* 15-min arrival with live GPS tracking"
+    },
+    {
       id: "slide-cleaning",
       image: "/images/pinterest_clean_widescreen.jpg",
       title: "Clean Space",
@@ -107,7 +121,7 @@ function Home() {
 
   const heroBanners = dataContext?.heroBanners || [];
   const activeBanners = heroBanners.filter((b) => b.active !== false && !b.image?.includes("helper_full_banner"));
-  const heroSlides = (activeBanners.length >= 4 && activeBanners.some((b) => b.image?.includes("pinterest_clean"))) ? activeBanners : defaultHeroSlides;
+  const heroSlides = (activeBanners.length >= 4 && (activeBanners.some((b) => b.image?.includes("homepage_5")) || activeBanners.some((b) => b.image?.includes("pinterest_clean")))) ? activeBanners : defaultHeroSlides;
 
   const [heroIndex, setHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
@@ -379,22 +393,27 @@ function Home() {
         onMouseLeave={() => setIsHeroPaused(false)}
       >
         <div className="helper-hero-slider">
-          {/* 4-Image Full-Width Auto-Slider */}
+          {/* Full-Width Auto-Slider with Responsive Picture Elements */}
           {heroSlides.map((slide, idx) => (
             <div 
               key={slide.id || idx} 
               className={`hero-slide-item ${idx === heroIndex ? "active" : ""}`}
             >
-              <img 
-                src={slide.image || `/images/homepage_${(idx % 4) + 1}.jpg`} 
-                alt={slide.title || `Home Banner ${idx + 1}`}
-                className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
-                loading={idx === 0 ? "eager" : "lazy"}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = `/images/homepage_${(idx % 4) + 1}.jpg`;
-                }}
-              />
+              <picture className="hero-slide-picture">
+                {slide.mobileImage && (
+                  <source media="(max-width: 768px)" srcSet={slide.mobileImage} />
+                )}
+                <img 
+                  src={slide.image || `/images/homepage_${(idx % 5) + 1}.jpg`} 
+                  alt={slide.title || `Home Banner ${idx + 1}`}
+                  className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = `/images/homepage_5_wide.jpg`;
+                  }}
+                />
+              </picture>
             </div>
           ))}
 
@@ -493,6 +512,20 @@ function Home() {
                 </div>
               </div>
 
+              {/* Primary Hero Action: Find Your Expert / Dynamic Slide CTA */}
+              <div className="hero-primary-cta-row">
+                <Link to={heroSlides[heroIndex]?.ctaLink || "/services"} className="hero-find-expert-btn">
+                  <span className="btn-lightning-glow">⚡</span>
+                  <span>{heroSlides[heroIndex]?.ctaText || "Find Your Expert"}</span>
+                  <span className="btn-arrow-glow">➔</span>
+                </Link>
+
+                <div className="hero-active-perk-badge">
+                  <span className="perk-badge-check">✓</span>
+                  <span>{heroSlides[heroIndex]?.perk1?.replace(/^\*\s*/, '') || "100% Police-verified specialists"}</span>
+                </div>
+              </div>
+
               {/* Trust Badges Bar */}
               <div className="hero-trust-bar">
                 <div className="trust-item">
@@ -519,30 +552,8 @@ function Home() {
               </div>
             </div>
 
-            {/* Right Column: Pinterest-Inspired Glowing Neon Framed Quote Card */}
-            <div className="hero-panoramic-right">
-              <div className="hero-pinterest-neon-frame">
-                <div className="neon-card-discounts">
-                  <div className="discount-line">
-                    <span className="discount-asterisk">*</span>
-                    <span><strong className="discount-bold">12% discount</strong> for first time user</span>
-                  </div>
-                  <div className="discount-line">
-                    <span className="discount-asterisk">*</span>
-                    <span><strong className="discount-bold">24% discount</strong> for repeating clients</span>
-                  </div>
-                  <div className="discount-line">
-                    <span className="discount-asterisk">*</span>
-                    <span><strong className="discount-bold">15-min arrival</strong> with live GPS tracking</span>
-                  </div>
-                </div>
-
-                <Link to={heroSlides[heroIndex]?.ctaLink || "/services"} className="neon-quote-action-btn">
-                  <span>{heroSlides[heroIndex]?.ctaText || "Get a Free Quote"}</span>
-                  <span className="btn-arrow-glow">➔</span>
-                </Link>
-              </div>
-            </div>
+            {/* Right Column: Kept completely open & unobscured so all 14+ professionals & airplane are 100% visible */}
+            <div className="hero-panoramic-right hero-right-unobstructed" />
           </div>
 
           {/* 2-Second Slider Controls & Indicator Dots */}
@@ -882,6 +893,135 @@ function Home() {
             </span>
           </div>
 
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 3.5: MEET OUR VERIFIED EXPERTS (Showcasing home page5.jpg)
+          ========================================================================= */}
+      <section className="nexora-content-section nexora-verified-experts-section" id="verified-experts-section">
+        <div className="nexora-section-container">
+          <div className="experts-showcase-card">
+            {/* Ambient Background Glows */}
+            <div className="experts-glow-blob-1" />
+            <div className="experts-glow-blob-2" />
+
+            <div className="experts-grid-layout">
+              {/* Left Column: Trust Pitch & Key Pillars */}
+              <div className="experts-content-col">
+                <div className="experts-badge-pill">
+                  <span className="badge-shield-icon">🛡️</span>
+                  <span>100% POLICE-VERIFIED & CERTIFIED SPECIALISTS</span>
+                </div>
+
+                <h2 className="experts-main-title">
+                  Skilled Hands You Can <span className="experts-highlight">Trust in Your Home.</span>
+                </h2>
+
+                <p className="experts-subtitle">
+                  We don't just dispatch anyone. Every Helper professional undergoes a rigorous 5-step background vetting, national police verification, and hands-on trade skills testing before ever ringing your doorbell.
+                </p>
+
+                {/* 4 Feature Checklist Pillars */}
+                <div className="experts-pillars-list">
+                  <div className="pillar-item">
+                    <div className="pillar-icon-box">🛡️</div>
+                    <div className="pillar-text">
+                      <h4>Police Background Verified</h4>
+                      <p>Criminal records checked and verified with official government databases.</p>
+                    </div>
+                  </div>
+
+                  <div className="pillar-item">
+                    <div className="pillar-icon-box">⚡</div>
+                    <div className="pillar-text">
+                      <h4>15-Minute Rapid Doorstep Dispatch</h4>
+                      <p>Real-time live GPS tracking of your assigned pro from route to doorstep.</p>
+                    </div>
+                  </div>
+
+                  <div className="pillar-item">
+                    <div className="pillar-icon-box">🏷️</div>
+                    <div className="pillar-text">
+                      <h4>Fixed Upfront Standard Rate Card</h4>
+                      <p>Transparent digital estimates with zero hidden fees or post-service surprises.</p>
+                    </div>
+                  </div>
+
+                  <div className="pillar-item">
+                    <div className="pillar-icon-box">✨</div>
+                    <div className="pillar-text">
+                      <h4>30-Day Free Revisit Guarantee</h4>
+                      <p>Full satisfaction warranty on every repair, electrical and cleaning job.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons & Live Active Counter */}
+                <div className="experts-action-row">
+                  <Link to="/services" className="experts-primary-btn">
+                    <span>Explore 100+ Verified Services</span>
+                    <span className="btn-arrow">➔</span>
+                  </Link>
+
+                  <div className="experts-live-status">
+                    <span className="live-status-pulse" />
+                    <div className="live-status-info">
+                      <strong>1,420+ Verified Pros</strong>
+                      <span>Active & Ready in Indore</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: 3D Visual Showcase Card of home page5.jpg */}
+              <div className="experts-visual-col">
+                <div className="experts-3d-card-frame">
+                  <div className="experts-image-wrapper">
+                    <img 
+                      src="/images/homepage_5.jpg" 
+                      alt="Helper Verified Service Professionals" 
+                      className="experts-hero-photo"
+                      loading="lazy"
+                    />
+
+                    {/* Floating Trust Badges */}
+                    <div className="floating-badge badge-top-left">
+                      <span className="badge-star">⭐</span>
+                      <div>
+                        <strong>4.9 / 5 Rating</strong>
+                        <span>50,000+ Happy Clients</span>
+                      </div>
+                    </div>
+
+                    <div className="floating-badge badge-top-right">
+                      <span className="badge-plane">✈️</span>
+                      <div>
+                        <strong>15-Min Express</strong>
+                        <span>Fast GPS Dispatch</span>
+                      </div>
+                    </div>
+
+                    <div className="floating-badge badge-bottom-left">
+                      <span className="badge-shield">🛡️</span>
+                      <div>
+                        <strong>Govt ID & Police</strong>
+                        <span>100% Background Screened</span>
+                      </div>
+                    </div>
+
+                    <div className="floating-badge badge-bottom-right">
+                      <span className="badge-dot-green" />
+                      <div>
+                        <strong>Multi-Trade Pros</strong>
+                        <span>Electric, Clean, Plumb, Tech</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

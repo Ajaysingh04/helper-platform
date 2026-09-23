@@ -1,6 +1,24 @@
 // Initial Hero Banners for Helper Platform - Curated Attractive 1920x1080 Photography
 export const initialHeroBanners = [
   {
+    id: "hero-banner-5-experts",
+    title: "All Verified Experts.",
+    highlight: "One Trusted Platform.",
+    subtitle: "Over 100+ on-demand home, technical, medical & emergency services delivered in 15 mins by police-verified professionals.",
+    badge: "🛡️ 50,000+ POLICE-VERIFIED SPECIALISTS",
+    city: "📍 INDORE & SURROUNDING REGIONS",
+    image: "/images/homepage_5_wide.jpg",
+    mobileImage: "/images/homepage_5.jpg",
+    active: true,
+    ctaText: "Find Your Expert ➔",
+    ctaLink: "/services",
+    perk1: "* 100% Police-verified & certified specialists",
+    perk2: "* Upfront pricing with 30-day rework warranty",
+    perk3: "* 15-min arrival with live GPS tracking",
+    tags: ["Verified Pros", "Technicians", "Electricians", "Plumbers", "Cleaning", "Doctors"],
+    createdAt: "2026-09-23"
+  },
+  {
     id: "hero-banner-cleaning",
     title: "Clean Space",
     highlight: "Starts Here.",
@@ -77,6 +95,12 @@ export const initialHeroBanners = [
 ];
 
 export const HERO_IMAGE_PRESETS = [
+  {
+    name: "50,000+ Verified Experts (Your Image 5)",
+    url: "/images/homepage_5_wide.jpg",
+    badge: "Your Upload 5",
+    desc: "14+ multi-industry professionals with city skyline & airplane"
+  },
   {
     name: "Quality House Painter (Your Image 1)",
     url: "/images/homepage_1.jpg",
