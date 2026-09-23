@@ -4,13 +4,22 @@
 
 .header-floating-wrapper {
   position: sticky;
-  top: 14px;
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  padding: 0 20px;
+  padding: 10px 20px;
   width: 100%;
+  background: rgba(248, 250, 252, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.dark .header-floating-wrapper {
+  background: rgba(11, 15, 25, 0.96);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 .header-pill-bar {

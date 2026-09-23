@@ -60,6 +60,17 @@ function Home() {
     return () => clearInterval(interval);
   }, [heroSlides.length, isHeroPaused]);
 
+  // 3D Parallax Scroll Tracking
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY || window.pageYOffset || 0);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // Popular Services & Categories Filter States
   const [homeCatFilter, setHomeCatFilter] = useState("All");
   const [homeCatSearch, setHomeCatSearch] = useState("");
@@ -294,10 +305,14 @@ function Home() {
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
       {/* =========================================================================
-          HERO SECTION: 2-Second Crystal Clear Image Carousel (No Manual Overlays)
+          HERO SECTION: 2-Second Crystal Clear Image Carousel (Pinned under Header)
           ========================================================================= */}
       <section 
         className="helper-hero-slider-wrap"
+        style={{
+          transform: `scale(${Math.max(0.93, 1 - scrollY * 0.00025)})`,
+          filter: `brightness(${Math.max(0.85, 1 - scrollY * 0.0005)})`
+        }}
         onMouseEnter={() => setIsHeroPaused(true)}
         onMouseLeave={() => setIsHeroPaused(false)}
       >
@@ -355,8 +370,18 @@ function Home() {
             </div>
           )}
         </div>
+      </section>
 
-        {/* Clean Search Bar Strip Below Hero (Keeps Full Usability Without Blocking Images) */}
+      {/* =========================================================================
+          3D STACKING SHEET: Slides Up and Layers OVER the Hero Section
+          ========================================================================= */}
+      <div className="home-3d-stack-sheet">
+        {/* Subtle 3D Card Pill Handle */}
+        <div className="sheet-3d-handle-bar">
+          <div className="sheet-3d-pill" />
+        </div>
+
+        {/* Clean Search Bar Strip (Now Inside the 3D Stacking Layer) */}
         <div className="hero-bottom-search-strip">
           <div className="container-wrapper">
             <div className="hero-search-strip-inner">
@@ -407,7 +432,6 @@ function Home() {
             </div>
           </div>
         </div>
-      </section>
 
       {/* =========================================================================
           SECTION 1: OUR SERVICES
@@ -898,6 +922,8 @@ function Home() {
         </div>
       )}
 
+      {/* End of 3D Stacking Layer */}
+      </div>
     </div>
   );
 }
