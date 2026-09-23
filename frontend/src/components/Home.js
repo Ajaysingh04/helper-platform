@@ -266,6 +266,8 @@ function Home() {
 
         {/* Ambient Gradient Scrim to ensure crisp typography and readability */}
         <div className="hero-panoramic-overlay" />
+        <div className="hero-ambient-glow-warm" />
+        <div className="hero-ambient-glow-cyan" />
 
         {/* Main Content Container overlaying the panoramic image */}
         <div className="container-wrapper hero-panoramic-grid">
