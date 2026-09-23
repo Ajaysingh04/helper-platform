@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import { popularCategories } from "../data/popularCategoriesData";
 import { initialOffers } from "../data/offersData";
+import { initialHeroBanners } from "../data/heroBannersData";
 import { API_BASE } from "../apiConfig";
 
 export const DataContext = createContext();
@@ -234,6 +235,19 @@ export const DataProvider = ({ children }) => {
     return initialOffers;
   });
 
+  const [heroBanners, setHeroBanners] = useState(() => {
+    try {
+      const saved = localStorage.getItem("helper_hero_banners");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return initialHeroBanners;
+  });
+
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem("helper_users");
     return saved ? JSON.parse(saved) : initialUsers;
@@ -301,6 +315,7 @@ export const DataProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem("helper_providers", JSON.stringify(providers)); }, [providers]);
   useEffect(() => { localStorage.setItem("helper_bookings", JSON.stringify(bookings)); }, [bookings]);
   useEffect(() => { localStorage.setItem("helper_slides", JSON.stringify(slides)); }, [slides]);
+  useEffect(() => { localStorage.setItem("helper_hero_banners", JSON.stringify(heroBanners)); }, [heroBanners]);
   useEffect(() => { localStorage.setItem("helper_users", JSON.stringify(users)); }, [users]);
   useEffect(() => { localStorage.setItem("helper_tickets", JSON.stringify(tickets)); }, [tickets]);
   useEffect(() => { localStorage.setItem("helper_settings", JSON.stringify(settings)); }, [settings]);
@@ -575,6 +590,60 @@ export const DataProvider = ({ children }) => {
   const toggleOfferActive = toggleSlideActive;
   const deleteOffer = deleteSlide;
 
+  // Hero Banners Management (Admin Panel & Dynamic Home Hero)
+  const addHeroBanner = (bannerData) => {
+    const newBanner = {
+      id: `hero-${Date.now()}`,
+      title: bannerData.title || "Everything Your Home Needs.",
+      highlight: bannerData.highlight || "Delivered In 15 Mins.",
+      subtitle: bannerData.subtitle || "Book certified electricians, plumbers & cleaning experts.",
+      badge: bannerData.badge || "#1 ON-DEMAND HOME SERVICE PLATFORM",
+      city: bannerData.city || "📍 INDORE & REGION",
+      image: bannerData.image || "/images/homepage_1.jpg",
+      active: bannerData.active !== undefined ? bannerData.active : true,
+      ctaText: bannerData.ctaText || "Book Service Now ➔",
+      ctaLink: bannerData.ctaLink || "/services",
+      tags: Array.isArray(bannerData.tags) ? bannerData.tags : ["Electrician", "AC Repair", "Cleaning", "Plumber"],
+      createdAt: new Date().toISOString()
+    };
+    setHeroBanners(prev => [newBanner, ...prev]);
+  };
+
+  const updateHeroBanner = (id, updatedFields) => {
+    setHeroBanners(prev => prev.map(b => (b.id === id || b._id === id) ? { ...b, ...updatedFields } : b));
+  };
+
+  const toggleHeroBannerActive = (id) => {
+    setHeroBanners(prev => prev.map(b => {
+      if (b.id === id || b._id === id) {
+        return { ...b, active: !b.active };
+      }
+      return b;
+    }));
+  };
+
+  const setActiveHeroBanner = (id) => {
+    setHeroBanners(prev => prev.map(b => ({
+      ...b,
+      active: (b.id === id || b._id === id)
+    })));
+  };
+
+  const deleteHeroBanner = (id) => {
+    setHeroBanners(prev => {
+      if (prev.length <= 1) {
+        alert("At least one hero banner must remain.");
+        return prev;
+      }
+      const filtered = prev.filter(b => b.id !== id && b._id !== id);
+      // Ensure at least one is active if the deleted one was active
+      if (!filtered.some(b => b.active) && filtered.length > 0) {
+        filtered[0].active = true;
+      }
+      return filtered;
+    });
+  };
+
   // Users
   const updateUserStatus = async (id, status) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, status } : u));
@@ -662,6 +731,7 @@ export const DataProvider = ({ children }) => {
     setProviders(initialProviders);
     setBookings(initialBookings);
     setSlides(initialSlides);
+    setHeroBanners(initialHeroBanners);
     setUsers(initialUsers);
     setTickets(initialTickets);
     setSettings(initialSettings);
@@ -679,6 +749,7 @@ export const DataProvider = ({ children }) => {
       bookings, addBooking, updateBookingStatus, deleteBooking,
       slides, addSlide, updateSlide, deleteSlide, toggleSlideActive,
       offers, addOffer, updateOffer, deleteOffer, toggleOfferActive,
+      heroBanners, addHeroBanner, updateHeroBanner, toggleHeroBannerActive, setActiveHeroBanner, deleteHeroBanner,
       users, updateUserStatus, deleteUser,
       tickets, resolveTicket, addTicket,
       settings, updateSettings, resetAllData

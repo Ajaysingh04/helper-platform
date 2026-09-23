@@ -36,6 +36,23 @@ function Home() {
 
   const activeOffers = (offersList || []).filter((o) => o.active !== false);
 
+  // Dynamic Hero Banners from DataContext (Admin Add/Edit/Active/Delete)
+  const heroBanners = dataContext?.heroBanners || [];
+  const activeHeroBanners = heroBanners.filter((b) => b.active !== false);
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  const currentHero = (activeHeroBanners.length > 0 && activeHeroBanners[heroIndex])
+    ? activeHeroBanners[heroIndex]
+    : (activeHeroBanners[0] || heroBanners[0] || {
+        title: "Everything Your Home Needs.",
+        highlight: "Delivered In 15 Mins.",
+        subtitle: "Book certified electricians, plumbers, AC technicians, salon pros & cleaning experts. Guaranteed upfront rates with live GPS tracking.",
+        badge: "#1 ON-DEMAND HOME SERVICE PLATFORM",
+        city: "📍 INDORE & REGION",
+        image: "/images/homepage_1.jpg",
+        tags: ["House Painting", "Wall Care", "Plumbing", "Electrician"]
+      });
+
   // Popular Services & Categories Filter States
   const [homeCatFilter, setHomeCatFilter] = useState("All");
   const [homeCatSearch, setHomeCatSearch] = useState("");
@@ -270,21 +287,56 @@ function Home() {
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
       {/* =========================================================================
-          HERO SECTION: Full-Width Panoramic High-Definition Hero Banner
+          HERO SECTION: Full-Width Panoramic High-Definition Hero Banner (Admin Managed)
           ========================================================================= */}
       <section className="helper-hero-panoramic">
         {/* Full-Page High-Definition Panoramic Background Image */}
         <img 
-          src="/images/helper_full_banner.jpg" 
-          alt="Helper GO - Everything You Need Delivered to You" 
+          key={currentHero.image}
+          src={currentHero.image || "/images/homepage_1.jpg"} 
+          alt={currentHero.title || "Helper GO"} 
           className="hero-panoramic-bg"
           loading="eager"
+          onError={(e) => { e.target.src = "/images/homepage_1.jpg"; }}
         />
 
         {/* Ambient Gradient Scrim to ensure crisp typography and readability */}
         <div className="hero-panoramic-overlay" />
         <div className="hero-ambient-glow-warm" />
         <div className="hero-ambient-glow-cyan" />
+
+        {/* Multi-banner Navigation Controls (if more than 1 active banner) */}
+        {activeHeroBanners.length > 1 && (
+          <div className="hero-slider-nav-controls">
+            <button
+              type="button"
+              className="hero-slider-arrow prev"
+              onClick={() => setHeroIndex((prev) => (prev > 0 ? prev - 1 : activeHeroBanners.length - 1))}
+              title="Previous Banner"
+            >
+              ‹
+            </button>
+            <div className="hero-slider-dots">
+              {activeHeroBanners.map((_, i) => (
+                <button
+                  type="button"
+                  key={i}
+                  className={`hero-slider-dot ${i === heroIndex ? "active" : ""}`}
+                  onClick={() => setHeroIndex(i)}
+                  title={`Banner ${i + 1}`}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              className="hero-slider-arrow next"
+              onClick={() => setHeroIndex((prev) => (prev < activeHeroBanners.length - 1 ? prev + 1 : 0))}
+              title="Next Banner"
+            >
+              ›
+            </button>
+          </div>
+        )}
 
         {/* Main Content Container overlaying the panoramic image */}
         <div className="container-wrapper hero-panoramic-grid">
@@ -295,18 +347,23 @@ function Home() {
             {/* Live Status Pill */}
             <div className="hero-live-pill">
               <span className="live-pulse-dot" />
-              <span className="live-pill-text">#1 ON-DEMAND HOME SERVICE PLATFORM</span>
-              <span className="live-pill-city">📍 INDORE & REGION</span>
+              <span className="live-pill-text">{currentHero.badge || "#1 ON-DEMAND HOME SERVICE PLATFORM"}</span>
+              <span className="live-pill-city">{currentHero.city || "📍 INDORE & REGION"}</span>
             </div>
 
             {/* Razor-sharp Typography Headline */}
             <h1 className="hero-studio-headline">
-              Everything Your Home Needs.<br />
-              <span className="hero-gradient-highlight">Delivered In 15 Mins.</span>
+              {currentHero.title}
+              {currentHero.highlight && (
+                <>
+                  <br />
+                  <span className="hero-gradient-highlight">{currentHero.highlight}</span>
+                </>
+              )}
             </h1>
 
             <p className="hero-studio-subtitle">
-              Book certified electricians, plumbers, AC technicians, salon pros & cleaning experts. Guaranteed upfront rates with live GPS tracking.
+              {currentHero.subtitle}
             </p>
 
             {/* Live Interactive Search Bar */}
@@ -329,7 +386,7 @@ function Home() {
                 onChange={(e) => setHomeCatSearch(e.target.value)}
               />
               <button type="submit" className="hero-search-btn">
-                <span>Find Service ➔</span>
+                <span>{currentHero.ctaText ? currentHero.ctaText.replace(/[➔→]/g, "").trim() : "Find Service"} ➔</span>
               </button>
             </form>
 
@@ -337,21 +394,40 @@ function Home() {
             <div className="hero-quick-tags">
               <span className="quick-tags-label">Popular Now:</span>
               <div className="quick-tags-list">
-                <Link to="/category/ac-repair-services" className="quick-service-chip">
-                  <span>❄️ AC Repair</span>
-                </Link>
-                <Link to="/category/electricians" className="quick-service-chip">
-                  <span>⚡ Electrician</span>
-                </Link>
-                <Link to="/category/plumbers" className="quick-service-chip">
-                  <span>🚰 Plumber</span>
-                </Link>
-                <Link to="/category/beauty-parlours" className="quick-service-chip">
-                  <span>💇‍♀️ Salon & Spa</span>
-                </Link>
-                <Link to="/category/cleaning" className="quick-service-chip">
-                  <span>🧹 Deep Cleaning</span>
-                </Link>
+                {Array.isArray(currentHero.tags) && currentHero.tags.length > 0 ? (
+                  currentHero.tags.map((tag, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className="quick-service-chip"
+                      onClick={() => {
+                        setHomeCatSearch(tag);
+                        const element = document.getElementById("popular-service-categories");
+                        if (element) element.scrollIntoView({ behavior: "smooth" });
+                      }}
+                    >
+                      <span>⚡ {tag}</span>
+                    </button>
+                  ))
+                ) : (
+                  <>
+                    <Link to="/category/ac-repair-services" className="quick-service-chip">
+                      <span>❄️ AC Repair</span>
+                    </Link>
+                    <Link to="/category/electricians" className="quick-service-chip">
+                      <span>⚡ Electrician</span>
+                    </Link>
+                    <Link to="/category/plumbers" className="quick-service-chip">
+                      <span>🚰 Plumber</span>
+                    </Link>
+                    <Link to="/category/beauty-parlours" className="quick-service-chip">
+                      <span>💇‍♀️ Salon & Spa</span>
+                    </Link>
+                    <Link to="/category/cleaning" className="quick-service-chip">
+                      <span>🧹 Deep Cleaning</span>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 
@@ -408,7 +484,7 @@ function Home() {
                     name: "Rahul Sharma",
                     phone: "+91 98765 43210",
                     rating: 4.9,
-                    photo: "/images/helper_full_banner.jpg"
+                    photo: "/images/homepage_1.jpg"
                   }
                 });
               }}

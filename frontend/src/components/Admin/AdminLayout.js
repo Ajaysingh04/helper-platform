@@ -8,6 +8,7 @@ import AdminCategories from "./AdminCategories";
 import AdminProviders from "./AdminProviders";
 import AdminUsers from "./AdminUsers";
 import AdminPromotions from "./AdminPromotions";
+import AdminHeroBanners from "./AdminHeroBanners";
 import AdminSupport from "./AdminSupport";
 import AdminSettings from "./AdminSettings";
 import OtpInput from "../OtpInput";
@@ -203,7 +204,17 @@ function AdminLayout() {
             </div>
           </button>
 
-          <span className="admin-nav-category-title">Marketing & Help</span>
+          <span className="admin-nav-category-title">Marketing & Hero</span>
+
+          <button 
+            className={`admin-nav-btn ${activeTab === "hero" ? "active" : ""}`}
+            onClick={() => setActiveTab("hero")}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">🖼️</span>
+              <span>Hero Section</span>
+            </div>
+          </button>
 
           <button 
             className={`admin-nav-btn ${activeTab === "promotions" ? "active" : ""}`}
@@ -211,7 +222,7 @@ function AdminLayout() {
           >
             <div className="nav-btn-content">
               <span className="nav-icon">🎁</span>
-              <span>Hero Slider & Offers</span>
+              <span>Offers & Deals</span>
             </div>
           </button>
 
@@ -298,6 +309,7 @@ function AdminLayout() {
           {activeTab === "categories" && <AdminCategories />}
           {activeTab === "providers" && <AdminProviders />}
           {activeTab === "users" && <AdminUsers />}
+          {activeTab === "hero" && <AdminHeroBanners />}
           {activeTab === "promotions" && <AdminPromotions />}
           {activeTab === "support" && <AdminSupport />}
           {activeTab === "settings" && <AdminSettings />}
