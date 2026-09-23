@@ -135,17 +135,6 @@ function Home() {
     return () => clearInterval(interval);
   }, [heroSlides.length, isHeroPaused]);
 
-  // 3D Parallax Scroll Tracking
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY || window.pageYOffset || 0);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   // Popular Services & Categories Filter States
   const [homeCatFilter, setHomeCatFilter] = useState("All");
   const [homeCatSearch, setHomeCatSearch] = useState("");
@@ -384,11 +373,6 @@ function Home() {
           ========================================================================= */}
       <section 
         className="helper-hero-slider-wrap"
-        style={{
-          transform: scrollY > 0 ? `scale(${Math.max(0.95, 1 - scrollY * 0.00018)})` : "none",
-          transformOrigin: "top center",
-          filter: scrollY > 0 ? `brightness(${Math.max(0.88, 1 - scrollY * 0.0004)})` : "none"
-        }}
         onMouseEnter={() => setIsHeroPaused(true)}
         onMouseLeave={() => setIsHeroPaused(false)}
       >

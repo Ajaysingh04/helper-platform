@@ -88,26 +88,16 @@ body.dark .helper-hero-slider {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: high-quality;
   filter: brightness(0.96) contrast(1.04);
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  transition: transform 0.8s ease-out;
+  transform: none !important;
+  transition: opacity 0.5s ease-in-out !important;
+  pointer-events: none;
+  user-select: none;
 }
 
-/* Cinematic Slow Breathing Ken Burns Animation (Matching Animated Reference) */
+/* Static, Rock-Solid Image (No wobbling, shifting, or zooming on hover) */
 .hero-slide-img.kenburns-active {
-  animation: heroKenBurnsAnim 16s ease-in-out infinite alternate;
-}
-
-@keyframes heroKenBurnsAnim {
-  0% {
-    transform: scale(1) translate(0, 0);
-  }
-  50% {
-    transform: scale(1.042) translate(-1%, -0.6%);
-  }
-  100% {
-    transform: scale(1) translate(0, 0);
-  }
+  animation: none !important;
+  transform: none !important;
 }
 
 /* Floating Clean Air Sparkles & Dust Motes (Animated Ambient Glow) */
@@ -260,7 +250,7 @@ body.dark .hero-panoramic-overlay {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 56px 28px 64px;
+  padding: 110px 28px 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -271,7 +261,7 @@ body.dark .hero-panoramic-overlay {
   .hero-panoramic-grid {
     flex-direction: column;
     align-items: flex-start;
-    padding: 36px 18px 48px;
+    padding: 95px 18px 48px;
     gap: 32px;
   }
   .hero-panoramic-overlay {
