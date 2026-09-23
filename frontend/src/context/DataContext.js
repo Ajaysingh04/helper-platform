@@ -237,10 +237,10 @@ export const DataProvider = ({ children }) => {
 
   const [heroBanners, setHeroBanners] = useState(() => {
     try {
-      const saved = localStorage.getItem("helper_hero_banners");
+      const saved = localStorage.getItem("helper_hero_banners_v4");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed) && parsed.length >= 4 && !parsed.some(b => b.image?.includes("helper_full_banner"))) {
           return parsed;
         }
       }
@@ -315,7 +315,7 @@ export const DataProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem("helper_providers", JSON.stringify(providers)); }, [providers]);
   useEffect(() => { localStorage.setItem("helper_bookings", JSON.stringify(bookings)); }, [bookings]);
   useEffect(() => { localStorage.setItem("helper_slides", JSON.stringify(slides)); }, [slides]);
-  useEffect(() => { localStorage.setItem("helper_hero_banners", JSON.stringify(heroBanners)); }, [heroBanners]);
+  useEffect(() => { localStorage.setItem("helper_hero_banners_v4", JSON.stringify(heroBanners)); }, [heroBanners]);
   useEffect(() => { localStorage.setItem("helper_users", JSON.stringify(users)); }, [users]);
   useEffect(() => { localStorage.setItem("helper_tickets", JSON.stringify(tickets)); }, [tickets]);
   useEffect(() => { localStorage.setItem("helper_settings", JSON.stringify(settings)); }, [settings]);

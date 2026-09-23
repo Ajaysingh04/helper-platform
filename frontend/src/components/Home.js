@@ -45,8 +45,8 @@ function Home() {
   ];
 
   const heroBanners = dataContext?.heroBanners || [];
-  const activeBanners = heroBanners.filter((b) => b.active !== false);
-  const heroSlides = activeBanners.length > 0 ? activeBanners : defaultHeroSlides;
+  const activeBanners = heroBanners.filter((b) => b.active !== false && !b.image?.includes("helper_full_banner"));
+  const heroSlides = (activeBanners.length >= 4) ? activeBanners : defaultHeroSlides;
 
   const [heroIndex, setHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
@@ -312,6 +312,10 @@ function Home() {
                 alt={slide.title || `Home Banner ${idx + 1}`}
                 className="hero-slide-img"
                 loading={idx === 0 ? "eager" : "lazy"}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = `/images/homepage_${(idx % 4) + 1}.jpg`;
+                }}
               />
             </div>
           ))}

@@ -28,8 +28,12 @@ body.dark .nexora-home-wrapper {
 .helper-hero-slider-wrap {
   position: relative;
   width: 100%;
-  background-color: #0B1120;
+  background-color: #F8FAFC;
   overflow: hidden;
+}
+
+body.dark .helper-hero-slider-wrap {
+  background-color: #0B1120;
 }
 
 .helper-hero-slider {
@@ -37,6 +41,10 @@ body.dark .nexora-home-wrapper {
   width: 100%;
   height: clamp(340px, 48vw, 560px);
   overflow: hidden;
+  background-color: #F1F5F9;
+}
+
+body.dark .helper-hero-slider {
   background-color: #070B14;
 }
 
