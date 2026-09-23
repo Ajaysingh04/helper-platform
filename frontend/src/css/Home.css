@@ -30,22 +30,28 @@ body.dark .nexora-home-wrapper {
   top: 84px;
   z-index: 1;
   width: 100%;
-  background-color: #F8FAFC;
+  background-color: #0B1120;
   overflow: hidden;
   will-change: transform, filter;
   transition: transform 0.15s ease-out, filter 0.15s ease-out;
 }
 
 body.dark .helper-hero-slider-wrap {
-  background-color: #0B1120;
+  background-color: #070B14;
 }
 
 .helper-hero-slider {
   position: relative;
   width: 100%;
-  height: clamp(340px, 46vw, 560px);
+  max-width: 1540px;
+  margin: 0 auto;
+  /* Natural aspect-ratio ensures 100% of height and width fits with ZERO top cropping */
+  aspect-ratio: 16 / 8.8;
+  height: auto;
+  max-height: calc(100vh - 110px);
+  min-height: 400px;
   overflow: hidden;
-  background-color: #F1F5F9;
+  background-color: #0B1120;
 }
 
 body.dark .helper-hero-slider {
@@ -73,8 +79,9 @@ body.dark .helper-hero-slider {
 .hero-slide-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  /* Contain with top-center alignment: completely prevents header-side cut-off */
+  object-fit: contain;
+  object-position: center top;
   display: block;
   /* Ultra crystal-clear clarity: text inside images remains 100% sharp */
   image-rendering: -webkit-optimize-contrast;
