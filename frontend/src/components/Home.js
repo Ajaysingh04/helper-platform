@@ -36,8 +36,21 @@ function Home() {
 
   const activeOffers = (offersList || []).filter((o) => o.active !== false);
 
-  // Dynamic Hero Banners - Auto-slide home 1, 2, 3, 4 every 2 seconds
+  // Dynamic Hero Banners - Auto-slide home banners with animated cinematic feel
   const defaultHeroSlides = [
+    {
+      id: "slide-cleaning",
+      image: "/images/pinterest_clean_widescreen.jpg",
+      title: "Clean Space",
+      highlight: "Starts Here.",
+      subtitle: "Professional cleaning services for offices, homes, and commercial spaces — done right, every time.",
+      badge: "⭐ TRUSTED BY 10,000+ HOMES & BUSINESSES",
+      ctaText: "Get a Free Quote",
+      ctaLink: "/services",
+      perk1: "* 12% discount for first time user",
+      perk2: "* 24% discount for repeating clients",
+      perk3: "* 15-min arrival with live GPS tracking"
+    },
     {
       id: "slide-1",
       image: "/images/homepage_1.jpg",
@@ -45,8 +58,11 @@ function Home() {
       highlight: "Delivered In 15 Mins.",
       subtitle: "Book verified electricians, plumbers, cleaning experts & painters with guaranteed upfront rates and 30-day warranty.",
       badge: "⚡ #1 ON-DEMAND HOME SERVICE PLATFORM",
-      ctaText: "Book Service Now ➔",
-      ctaLink: "/services"
+      ctaText: "Book Service Now",
+      ctaLink: "/services",
+      perk1: "* 15-min arrival with live GPS tracking",
+      perk2: "* 100% verified police-checked experts",
+      perk3: "* Upfront rates with 30-day warranty"
     },
     {
       id: "slide-2",
@@ -55,8 +71,11 @@ function Home() {
       highlight: "Instant 15-Min Response.",
       subtitle: "Short circuit repair, wiring, switchboards, inverter & fan repairs by background-screened pros.",
       badge: "🛡️ 100% VERIFIED BACKGROUND CHECK",
-      ctaText: "Book Electrician ➔",
-      ctaLink: "/category/electricians"
+      ctaText: "Book Electrician",
+      ctaLink: "/category/electricians",
+      perk1: "* Upfront rates with zero fraud start OTP",
+      perk2: "* 30-day free revisit guarantee",
+      perk3: "* Certified high-voltage specialists"
     },
     {
       id: "slide-3",
@@ -65,8 +84,11 @@ function Home() {
       highlight: "Spotless Clean Guaranteed.",
       subtitle: "Leak repairs, tap fittings, pipe drainage & hospital-grade deep sanitization. Trusted by 25,000+ homes.",
       badge: "✨ 5-STAR HYGIENE & QUALITY GUARANTEE",
-      ctaText: "Explore Plumbers ➔",
-      ctaLink: "/category/plumbers"
+      ctaText: "Explore Plumbers",
+      ctaLink: "/category/plumbers",
+      perk1: "* 100% transparent rate card",
+      perk2: "* Certified master plumbers",
+      perk3: "* Free inspection on booking"
     },
     {
       id: "slide-4",
@@ -75,14 +97,17 @@ function Home() {
       highlight: "Flawless Finish On Time.",
       subtitle: "Premium dust-free painting, waterproof coatings & carpentry by top-rated certified specialists.",
       badge: "🏡 ARCHITECTURAL GRADE WORKMANSHIP",
-      ctaText: "Explore Services ➔",
-      ctaLink: "/services"
+      ctaText: "Explore Services",
+      ctaLink: "/services",
+      perk1: "* Free color consultation & 3D preview",
+      perk2: "* 5-year anti-peel warranty",
+      perk3: "* Laser accurate cost estimation"
     }
   ];
 
   const heroBanners = dataContext?.heroBanners || [];
   const activeBanners = heroBanners.filter((b) => b.active !== false && !b.image?.includes("helper_full_banner"));
-  const heroSlides = (activeBanners.length >= 4) ? activeBanners : defaultHeroSlides;
+  const heroSlides = (activeBanners.length >= 4 && activeBanners.some((b) => b.image?.includes("pinterest_clean"))) ? activeBanners : defaultHeroSlides;
 
   const [heroIndex, setHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
@@ -363,7 +388,7 @@ function Home() {
               <img 
                 src={slide.image || `/images/homepage_${(idx % 4) + 1}.jpg`} 
                 alt={slide.title || `Home Banner ${idx + 1}`}
-                className="hero-slide-img"
+                className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
                 loading={idx === 0 ? "eager" : "lazy"}
                 onError={(e) => {
                   e.currentTarget.onerror = null;
@@ -373,6 +398,16 @@ function Home() {
             </div>
           ))}
 
+          {/* Animated Ambient Sparkles / Light Dust Motes (Floating Clean Air Glow) */}
+          <div className="hero-ambient-particles">
+            <span className="ambient-sparkle sp-1" />
+            <span className="ambient-sparkle sp-2" />
+            <span className="ambient-sparkle sp-3" />
+            <span className="ambient-sparkle sp-4" />
+            <span className="ambient-sparkle sp-5" />
+            <span className="ambient-sparkle sp-6" />
+          </div>
+
           {/* Ambient Lighting & Scrim Overlays (Ensures Text is 100% Crisp) */}
           <div className="hero-panoramic-overlay" />
           <div className="hero-ambient-glow-warm" />
@@ -380,22 +415,36 @@ function Home() {
 
           {/* Manual Studio Hero Content Overlay */}
           <div className="container-wrapper hero-panoramic-grid">
+            {/* Left Column: Pinterest-Inspired Razor-Sharp Typography & Search */}
             <div className="hero-panoramic-left">
-              {/* Live Status Pill */}
-              <div className="hero-live-pill">
-                <span className="live-pulse-dot" />
-                <span className="live-pill-text">#1 ON-DEMAND HOME SERVICE PLATFORM</span>
-                <span className="live-pill-city">📍 INDORE & REGION</span>
+              {/* Top Row: Social Proof Avatars & Live Status Pill (Matching Pinterest Reference) */}
+              <div className="hero-top-social-row">
+                <div className="hero-social-proof-pill">
+                  <span className="social-proof-label">Trusted by 10,000+ happy clients</span>
+                  <span className="social-proof-arrow">➔</span>
+                  <div className="social-avatars-cluster">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=80" alt="Client 1" className="cluster-avatar" />
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80" alt="Client 2" className="cluster-avatar" />
+                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=80" alt="Client 3" className="cluster-avatar" />
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=80" alt="Client 4" className="cluster-avatar" />
+                  </div>
+                </div>
+                <div className="hero-live-pill">
+                  <span className="live-pulse-dot" />
+                  <span className="live-pill-city">📍 INDORE & REGION</span>
+                </div>
               </div>
 
               {/* Razor-sharp Typography Headline */}
               <h1 className="hero-studio-headline">
-                Everything Your Home Needs.<br />
-                <span className="hero-gradient-highlight">Delivered In 15 Mins.</span>
+                {heroSlides[heroIndex]?.title || "Clean Space"}<br />
+                <span className="hero-gradient-highlight">
+                  {heroSlides[heroIndex]?.highlight || "Starts Here."}
+                </span>
               </h1>
 
               <p className="hero-studio-subtitle">
-                Book certified electricians, plumbers, AC technicians, salon pros & cleaning experts. Guaranteed upfront rates with live GPS tracking.
+                {heroSlides[heroIndex]?.subtitle || "Professional cleaning services for offices, homes, and commercial spaces — done right, every time."}
               </p>
 
               {/* Live Interactive Search Bar */}
@@ -413,7 +462,7 @@ function Home() {
                 <input
                   type="text"
                   className="hero-search-input"
-                  placeholder="Search 'AC Repair', 'Electrician', 'Plumber', 'Cleaning'..."
+                  placeholder="Search 'Deep Cleaning', 'AC Repair', 'Plumber'..."
                   value={homeCatSearch}
                   onChange={(e) => setHomeCatSearch(e.target.value)}
                 />
@@ -426,6 +475,9 @@ function Home() {
               <div className="hero-quick-tags">
                 <span className="quick-tags-label">Popular Now:</span>
                 <div className="quick-tags-list">
+                  <Link to="/category/cleaning" className="quick-service-chip">
+                    <span>🧹 Deep Cleaning</span>
+                  </Link>
                   <Link to="/category/ac-repair-services" className="quick-service-chip">
                     <span>❄️ AC Repair</span>
                   </Link>
@@ -437,9 +489,6 @@ function Home() {
                   </Link>
                   <Link to="/category/beauty-parlours" className="quick-service-chip">
                     <span>💇‍♀️ Salon & Spa</span>
-                  </Link>
-                  <Link to="/category/cleaning" className="quick-service-chip">
-                    <span>🧹 Deep Cleaning</span>
                   </Link>
                 </div>
               </div>
@@ -467,6 +516,31 @@ function Home() {
                     <span>Police-Checked Pros</span>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Right Column: Pinterest-Inspired Glowing Neon Framed Quote Card */}
+            <div className="hero-panoramic-right">
+              <div className="hero-pinterest-neon-frame">
+                <div className="neon-card-discounts">
+                  <div className="discount-line">
+                    <span className="discount-asterisk">*</span>
+                    <span><strong className="discount-bold">12% discount</strong> for first time user</span>
+                  </div>
+                  <div className="discount-line">
+                    <span className="discount-asterisk">*</span>
+                    <span><strong className="discount-bold">24% discount</strong> for repeating clients</span>
+                  </div>
+                  <div className="discount-line">
+                    <span className="discount-asterisk">*</span>
+                    <span><strong className="discount-bold">15-min arrival</strong> with live GPS tracking</span>
+                  </div>
+                </div>
+
+                <Link to={heroSlides[heroIndex]?.ctaLink || "/services"} className="neon-quote-action-btn">
+                  <span>{heroSlides[heroIndex]?.ctaText || "Get a Free Quote"}</span>
+                  <span className="btn-arrow-glow">➔</span>
+                </Link>
               </div>
             </div>
           </div>

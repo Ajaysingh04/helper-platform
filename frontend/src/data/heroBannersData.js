@@ -1,6 +1,22 @@
 // Initial Hero Banners for Helper Platform - Curated Attractive 1920x1080 Photography
 export const initialHeroBanners = [
   {
+    id: "hero-banner-cleaning",
+    title: "Clean Space",
+    highlight: "Starts Here.",
+    subtitle: "Professional cleaning services for offices, homes, and commercial spaces — done right, every time.",
+    badge: "⭐ TRUSTED BY 10,000+ HOMES & BUSINESSES",
+    city: "📍 INDORE & SURROUNDING REGIONS",
+    image: "/images/pinterest_clean_widescreen.jpg",
+    active: true,
+    ctaText: "Get a Free Quote ➔",
+    ctaLink: "/services",
+    perk1: "* 12% discount for first time user",
+    perk2: "* 24% discount for repeating clients",
+    tags: ["Deep Cleaning", "Office Clean", "Floor Vacuum", "Sanitization"],
+    createdAt: "2026-09-23"
+  },
+  {
     id: "hero-banner-1",
     title: "Everything Your Home Needs.",
     highlight: "Delivered In 15 Mins.",
@@ -11,6 +27,8 @@ export const initialHeroBanners = [
     active: true,
     ctaText: "Book Service Now ➔",
     ctaLink: "/services",
+    perk1: "* 15-min arrival with live GPS tracking",
+    perk2: "* 100% verified police-checked experts",
     tags: ["Full Home Care", "Deep Cleaning", "AC Service", "Electrician"],
     createdAt: "2026-09-23"
   },
