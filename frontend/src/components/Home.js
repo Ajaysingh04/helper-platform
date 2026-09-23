@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../css/Home.css";
 import LoginModal from "./LoginModal";
@@ -36,22 +36,29 @@ function Home() {
 
   const activeOffers = (offersList || []).filter((o) => o.active !== false);
 
-  // Dynamic Hero Banners from DataContext (Admin Add/Edit/Active/Delete)
-  const heroBanners = dataContext?.heroBanners || [];
-  const activeHeroBanners = heroBanners.filter((b) => b.active !== false);
-  const [heroIndex, setHeroIndex] = useState(0);
+  // Dynamic Hero Banners - Auto-slide home 1, 2, 3, 4 every 2 seconds
+  const defaultHeroSlides = [
+    { id: "slide-1", image: "/images/homepage_1.jpg", title: "Quality House Painting" },
+    { id: "slide-2", image: "/images/homepage_2.jpg", title: "Expert Plumbing Repairs" },
+    { id: "slide-3", image: "/images/homepage_3.jpg", title: "Certified Electricians" },
+    { id: "slide-4", image: "/images/homepage_4.jpg", title: "Professional Cleaning Services" }
+  ];
 
-  const currentHero = (activeHeroBanners.length > 0 && activeHeroBanners[heroIndex])
-    ? activeHeroBanners[heroIndex]
-    : (activeHeroBanners[0] || heroBanners[0] || {
-        title: "Everything Your Home Needs.",
-        highlight: "Delivered In 15 Mins.",
-        subtitle: "Book certified electricians, plumbers, AC technicians, salon pros & cleaning experts. Guaranteed upfront rates with live GPS tracking.",
-        badge: "#1 ON-DEMAND HOME SERVICE PLATFORM",
-        city: "📍 INDORE & REGION",
-        image: "/images/homepage_1.jpg",
-        tags: ["House Painting", "Wall Care", "Plumbing", "Electrician"]
-      });
+  const heroBanners = dataContext?.heroBanners || [];
+  const activeBanners = heroBanners.filter((b) => b.active !== false);
+  const heroSlides = activeBanners.length > 0 ? activeBanners : defaultHeroSlides;
+
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
+
+  // 2-Second Auto-Slide Interval
+  useEffect(() => {
+    if (heroSlides.length <= 1 || isHeroPaused) return;
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % heroSlides.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [heroSlides.length, isHeroPaused]);
 
   // Popular Services & Categories Filter States
   const [homeCatFilter, setHomeCatFilter] = useState("All");
@@ -287,224 +294,114 @@ function Home() {
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
       {/* =========================================================================
-          HERO SECTION: Full-Width Panoramic High-Definition Hero Banner (Admin Managed)
+          HERO SECTION: 2-Second Crystal Clear Image Carousel (No Manual Overlays)
           ========================================================================= */}
-      <section className="helper-hero-panoramic">
-        {/* Full-Page High-Definition Panoramic Background Image */}
-        <img 
-          key={currentHero.image}
-          src={currentHero.image || "/images/homepage_1.jpg"} 
-          alt={currentHero.title || "Helper GO"} 
-          className="hero-panoramic-bg"
-          loading="eager"
-          onError={(e) => { e.target.src = "/images/homepage_1.jpg"; }}
-        />
-
-        {/* Ambient Gradient Scrim to ensure crisp typography and readability */}
-        <div className="hero-panoramic-overlay" />
-        <div className="hero-ambient-glow-warm" />
-        <div className="hero-ambient-glow-cyan" />
-
-        {/* Multi-banner Navigation Controls (if more than 1 active banner) */}
-        {activeHeroBanners.length > 1 && (
-          <div className="hero-slider-nav-controls">
-            <button
-              type="button"
-              className="hero-slider-arrow prev"
-              onClick={() => setHeroIndex((prev) => (prev > 0 ? prev - 1 : activeHeroBanners.length - 1))}
-              title="Previous Banner"
-            >
-              ‹
-            </button>
-            <div className="hero-slider-dots">
-              {activeHeroBanners.map((_, i) => (
-                <button
-                  type="button"
-                  key={i}
-                  className={`hero-slider-dot ${i === heroIndex ? "active" : ""}`}
-                  onClick={() => setHeroIndex(i)}
-                  title={`Banner ${i + 1}`}
-                />
-              ))}
-            </div>
-            <button
-              type="button"
-              className="hero-slider-arrow next"
-              onClick={() => setHeroIndex((prev) => (prev < activeHeroBanners.length - 1 ? prev + 1 : 0))}
-              title="Next Banner"
-            >
-              ›
-            </button>
-          </div>
-        )}
-
-        {/* Main Content Container overlaying the panoramic image */}
-        <div className="container-wrapper hero-panoramic-grid">
-          
-          {/* Left Column: Headline, Search, Quick Categories, Trust */}
-          <div className="hero-panoramic-left">
-            
-            {/* Live Status Pill */}
-            <div className="hero-live-pill">
-              <span className="live-pulse-dot" />
-              <span className="live-pill-text">{currentHero.badge || "#1 ON-DEMAND HOME SERVICE PLATFORM"}</span>
-              <span className="live-pill-city">{currentHero.city || "📍 INDORE & REGION"}</span>
-            </div>
-
-            {/* Razor-sharp Typography Headline */}
-            <h1 className="hero-studio-headline">
-              {currentHero.title}
-              {currentHero.highlight && (
-                <>
-                  <br />
-                  <span className="hero-gradient-highlight">{currentHero.highlight}</span>
-                </>
-              )}
-            </h1>
-
-            <p className="hero-studio-subtitle">
-              {currentHero.subtitle}
-            </p>
-
-            {/* Live Interactive Search Bar */}
-            <form 
-              className="hero-search-wrapper" 
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (homeCatSearch.trim()) {
-                  const element = document.getElementById("popular-service-categories");
-                  if (element) element.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-            >
-              <span className="hero-search-icon">🔍</span>
-              <input
-                type="text"
-                className="hero-search-input"
-                placeholder="Search 'AC Repair', 'Electrician', 'Plumber', 'Salon'..."
-                value={homeCatSearch}
-                onChange={(e) => setHomeCatSearch(e.target.value)}
-              />
-              <button type="submit" className="hero-search-btn">
-                <span>{currentHero.ctaText ? currentHero.ctaText.replace(/[➔→]/g, "").trim() : "Find Service"} ➔</span>
-              </button>
-            </form>
-
-            {/* Quick Service Tags (Direct 1-Click Action) */}
-            <div className="hero-quick-tags">
-              <span className="quick-tags-label">Popular Now:</span>
-              <div className="quick-tags-list">
-                {Array.isArray(currentHero.tags) && currentHero.tags.length > 0 ? (
-                  currentHero.tags.map((tag, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      className="quick-service-chip"
-                      onClick={() => {
-                        setHomeCatSearch(tag);
-                        const element = document.getElementById("popular-service-categories");
-                        if (element) element.scrollIntoView({ behavior: "smooth" });
-                      }}
-                    >
-                      <span>⚡ {tag}</span>
-                    </button>
-                  ))
-                ) : (
-                  <>
-                    <Link to="/category/ac-repair-services" className="quick-service-chip">
-                      <span>❄️ AC Repair</span>
-                    </Link>
-                    <Link to="/category/electricians" className="quick-service-chip">
-                      <span>⚡ Electrician</span>
-                    </Link>
-                    <Link to="/category/plumbers" className="quick-service-chip">
-                      <span>🚰 Plumber</span>
-                    </Link>
-                    <Link to="/category/beauty-parlours" className="quick-service-chip">
-                      <span>💇‍♀️ Salon & Spa</span>
-                    </Link>
-                    <Link to="/category/cleaning" className="quick-service-chip">
-                      <span>🧹 Deep Cleaning</span>
-                    </Link>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Trust Badges Bar */}
-            <div className="hero-trust-bar">
-              <div className="trust-item">
-                <span className="trust-icon">⭐</span>
-                <div className="trust-text">
-                  <strong>4.9 / 5</strong>
-                  <span>Customer Trust</span>
-                </div>
-              </div>
-              <div className="trust-divider" />
-              <div className="trust-item">
-                <span className="trust-icon">⚡</span>
-                <div className="trust-text">
-                  <strong>15 Mins</strong>
-                  <span>Rapid Arrival</span>
-                </div>
-              </div>
-              <div className="trust-divider" />
-              <div className="trust-item">
-                <span className="trust-icon">🛡️</span>
-                <div className="trust-text">
-                  <strong>30-Day</strong>
-                  <span>Revisit Warranty</span>
-                </div>
-              </div>
-              <div className="trust-divider" />
-              <div className="trust-item">
-                <span className="trust-icon">🔒</span>
-                <div className="trust-text">
-                  <strong>Zero Fraud</strong>
-                  <span>Start OTP Code</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Column: Floating Interactive Glassmorphism badges over the technician in the image */}
-          <div className="hero-panoramic-right">
-            
-            {/* Floating Top Radar Card */}
+      <section 
+        className="helper-hero-slider-wrap"
+        onMouseEnter={() => setIsHeroPaused(true)}
+        onMouseLeave={() => setIsHeroPaused(false)}
+      >
+        <div className="helper-hero-slider">
+          {heroSlides.map((slide, idx) => (
             <div 
-              className="hero-floating-glass-badge badge-top-panoramic"
-              onClick={() => {
-                setActiveLiveBooking({
-                  bookingId: "HLP-LIVE-902",
-                  status: "in_progress",
-                  serviceName: "AC Foam Jet Service",
-                  startOtp: "4192",
-                  assignedProvider: {
-                    name: "Rahul Sharma",
-                    phone: "+91 98765 43210",
-                    rating: 4.9,
-                    photo: "/images/homepage_1.jpg"
-                  }
-                });
-              }}
-              title="Click to view live order tracking demo"
+              key={slide.id || idx} 
+              className={`hero-slide-item ${idx === heroIndex ? "active" : ""}`}
             >
-              <div className="badge-radar-circle">
-                <span className="pulse-ping" />
-                <span className="badge-pro-icon">🛵</span>
+              <img 
+                src={slide.image || `/images/homepage_${(idx % 4) + 1}.jpg`} 
+                alt={slide.title || `Home Banner ${idx + 1}`}
+                className="hero-slide-img"
+                loading={idx === 0 ? "eager" : "lazy"}
+              />
+            </div>
+          ))}
+
+          {/* 2-Second Slider Controls & Indicator Dots */}
+          {heroSlides.length > 1 && (
+            <div className="hero-slider-nav-controls">
+              <button
+                type="button"
+                className="hero-slider-arrow prev"
+                onClick={() => setHeroIndex((prev) => (prev > 0 ? prev - 1 : heroSlides.length - 1))}
+                title="Previous Slide"
+              >
+                ‹
+              </button>
+              <div className="hero-slider-dots">
+                {heroSlides.map((_, i) => (
+                  <button
+                    type="button"
+                    key={i}
+                    className={`hero-slider-dot ${i === heroIndex ? "active" : ""}`}
+                    onClick={() => setHeroIndex(i)}
+                    title={`Slide ${i + 1}`}
+                  >
+                    <span>{i + 1}</span>
+                  </button>
+                ))}
               </div>
-              <div className="badge-text-stack">
-                <div className="badge-title-row">
-                  <span className="badge-pro-name">Rahul S. (Certified Pro)</span>
-                  <span className="badge-live-tag">ON THE WAY</span>
+              <button
+                type="button"
+                className="hero-slider-arrow next"
+                onClick={() => setHeroIndex((prev) => (prev < heroSlides.length - 1 ? prev + 1 : 0))}
+                title="Next Slide"
+              >
+                ›
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Clean Search Bar Strip Below Hero (Keeps Full Usability Without Blocking Images) */}
+        <div className="hero-bottom-search-strip">
+          <div className="container-wrapper">
+            <div className="hero-search-strip-inner">
+              <form 
+                className="hero-search-wrapper" 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (homeCatSearch.trim()) {
+                    const element = document.getElementById("popular-service-categories");
+                    if (element) element.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+              >
+                <span className="hero-search-icon">🔍</span>
+                <input
+                  type="text"
+                  className="hero-search-input"
+                  placeholder="Search 'AC Repair', 'Electrician', 'Plumber', 'Cleaning'..."
+                  value={homeCatSearch}
+                  onChange={(e) => setHomeCatSearch(e.target.value)}
+                />
+                <button type="submit" className="hero-search-btn">
+                  <span>Find Service ➔</span>
+                </button>
+              </form>
+
+              {/* Quick Tags */}
+              <div className="hero-quick-tags">
+                <span className="quick-tags-label">Popular:</span>
+                <div className="quick-tags-list">
+                  <Link to="/category/ac-repair-services" className="quick-service-chip">
+                    <span>❄️ AC Repair</span>
+                  </Link>
+                  <Link to="/category/electricians" className="quick-service-chip">
+                    <span>⚡ Electrician</span>
+                  </Link>
+                  <Link to="/category/plumbers" className="quick-service-chip">
+                    <span>🚰 Plumber</span>
+                  </Link>
+                  <Link to="/category/beauty-parlours" className="quick-service-chip">
+                    <span>💇‍♀️ Salon & Spa</span>
+                  </Link>
+                  <Link to="/category/cleaning" className="quick-service-chip">
+                    <span>🧹 Deep Cleaning</span>
+                  </Link>
                 </div>
-                <span className="badge-sub">⚡ 15 Mins Away • Sector 62</span>
               </div>
             </div>
-
           </div>
-
         </div>
       </section>
 
