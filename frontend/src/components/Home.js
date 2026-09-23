@@ -4,6 +4,7 @@ import "../css/Home.css";
 import LoginModal from "./LoginModal";
 import { DataContext } from "../context/DataContext";
 import { popularCategories } from "../data/popularCategoriesData";
+import { initialOffers } from "../data/offersData";
 import LiveTrackingModal from "./LiveTrackingModal";
 import { API_BASE } from "../apiConfig";
 
@@ -18,6 +19,22 @@ function Home() {
   const [enquiryPhone, setEnquiryPhone] = useState("");
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
   const [activeLiveBooking, setActiveLiveBooking] = useState(null);
+  const [copiedCode, setCopiedCode] = useState(null);
+
+  const handleCopyCode = (code) => {
+    if (!code) return;
+    try {
+      navigator.clipboard.writeText(code);
+    } catch (e) {}
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2500);
+  };
+
+  const offersList = (dataContext?.offers && dataContext.offers.length > 0)
+    ? dataContext.offers
+    : (dataContext?.slides && dataContext.slides.length > 0 ? dataContext.slides : initialOffers);
+
+  const activeOffers = (offersList || []).filter((o) => o.active !== false);
 
   // Popular Services & Categories Filter States
   const [homeCatFilter, setHomeCatFilter] = useState("All");
@@ -477,83 +494,112 @@ function Home() {
       </section>
 
       {/* =========================================================================
-          SECTION 2: OFFERS FOR YOU (3 Wide Promo Banners)
+          SECTION 2: OFFERS FOR YOU (Dynamic Offers & Promo Deals)
           ========================================================================= */}
-      <section className="nexora-content-section">
+      <section className="nexora-content-section" id="offers-for-you-section">
         <div className="nexora-section-container">
           
-          <div className="nexora-section-header">
-            <h2 className="nexora-section-title">Offers For You</h2>
+          <div className="nexora-section-header" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
+            <div>
+              <div className="pill-tag-coral" style={{ background: "rgba(255, 77, 45, 0.12)", borderColor: "rgba(255, 77, 45, 0.35)", color: "#FF4D2D", display: "inline-flex", marginBottom: "8px" }}>
+                <span>🔥 EXCLUSIVE SAVINGS & DEALS</span>
+              </div>
+              <h2 className="nexora-section-title" style={{ margin: 0 }}>Offers For You</h2>
+              <p style={{ margin: "6px 0 0", color: "#64748B", fontSize: "14px" }}>
+                Verified instant discounts, seasonal service combos & doorstep cashbacks.
+              </p>
+            </div>
+            {copiedCode && (
+              <div className="copied-toast-banner animate-fade-in">
+                <span>✨ Coupon <strong>"{copiedCode}"</strong> copied to clipboard!</span>
+              </div>
+            )}
           </div>
 
           <div className="nexora-offers-grid">
-            
-            {/* Promo Banner 1: All-In-One Home Services */}
-            <div className="offer-banner-card banner-home-services">
-              <div className="banner-badge-top">
-                <span>YOUR ALL-IN-ONE HOME SERVICES DESTINATION</span>
-              </div>
-              <div className="banner-brand-row">
-                <span className="banner-logo-text">HELPER</span>
-                <span className="banner-go-badge">GO ➔</span>
-              </div>
-              <div className="banner-services-montage">
-                <span className="montage-chip">🧹 Home Cleaning</span>
-                <span className="montage-chip">⚡ Electrician</span>
-                <span className="montage-chip">🪳 Pest Control</span>
-                <span className="montage-chip">🚰 Plumber</span>
-                <span className="montage-chip">❄️ Appliance Repair</span>
-                <span className="montage-chip">🛒 Grocery Delivery</span>
-              </div>
-              <Link to="/services" className="banner-book-now-btn">
-                BOOK NOW ➔
-              </Link>
-            </div>
+            {activeOffers.map((offer) => {
+              const isImageBanner = Boolean(offer.image);
+              const chips = offer.chips || (offer.subtitle ? [offer.subtitle] : []);
+              
+              return (
+                <div 
+                  key={offer.id || offer._id} 
+                  className={`offer-banner-card ${isImageBanner ? "has-bg-image" : "has-gradient-bg"}`}
+                  style={{
+                    background: offer.bgGradient || "linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #2563EB 100%)",
+                  }}
+                >
+                  {isImageBanner && (
+                    <img 
+                      src={offer.image} 
+                      alt={offer.title} 
+                      className="banner-bg-img"
+                      loading="lazy"
+                    />
+                  )}
 
-            {/* Promo Banner 2: Fresh Farm Vegetables */}
-            <div className="offer-banner-card banner-fresh-veg">
-              <img 
-                src="/images/fresh_vegetables_banner.jpg" 
-                alt="Fresh Farm Vegetables Delivered" 
-                className="banner-bg-img"
-              />
-              <div className="banner-overlay-content">
-                <div className="veg-brand-tag">
-                  <span className="veg-tag-text">HELPERGO.in</span>
-                  <span className="veg-fresh-badge">Eat Fresh Live Healthy</span>
+                  <div className="banner-overlay-scrim" />
+                  
+                  <div className="dynamic-offer-content">
+                    {/* Top Row: Tag / Badge & Discount Pill */}
+                    <div className="offer-header-row">
+                      <span className="banner-badge-top">
+                        {offer.badge || offer.tag || "🔥 SPECIAL OFFER"}
+                      </span>
+                      {offer.discount && (
+                        <span className="offer-discount-pill">
+                          {offer.discount}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Offer Title & Subtitle */}
+                    <div className="offer-body-main">
+                      <h3 className="offer-main-title">
+                        {offer.icon ? `${offer.icon} ` : ""}{offer.title}
+                      </h3>
+                      <p className="offer-desc-text">
+                        {offer.desc || offer.subtitle}
+                      </p>
+
+                      {/* Feature Chips */}
+                      {chips && chips.length > 0 && (
+                        <div className="banner-services-montage">
+                          {chips.slice(0, 5).map((chip, idx) => (
+                            <span key={idx} className="montage-chip">{chip}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Action Row: Coupon Code + Button */}
+                    <div className="offer-footer-action">
+                      {offer.code && (
+                        <button 
+                          type="button" 
+                          className={`coupon-code-pill ${copiedCode === offer.code ? "copied" : ""}`}
+                          onClick={() => handleCopyCode(offer.code)}
+                          title="Click to copy coupon code"
+                        >
+                          <span className="coupon-label">CODE:</span>
+                          <span className="coupon-val">{offer.code}</span>
+                          <span className="coupon-copy-icon">
+                            {copiedCode === offer.code ? "✓ Copied!" : "📋 Copy"}
+                          </span>
+                        </button>
+                      )}
+
+                      <Link 
+                        to={offer.actionPath || offer.ctaLink || "/services"} 
+                        className="banner-book-now-btn"
+                      >
+                        {offer.btnText || offer.ctaText || "Claim Offer ➔"}
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="veg-main-title">FRESH VEGETABLES</h3>
-                <p className="veg-subtitle">FRESH, HEALTHY DELIVERED TO YOU</p>
-                <div className="veg-features-row">
-                  <span>✔ 100% Fresh</span>
-                  <span>✔ Best Quality</span>
-                  <span>✔ Fast Delivery</span>
-                </div>
-                <Link to="/category/grocery-stores" className="btn-veg-shop">
-                  Order Now ➔
-                </Link>
-              </div>
-            </div>
-
-            {/* Promo Banner 3: Coming Soon */}
-            <div className="offer-banner-card banner-coming-soon">
-              <div className="coming-brand-header">
-                <span className="coming-brand">HELPER GO</span>
-                <span className="coming-badge-alert">COMING SOON</span>
-              </div>
-              <h3 className="coming-title">SOMETHING AMAZING IS ON THE WAY</h3>
-              <p className="coming-desc">Your favorite daily essentials delivered directly to your doorstep in minutes.</p>
-              <div className="coming-categories-grid">
-                <div className="coming-cat-pill">🍚 Groceries & Staples</div>
-                <div className="coming-cat-pill">🥦 Fresh Vegetables</div>
-                <div className="coming-cat-pill">🧴 Personal Care</div>
-                <div className="coming-cat-pill">🧼 Household Essentials</div>
-              </div>
-              <div className="coming-footer-note">
-                <span>📍 INDORE • KHARGONE • KHANDWA</span>
-              </div>
-            </div>
-
+              );
+            })}
           </div>
 
         </div>

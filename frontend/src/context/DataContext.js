@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import { popularCategories } from "../data/popularCategoriesData";
+import { initialOffers } from "../data/offersData";
 import { API_BASE } from "../apiConfig";
 
 export const DataContext = createContext();
@@ -166,12 +167,7 @@ const initialBookings = [
   { id: "BK-9078", customerName: "Ananya Roy", phone: "+91 98765 44332", service: "Plumber", price: "₹199", status: "Cancelled", date: "Yesterday, 10:00 AM", address: "Tower 2, Urban Heights", provider: "Rapid Flow Plumbing Works" }
 ];
 
-const initialSlides = [
-  { id: 1, tag: "🔥 LIMITED TIME OFFER", title: "Get Flat 20% OFF on Your First Service", desc: "Experience premier home cleaning, plumbing, repairs & electrical services with 100% verified experts.", btnText: "Claim Discount", icon: "🎁", actionPath: "/category/home-cleaner", active: true },
-  { id: 2, tag: "🛡️ 100% VERIFIED PROFESSIONALS", title: "Reliable & Trusted Home Service Experts", desc: "Background-checked electricians, plumbers, carpenters & handymen ready at your doorstep within 30 minutes.", btnText: "Explore Services", icon: "⚡", actionPath: "/services", active: true },
-  { id: 3, tag: "✨ HASSLE-FREE LIVING", title: "Save Time, Enjoy Life, Reduce Daily Stress", desc: "Book expert housekeepers, professional chefs and dedicated caretakers on your customized schedule.", btnText: "Book a Chef / Caretaker", icon: "🏠", actionPath: "/category/chef", active: true },
-  { id: 4, tag: "🕒 24/7 INSTANT SUPPORT", title: "Emergency Repairs Anytime You Need", desc: "AC breakdown? Water leakage? Electrical short? Our rapid-response team is on call 24 hours a day.", btnText: "Emergency Help", icon: "🚨", actionPath: "/category/electrician", active: true }
-];
+const initialSlides = initialOffers;
 
 const initialUsers = [
   { id: 1, name: "Ajay Singh Banafer", email: "ajay@example.com", phone: "+91 98765 43210", bookingsCount: 14, status: "Active", joined: "Jan 2026", role: "Super Admin" },
@@ -226,8 +222,16 @@ export const DataProvider = ({ children }) => {
   });
 
   const [slides, setSlides] = useState(() => {
-    const saved = localStorage.getItem("helper_slides");
-    return saved ? JSON.parse(saved) : initialSlides;
+    try {
+      const saved = localStorage.getItem("helper_slides") || localStorage.getItem("helper_offers");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 3) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return initialOffers;
   });
 
   const [users, setUsers] = useState(() => {
@@ -499,9 +503,13 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Promo Slides
+  // Offers & Promo Slides Management
   const addSlide = async (newSlide) => {
-    const item = { ...newSlide, id: `sl${Date.now()}`, active: true };
+    const item = { 
+      ...newSlide, 
+      id: newSlide.id || `off-${Date.now()}`, 
+      active: newSlide.active !== undefined ? newSlide.active : true 
+    };
     setSlides(prev => [item, ...prev]);
 
     try {
@@ -516,7 +524,7 @@ export const DataProvider = ({ children }) => {
   };
 
   const updateSlide = async (id, updatedFields) => {
-    setSlides(prev => prev.map(sl => sl.id === id ? { ...sl, ...updatedFields } : sl));
+    setSlides(prev => prev.map(sl => (sl.id === id || sl._id === id) ? { ...sl, ...updatedFields } : sl));
 
     try {
       await fetch(`${API_BASE}/promotions/${id}`, {
@@ -529,8 +537,29 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  const toggleSlideActive = async (id) => {
+    let targetActive = true;
+    setSlides(prev => prev.map(sl => {
+      if (sl.id === id || sl._id === id) {
+        targetActive = sl.active === false ? true : false;
+        return { ...sl, active: targetActive };
+      }
+      return sl;
+    }));
+
+    try {
+      await fetch(`${API_BASE}/promotions/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: targetActive })
+      });
+    } catch (err) {
+      console.warn("Backend toggleSlideActive error:", err);
+    }
+  };
+
   const deleteSlide = async (id) => {
-    setSlides(prev => prev.filter(sl => sl.id !== id));
+    setSlides(prev => prev.filter(sl => sl.id !== id && sl._id !== id));
 
     try {
       await fetch(`${API_BASE}/promotions/${id}`, { method: "DELETE" });
@@ -538,6 +567,13 @@ export const DataProvider = ({ children }) => {
       console.warn("Backend deleteSlide error:", err);
     }
   };
+
+  // Offers Aliases (Offers For You section & Admin)
+  const offers = slides;
+  const addOffer = addSlide;
+  const updateOffer = updateSlide;
+  const toggleOfferActive = toggleSlideActive;
+  const deleteOffer = deleteSlide;
 
   // Users
   const updateUserStatus = async (id, status) => {
@@ -641,7 +677,8 @@ export const DataProvider = ({ children }) => {
       services, addService, updateService, deleteService,
       providers, addProvider, updateProvider, deleteProvider,
       bookings, addBooking, updateBookingStatus, deleteBooking,
-      slides, addSlide, updateSlide, deleteSlide,
+      slides, addSlide, updateSlide, deleteSlide, toggleSlideActive,
+      offers, addOffer, updateOffer, deleteOffer, toggleOfferActive,
       users, updateUserStatus, deleteUser,
       tickets, resolveTicket, addTicket,
       settings, updateSettings, resetAllData
