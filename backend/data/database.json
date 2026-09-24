@@ -10,7 +10,8 @@
       "group": "Spa & Wellness",
       "popular": true,
       "order": 1,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-2",
@@ -22,7 +23,8 @@
       "group": "Entertainment",
       "popular": true,
       "order": 2,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-3",
@@ -34,7 +36,8 @@
       "group": "Education",
       "popular": true,
       "order": 3,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-4",
@@ -46,7 +49,8 @@
       "group": "Spa & Wellness",
       "popular": true,
       "order": 4,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-5",
@@ -58,7 +62,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 5,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-6",
@@ -70,7 +75,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 6,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-7",
@@ -82,7 +88,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 7,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-8",
@@ -94,7 +101,8 @@
       "group": "Spa & Wellness",
       "popular": true,
       "order": 8,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-9",
@@ -106,7 +114,8 @@
       "group": "Spa & Wellness",
       "popular": true,
       "order": 9,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-10",
@@ -118,7 +127,8 @@
       "group": "City & Finance",
       "popular": true,
       "order": 10,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-11",
@@ -130,7 +140,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 11,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-12",
@@ -142,7 +153,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 12,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-13",
@@ -154,7 +166,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 13,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1507842229451-7f01be7fe7ab?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-14",
@@ -166,7 +179,8 @@
       "group": "Travel & Transport",
       "popular": true,
       "order": 14,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-15",
@@ -178,7 +192,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 15,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-16",
@@ -190,7 +205,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 16,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-17",
@@ -202,7 +218,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 17,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-18",
@@ -214,7 +231,8 @@
       "group": "Travel & Transport",
       "popular": true,
       "order": 18,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-19",
@@ -226,7 +244,8 @@
       "group": "Travel & Transport",
       "popular": true,
       "order": 19,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-20",
@@ -238,7 +257,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 20,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-21",
@@ -250,7 +270,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 21,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-22",
@@ -262,7 +283,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 22,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-23",
@@ -274,7 +296,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 23,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-24",
@@ -286,7 +309,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 24,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-25",
@@ -298,7 +322,8 @@
       "group": "Education",
       "popular": true,
       "order": 25,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-26",
@@ -310,7 +335,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 26,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-27",
@@ -322,7 +348,8 @@
       "group": "Travel & Transport",
       "popular": true,
       "order": 27,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-28",
@@ -334,7 +361,8 @@
       "group": "Spa & Wellness",
       "popular": true,
       "order": 28,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-29",
@@ -346,7 +374,8 @@
       "group": "City & Finance",
       "popular": true,
       "order": 29,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-30",
@@ -358,7 +387,8 @@
       "group": "Education",
       "popular": true,
       "order": 30,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-31",
@@ -370,7 +400,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 31,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-32",
@@ -382,7 +413,8 @@
       "group": "Travel & Transport",
       "popular": true,
       "order": 32,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1556122071-e404eaedb77f?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-33",
@@ -394,7 +426,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 33,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-34",
@@ -406,7 +439,8 @@
       "group": "Home & Repairs",
       "popular": true,
       "order": 34,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-35",
@@ -418,7 +452,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 35,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02560?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-36",
@@ -430,7 +465,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 36,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-37",
@@ -442,7 +478,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 37,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-38",
@@ -454,7 +491,8 @@
       "group": "Travel & Transport",
       "popular": true,
       "order": 38,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1600518464441-9154a4dea21b?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-39",
@@ -466,7 +504,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 39,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-40",
@@ -478,7 +517,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 40,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-41",
@@ -490,7 +530,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 41,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-42",
@@ -502,7 +543,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 42,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-43",
@@ -514,7 +556,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 43,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-44",
@@ -526,7 +569,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 44,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-45",
@@ -538,7 +582,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 45,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1632053002928-196bee749557?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-46",
@@ -550,7 +595,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 46,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-47",
@@ -562,7 +608,8 @@
       "group": "Spa & Wellness",
       "popular": true,
       "order": 47,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-48",
@@ -574,7 +621,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 48,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-49",
@@ -586,7 +634,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 49,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-50",
@@ -598,7 +647,8 @@
       "group": "Home & Repairs",
       "popular": true,
       "order": 50,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-51",
@@ -610,7 +660,8 @@
       "group": "Spa & Wellness",
       "popular": true,
       "order": 51,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1512290900672-1f5be673b224?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-52",
@@ -622,7 +673,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 52,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-53",
@@ -634,7 +686,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 53,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-54",
@@ -646,7 +699,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 54,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-55",
@@ -658,7 +712,8 @@
       "group": "Education",
       "popular": true,
       "order": 55,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-56",
@@ -670,7 +725,8 @@
       "group": "Home & Repairs",
       "popular": true,
       "order": 56,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-57",
@@ -682,7 +738,8 @@
       "group": "Education",
       "popular": true,
       "order": 57,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-58",
@@ -694,7 +751,8 @@
       "group": "Home & Repairs",
       "popular": true,
       "order": 58,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-59",
@@ -706,7 +764,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 59,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-60",
@@ -718,7 +777,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 60,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-61",
@@ -730,7 +790,8 @@
       "group": "Spa & Wellness",
       "popular": true,
       "order": 61,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-62",
@@ -742,7 +803,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 62,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-63",
@@ -754,7 +816,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 63,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-64",
@@ -766,7 +829,8 @@
       "group": "Home & Repairs",
       "popular": true,
       "order": 64,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-65",
@@ -778,7 +842,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 65,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-66",
@@ -790,7 +855,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 66,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-67",
@@ -802,7 +868,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 67,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-68",
@@ -814,7 +881,8 @@
       "group": "Home & Repairs",
       "popular": true,
       "order": 68,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1502005229762-ee1b2b8ab98f?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-69",
@@ -826,7 +894,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 69,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-70",
@@ -838,7 +907,8 @@
       "group": "Home & Repairs",
       "popular": true,
       "order": 70,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-71",
@@ -850,7 +920,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 71,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-72",
@@ -862,7 +933,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 72,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-73",
@@ -874,7 +946,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 73,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-74",
@@ -886,7 +959,8 @@
       "group": "Home & Repairs",
       "popular": true,
       "order": 74,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-75",
@@ -898,7 +972,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 75,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1586773860383-dab5f3bc1bcc?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-76",
@@ -910,7 +985,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 76,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-77",
@@ -922,7 +998,8 @@
       "group": "City & Finance",
       "popular": true,
       "order": 77,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-78",
@@ -934,7 +1011,8 @@
       "group": "City & Finance",
       "popular": true,
       "order": 78,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-79",
@@ -946,7 +1024,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 79,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-80",
@@ -958,7 +1037,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 80,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-81",
@@ -970,7 +1050,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 81,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-82",
@@ -982,7 +1063,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 82,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-83",
@@ -994,7 +1076,8 @@
       "group": "Shopping",
       "popular": true,
       "order": 83,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-84",
@@ -1006,7 +1089,8 @@
       "group": "Healthcare",
       "popular": true,
       "order": 84,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&q=80&w=600"
     },
     {
       "id": "cat-85",
@@ -1018,7 +1102,8 @@
       "group": "Dining & Stays",
       "popular": true,
       "order": 85,
-      "active": true
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&q=80&w=600"
     }
   ],
   "services": [

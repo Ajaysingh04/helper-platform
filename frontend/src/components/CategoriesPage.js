@@ -115,7 +115,22 @@ function CategoriesPage() {
             >
               <div className="pop-cat-card-left">
                 <div className="pop-cat-icon-badge">
-                  {cat.icon || "⚡"}
+                  {cat.image ? (
+                    <img 
+                      src={cat.image} 
+                      alt={cat.name} 
+                      className="pop-cat-img" 
+                      loading="lazy" 
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fallback = e.currentTarget.parentElement.querySelector(".pop-cat-fallback-icon");
+                        if (fallback) fallback.style.display = "inline";
+                      }} 
+                    />
+                  ) : null}
+                  <span className="pop-cat-fallback-icon" style={{ display: cat.image ? "none" : "inline" }}>
+                    {cat.icon || "⚡"}
+                  </span>
                 </div>
                 <div className="pop-cat-text-info">
                   <h4 className="pop-cat-name">{cat.name}</h4>

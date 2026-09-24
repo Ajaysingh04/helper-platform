@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { LocationContext } from "../context/LocationContext";
 import { DataContext } from "../context/DataContext";
 import { popularCategories } from "../data/popularCategoriesData";
+import { getServicemanImagesForCategory, getServicemanImage } from "../data/categoryImages";
 import "../css/CategoryPage.css";
 
 // Global cache for ItemDetailsPage lookup
@@ -81,6 +82,7 @@ function CategoryPage() {
   }, [matchedCategory, currentSlug]);
 
   const categoryIcon = matchedCategory?.icon || "⚡";
+  const categoryImage = matchedCategory?.image || "";
   const categoryTag = matchedCategory?.tag || "Verified Sector";
   const categoryCount = matchedCategory?.count || "50+ Specialists";
 
@@ -107,6 +109,7 @@ function CategoryPage() {
 
     // Fallback template items if this category does not yet have custom entries in DB
     if (matching.length === 0) {
+      const catImages = getServicemanImagesForCategory(categoryTitle || currentSlug);
       matching = [
         {
           id: `seed_${currentSlug}_1`,
@@ -121,7 +124,8 @@ function CategoryPage() {
           location: "Sector 18, Central Zone",
           address: "Sector 18, Central Zone, Near Metro",
           facilities: ["Verified Specialist", "Instant Booking", "Same Day Service", "Warranty Covered"],
-          avatar: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600",
+          avatar: catImages[0],
+          image: catImages[0],
           verified: true
         },
         {
@@ -137,7 +141,8 @@ function CategoryPage() {
           location: "Ring Road, Commercial Phase",
           address: "Ring Road, Commercial Phase, North Sector",
           facilities: ["Top Rated Pro", "Fast Dispatch", "Digital Billing", "Police Verified"],
-          avatar: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&q=80&w=600",
+          avatar: catImages[1],
+          image: catImages[1],
           verified: true
         },
         {
@@ -153,7 +158,8 @@ function CategoryPage() {
           location: "Galleria Commercial Zone",
           address: "Galleria Commercial Zone, City South",
           facilities: ["Certified Technicians", "Zero Advance", "Quality Assured", "24/7 Support"],
-          avatar: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&q=80&w=600",
+          avatar: catImages[2],
+          image: catImages[2],
           verified: true
         }
       ];
@@ -311,16 +317,32 @@ function CategoryPage() {
             <span>Back</span>
           </button>
 
-          <div className="category-title-group">
-            <span className="category-tag-pill">
-              {categoryIcon} {categoryTag} • DIRECTORY
-            </span>
-            <h1 className="category-heading">
-              {categoryTitle}{" "}
-              <span className="category-count-badge">
-                ({sortedData.length} Verified Centres • {categoryCount})
+          <div className="category-title-group" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            {categoryImage ? (
+              <img
+                src={categoryImage}
+                alt={categoryTitle}
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "14px",
+                  objectFit: "cover",
+                  boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
+                  border: "2px solid rgba(255,255,255,0.8)"
+                }}
+              />
+            ) : null}
+            <div>
+              <span className="category-tag-pill">
+                {categoryIcon} {categoryTag} • DIRECTORY
               </span>
-            </h1>
+              <h1 className="category-heading" style={{ margin: "4px 0 0 0" }}>
+                {categoryTitle}{" "}
+                <span className="category-count-badge">
+                  ({sortedData.length} Verified Centres • {categoryCount})
+                </span>
+              </h1>
+            </div>
           </div>
 
           {/* Search, Sort & Add Controls */}
@@ -371,116 +393,110 @@ function CategoryPage() {
         )}
 
         {/* Providers Listing Grid */}
-        <div className="category-items-grid">
-          {sortedData.map((item) => (
-            <div className="category-item-card-modern" key={item.id || item._id}>
-              {/* Card Image Thumbnail */}
-              <div className="item-thumbnail-box">
-                <img
-                  src={item.avatar || item.image || "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=800"}
-                  alt={item.shopName || item.name}
-                  className="item-thumbnail-img"
-                />
-                <div className="item-status-tag">{item.status || "Open Now"}</div>
-                <div className="item-rating-float">
-                  <span>★ {item.rating || 4.9}</span>
-                  <span className="reviews-sub">({item.totalReviewsCount || item.reviews || 150}+)</span>
-                </div>
-              </div>
+        {/* Providers Listing Grid (Compact & Modern UX) */}
+        <div className="category-items-grid compact-grid">
+          {sortedData.map((item, idx) => {
+            const fallbackImg = getServicemanImage(item.category || categoryTitle, idx);
+            const displayImg = (item.avatar && !item.avatar.includes("photo-1540555700478")) 
+              ? item.avatar 
+              : ((item.image && !item.image.includes("photo-1540555700478")) ? item.image : fallbackImg);
 
-              {/* Card Body with Detailed Info */}
-              <div className="item-info-panel">
-                
-                {/* Serviceman Name & Edit Button */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div className="item-serviceman-bar">
-                    <span>👨‍🔧 Serviceman:</span>
-                    <strong>{item.name}</strong>
+            return (
+              <div className="category-item-card-modern compact-pro-card" key={item.id || item._id}>
+                {/* Compact Card Thumbnail with Overlays */}
+                <div className="item-thumbnail-box compact-thumbnail">
+                  <img
+                    src={displayImg}
+                    alt={item.shopName || item.name}
+                    className="item-thumbnail-img"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = fallbackImg;
+                    }}
+                  />
+                  <div className="item-status-tag-compact">
+                    <span className="live-dot" />
+                    <span>Verified</span>
                   </div>
 
                   <button
                     type="button"
-                    className="btn-edit-pro-badge"
+                    className="btn-edit-pro-floating"
                     onClick={() => handleOpenEdit(item)}
-                    title="Click to edit contact, KM, experience & rating in Backend"
+                    title="Edit provider details in backend"
                   >
-                    ✏️ Edit Details
-                  </button>
-                </div>
-
-                {/* Service / Shop / Center Name */}
-                <h2 className="item-title" style={{ fontSize: "19px", marginBottom: "6px" }}>
-                  {item.shopName || `${item.name}'s ${categoryTitle}`}
-                </h2>
-
-                {/* Key Stats Row: Distance in KM, Experience, Rating */}
-                <div className="item-key-stats-row">
-                  <span className="key-stat-chip stat-km" title="Distance from your location">
-                    <span>📍</span>
-                    <strong>{item.distance || "1.2 km"} away</strong>
-                  </span>
-
-                  <span className="key-stat-chip stat-exp" title="Work Experience">
-                    <span>💼</span>
-                    <strong>{item.experience || "5+ Years Exp"}</strong>
-                  </span>
-
-                  <span className="key-stat-chip stat-rating" title="Customer Rating">
-                    <span>⭐</span>
-                    <strong>{item.rating || 4.9} / 5.0</strong>
-                  </span>
-                </div>
-
-                {/* Address & Contact Number */}
-                <div style={{ marginBottom: "12px", fontSize: "13px", color: "#64748B" }}>
-                  <p style={{ margin: "0 0 4px 0" }}>📌 {item.address || item.location || "City Center, Local Hub"}</p>
-                  <p style={{ margin: "0", color: "#0F172A", fontWeight: 600 }}>
-                    📞 Contact No: <strong>{item.phone || item.contact || "+91 98765 00000"}</strong>
-                  </p>
-                </div>
-
-                {/* Card Action Buttons (Direct Call, WhatsApp, Book, View Profile) */}
-                <div className="pro-card-actions-grid">
-                  <a
-                    href={`tel:${item.phone || item.contact || "+919876543210"}`}
-                    className="btn-call-direct"
-                    title="Direct Call Serviceman"
-                  >
-                    📞 Call Now
-                  </a>
-
-                  <a
-                    href={`https://wa.me/${String(item.phone || item.contact || "9876543210").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(item.name)},%20I%20saw%20your%20listing%20for%20${encodeURIComponent(categoryTitle)}%20and%20would%20like%20to%20book%20a%20service.`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-wa-direct"
-                    title="Chat on WhatsApp"
-                  >
-                    💬 WhatsApp
-                  </a>
-
-                  <button
-                    type="button"
-                    className="view-details-action-btn"
-                    style={{ flex: 1, border: "none", cursor: "pointer" }}
-                    onClick={() => setEnquiryItem(item)}
-                  >
-                    Enquire ⚡
+                    ✏️
                   </button>
 
-                  <Link
-                    to={`/details/${item.id || item._id}`}
-                    className="view-details-action-btn"
-                    style={{ background: "transparent", color: "#64748B", border: "1px solid #E2E8F0", boxShadow: "none" }}
-                    title="View Full Profile"
+                  <div className="item-thumbnail-bottom-bar">
+                    <span className="thumb-stat-pill stat-km">
+                      📍 {item.distance || "1.2 km"}
+                    </span>
+                    <span className="thumb-stat-pill stat-rating">
+                      ★ {item.rating || 4.9}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Compact Card Info Panel */}
+                <div className="item-info-panel compact-info-panel">
+                  {/* Shop / Center Name */}
+                  <Link 
+                    to={`/details/${item.id || item._id}`} 
+                    className="compact-item-title-link"
+                    title={item.shopName || `${item.name}'s ${categoryTitle}`}
                   >
-                    Profile →
+                    <h3 className="compact-item-title">
+                      {item.shopName || `${item.name}'s ${categoryTitle}`}
+                    </h3>
                   </Link>
-                </div>
 
+                  {/* Serviceman Name & Experience */}
+                  <div className="compact-serviceman-meta">
+                    <span className="pro-name-tag">👨‍🔧 {item.name}</span>
+                    <span className="meta-sep">•</span>
+                    <span className="pro-exp-tag">{item.experience || "5+ Yrs Exp"}</span>
+                  </div>
+
+                  {/* Address */}
+                  <div className="compact-address-row" title={item.address || item.location}>
+                    <span className="addr-icon">📌</span>
+                    <span className="addr-text">{item.address || item.location || "City Central Zone"}</span>
+                  </div>
+
+                  {/* 3 Compact Action Buttons */}
+                  <div className="compact-card-actions">
+                    <a
+                      href={`tel:${item.phone || item.contact || "+919876543210"}`}
+                      className="compact-action-btn btn-call"
+                      title="Direct Phone Call"
+                    >
+                      <span>📞 Call</span>
+                    </a>
+
+                    <a
+                      href={`https://wa.me/${String(item.phone || item.contact || "9876543210").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(item.name)},%20I%20saw%20your%20listing%20for%20${encodeURIComponent(categoryTitle)}%20and%20would%20like%20to%20book%20a%20service.`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="compact-action-btn btn-wa"
+                      title="Chat on WhatsApp"
+                    >
+                      <span>💬 Chat</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      className="compact-action-btn btn-book"
+                      onClick={() => setEnquiryItem(item)}
+                      title="Quick Booking Enquiry"
+                    >
+                      <span>⚡ Book</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
       </div>

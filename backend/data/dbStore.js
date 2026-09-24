@@ -25,6 +25,22 @@ class DBStore {
         const raw = fs.readFileSync(DB_FILE, "utf-8");
         const parsed = JSON.parse(raw);
         this.data = { ...this.data, ...parsed };
+
+        // Automatically sync category images into stored categories if missing
+        if (Array.isArray(this.data.categories) && Array.isArray(seedData.initialCategories)) {
+          let updatedAny = false;
+          this.data.categories = this.data.categories.map((c) => {
+            const seedCat = seedData.initialCategories.find((sc) => sc.id === c.id || sc.name === c.name);
+            if (seedCat && seedCat.image && (!c.image || c.image === "")) {
+              updatedAny = true;
+              return { ...c, image: seedCat.image };
+            }
+            return c;
+          });
+          if (updatedAny) {
+            this.save();
+          }
+        }
       } else {
         this.save();
       }

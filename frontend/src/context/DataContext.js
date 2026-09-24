@@ -38,7 +38,7 @@ const initialProviders = [
     address: "Sector 62, Noida", 
     experience: "8+ Years Exp",
     badges: ["Govt Certified", "Top Rated"],
-    image: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400" 
+    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400" 
   },
   { 
     id: 102, 
@@ -55,7 +55,7 @@ const initialProviders = [
     address: "Sector 18, Noida", 
     experience: "6+ Years Exp",
     badges: ["Leak Specialist", "Instant Dispatch"],
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" 
+    image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400" 
   },
   { 
     id: 103, 
@@ -72,7 +72,7 @@ const initialProviders = [
     address: "Sector 50, Noida", 
     experience: "10+ Years Exp",
     badges: ["Jet Foam Clean", "PCB Expert"],
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" 
+    image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=400" 
   },
   { 
     id: 104, 
@@ -89,7 +89,7 @@ const initialProviders = [
     address: "Indirapuram, Ghaziabad", 
     experience: "5+ Years Exp",
     badges: ["Eco Clean Tech", "Police Verified"],
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400" 
+    image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400" 
   },
   { 
     id: 105, 
@@ -123,7 +123,7 @@ const initialProviders = [
     address: "Mayur Vihar, Delhi", 
     experience: "9+ Years Exp",
     badges: ["Modular Furniture", "Instant Fix"],
-    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400" 
+    image: "https://images.unsplash.com/photo-1502005229762-ee1b2b8ab98f?auto=format&fit=crop&q=80&w=400" 
   },
   { 
     id: 107, 
@@ -140,7 +140,7 @@ const initialProviders = [
     address: "Sector 76, Noida", 
     experience: "12+ Years Exp",
     badges: ["Asian Paints Certified", "Dust-Free"],
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400" 
+    image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=400" 
   },
   { 
     id: 108, 
@@ -157,7 +157,7 @@ const initialProviders = [
     address: "Sector 62, Noida", 
     experience: "8+ Years Exp",
     badges: ["Zero Incident Record", "Commercial Lic"],
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=400" 
+    image: "https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&q=80&w=400" 
   }
 ];
 
@@ -199,7 +199,7 @@ export const DataProvider = ({ children }) => {
       const saved = localStorage.getItem("helper_categories");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 80 && parsed[0]?.name === "Body Massage Centres") {
+        if (Array.isArray(parsed) && parsed.length >= 80 && parsed[0]?.name === "Body Massage Centres" && parsed[0]?.image) {
           return parsed;
         }
       }
@@ -213,7 +213,7 @@ export const DataProvider = ({ children }) => {
   });
 
   const [providers, setProviders] = useState(() => {
-    const saved = localStorage.getItem("helper_providers");
+    const saved = localStorage.getItem("helper_providers_v2");
     return saved ? JSON.parse(saved) : initialProviders;
   });
 
@@ -286,7 +286,16 @@ export const DataProvider = ({ children }) => {
           fetch(`${API_BASE}/settings`).then(r => r.json())
         ]);
 
-        if (catRes.status === "fulfilled" && catRes.value?.data?.length) setCategories(catRes.value.data);
+        if (catRes.status === "fulfilled" && catRes.value?.data?.length) {
+          const mergedCats = catRes.value.data.map(c => {
+            if (!c.image) {
+              const matched = initialCategories.find(ic => ic.id === c.id || ic.name === c.name);
+              if (matched?.image) return { ...c, image: matched.image };
+            }
+            return c;
+          });
+          setCategories(mergedCats);
+        }
         if (srvRes.status === "fulfilled" && srvRes.value?.data?.length) setServices(srvRes.value.data);
         if (prvRes.status === "fulfilled" && prvRes.value?.data?.length) setProviders(prvRes.value.data);
         if (bkgRes.status === "fulfilled" && bkgRes.value?.data?.length) setBookings(bkgRes.value.data);
@@ -312,7 +321,7 @@ export const DataProvider = ({ children }) => {
   // Sync state changes to localStorage for offline cache
   useEffect(() => { localStorage.setItem("helper_categories", JSON.stringify(categories)); }, [categories]);
   useEffect(() => { localStorage.setItem("helper_services", JSON.stringify(services)); }, [services]);
-  useEffect(() => { localStorage.setItem("helper_providers", JSON.stringify(providers)); }, [providers]);
+  useEffect(() => { localStorage.setItem("helper_providers_v2", JSON.stringify(providers)); }, [providers]);
   useEffect(() => { localStorage.setItem("helper_bookings", JSON.stringify(bookings)); }, [bookings]);
   useEffect(() => { localStorage.setItem("helper_slides", JSON.stringify(slides)); }, [slides]);
   useEffect(() => { localStorage.setItem("helper_hero_banners_v5", JSON.stringify(heroBanners)); }, [heroBanners]);

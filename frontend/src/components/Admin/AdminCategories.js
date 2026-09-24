@@ -8,6 +8,7 @@ function AdminCategories() {
 
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("🍽️");
+  const [image, setImage] = useState("");
   const [tag, setTag] = useState("Food");
   const [count, setCount] = useState("50+ Places");
 
@@ -15,6 +16,7 @@ function AdminCategories() {
     setEditingCat(null);
     setName("");
     setIcon("🏷️");
+    setImage("");
     setTag("All");
     setCount("10+ Pros");
     setShowModal(true);
@@ -24,6 +26,7 @@ function AdminCategories() {
     setEditingCat(cat);
     setName(cat.name);
     setIcon(cat.icon);
+    setImage(cat.image || "");
     setTag(cat.tag || "All");
     setCount(cat.count || "10+ Places");
     setShowModal(true);
@@ -35,6 +38,7 @@ function AdminCategories() {
       updateCategory(editingCat.id, {
         name,
         icon,
+        image,
         tag,
         count,
         path: name.toLowerCase().replace(/\s+/g, '-')
@@ -43,6 +47,7 @@ function AdminCategories() {
       addCategory({
         name,
         icon,
+        image,
         tag,
         count
       });
@@ -66,8 +71,19 @@ function AdminCategories() {
         <div className="category-grid" style={{ marginTop: "20px" }}>
           {categories.map((cat) => (
             <div className="category-card-modern" key={cat.id || cat.path} style={{ position: "relative" }}>
-              <div className="category-icon-wrapper">
-                <span className="category-icon">{cat.icon}</span>
+              <div className="category-icon-wrapper" style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", width: "42px", height: "42px", borderRadius: "10px" }}>
+                {cat.image ? (
+                  <img 
+                    src={cat.image} 
+                    alt={cat.name} 
+                    style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = "inline";
+                    }}
+                  />
+                ) : null}
+                <span className="category-icon" style={{ display: cat.image ? "none" : "inline" }}>{cat.icon}</span>
               </div>
               <div className="category-card-text">
                 <h3>{cat.name}</h3>
@@ -163,7 +179,17 @@ function AdminCategories() {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary-glow" style={{ width: "100%", marginTop: "10px" }}>
+              <div className="admin-form-group" style={{ marginTop: "8px" }}>
+                <label>Category Image URL (Unsplash / Direct Link)</label>
+                <input
+                  type="url"
+                  placeholder="https://images.unsplash.com/photo-..."
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                />
+              </div>
+
+              <button type="submit" className="btn-primary-glow" style={{ width: "100%", marginTop: "14px" }}>
                 {editingCat ? "Update Category" : "Add Category"} ⚡
               </button>
             </form>

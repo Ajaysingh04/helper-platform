@@ -5,6 +5,7 @@ import LoginModal from "./LoginModal";
 import { DataContext } from "../context/DataContext";
 import { popularCategories } from "../data/popularCategoriesData";
 import { initialOffers } from "../data/offersData";
+import { getServicemanImage } from "../data/categoryImages";
 import LiveTrackingModal from "./LiveTrackingModal";
 import { API_BASE } from "../apiConfig";
 
@@ -257,12 +258,12 @@ function Home() {
           name: selectedProvider.name,
           phone: selectedProvider.contact,
           rating: selectedProvider.rating,
-          photo: selectedProvider.image
+          photo: selectedProvider.image || getServicemanImage(selectedService.name)
         } : {
-          name: "Ramesh Sharma",
+          name: `${selectedService.name} Specialist`,
           phone: "+91 98765 43210",
           rating: 4.9,
-          photo: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200"
+          photo: getServicemanImage(selectedService.name)
         }
       };
       if (addBooking) {
@@ -298,69 +299,87 @@ function Home() {
     {
       id: "srv-clean",
       name: "House cleaning",
-      subtitle: "Service at your...",
-      badge: "New",
+      subtitle: "Full deep sanitization",
+      badge: "Popular",
       badgeType: "new",
-      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=320",
+      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400",
       path: "/category/cleaning"
     },
     {
       id: "srv-elec",
       name: "Electrician",
-      subtitle: "Service at your...",
-      badge: null,
-      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=320",
+      subtitle: "15-min instant dispatch",
+      badge: "Trending",
+      badgeType: "sale",
+      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400",
       path: "/category/electricians"
     },
     {
       id: "srv-plumb",
       name: "Plumbing Fix",
-      subtitle: "Service at your...",
+      subtitle: "Leak repairs & fitting",
       badge: null,
-      image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=320",
+      image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400",
       path: "/category/plumbers"
     },
     {
-      id: "srv-veg",
-      name: "Vegetables",
-      subtitle: "Service at your...",
+      id: "srv-ac",
+      name: "AC Repair & Jet",
+      subtitle: "Cooling & gas refill",
+      badge: "Hot",
+      badgeType: "sale",
+      image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=400",
+      path: "/category/ac-repair-services"
+    },
+    {
+      id: "srv-paint",
+      name: "Wall Painting",
+      subtitle: "Dust-free & waterproof",
       badge: null,
-      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=320",
-      path: "/category/grocery-stores"
+      image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=400",
+      path: "/category/painters"
     },
     {
       id: "srv-salon",
-      name: "Salon",
-      subtitle: "Service at your...",
+      name: "Salon & Spa",
+      subtitle: "Beauty, hair & facial",
       badge: "New",
       badgeType: "new",
-      image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=320",
+      image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=400",
       path: "/category/beauty-parlours"
     },
     {
+      id: "srv-carp",
+      name: "Carpentry & Locks",
+      subtitle: "Furniture & woodwork",
+      badge: null,
+      image: "https://images.unsplash.com/photo-1502005229762-ee1b2b8ab98f?auto=format&fit=crop&q=80&w=400",
+      path: "/category/carpenters"
+    },
+    {
       id: "srv-teach",
-      name: "Teaching",
-      subtitle: "Service at your...",
-      badge: "Sale",
+      name: "Teaching & Tutors",
+      subtitle: "Home & online tuition",
+      badge: "Top Rated",
       badgeType: "sale",
-      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=320",
+      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=400",
       path: "/category/schools"
     },
     {
       id: "srv-repair",
-      name: "Repairing",
-      subtitle: "Service at your...",
+      name: "Mobile & Gadget Fix",
+      subtitle: "Electronics diagnostic",
       badge: null,
-      image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=320",
-      path: "/category/repairs"
+      image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400",
+      path: "/category/mobile-phone-dealers"
     },
     {
-      id: "srv-fixed",
-      name: "Fixed Price Cat...",
-      subtitle: "Service at your...",
+      id: "srv-veg",
+      name: "Fresh Groceries",
+      subtitle: "Daily organic produce",
       badge: null,
-      image: "https://images.unsplash.com/photo-1505798577917-a65157d3320a?auto=format&fit=crop&q=80&w=320",
-      path: "/category/cleaning"
+      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=400",
+      path: "/category/grocery-stores"
     }
   ];
 
@@ -616,12 +635,12 @@ function Home() {
 
           <div className="nexora-services-scroll-track" ref={servicesCarouselRef}>
             {ourServicesList.map((service) => (
-              <div 
+              <Link 
+                to={service.path}
                 className="nexora-service-card" 
                 key={service.id}
-                onClick={() => handleEnquire({ name: service.name, price: 249, tag: "Repairs" })}
-                style={{ cursor: "pointer" }}
-                title={`Instant Book ${service.name}`}
+                style={{ cursor: "pointer", textDecoration: "none" }}
+                title={`Explore ${service.name} Servicemen`}
               >
                 <div className="card-thumb-wrapper">
                   <img 
@@ -638,9 +657,23 @@ function Home() {
                 </div>
                 <div className="card-info">
                   <h4 className="service-name">{service.name}</h4>
-                  <p className="service-subtext">{service.subtitle}</p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginTop: "2px" }}>
+                    <p className="service-subtext" style={{ margin: 0 }}>{service.subtitle}</p>
+                    <button
+                      type="button"
+                      className="card-book-mini-btn"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEnquire({ name: service.name, price: 249, tag: "Repairs" });
+                      }}
+                      title={`Instant book ${service.name}`}
+                    >
+                      Book ⚡
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -833,7 +866,22 @@ function Home() {
               >
                 <div className="pop-cat-card-left">
                   <div className="pop-cat-icon-badge">
-                    {cat.icon || "⚡"}
+                    {cat.image ? (
+                      <img 
+                        src={cat.image} 
+                        alt={cat.name} 
+                        className="pop-cat-img" 
+                        loading="lazy" 
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const fallback = e.currentTarget.parentElement.querySelector(".pop-cat-fallback-icon");
+                          if (fallback) fallback.style.display = "inline";
+                        }} 
+                      />
+                    ) : null}
+                    <span className="pop-cat-fallback-icon" style={{ display: cat.image ? "none" : "inline" }}>
+                      {cat.icon || "⚡"}
+                    </span>
                   </div>
                   <div className="pop-cat-text-info">
                     <h4 className="pop-cat-name">{cat.name}</h4>

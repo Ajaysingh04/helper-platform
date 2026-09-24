@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { realData, categoryItemsRegistry } from "./CategoryPage";
+import { getServicemanImage } from "../data/categoryImages";
 import "../css/ItemDetailsPage.css";
 
 function ItemDetailsPage() {
@@ -36,7 +37,7 @@ function ItemDetailsPage() {
         rating: 4.9,
         reviews: 240,
         address: "Block 12, Express Avenue, Metro District",
-        image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200",
+        image: getServicemanImage(id),
       });
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -95,7 +96,15 @@ function ItemDetailsPage() {
         {/* Hero Section */}
         <div className="details-hero-card">
           <div className="details-hero-image-box">
-            <img src={item.image} alt={item.name} className="details-hero-img" />
+            <img 
+              src={item.image || item.avatar || getServicemanImage(item.category || item.name || "")} 
+              alt={item.name} 
+              className="details-hero-img" 
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = getServicemanImage(item.category || item.name || "");
+              }}
+            />
             <div className="details-hero-gradient"></div>
             
             <div className="details-hero-floating-info">

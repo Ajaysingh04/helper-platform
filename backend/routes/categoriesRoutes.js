@@ -9,9 +9,9 @@ const popularCategoriesData = require("../data/popularCategoriesData");
 async function ensureCategoriesSeeded() {
   try {
     if (!getStatus()) return;
-    const count = await Category.countDocuments();
-    if (count < popularCategoriesData.length) {
-      console.log(`[Categories] Seeding/Updating ${popularCategoriesData.length} popular categories in MongoDB...`);
+    const countWithImage = await Category.countDocuments({ image: { $exists: true, $ne: "" } });
+    if (countWithImage < popularCategoriesData.length) {
+      console.log(`[Categories] Seeding/Updating ${popularCategoriesData.length} popular categories with images in MongoDB...`);
       for (const cat of popularCategoriesData) {
         await Category.findOneAndUpdate(
           { $or: [{ id: cat.id }, { name: cat.name }] },
@@ -19,7 +19,7 @@ async function ensureCategoriesSeeded() {
           { upsert: true, new: true }
         );
       }
-      console.log("[Categories] Successfully seeded 85 popular categories to MongoDB.");
+      console.log("[Categories] Successfully seeded 85 popular categories with images to MongoDB.");
     }
   } catch (err) {
     console.warn("[Categories] Auto-seed note:", err.message);
@@ -129,7 +129,7 @@ router.post("/seed", async (req, res) => {
 // POST /api/categories
 router.post("/", async (req, res) => {
   try {
-    const { name, icon, count, path, tag } = req.body;
+    const { name, icon, count, path, tag, image, group } = req.body;
     if (!name) {
       return res.status(400).json({ success: false, message: "Category name is required" });
     }
@@ -138,9 +138,11 @@ router.post("/", async (req, res) => {
       id: `${Date.now()}`,
       name,
       icon: icon || "⚡",
+      image: image || "",
       count: count || "0+ Pros",
       path: path || name.toLowerCase().replace(/\s+/g, "-"),
       tag: tag || "General",
+      group: group || "Services",
       active: true
     };
 
