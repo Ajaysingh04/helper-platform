@@ -86,25 +86,43 @@ function CategoryPage() {
   const categoryTag = matchedCategory?.tag || "Verified Sector";
   const categoryCount = matchedCategory?.count || "50+ Specialists";
 
+  const isAdmin = localStorage.getItem("helper_admin_auth") === "true";
+
   // Filter providers from DataContext / Backend for this category
   const categoryProviders = useMemo(() => {
     const allProviders = dataContext?.providers || [];
     const cleanCat = categoryTitle.toLowerCase();
-    const cleanSlug = currentSlug.replace(/-/g, " ");
+    const cleanSlug = currentSlug.replace(/[-_]/g, " ").toLowerCase();
+
+    const getTokens = (str) =>
+      (str || "")
+        .toLowerCase()
+        .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 2 && !["and", "the", "for", "hub", "care", "zone", "pro", "services", "centres", "center"].includes(w));
+
+    const catTokens = getTokens(`${cleanCat} ${cleanSlug}`);
 
     let matching = allProviders.filter((p) => {
       const pCat = (p.category || "").toLowerCase();
       const pShop = (p.shopName || "").toLowerCase();
+      const pName = (p.name || "").toLowerCase();
       const pServiceCats = (p.serviceCategories || []).map((c) => String(c).toLowerCase());
 
-      return (
+      const directMatch =
         pCat.includes(cleanCat) ||
         cleanCat.includes(pCat) ||
         pCat.includes(cleanSlug) ||
         cleanSlug.includes(pCat) ||
         pShop.includes(cleanCat) ||
-        pServiceCats.some((sc) => sc.includes(cleanCat) || cleanCat.includes(sc))
-      );
+        pShop.includes(cleanSlug) ||
+        pServiceCats.some((sc) => sc.includes(cleanCat) || cleanCat.includes(sc) || sc.includes(cleanSlug) || cleanSlug.includes(sc));
+
+      if (directMatch) return true;
+
+      // Token overlap matching (e.g. massage, spa, salon, plumbing)
+      const pTokens = getTokens(`${pCat} ${pShop} ${pName} ${pServiceCats.join(" ")}`);
+      return catTokens.some((t) => pTokens.includes(t));
     });
 
     // Fallback template items if this category does not yet have custom entries in DB
@@ -421,14 +439,16 @@ function CategoryPage() {
                     <span>Verified</span>
                   </div>
 
-                  <button
-                    type="button"
-                    className="btn-edit-pro-floating"
-                    onClick={() => handleOpenEdit(item)}
-                    title="Edit provider details in backend"
-                  >
-                    ✏️
-                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      className="btn-edit-pro-floating"
+                      onClick={() => handleOpenEdit(item)}
+                      title="Edit provider details (Admin Only)"
+                    >
+                      ✏️
+                    </button>
+                  )}
 
                   <div className="item-thumbnail-bottom-bar">
                     <span className="thumb-stat-pill stat-km">

@@ -421,10 +421,12 @@ function VendorDashboard() {
       });
       setVendor(updatedVendor);
       localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
+      window.dispatchEvent(new Event("vendor_updated"));
       showToast("Shop work details, phone & location updated successfully! ✅");
     } catch (err) {
       setVendor(updatedVendor);
       localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
+      window.dispatchEvent(new Event("vendor_updated"));
       showToast("Details saved locally ✅");
     } finally {
       setSavingProfile(false);

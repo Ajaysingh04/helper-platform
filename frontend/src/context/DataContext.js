@@ -23,6 +23,28 @@ const initialServices = [
 ];
 
 const initialProviders = [
+  {
+    id: "vdr_rahul_amritam",
+    name: "Rahul Gandhi",
+    shopName: "Amritam",
+    category: "Body Massage & Spa",
+    serviceCategories: ["Body Massage & Spa", "Body Massage Centres", "Spa & Wellness", "Massage"],
+    phone: "+91 98765 00001",
+    contact: "+91 98765 00001",
+    rating: 4.9,
+    status: "Active",
+    verified: true,
+    jobsDone: 48,
+    distance: "0.8 km",
+    distanceKm: 0.8,
+    hourlyRate: "₹302/hr",
+    location: "Indore Ahinsha Tower, MG Road, Indore",
+    address: "Ahinsa Tower, MG Road, Indore, Madhya Pradesh",
+    experience: "5+ Years Exp",
+    badges: ["Verified Pro", "Ayurvedic Massage", "Couple Suites", "Doorstep Visit"],
+    image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
+    avatar: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600"
+  },
   { 
     id: 101, 
     name: "Ramesh Sharma", 
@@ -213,8 +235,55 @@ export const DataProvider = ({ children }) => {
   });
 
   const [providers, setProviders] = useState(() => {
-    const saved = localStorage.getItem("helper_providers_v2");
-    return saved ? JSON.parse(saved) : initialProviders;
+    let list = initialProviders;
+    try {
+      const saved = localStorage.getItem("helper_providers_v2");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+      }
+      // Check active vendor from helper_vendor in localStorage
+      const activeVendorRaw = localStorage.getItem("helper_vendor");
+      if (activeVendorRaw) {
+        const v = JSON.parse(activeVendorRaw);
+        if (v && (v.name || v.shopName)) {
+          const matchIdx = list.findIndex(p => p.id === v.id || p.id === "vdr_rahul_amritam" || (p.name && v.name && p.name.toLowerCase() === v.name.toLowerCase()));
+          const formattedVendor = {
+            id: v.id || "vdr_rahul_amritam",
+            name: v.name,
+            shopName: v.shopName || "Amritam",
+            category: v.category || "Body Massage & Spa",
+            serviceCategories: v.serviceCategories || ["Body Massage & Spa", "Body Massage Centres", "Spa & Wellness", "Massage"],
+            phone: v.phone || "+91 98765 00001",
+            contact: v.phone || "+91 98765 00001",
+            rating: v.rating || 4.9,
+            status: "Active",
+            verified: true,
+            franchiseActive: true,
+            franchisePlan: v.franchisePlan || "monthly",
+            franchiseAmount: v.franchiseAmount || 4000,
+            jobsDone: v.jobsCompleted || 48,
+            distance: v.distance || "0.8 km",
+            hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : "₹302/hr",
+            location: v.location || "Indore Ahinsha Tower, MG Road, Indore",
+            address: v.address || v.location || "Ahinsa Tower, MG Road, Indore, Madhya Pradesh",
+            image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
+            avatar: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600"
+          };
+          if (matchIdx !== -1) {
+            list[matchIdx] = { ...list[matchIdx], ...formattedVendor };
+          } else {
+            list = [formattedVendor, ...list];
+          }
+        }
+      }
+      // Ensure Rahul Gandhi (Amritam) is always present at top
+      const rahul = initialProviders[0];
+      if (!list.some(p => p.id === rahul.id || (p.name && p.name.toLowerCase().includes("rahul")))) {
+        list = [rahul, ...list];
+      }
+    } catch (e) {}
+    return list;
   });
 
   const [bookings, setBookings] = useState(() => {
@@ -297,7 +366,12 @@ export const DataProvider = ({ children }) => {
           setCategories(mergedCats);
         }
         if (srvRes.status === "fulfilled" && srvRes.value?.data?.length) setServices(srvRes.value.data);
-        if (prvRes.status === "fulfilled" && prvRes.value?.data?.length) setProviders(prvRes.value.data);
+        if (prvRes.status === "fulfilled" && prvRes.value?.data?.length) {
+          const fetchedProviders = prvRes.value.data;
+          const rahul = initialProviders[0];
+          const hasRahul = fetchedProviders.some(p => p.id === rahul.id || p.name === rahul.name);
+          setProviders(hasRahul ? fetchedProviders : [rahul, ...fetchedProviders]);
+        }
         if (bkgRes.status === "fulfilled" && bkgRes.value?.data?.length) setBookings(bkgRes.value.data);
         if (sldRes.status === "fulfilled" && sldRes.value?.data?.length) setSlides(sldRes.value.data);
         if (usrRes.status === "fulfilled" && usrRes.value?.data?.length) setUsers(usrRes.value.data);
@@ -317,6 +391,63 @@ export const DataProvider = ({ children }) => {
   useEffect(() => {
     fetchAllFromBackend();
   }, [fetchAllFromBackend]);
+
+  // Listen to vendor profile updates in real-time from Service Man Panel
+  useEffect(() => {
+    const handleVendorUpdate = () => {
+      try {
+        const raw = localStorage.getItem("helper_vendor");
+        if (raw) {
+          const v = JSON.parse(raw);
+          if (v && (v.name || v.shopName)) {
+            setProviders(prev => {
+              const exists = prev.find(p => p.id === v.id || p.id === "vdr_rahul_amritam" || (p.name && v.name && p.name.toLowerCase() === v.name.toLowerCase()));
+              if (exists) {
+                return prev.map(p => (p.id === exists.id) ? {
+                  ...p,
+                  name: v.name,
+                  shopName: v.shopName || p.shopName,
+                  category: v.category || p.category,
+                  serviceCategories: v.serviceCategories || p.serviceCategories || ["Body Massage Centres", "Body Massage & Spa", "Spa & Wellness", "Massage"],
+                  location: v.location || p.location,
+                  address: v.address || v.location || p.address,
+                  phone: v.phone || p.phone,
+                  contact: v.phone || p.contact,
+                  franchiseActive: true,
+                  hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : p.hourlyRate
+                } : p);
+              }
+              const newP = {
+                id: v.id || `vdr_${Date.now()}`,
+                name: v.name,
+                shopName: v.shopName || "Amritam",
+                category: v.category || "Body Massage & Spa",
+                serviceCategories: ["Body Massage Centres", "Body Massage & Spa", "Spa & Wellness", "Massage"],
+                phone: v.phone || "+91 98765 00001",
+                contact: v.phone || "+91 98765 00001",
+                rating: 4.9,
+                status: "Active",
+                verified: true,
+                franchiseActive: true,
+                franchisePlan: v.franchisePlan || "monthly",
+                franchiseAmount: v.franchiseAmount || 4000,
+                jobsDone: 48,
+                hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : "₹302/hr",
+                location: v.location || "Indore Ahinsha Tower, MG Road, Indore",
+                address: v.address || v.location || "Ahinsa Tower, MG Road, Indore, Madhya Pradesh",
+                image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
+                avatar: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600"
+              };
+              return [newP, ...prev];
+            });
+          }
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener("vendor_updated", handleVendorUpdate);
+    return () => window.removeEventListener("vendor_updated", handleVendorUpdate);
+  }, []);
 
   // Sync state changes to localStorage for offline cache
   useEffect(() => { localStorage.setItem("helper_categories", JSON.stringify(categories)); }, [categories]);

@@ -96,13 +96,22 @@ function AdminProviders() {
                         style={{ width: "38px", height: "38px", borderRadius: "10px", objectFit: "cover" }} 
                       />
                       <div>
-                        <strong>{p.name}</strong>
-                        <div style={{ fontSize: "11.5px", color: "var(--text-muted)" }}>{p.address}</div>
+                        <strong>{p.shopName ? `${p.shopName} • ${p.name}` : p.name}</strong>
+                        <div style={{ fontSize: "11.5px", color: "var(--text-muted)" }}>{p.address || p.location}</div>
                       </div>
                     </div>
                   </td>
-                  <td><span className="badge-pill">{p.category}</span></td>
-                  <td><strong>{p.contact}</strong></td>
+                  <td>
+                    <span className="badge-pill">{p.category}</span>
+                    {p.franchiseActive && (
+                      <div style={{ marginTop: "4px" }}>
+                        <span style={{ fontSize: "10.5px", background: "rgba(16, 185, 129, 0.15)", color: "#10b981", padding: "2px 6px", borderRadius: "6px", fontWeight: "600" }}>
+                          👑 Franchise ({p.franchisePlan === "annual" ? "₹5L/yr" : "₹4k/mo"})
+                        </span>
+                      </div>
+                    )}
+                  </td>
+                  <td><strong>{p.contact || p.phone || "—"}</strong></td>
                   <td>
                     <div>
                       <span>⭐ {p.rating || 4.8}</span>

@@ -1,4 +1,34 @@
 const seedProviders = [
+  // 1. Featured Partner: Rahul Gandhi (Amritam)
+  {
+    id: "vdr_rahul_amritam",
+    name: "Rahul Gandhi",
+    shopName: "Amritam",
+    category: "Body Massage & Spa",
+    serviceCategories: ["Body Massage Centres", "Body Massage & Spa", "Spa & Wellness", "Massage"],
+    phone: "+91 98765 00001",
+    distance: "0.8 km",
+    distanceKm: 0.8,
+    experience: "5+ Years Exp",
+    experienceYears: 5,
+    rating: 4.9,
+    totalReviewsCount: 148,
+    hourlyRate: "₹302/hr",
+    location: "Indore Ahinsha Tower, MG Road, Indore",
+    address: "Ahinsa Tower, MG Road, Indore, Madhya Pradesh",
+    facilities: ["Verified Pro", "Ayurvedic Massage", "Couple Suites", "Doorstep Visit Available", "Shower & Steam"],
+    avatar: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
+    image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
+    verified: true,
+    status: "Active",
+    franchiseActive: true,
+    franchisePlan: "monthly",
+    franchiseAmount: 4000,
+    teamMembers: [
+      { id: "mem_1", name: "Rahul Gandhi (Owner / Lead)", phone: "+91 98765 00001", role: "Master Specialist", active: true }
+    ],
+    bio: "Certified therapist offering authentic Ayurvedic & relaxation body massage, steam therapy and wellness care."
+  },
   // 1. Body Massage Centres
   {
     id: "prv-bmc-1",

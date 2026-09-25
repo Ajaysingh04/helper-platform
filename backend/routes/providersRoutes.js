@@ -14,12 +14,22 @@ router.get("/", async (req, res) => {
     if (getStatus()) {
       const filter = {};
       if (category) {
-        const cleanCat = category.replace(/-/g, " ");
+        const cleanCat = category.replace(/[-_]/g, " ").trim();
+        const tokens = cleanCat
+          .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
+          .split(/\s+/)
+          .filter(w => w.length > 2 && !["and", "for", "the", "services", "centres", "center", "hub", "care"].includes(w.toLowerCase()));
+
+        const tokenRegexes = tokens.map(t => new RegExp(t, "i"));
+
         filter.$or = [
           { category: new RegExp(cleanCat, "i") },
           { category: new RegExp(category, "i") },
           { shopName: new RegExp(cleanCat, "i") },
-          { serviceCategories: new RegExp(cleanCat, "i") }
+          { serviceCategories: new RegExp(cleanCat, "i") },
+          ...tokenRegexes.map(r => ({ category: r })),
+          ...tokenRegexes.map(r => ({ serviceCategories: r })),
+          ...tokenRegexes.map(r => ({ shopName: r }))
         ];
       }
       if (verified !== undefined) filter.verified = verified === "true";
@@ -29,14 +39,28 @@ router.get("/", async (req, res) => {
 
     let providers = dbStore.getAll("providers");
     if (category) {
-      const cleanCat = category.replace(/-/g, " ").toLowerCase();
+      const cleanCat = category.replace(/[-_]/g, " ").toLowerCase().trim();
       const rawCat = category.toLowerCase();
-      providers = providers.filter(
-        (p) =>
-          (p.category && (p.category.toLowerCase().includes(cleanCat) || p.category.toLowerCase().includes(rawCat))) ||
-          (p.shopName && p.shopName.toLowerCase().includes(cleanCat)) ||
-          (p.serviceCategories && p.serviceCategories.some(c => c.toLowerCase().includes(cleanCat) || c.toLowerCase().includes(rawCat)))
-      );
+      const tokens = cleanCat
+        .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !["and", "for", "the", "services", "centres", "center", "hub", "care"].includes(w));
+
+      providers = providers.filter((p) => {
+        const pCat = (p.category || "").toLowerCase();
+        const pShop = (p.shopName || "").toLowerCase();
+        const pServiceCats = (p.serviceCategories || []).map(c => String(c).toLowerCase());
+
+        const direct =
+          pCat.includes(cleanCat) ||
+          pCat.includes(rawCat) ||
+          cleanCat.includes(pCat) ||
+          pShop.includes(cleanCat) ||
+          pServiceCats.some(c => c.includes(cleanCat) || c.includes(rawCat) || cleanCat.includes(c));
+
+        if (direct) return true;
+        return tokens.some(t => pCat.includes(t) || pShop.includes(t) || pServiceCats.some(c => c.includes(t)));
+      });
     }
     if (verified !== undefined) {
       providers = providers.filter((p) => String(p.verified) === verified);

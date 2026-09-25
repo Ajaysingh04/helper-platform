@@ -1218,20 +1218,66 @@
   ],
   "providers": [
     {
+      "id": "vdr_rahul_amritam",
+      "name": "Rahul Gandhi",
+      "shopName": "Amritam",
+      "category": "Body Massage & Spa",
+      "serviceCategories": [
+        "Body Massage Centres",
+        "Body Massage & Spa",
+        "Spa & Wellness",
+        "Massage"
+      ],
+      "phone": "+91 98765 00001",
+      "distance": "0.8 km",
+      "distanceKm": 0.8,
+      "experience": "5+ Years Exp",
+      "experienceYears": 5,
+      "rating": 4.9,
+      "totalReviewsCount": 148,
+      "hourlyRate": "₹302/hr",
+      "location": "Indore Ahinsha Tower, MG Road, Indore",
+      "address": "Ahinsa Tower, MG Road, Indore, Madhya Pradesh",
+      "facilities": [
+        "Verified Pro",
+        "Ayurvedic Massage",
+        "Couple Suites",
+        "Doorstep Visit Available",
+        "Shower & Steam"
+      ],
+      "avatar": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
+      "image": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
+      "verified": true,
+      "status": "Active",
+      "franchiseActive": true,
+      "franchisePlan": "monthly",
+      "franchiseAmount": 4000,
+      "teamMembers": [
+        {
+          "id": "mem_1",
+          "name": "Rahul Gandhi (Owner / Lead)",
+          "phone": "+91 98765 00001",
+          "role": "Master Specialist",
+          "active": true
+        }
+      ],
+      "bio": "Certified therapist offering authentic Ayurvedic & relaxation body massage, steam therapy and wellness care."
+    },
+    {
       "id": "prv-bmc-1",
-      "name": "Vikram Joshi (Master Therapist)",
+      "name": "Vikram Joshi",
       "shopName": "Aura Luxury Wellness & Thai Massage",
       "category": "Body Massage Centres",
       "serviceCategories": [
         "Body Massage Centres",
         "Spa & Wellness"
       ],
-      "phone": "+91 98765 99999",
-      "distance": "0.8 km",
+      "phone": "+91 98765 43210",
+      "distance": "1.1 km",
       "distanceKm": 1.1,
-      "experience": "12+ Years Exp",
+      "experience": "8+ Years Exp",
       "experienceYears": 8,
-      "rating": 5,
+      "rating": 4.9,
       "totalReviewsCount": 384,
       "hourlyRate": "₹1,299 onwards",
       "location": "14 Palm Avenue, Metro Zone, City Central",
