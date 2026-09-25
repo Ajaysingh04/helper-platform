@@ -1856,3 +1856,371 @@
   }
 }
 
+/* ============================================================
+   ADMIN BOOKINGS ORDERS & ANALYTICS GRAPH STYLES
+   ============================================================ */
+.bookings-analytics-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 22px 24px;
+}
+
+.bookings-graph-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  margin-top: 14px;
+  align-items: stretch;
+}
+
+@media (max-width: 992px) {
+  .bookings-graph-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Status Multi-Segment Bar */
+.status-progress-block {
+  background: var(--surface-input);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.status-progress-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 12px;
+}
+
+.status-progress-title strong {
+  font-size: 13px;
+  color: var(--primary);
+}
+
+.status-multi-bar {
+  display: flex;
+  height: 18px;
+  width: 100%;
+  border-radius: 100px;
+  overflow: hidden;
+  background: rgba(150, 150, 150, 0.15);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+  margin-bottom: 14px;
+}
+
+.multi-bar-seg {
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.multi-bar-seg:hover {
+  filter: brightness(1.15);
+}
+
+.multi-bar-seg.completed {
+  background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+}
+
+.multi-bar-seg.in-progress {
+  background: linear-gradient(90deg, #6366F1 0%, #4F46E5 100%);
+}
+
+.multi-bar-seg.pending {
+  background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
+}
+
+.multi-bar-seg.cancelled {
+  background: linear-gradient(90deg, #EF4444 0%, #DC2626 100%);
+}
+
+.status-legend-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.legend-chip .chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.legend-chip.completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+}
+.legend-chip.completed .chip-dot { background: #10B981; }
+
+.legend-chip.in-progress {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366F1;
+}
+.legend-chip.in-progress .chip-dot { background: #6366F1; }
+
+.legend-chip.pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #D97706;
+}
+.legend-chip.pending .chip-dot { background: #D97706; }
+
+.legend-chip.cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+}
+.legend-chip.cancelled .chip-dot { background: #EF4444; }
+
+.legend-chip:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+
+/* 7-Day Order Intake Mini Chart */
+.weekly-mini-chart-block {
+  background: var(--surface-input);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.mini-chart-peak {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #FF4D2D;
+  background: rgba(255, 77, 45, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.mini-chart-bars-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  height: 90px;
+  padding-top: 10px;
+}
+
+.mini-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+}
+
+.mini-bar-track {
+  width: 100%;
+  max-width: 28px;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(150, 150, 150, 0.08);
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+}
+
+.mini-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #FF4D2D 0%, #FF7A00 100%);
+  border-radius: 6px 6px 0 0;
+  transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mini-bar-fill.active {
+  background: linear-gradient(180deg, #6366F1 0%, #4F46E5 100%);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.mini-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.mini-bar-label.active {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.mini-bar-hover-pop {
+  position: absolute;
+  bottom: 105%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 11px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.mini-bar-hover-pop strong {
+  color: var(--text-main);
+}
+
+.mini-bar-hover-pop span {
+  color: #10B981;
+  font-weight: 700;
+}
+
+/* Modern Booking Table Cell Elements */
+.booking-id-tag {
+  font-family: monospace;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.08);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.booking-customer-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.booking-cust-name {
+  font-size: 14px;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.booking-cust-phone {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.booking-cust-phone:hover {
+  color: var(--primary);
+}
+
+.booking-service-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  background: var(--surface-input);
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.booking-provider-select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  max-width: 170px;
+}
+
+.booking-provider-select:focus {
+  border-color: var(--primary);
+}
+
+.booking-address-text {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-price-tag {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.booking-date-text {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Status Pill Dropdown */
+.status-select-pill {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.status-select-pill.status-badge-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #D97706;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.status-select-pill.status-badge-progress {
+  background: rgba(99, 102, 241, 0.15);
+  color: #6366F1;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.status-select-pill.status-badge-completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.status-select-pill.status-badge-cancelled {
+  background: rgba(239, 68, 68, 0.15);
+  color: #DC2626;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+
