@@ -262,13 +262,24 @@ router.get("/:id/bookings", async (req, res) => {
       const provider = await Provider.findOne({ id: req.params.id }) || await Provider.findById(req.params.id).catch(() => null);
       if (!provider) return res.json({ success: true, count: 0, data: [] });
 
+      const catTokens = (provider.category || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, " ")
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !["and", "for", "the", "services"].includes(w));
+      const tokenRegexes = catTokens.map(t => new RegExp(t, "i"));
+
       const vendorBookings = await Booking.find({
         $or: [
           { assignedProvider: provider.id },
           { assignedProvider: provider.name },
           { assignedProvider: provider.shopName },
+          { assignedProviderName: new RegExp(provider.name, "i") },
+          { provider: provider._id },
           { serviceName: new RegExp(provider.category, "i") },
-          { assignedProvider: "Unassigned" }
+          { serviceCategory: new RegExp(provider.category, "i") },
+          ...tokenRegexes.map(r => ({ serviceName: r })),
+          ...tokenRegexes.map(r => ({ serviceCategory: r }))
         ]
       }).sort({ createdAt: -1 });
 
@@ -279,13 +290,24 @@ router.get("/:id/bookings", async (req, res) => {
     const allBookings = dbStore.getAll("bookings") || [];
     if (!provider) return res.json({ success: true, count: 0, data: [] });
 
-    const vendorBookings = allBookings.filter(b => 
-      b.assignedProvider === provider.id ||
-      b.assignedProvider === provider.name ||
-      b.assignedProvider === provider.shopName ||
-      (b.serviceName && provider.category && b.serviceName.toLowerCase().includes(provider.category.toLowerCase())) ||
-      b.assignedProvider === "Unassigned"
-    );
+    const catTokens = (provider.category || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, " ")
+      .split(/\s+/)
+      .filter(w => w.length > 2 && !["and", "for", "the", "services"].includes(w));
+
+    const vendorBookings = allBookings.filter(b => {
+      const assigned = String(b.assignedProvider || b.assignedProviderName || "").toLowerCase();
+      const srv = String(b.serviceName || b.service || "").toLowerCase();
+      const srvCat = String(b.serviceCategory || "").toLowerCase();
+      const provName = (provider.name || "").toLowerCase();
+      const provShop = (provider.shopName || "").toLowerCase();
+      const provCat = (provider.category || "").toLowerCase();
+
+      if (assigned.includes(provName) || assigned.includes(provShop) || assigned === provider.id) return true;
+      if (provCat && (srv.includes(provCat) || srvCat.includes(provCat))) return true;
+      return catTokens.some(t => srv.includes(t) || srvCat.includes(t));
+    });
 
     res.json({ success: true, count: vendorBookings.length, data: vendorBookings });
   } catch (error) {

@@ -349,6 +349,15 @@ function Home() {
       path: "/category/beauty-parlours"
     },
     {
+      id: "srv-spa-amritam",
+      name: "Body Massage & Spa",
+      subtitle: "Amritam • Ayurvedic & Swedish",
+      badge: "₹302/hr",
+      badgeType: "new",
+      image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=400",
+      path: "/category/body-massage-centres"
+    },
+    {
       id: "srv-carp",
       name: "Carpentry & Locks",
       subtitle: "Furniture & woodwork",

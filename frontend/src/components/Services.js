@@ -5,6 +5,7 @@ import "../css/Services.css";
 
 const categoryIcons = {
   "All": "⚡",
+  "Spa & Wellness": "💆‍♂️",
   "Repairs": "🛠️",
   "Cleaning": "🧹",
   "Daily Help": "👨‍🍳",
@@ -13,14 +14,15 @@ const categoryIcons = {
 };
 
 const defaultServices = [
-  { id: 1, name: "Electrician", icon: "💡", desc: "Short circuits, wiring, switchboards, inverter & fan repairs.", price: "₹249", tag: "Repairs", popular: true, speed: "20 min dispatch" },
-  { id: 2, name: "Plumber", icon: "🚰", desc: "Leak repair, tap replacement, drainage clogs & water heaters.", price: "₹199", tag: "Repairs", popular: true, speed: "25 min dispatch" },
-  { id: 3, name: "AC Jet Service", icon: "❄️", desc: "Deep jet clean, gas refill, cooling check & circuit repair.", price: "₹599", tag: "Appliances", popular: true, speed: "30 min dispatch" },
-  { id: 4, name: "Deep Home Cleaning", icon: "🧹", desc: "Complete kitchen, washroom, balcony & floor sanitization.", price: "₹899", tag: "Cleaning", popular: false, speed: "Same day" },
-  { id: 5, name: "Daily Home Chef", icon: "👨‍🍳", desc: "Hygienic home-style meals, breakfast, lunch & dinner prep.", price: "₹399", tag: "Daily Help", popular: true, speed: "Immediate match" },
-  { id: 6, name: "Appliance Technician", icon: "🔧", desc: "Washing machine, microwave, chimney & refrigerator fix.", price: "₹349", tag: "Appliances", popular: false, speed: "40 min dispatch" },
-  { id: 7, name: "Home Painter", icon: "🎨", desc: "Interior waterproof touch-ups, wall putty & full coat paint.", price: "₹1,299", tag: "Home Decor", popular: false, speed: "Next day" },
-  { id: 8, name: "Carpentry & Locks", icon: "🚪", desc: "Door lock installation, furniture assembly & modular fittings.", price: "₹299", tag: "Repairs", popular: false, speed: "30 min dispatch" }
+  { id: 1, name: "Electrician", icon: "💡", desc: "Short circuits, wiring, switchboards, inverter & fan repairs.", price: "₹249", tag: "Repairs", popular: true, speed: "20 min dispatch", category: "electricians" },
+  { id: 2, name: "Plumber", icon: "🚰", desc: "Leak repair, tap replacement, drainage clogs & water heaters.", price: "₹199", tag: "Repairs", popular: true, speed: "25 min dispatch", category: "plumbers" },
+  { id: "srv-spa-amritam", name: "Body Massage & Spa", icon: "💆‍♂️", desc: "Authentic Ayurvedic body massage, Swedish relaxation & aroma spa therapy by certified specialists.", price: "₹302", tag: "Spa & Wellness", popular: true, speed: "Verified Center • Amritam", category: "body-massage-centres" },
+  { id: 3, name: "AC Jet Service", icon: "❄️", desc: "Deep jet clean, gas refill, cooling check & circuit repair.", price: "₹599", tag: "Appliances", popular: true, speed: "30 min dispatch", category: "ac-repair-services" },
+  { id: 4, name: "Deep Home Cleaning", icon: "🧹", desc: "Complete kitchen, washroom, balcony & floor sanitization.", price: "₹899", tag: "Cleaning", popular: false, speed: "Same day", category: "cleaning" },
+  { id: 5, name: "Daily Home Chef", icon: "👨‍🍳", desc: "Hygienic home-style meals, breakfast, lunch & dinner prep.", price: "₹399", tag: "Daily Help", popular: true, speed: "Immediate match", category: "daily-help" },
+  { id: 6, name: "Appliance Technician", icon: "🔧", desc: "Washing machine, microwave, chimney & refrigerator fix.", price: "₹349", tag: "Appliances", popular: false, speed: "40 min dispatch", category: "appliances" },
+  { id: 7, name: "Home Painter", icon: "🎨", desc: "Interior waterproof touch-ups, wall putty & full coat paint.", price: "₹1,299", tag: "Home Decor", popular: false, speed: "Next day", category: "painters" },
+  { id: 8, name: "Carpentry & Locks", icon: "🚪", desc: "Door lock installation, furniture assembly & modular fittings.", price: "₹299", tag: "Repairs", popular: false, speed: "30 min dispatch", category: "carpenters" }
 ];
 
 function Services() {
@@ -30,7 +32,7 @@ function Services() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPaused, setIsPaused] = useState(false);
 
-  const categories = ["All", "Repairs", "Cleaning", "Daily Help", "Appliances", "Home Decor"];
+  const categories = ["All", "Spa & Wellness", "Repairs", "Cleaning", "Daily Help", "Appliances", "Home Decor"];
 
   const filtered = servicesList.filter(s => {
     const matchesCat = activeFilter === "All" || s.tag === activeFilter || (s.category && s.category.toLowerCase().includes(activeFilter.toLowerCase()));
@@ -155,7 +157,7 @@ function Services() {
                 </div>
 
                 <Link 
-                  to={`/category/${item.name.toLowerCase().replace(/\s+/g, '-')}`} 
+                  to={`/category/${(item.category || item.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`} 
                   className="btn-coral-sm"
                 >
                   <span>Book Now</span>

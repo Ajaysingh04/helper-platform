@@ -1226,7 +1226,9 @@
         "Body Massage Centres",
         "Body Massage & Spa",
         "Spa & Wellness",
-        "Massage"
+        "Massage",
+        "Beauty Spas",
+        "Spa"
       ],
       "phone": "+91 98765 00001",
       "distance": "0.8 km",
@@ -1714,6 +1716,26 @@
     }
   ],
   "bookings": [
+    {
+      "id": "HLP-72819",
+      "bookingId": "HLP-72819",
+      "bookingCode": "HLP-72819",
+      "customerName": "Vikramaditya Roy",
+      "customerPhone": "+91 98260 12345",
+      "customerAddress": "Palasia Square, Near AB Road, Indore",
+      "serviceName": "Full Body Relaxation & Ayurvedic Therapy",
+      "serviceCategory": "Body Massage & Spa",
+      "servicePrice": 302,
+      "totalAmount": 302,
+      "date": "2026-09-25",
+      "time": "11:30 AM",
+      "status": "Pending",
+      "doorOtp": "1234",
+      "assignedProvider": "vdr_rahul_amritam",
+      "assignedProviderName": "Rahul Gandhi",
+      "provider": "vdr_rahul_amritam",
+      "createdAt": "2026-09-25 11:30"
+    },
     {
       "id": "BK-9021",
       "customerName": "Rahul Sharma",

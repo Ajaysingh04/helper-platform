@@ -18,8 +18,8 @@ const initialServices = [
   { id: 6, name: "Nanny / Babysitter", icon: "👶", desc: "Trained, attentive and background-screened infant & toddler care.", price: "₹450", tag: "Daily Help", popular: false, bookings: "430+", rating: 4.9 },
   { id: 7, name: "Wall Painter", icon: "🎨", desc: "Interior, exterior, texture designs & waterproof painting.", price: "₹599", tag: "Home Decor", popular: false, bookings: "890+", rating: 4.8 },
   { id: 8, name: "Carpenter", icon: "🪚", desc: "Furniture crafting, repair, lock assembly & custom woodwork.", price: "₹299", tag: "Repairs", popular: true, bookings: "1.1k", rating: 4.8 },
-  { id: 9, name: "AC Repair & Gas", icon: "🧊", desc: "AC foam wash, gas leak fix, cooling troubleshooting & PCB repair.", price: "₹399", tag: "Appliances", popular: true, bookings: "3.4k", rating: 4.9 },
-  { id: 10, name: "Appliance Repair", icon: "🛠️", desc: "Washing machine, fridge, microwave & TV fixing.", price: "₹299", tag: "Appliances", popular: false, bookings: "1.5k", rating: 4.8 }
+  { id: 10, name: "Appliance Repair", icon: "🛠️", desc: "Washing machine, fridge, microwave & TV fixing.", price: "₹299", tag: "Appliances", popular: false, bookings: "1.5k", rating: 4.8 },
+  { id: 11, name: "Body Massage & Spa", icon: "💆‍♂️", desc: "Authentic Ayurvedic body massage, Swedish relaxation & aroma spa therapy by certified specialists.", price: "₹302", tag: "Spa & Wellness", popular: true, bookings: "2.1k", rating: 4.9, category: "body-massage-centres" }
 ];
 
 const initialProviders = [
@@ -184,6 +184,7 @@ const initialProviders = [
 ];
 
 const initialBookings = [
+  { id: "HLP-72819", bookingId: "HLP-72819", bookingCode: "HLP-72819", customerName: "Vikramaditya Roy", customerPhone: "+91 98260 12345", phone: "+91 98260 12345", service: "Body Massage & Spa", serviceName: "Full Body Relaxation & Ayurvedic Therapy", serviceCategory: "Body Massage & Spa", price: "₹302", totalAmount: 302, status: "Pending", doorOtp: "1234", date: "Today, 11:30 AM", address: "Palasia Square, Near AB Road, Indore", customerAddress: "Palasia Square, Near AB Road, Indore", provider: "Amritam • Rahul Gandhi", assignedProvider: "Amritam • Rahul Gandhi", assignedProviderName: "Rahul Gandhi", providerId: "vdr_rahul_amritam" },
   { id: "BK-9081", customerName: "Rahul Verma", phone: "+91 98765 12345", service: "AC Repair & Gas", price: "₹399", status: "Pending", date: "Today, 02:30 PM", address: "Flat 402, Green Valley Apartments", provider: "Apex Electrical Solutions" },
   { id: "BK-9080", customerName: "Priya Mehra", phone: "+91 98765 67890", service: "Home Cleaner", price: "₹499", status: "In Progress", date: "Today, 11:15 AM", address: "House 18, Block C, Metro Park", provider: "ProClean Sanitization Hub" },
   { id: "BK-9079", customerName: "Siddharth Jain", phone: "+91 98765 99887", service: "Electrician", price: "₹249", status: "Completed", date: "Yesterday, 04:00 PM", address: "Plot 89, Tech Residency", provider: "Apex Electrical Solutions" },
@@ -594,19 +595,34 @@ export const DataProvider = ({ children }) => {
 
   // Bookings
   const addBooking = async (bookingData) => {
-    const tempId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
+    const bookingCode = bookingData.id || bookingData.bookingCode || `HLP-${Math.floor(10000 + Math.random() * 90000)}`;
     const item = {
-      id: tempId,
+      id: bookingCode,
+      bookingId: bookingCode,
+      bookingCode: bookingCode,
       customerName: bookingData.name || bookingData.customerName || "Customer",
-      phone: bookingData.phone || "+91 98765 00000",
-      service: bookingData.service || "General Service",
-      price: bookingData.price || "₹299",
+      customerPhone: bookingData.phone || bookingData.customerPhone || "+91 98765 00000",
+      phone: bookingData.phone || bookingData.customerPhone || "+91 98765 00000",
+      service: bookingData.service || bookingData.serviceName || "Body Massage & Spa",
+      serviceName: bookingData.serviceName || bookingData.service || "Body Massage & Spa",
+      serviceCategory: bookingData.serviceCategory || "Body Massage & Spa",
+      price: bookingData.price || "₹302",
+      totalAmount: parseInt(String(bookingData.price || bookingData.totalAmount || "302").replace(/[^0-9]/g, "")) || 302,
       status: "Pending",
+      doorOtp: bookingData.doorOtp || "1234",
       date: bookingData.date || "Just now",
-      address: bookingData.address || "Local Delivery Area",
-      provider: bookingData.provider || "Auto Assigned"
+      address: bookingData.address || "Ahinsa Tower, Indore, MP",
+      customerAddress: bookingData.address || "Ahinsa Tower, Indore, MP",
+      provider: bookingData.provider || bookingData.assignedProvider || "Amritam • Rahul Gandhi",
+      assignedProvider: bookingData.provider || bookingData.assignedProvider || "Amritam • Rahul Gandhi",
+      assignedProviderName: bookingData.assignedProviderName || bookingData.provider || "Rahul Gandhi",
+      providerId: bookingData.providerId || "vdr_rahul_amritam"
     };
+
     setBookings(prev => [item, ...prev]);
+
+    // Dispatch real-time booking event so Service Man Panel and Admin receive it instantly
+    window.dispatchEvent(new CustomEvent("new_booking_created", { detail: item }));
 
     try {
       const res = await fetch(`${API_BASE}/bookings`, {
@@ -615,8 +631,9 @@ export const DataProvider = ({ children }) => {
         body: JSON.stringify(item)
       });
       const data = await res.json();
-      if (data.success && data.data) {
-        setBookings(prev => prev.map(b => b.id === tempId ? { ...item, ...data.data } : b));
+      if (data.success && (data.data || data.booking)) {
+        const saved = data.data || data.booking;
+        setBookings(prev => prev.map(b => b.id === bookingCode ? { ...item, ...saved } : b));
       }
     } catch (err) {
       console.warn("Backend addBooking error:", err);

@@ -244,6 +244,23 @@ function VendorDashboard() {
     return () => clearInterval(interval);
   }, [incomingOffer]);
 
+  // Listen for real-time customer bookings
+  useEffect(() => {
+    const handleNewBooking = (e) => {
+      if (e.detail) {
+        const newB = e.detail;
+        setBookings(prev => {
+          const exists = prev.some(b => (b.bookingId || b.id) === (newB.bookingId || newB.id));
+          if (exists) return prev;
+          return [newB, ...prev];
+        });
+        showToast(`🔔 NEW CUSTOMER BOOKING: ${newB.serviceName || newB.service} from ${newB.customerName}! ⚡`);
+      }
+    };
+    window.addEventListener("new_booking_created", handleNewBooking);
+    return () => window.removeEventListener("new_booking_created", handleNewBooking);
+  }, []);
+
   // Fetch Bookings
   const fetchBookings = async (vendorId) => {
     setLoadingBookings(true);
