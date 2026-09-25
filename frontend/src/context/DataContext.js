@@ -10,15 +10,42 @@ export const DataContext = createContext();
 const initialCategories = popularCategories;
 
 const initialServices = [
+  // Repairs
   { id: 1, name: "Electrician", icon: "💡", desc: "Short circuits, wiring, switchboards, inverter & fan repairs.", price: "₹249", tag: "Repairs", popular: true, bookings: "1.2k", rating: 4.9 },
   { id: 2, name: "Plumber", icon: "🚰", desc: "Leak repair, tap replacement, drainage clogs & water heaters.", price: "₹199", tag: "Repairs", popular: true, bookings: "980+", rating: 4.8 },
-  { id: 3, name: "Home Cleaner", icon: "🧹", desc: "Full house deep cleaning, sofa scrubbing & sanitization.", price: "₹499", tag: "Cleaning", popular: true, bookings: "2.5k", rating: 4.9 },
-  { id: 4, name: "Home Chef", icon: "👨‍🍳", desc: "Daily nutritious meals, custom diet menus & party cuisine cooking.", price: "₹399", tag: "Kitchen", popular: false, bookings: "750+", rating: 4.8 },
+  { id: 8, name: "Carpenter", icon: "🪚", desc: "Furniture crafting, repair, lock assembly & custom woodwork.", price: "₹299", tag: "Repairs", popular: true, bookings: "1.1k", rating: 4.8 },
+  { id: 12, name: "Door Locks & Hardware", icon: "🔐", desc: "Smart locks installation, broken cylinder replacement & safety latch fix.", price: "₹249", tag: "Repairs", popular: false, bookings: "410+", rating: 4.7 },
+
+  // Cleaning
+  { id: 3, name: "Home Cleaner", icon: "🧹", desc: "Full house deep cleaning, balcony pressure wash & sanitization.", price: "₹499", tag: "Cleaning", popular: true, bookings: "2.5k", rating: 4.9 },
+  { id: 13, name: "Sofa & Carpet Sanitization", icon: "🛋️", desc: "Anti-allergen high extraction steam wash, removes deep stains & bad odors.", price: "₹599", tag: "Cleaning", popular: true, bookings: "890+", rating: 4.8 },
+  { id: 14, name: "Pest & Termite Control", icon: "🐜", desc: "100% herbal eco-friendly cockroach, ant & bed bug eradication.", price: "₹799", tag: "Cleaning", popular: false, bookings: "640+", rating: 4.9 },
+  { id: 15, name: "Bathroom & Tiles Descaling", icon: "🚿", desc: "Hard water scale removal, acid-free grout scrubbing & mirror polishing.", price: "₹399", tag: "Cleaning", popular: false, bookings: "520+", rating: 4.8 },
+
+  // Daily Help
   { id: 5, name: "Home Keeper", icon: "🏠", desc: "Daily dusting, utensil assistance, organizing & housekeeping.", price: "₹349", tag: "Daily Help", popular: false, bookings: "620+", rating: 4.7 },
   { id: 6, name: "Nanny / Babysitter", icon: "👶", desc: "Trained, attentive and background-screened infant & toddler care.", price: "₹450", tag: "Daily Help", popular: false, bookings: "430+", rating: 4.9 },
-  { id: 7, name: "Wall Painter", icon: "🎨", desc: "Interior, exterior, texture designs & waterproof painting.", price: "₹599", tag: "Home Decor", popular: false, bookings: "890+", rating: 4.8 },
-  { id: 8, name: "Carpenter", icon: "🪚", desc: "Furniture crafting, repair, lock assembly & custom woodwork.", price: "₹299", tag: "Repairs", popular: true, bookings: "1.1k", rating: 4.8 },
+  { id: 16, name: "Elderly Care Assistant", icon: "👵", desc: "Compassionate bedside assistance, vital monitoring & medicine support.", price: "₹499", tag: "Daily Help", popular: false, bookings: "380+", rating: 4.9 },
+  { id: 17, name: "Driver / Chauffeur", icon: "🚗", desc: "Professional city & highway private car driving on per-hour basis.", price: "₹399", tag: "Daily Help", popular: true, bookings: "950+", rating: 4.8 },
+
+  // Appliances
   { id: 10, name: "Appliance Repair", icon: "🛠️", desc: "Washing machine, fridge, microwave & TV fixing.", price: "₹299", tag: "Appliances", popular: false, bookings: "1.5k", rating: 4.8 },
+  { id: 18, name: "AC Jet Service & Gas Refill", icon: "❄️", desc: "Foam jet filter wash, cooling coil flush & refrigerant top-up.", price: "₹499", tag: "Appliances", popular: true, bookings: "2.3k", rating: 4.9 },
+  { id: 19, name: "RO Water Purifier Service", icon: "💧", desc: "Filter membrane replacement, TDS adjustment & sterilizing flush.", price: "₹299", tag: "Appliances", popular: false, bookings: "720+", rating: 4.8 },
+  { id: 20, name: "Geyser & Heater Repair", icon: "♨️", desc: "Thermostat check, heating coil replacement & sediment descaling.", price: "₹349", tag: "Appliances", popular: false, bookings: "510+", rating: 4.7 },
+
+  // Home Decor
+  { id: 7, name: "Wall Painter", icon: "🎨", desc: "Interior, exterior, texture designs & waterproof painting.", price: "₹599", tag: "Home Decor", popular: false, bookings: "890+", rating: 4.8 },
+  { id: 21, name: "False Ceiling & POP Works", icon: "🏛️", desc: "Modern gypsum board false ceiling, cove LED lighting & artistic plaster.", price: "₹899", tag: "Home Decor", popular: false, bookings: "340+", rating: 4.8 },
+  { id: 22, name: "Curtains & Wallpaper Fitting", icon: "🖼️", desc: "Motorized curtain channel installation & 3D designer wallpaper pasting.", price: "₹399", tag: "Home Decor", popular: false, bookings: "460+", rating: 4.7 },
+
+  // Kitchen
+  { id: 4, name: "Home Chef", icon: "👨‍🍳", desc: "Daily nutritious meals, custom diet menus & party cuisine cooking.", price: "₹399", tag: "Kitchen", popular: false, bookings: "750+", rating: 4.8 },
+  { id: 23, name: "Kitchen Chimney & Hob Cleaning", icon: "🍳", desc: "Degreasing motor suction, baffle filter steam wash & gas stove tuning.", price: "₹449", tag: "Kitchen", popular: true, bookings: "820+", rating: 4.9 },
+  { id: 24, name: "Modular Kitchen Alignment", icon: "🍽️", desc: "Soft-close hydraulic hinge repair & tandem box drawer tracks.", price: "₹399", tag: "Kitchen", popular: false, bookings: "290+", rating: 4.8 },
+  { id: 25, name: "Party Catering & Bartender Host", icon: "🍹", desc: "Mocktail crafting, live barbecue plating & culinary party assistance.", price: "₹999", tag: "Kitchen", popular: false, bookings: "370+", rating: 4.9 },
+
+  // Wellness
   { id: 11, name: "Body Massage & Spa", icon: "💆‍♂️", desc: "Authentic Ayurvedic body massage, Swedish relaxation & aroma spa therapy by certified specialists.", price: "₹302", tag: "Spa & Wellness", popular: true, bookings: "2.1k", rating: 4.9, category: "body-massage-centres" }
 ];
 
@@ -231,8 +258,23 @@ export const DataProvider = ({ children }) => {
   });
 
   const [services, setServices] = useState(() => {
-    const saved = localStorage.getItem("helper_services");
-    return saved ? JSON.parse(saved) : initialServices;
+    try {
+      const saved = localStorage.getItem("helper_services");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          Array.isArray(parsed) && 
+          parsed.length >= 18 && 
+          parsed.some(s => s.tag === "Kitchen") &&
+          parsed.some(s => s.tag === "Daily Help") &&
+          parsed.some(s => s.tag === "Home Decor") &&
+          parsed.some(s => s.tag === "Appliances")
+        ) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return initialServices;
   });
 
   const [providers, setProviders] = useState(() => {
@@ -384,7 +426,33 @@ export const DataProvider = ({ children }) => {
           });
           setCategories(mergedCats);
         }
-        if (srvRes.status === "fulfilled" && srvRes.value?.data?.length) setServices(srvRes.value.data);
+        if (srvRes.status === "fulfilled" && srvRes.value?.data?.length) {
+          const normalizeTag = (s) => {
+            const raw = `${s.tag || ""} ${s.category || ""} ${s.name || ""}`.toLowerCase();
+            if (raw.includes("kitchen") || raw.includes("cook") || raw.includes("chef") || raw.includes("chimney")) return "Kitchen";
+            if (raw.includes("clean") || raw.includes("pest") || raw.includes("sanit") || raw.includes("scrub")) return "Cleaning";
+            if (raw.includes("appliance") || raw.includes("ac") || raw.includes("fridge") || raw.includes("ro") || raw.includes("geyser")) return "Appliances";
+            if (raw.includes("decor") || raw.includes("paint") || raw.includes("wall") || raw.includes("ceiling") || raw.includes("wallpaper")) return "Home Decor";
+            if (raw.includes("daily") || raw.includes("help") || raw.includes("maid") || raw.includes("nanny") || raw.includes("keeper") || raw.includes("driver")) return "Daily Help";
+            if (raw.includes("massage") || raw.includes("spa") || raw.includes("wellness")) return "Spa & Wellness";
+            return s.tag || "Repairs";
+          };
+
+          const backendList = srvRes.value.data.map(s => ({
+            ...s,
+            desc: s.desc || s.description || "Standard home care consultation and certified service.",
+            price: typeof s.price === "number" ? `₹${s.price}` : (s.price || "₹299"),
+            tag: normalizeTag(s)
+          }));
+
+          const mergedServices = [...backendList];
+          initialServices.forEach(initS => {
+            if (!mergedServices.some(s => s.id === initS.id || (s.name && initS.name && s.name.toLowerCase() === initS.name.toLowerCase()))) {
+              mergedServices.push(initS);
+            }
+          });
+          setServices(mergedServices);
+        }
         if (prvRes.status === "fulfilled" && prvRes.value?.data?.length) {
           let fetchedProviders = prvRes.value.data;
           const rahul = initialProviders[0];

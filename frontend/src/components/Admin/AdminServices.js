@@ -3,6 +3,45 @@ import { DataContext } from "../../context/DataContext";
 
 const AVAILABLE_TAGS = ["All", "Repairs", "Cleaning", "Daily Help", "Appliances", "Home Decor", "Kitchen"];
 
+// Robust matching for categories and sub-sectors
+export const isServiceInTag = (service, targetTag) => {
+  if (!service) return false;
+  if (targetTag === "All") return true;
+
+  const sTag = (service.tag || "").toLowerCase().trim();
+  const tTag = targetTag.toLowerCase().trim();
+  if (sTag === tTag) return true;
+
+  const corpus = `${service.name || ""} ${service.tag || ""} ${service.category || ""} ${service.desc || ""}`.toLowerCase();
+
+  if (tTag === "repairs") {
+    return sTag.includes("repair") || sTag.includes("plumb") || sTag.includes("electr") || sTag.includes("carpent") || sTag.includes("lock") ||
+           corpus.includes("electric") || corpus.includes("plumb") || corpus.includes("carpent") || corpus.includes("switchboard") || corpus.includes("leak") || corpus.includes("lock");
+  }
+  if (tTag === "cleaning") {
+    return sTag.includes("clean") || sTag.includes("pest") || sTag.includes("sanit") ||
+           corpus.includes("clean") || corpus.includes("pest") || corpus.includes("termite") || corpus.includes("sanit") || corpus.includes("descal") || corpus.includes("shampoo");
+  }
+  if (tTag === "daily help") {
+    return sTag.includes("daily") || sTag.includes("help") || sTag.includes("maid") || sTag.includes("nanny") || sTag.includes("keeper") || sTag.includes("driver") ||
+           corpus.includes("keeper") || corpus.includes("nanny") || corpus.includes("babysitter") || corpus.includes("elderly") || corpus.includes("driver") || corpus.includes("chauffeur") || corpus.includes("maid");
+  }
+  if (tTag === "appliances") {
+    return sTag.includes("appliance") || sTag.includes("ac") || sTag.includes("fridge") || sTag.includes("ro") || sTag.includes("geyser") ||
+           corpus.includes("appliance") || corpus.includes("ac jet") || corpus.includes("cooling") || corpus.includes("refrigerator") || corpus.includes("washing machine") || corpus.includes("purifier") || corpus.includes("geyser") || corpus.includes("heater");
+  }
+  if (tTag === "home decor") {
+    return sTag.includes("decor") || sTag.includes("paint") || sTag.includes("wall") || sTag.includes("ceiling") ||
+           corpus.includes("paint") || corpus.includes("decor") || corpus.includes("ceiling") || corpus.includes("pop") || corpus.includes("wallpaper") || corpus.includes("curtain");
+  }
+  if (tTag === "kitchen") {
+    return sTag.includes("kitchen") || sTag.includes("cook") || sTag.includes("chef") || sTag.includes("chimney") ||
+           corpus.includes("chef") || corpus.includes("cook") || corpus.includes("kitchen") || corpus.includes("chimney") || corpus.includes("hob") || corpus.includes("catering") || corpus.includes("bartender");
+  }
+
+  return false;
+};
+
 function AdminServices() {
   const { services, addService, updateService, deleteService } = useContext(DataContext);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -25,7 +64,7 @@ function AdminServices() {
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (s.desc && s.desc.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (s.tag && s.tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchTag = activeTag === "All" || (s.tag && s.tag.toLowerCase() === activeTag.toLowerCase());
+      const matchTag = isServiceInTag(s, activeTag);
       return matchSearch && matchTag;
     });
   }, [services, searchTerm, activeTag]);
@@ -155,16 +194,20 @@ function AdminServices() {
 
           {/* Filter Tag Chips */}
           <div className="admin-tag-chips-wrapper">
-            {AVAILABLE_TAGS.map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`admin-tag-chip ${activeTag === t ? "active" : ""}`}
-                onClick={() => setActiveTag(t)}
-              >
-                {t}
-              </button>
-            ))}
+            {AVAILABLE_TAGS.map((t) => {
+              const count = services.filter((s) => isServiceInTag(s, t)).length;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  className={`admin-tag-chip ${activeTag === t ? "active" : ""}`}
+                  onClick={() => setActiveTag(t)}
+                >
+                  <span>{t}</span>
+                  <span className="tag-chip-count">{count}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
