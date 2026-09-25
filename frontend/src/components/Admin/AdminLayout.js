@@ -20,6 +20,7 @@ function AdminLayout() {
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { bookings, tickets } = useContext(DataContext);
 
   const pendingBookingsCount = bookings.filter(b => b.status === "Pending").length;
@@ -126,9 +127,18 @@ function AdminLayout() {
   return (
     <div className="admin-layout-wrapper">
       
+      {/* Mobile Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="admin-sidebar-backdrop" 
+          onClick={() => setSidebarOpen(false)}
+          title="Close Navigation"
+        />
+      )}
+
       {/* Sidebar Navigation */}
-      <aside className="admin-sidebar">
-        <Link to="/" className="admin-sidebar-header" title="Go to Helper Home Page">
+      <aside className={`admin-sidebar ${sidebarOpen ? "mobile-open" : ""}`}>
+        <Link to="/" className="admin-sidebar-header" title="Go to Helper Home Page" onClick={() => setSidebarOpen(false)}>
           <div className="admin-logo-badge">⚡</div>
           <div className="admin-brand-text">
             <h2>Helper</h2>
@@ -141,7 +151,10 @@ function AdminLayout() {
           
           <button 
             className={`admin-nav-btn ${activeTab === "dashboard" ? "active" : ""}`}
-            onClick={() => setActiveTab("dashboard")}
+            onClick={() => {
+              setActiveTab("dashboard");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">📊</span>
@@ -151,7 +164,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "bookings" ? "active" : ""}`}
-            onClick={() => setActiveTab("bookings")}
+            onClick={() => {
+              setActiveTab("bookings");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">📦</span>
@@ -164,7 +180,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "services" ? "active" : ""}`}
-            onClick={() => setActiveTab("services")}
+            onClick={() => {
+              setActiveTab("services");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">🛠️</span>
@@ -174,7 +193,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "categories" ? "active" : ""}`}
-            onClick={() => setActiveTab("categories")}
+            onClick={() => {
+              setActiveTab("categories");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">🏷️</span>
@@ -186,7 +208,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "providers" ? "active" : ""}`}
-            onClick={() => setActiveTab("providers")}
+            onClick={() => {
+              setActiveTab("providers");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">🛡️</span>
@@ -196,7 +221,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "users" ? "active" : ""}`}
-            onClick={() => setActiveTab("users")}
+            onClick={() => {
+              setActiveTab("users");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">👥</span>
@@ -208,7 +236,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "hero" ? "active" : ""}`}
-            onClick={() => setActiveTab("hero")}
+            onClick={() => {
+              setActiveTab("hero");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">🖼️</span>
@@ -218,7 +249,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "promotions" ? "active" : ""}`}
-            onClick={() => setActiveTab("promotions")}
+            onClick={() => {
+              setActiveTab("promotions");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">🎁</span>
@@ -228,7 +262,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "support" ? "active" : ""}`}
-            onClick={() => setActiveTab("support")}
+            onClick={() => {
+              setActiveTab("support");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">💬</span>
@@ -241,7 +278,10 @@ function AdminLayout() {
 
           <button 
             className={`admin-nav-btn ${activeTab === "settings" ? "active" : ""}`}
-            onClick={() => setActiveTab("settings")}
+            onClick={() => {
+              setActiveTab("settings");
+              setSidebarOpen(false);
+            }}
           >
             <div className="nav-btn-content">
               <span className="nav-icon">⚙️</span>
@@ -251,7 +291,7 @@ function AdminLayout() {
         </nav>
 
         <div className="admin-sidebar-footer">
-          <Link to="/" className="admin-back-site-btn">
+          <Link to="/" className="admin-back-site-btn" onClick={() => setSidebarOpen(false)}>
             <span>🌐 View Website</span>
           </Link>
           <button 
@@ -270,12 +310,23 @@ function AdminLayout() {
         
         {/* Top Navbar */}
         <header className="admin-top-bar">
-          <div className="admin-search-wrap">
-            <span className="admin-search-icon">🔍</span>
-            <input 
-              type="text" 
-              placeholder="Search bookings, pros, services..."
-            />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button 
+              type="button" 
+              className="admin-mobile-toggle-btn"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title="Toggle Navigation Menu"
+            >
+              ☰
+            </button>
+
+            <div className="admin-search-wrap">
+              <span className="admin-search-icon">🔍</span>
+              <input 
+                type="text" 
+                placeholder="Search bookings, pros, services..."
+              />
+            </div>
           </div>
 
           <div className="admin-top-actions">

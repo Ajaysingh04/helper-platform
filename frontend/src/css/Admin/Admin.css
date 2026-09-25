@@ -2363,5 +2363,137 @@
   border: 1px solid var(--border-color);
 }
 
+/* ============================================================
+   ADMIN FULL MOBILE RESPONSIVENESS & DRAWER STYLES
+   ============================================================ */
+.admin-mobile-toggle-btn {
+  display: none;
+  background: var(--surface-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.admin-mobile-toggle-btn:hover {
+  background: var(--surface-card);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.admin-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 992px) {
+  .admin-mobile-toggle-btn {
+    display: inline-flex;
+  }
+
+  .admin-sidebar.mobile-open {
+    width: 280px !important;
+    transform: translateX(0) !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+  }
+
+  .admin-sidebar.mobile-open .admin-brand-text,
+  .admin-sidebar.mobile-open .admin-nav-btn span,
+  .admin-sidebar.mobile-open .admin-nav-category-title,
+  .admin-sidebar.mobile-open .admin-nav-count {
+    display: inline-block !important;
+  }
+
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 995;
+  }
+
+  .admin-search-wrap {
+    width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-search-wrap {
+    display: none;
+  }
+
+  .admin-top-bar {
+    padding: 0 14px;
+    height: 64px;
+  }
+
+  .admin-profile-pill .admin-name-text {
+    display: none;
+  }
+
+  .admin-view-body {
+    padding: 18px 12px;
+  }
+
+  .admin-sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-main-viewport {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  .admin-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .admin-kpi-card {
+    padding: 16px 18px;
+  }
+
+  .admin-card-section {
+    padding: 18px 14px;
+    margin-bottom: 20px;
+  }
+
+  .admin-table-container {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-live-badge span {
+    display: none;
+  }
+
+  .admin-live-badge {
+    padding: 6px;
+    border-radius: 50%;
+  }
+
+  .admin-header-actions {
+    width: 100%;
+  }
+
+  .admin-header-actions .btn-primary-glow {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+
 
 
