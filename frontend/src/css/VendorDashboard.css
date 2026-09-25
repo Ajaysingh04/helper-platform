@@ -1077,3 +1077,286 @@
     padding: 16px;
   }
 }
+
+/* ==========================================================================
+   11. HIGH-TECH VENDOR OPERATION CARD & LIVE STOPWATCH STYLES
+   ========================================================================== */
+
+.booking-operations-box {
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #E2E8F0;
+}
+
+.vendor-stage-stepper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #F8FAFC;
+  padding: 8px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #E2E8F0;
+}
+
+.vendor-step-node {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vendor-step-node.active {
+  color: #FF4D2D;
+}
+
+.vendor-step-node.done {
+  color: #10B981;
+}
+
+/* Slot Confirmation Section */
+.stage-slot-confirmation {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stage-slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stage-slot-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input-slot-otp {
+  width: 120px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #FCD34D;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 2px;
+  background: #FFFFFF;
+}
+
+.btn-lock-slot {
+  background: #D97706;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-lock-slot:hover {
+  background: #B45309;
+}
+
+/* Slot Confirmed & Countdown Active */
+.stage-slot-locked-box {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.vendor-live-countdown {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  color: #059669;
+  background: #FFFFFF;
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid #A7F3D0;
+}
+
+.btn-doorstep-arrived {
+  background: #0284C7;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-doorstep-arrived:hover {
+  background: #0369A1;
+}
+
+/* Doorstep QR Verification Box */
+.stage-qr-verify-box {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.input-qr-token {
+  flex: 1;
+  min-width: 140px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #93C5FD;
+  font-size: 13px;
+  font-weight: 700;
+  background: #FFFFFF;
+}
+
+.btn-verify-qr-start {
+  background: #FF4D2D;
+  color: #FFFFFF;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 77, 45, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-verify-qr-start:hover {
+  background: #E03E1F;
+}
+
+/* Live Work Stopwatch in Plumber Dashboard */
+.stage-live-stopwatch-box {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  color: #FFFFFF;
+  border-radius: 14px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+}
+
+.vendor-stopwatch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.vendor-stopwatch-val {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 32px;
+  font-weight: 900;
+  color: #34D399;
+  text-shadow: 0 0 16px rgba(52, 211, 153, 0.5);
+  letter-spacing: 0.04em;
+}
+
+.vendor-running-meter {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.vendor-stopwatch-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-stop-timer {
+  background: #EF4444;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-stop-timer:hover {
+  background: #DC2626;
+}
+
+/* Itemized Final Receipt in Plumber Dashboard */
+.stage-work-completed-receipt {
+  background: #F8FAFC;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-top: 10px;
+}
+
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #475569;
+  padding: 4px 0;
+}
+
+.receipt-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 900;
+  color: #0F172A;
+  padding-top: 8px;
+  margin-top: 6px;
+  border-top: 1px solid #CBD5E1;
+}
+
+.btn-collect-payment {
+  background: #10B981;
+  color: #FFFFFF;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.btn-collect-payment:hover {
+  background: #059669;
+}

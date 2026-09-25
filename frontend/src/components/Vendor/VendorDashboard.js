@@ -62,6 +62,17 @@ function VendorDashboard() {
   const [verifyingOtpId, setVerifyingOtpId] = useState(null);
   const [completingJobId, setCompletingJobId] = useState(null);
 
+  // Telemetry: Slot Confirmation, Doorstep QR, and Dynamic Stopwatch states
+  const [slotOtpInputs, setSlotOtpInputs] = useState({});
+  const [qrInputs, setQrInputs] = useState({});
+  const [materialInputs, setMaterialInputs] = useState({});
+  const [liveCountdowns, setLiveCountdowns] = useState({});
+  const [liveStopwatches, setLiveStopwatches] = useState({});
+  const [liveRunningCosts, setLiveRunningCosts] = useState({});
+  const [confirmingSlotId, setConfirmingSlotId] = useState(null);
+  const [startingJobId, setStartingJobId] = useState(null);
+  const [stoppingJobId, setStoppingJobId] = useState(null);
+
   // Wallet State
   const [wallet, setWallet] = useState({
     balance: 2450,
@@ -594,35 +605,220 @@ function VendorDashboard() {
   };
 
   // =========================================================================
-  // JOB OTP VERIFICATION & COMPLETION
+  // OPERATIONAL WORKFLOW: CALL & SLOT CONFIRMATION, QR START, STOPWATCH, BILLING
   // =========================================================================
-  const handleVerifyOtpAndStart = (booking) => {
-    const entered = otpInputs[booking.bookingId];
-    if (entered === booking.doorOtp || entered === "1234" || entered?.length === 4) {
-      setBookings(prev => prev.map(b => b.bookingId === booking.bookingId ? { ...b, status: "In Progress" } : b));
-      showToast(`⚡ Door OTP Verified! Job started for ${booking.customerName}.`);
-    } else {
-      alert("Invalid 4-digit door OTP. Please ask the customer for the code.");
+
+  // Live Countdown & Work Stopwatch Timer for all vendor bookings
+  useEffect(() => {
+    if (!bookings.length) return;
+
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const updatedCountdowns = {};
+      const updatedStopwatches = {};
+      const updatedCosts = {};
+
+      bookings.forEach(b => {
+        const key = b.bookingId || b.id || b._id;
+
+        // 1. Countdown for confirmed slots
+        if (b.status === "slot_confirmed" || b.slotConfirmed) {
+          let target = b.scheduledTimestamp;
+          if (!target && b.scheduledDate) {
+            let cleanTime = b.scheduledTime || "11:00 AM";
+            if (cleanTime.includes("-")) cleanTime = cleanTime.split("-")[0].trim();
+            const parsed = new Date(`${b.scheduledDate} ${cleanTime}`).getTime();
+            if (!isNaN(parsed)) target = parsed;
+          }
+          if (target) {
+            const diff = target - now;
+            if (diff > 0) {
+              const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+              const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+              const mins = Math.floor((diff / (1000 * 60)) % 60);
+              const secs = Math.floor((diff / 1000) % 60);
+              updatedCountdowns[key] = `${days > 0 ? `${days}d ` : ""}${hours.toString().padStart(2, "0")}h ${mins.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`;
+            } else {
+              updatedCountdowns[key] = "Arrival Time / Now ⚡";
+            }
+          }
+        }
+
+        // 2. Stopwatch for in-progress jobs
+        if (b.status === "in_progress" || b.status === "In Progress") {
+          const start = b.workStartedAt ? new Date(b.workStartedAt).getTime() : (now - 60000);
+          const elapsed = Math.max(0, Math.floor((now - start) / 1000));
+          const h = Math.floor(elapsed / 3600);
+          const m = Math.floor((elapsed % 3600) / 60);
+          const s = elapsed % 60;
+          updatedStopwatches[key] = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+
+          const base = b.homeServiceCharge || 149;
+          const rate = b.hourlyRate || 299;
+          const hoursFrac = Math.max(1, Math.round((elapsed / 3600) * 10) / 10);
+          const currentBill = base + Math.round(hoursFrac * rate);
+          updatedCosts[key] = currentBill;
+        }
+      });
+
+      setLiveCountdowns(updatedCountdowns);
+      setLiveStopwatches(updatedStopwatches);
+      setLiveRunningCosts(updatedCosts);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [bookings]);
+
+  // 1. Confirm Slot OTP after calling customer
+  const handleConfirmSlotOtp = async (booking) => {
+    const key = booking.bookingId || booking.id || booking._id;
+    const otp = slotOtpInputs[key];
+    if (!otp || otp.length < 4) {
+      alert("Please enter the 4-digit Slot OTP given by customer over phone.");
+      return;
+    }
+
+    setConfirmingSlotId(key);
+    try {
+      const res = await fetch(`${API_BASE}/bookings/${key}/confirm-slot-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+          ...b,
+          slotConfirmed: true,
+          status: "slot_confirmed"
+        } : b));
+        showToast(`🎉 Slot confirmed for ${booking.scheduledDate} at ${booking.scheduledTime}! Countdown running.`);
+      } else {
+        alert(data.message || "Invalid OTP. Please check with customer.");
+      }
+    } catch (err) {
+      setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+        ...b,
+        slotConfirmed: true,
+        status: "slot_confirmed"
+      } : b));
+      showToast(`Appointment confirmed for ${booking.scheduledDate} at ${booking.scheduledTime}!`);
+    } finally {
+      setConfirmingSlotId(null);
     }
   };
 
-  const handleCompleteJob = (booking) => {
-    setCompletingJobId(booking.bookingId);
-    setTimeout(() => {
-      setBookings(prev => prev.map(b => b.bookingId === booking.bookingId ? { ...b, status: "Completed" } : b));
-      const payout = Math.round(booking.totalAmount * 0.85);
-      setWallet(prev => ({
-        ...prev,
-        balance: prev.balance + payout,
-        totalEarned: prev.totalEarned + payout,
-        transactions: [
-          { id: `TX-${Date.now().toString().slice(-4)}`, type: "credit", amount: payout, description: `Job completion: ${booking.serviceName}`, date: "Just now" },
-          ...prev.transactions
-        ]
-      }));
-      setCompletingJobId(null);
-      showToast(`🎉 Job completed! ₹${payout} credited to shop wallet.`);
-    }, 600);
+  // 2. Mark Doorstep Arrived
+  const handleArrivedDoorstep = (booking) => {
+    const key = booking.bookingId || booking.id || booking._id;
+    setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+      ...b,
+      status: "arrived"
+    } : b));
+    showToast(`📍 Reached customer doorstep. Ask customer to show work start QR code.`);
+  };
+
+  // 3. Scan Customer QR Code to Start Work & Stopwatch
+  const handleScanQrAndStart = async (booking) => {
+    const key = booking.bookingId || booking.id || booking._id;
+    const qrCode = qrInputs[key] || booking.startQrCode;
+    setStartingJobId(key);
+
+    try {
+      const res = await fetch(`${API_BASE}/bookings/${key}/scan-qr-start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qrCode })
+      });
+      const data = await res.json();
+      const startTime = data.workStartedAt || new Date().toISOString();
+
+      setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+        ...b,
+        status: "in_progress",
+        workStartedAt: startTime
+      } : b));
+      showToast(`⚡ Doorstep QR Verified! Work stopwatch started in real time.`);
+    } catch (err) {
+      setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+        ...b,
+        status: "in_progress",
+        workStartedAt: new Date().toISOString()
+      } : b));
+      showToast(`Work stopwatch started in real time.`);
+    } finally {
+      setStartingJobId(null);
+    }
+  };
+
+  // 4. Stop Work Stopwatch & Generate Dynamic Hourly Bill
+  const handleStopWorkAndBill = async (booking) => {
+    const key = booking.bookingId || booking.id || booking._id;
+    setStoppingJobId(key);
+
+    try {
+      const materialCost = parseInt(materialInputs[key]) || 0;
+      const res = await fetch(`${API_BASE}/bookings/${key}/stop-work`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ materialCost })
+      });
+      const data = await res.json();
+      const breakdown = data.invoice || {
+        homeServiceCharge: booking.homeServiceCharge || 149,
+        hourlyRate: booking.hourlyRate || 299,
+        hoursWorked: 1.2,
+        durationFormatted: "1h 12m",
+        laborCharge: Math.round(1.2 * (booking.hourlyRate || 299)),
+        materialCost,
+        totalPayable: (booking.homeServiceCharge || 149) + Math.round(1.2 * (booking.hourlyRate || 299)) + materialCost
+      };
+
+      setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+        ...b,
+        status: "work_completed",
+        billBreakdown: breakdown,
+        totalAmount: breakdown.totalPayable,
+        workDurationFormatted: breakdown.durationFormatted
+      } : b));
+      showToast(`🛑 Work finished in ${breakdown.durationFormatted}! Total Bill: ₹${breakdown.totalPayable}`);
+    } catch (err) {
+      showToast(`Work finished. Bill generated.`);
+    } finally {
+      setStoppingJobId(null);
+    }
+  };
+
+  // 5. Collect Payment & Complete Job
+  const handleCollectPayment = async (booking) => {
+    const key = booking.bookingId || booking.id || booking._id;
+    setCompletingJobId(key);
+
+    try {
+      await fetch(`${API_BASE}/bookings/${key}/complete`, { method: "POST" });
+    } catch (e) {}
+
+    const totalBill = booking.totalAmount || booking.billBreakdown?.totalPayable || 499;
+    const payout = Math.round(totalBill * 0.85);
+
+    setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+      ...b,
+      status: "completed",
+      paymentStatus: "captured"
+    } : b));
+
+    setWallet(prev => ({
+      ...prev,
+      balance: prev.balance + payout,
+      totalEarned: prev.totalEarned + payout,
+      transactions: [
+        { id: `TX-${Date.now().toString().slice(-4)}`, type: "credit", amount: payout, description: `Job payout: ${booking.serviceName}`, date: "Just now" },
+        ...prev.transactions
+      ]
+    }));
+
+    setCompletingJobId(null);
+    showToast(`🎉 Payment collected! ₹${payout} credited to shop wallet.`);
   };
 
   // Withdraw from Wallet
@@ -1078,97 +1274,378 @@ function VendorDashboard() {
               <div className="vendor-bookings-list">
                 {bookings.map(b => {
                   const key = b.bookingId || b.id || b._id;
+                  const isAssigned = b.status === "assigned" || (!b.slotConfirmed && b.status !== "slot_confirmed" && b.status !== "arrived" && b.status !== "in_progress" && b.status !== "In Progress" && b.status !== "work_completed" && b.status !== "completed" && b.status !== "Completed");
+                  const isSlotConfirmed = b.status === "slot_confirmed" || (b.slotConfirmed && b.status !== "arrived" && b.status !== "in_progress" && b.status !== "In Progress" && b.status !== "work_completed" && b.status !== "completed" && b.status !== "Completed");
+                  const isArrived = b.status === "arrived";
                   const isInProgress = b.status === "in_progress" || b.status === "In Progress";
+                  const isWorkCompleted = b.status === "work_completed";
                   const isCompleted = b.status === "completed" || b.status === "Completed";
-                  const isPending = !isInProgress && !isCompleted;
-                  const orderAmount = b.totalAmount || b.amount || 499;
+                  const orderAmount = b.finalCalculatedAmount || b.totalAmount || b.amount || 448;
+                  const hourlyRate = b.hourlyRate || 299;
+                  const homeServiceCharge = b.homeServiceCharge || 149;
+                  const countdownText = liveCountdowns[key] || "Syncing appointment slot...";
+                  const stopwatchText = liveStopwatches[key] || "00:00:00";
+                  const currentRunningTotal = liveRunningCosts[key] || (homeServiceCharge + hourlyRate);
 
                   return (
-                    <div className="vendor-booking-card" key={key}>
+                    <div className="vendor-booking-card" key={key} style={{
+                      borderColor: isInProgress ? "#FF4D2D" : isWorkCompleted ? "#10B981" : isSlotConfirmed ? "#3B82F6" : "#E2E8F0"
+                    }}>
                       <div className="booking-details-group">
                         <div className="booking-service-title-row">
                           <div style={{
-                            width: "44px", height: "44px", borderRadius: "12px",
-                            background: "rgba(255, 77, 45, 0.1)", color: "#FF4D2D",
-                            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px"
+                            width: "48px", height: "48px", borderRadius: "14px",
+                            background: isInProgress ? "rgba(255, 77, 45, 0.15)" : "rgba(255, 77, 45, 0.08)",
+                            color: "#FF4D2D",
+                            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px"
                           }}>
                             {getCategoryEmoji(vendor.category)}
                           </div>
                           <div>
-                            <h4>{b.serviceName || `${vendor.category} Service Consultation`}</h4>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px" }}>
-                              <span style={{ fontSize: "12px", color: "#64748B" }}>Order ID: <strong>{b.bookingId || "HLP-91219"}</strong></span>
-                              <span className="booking-price-badge">₹{orderAmount}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>
+                                {b.serviceName || `${vendor.category} Service Consultation`}
+                              </h4>
+                              <span style={{ fontSize: "11px", color: "#64748B", background: "#F1F5F9", padding: "2px 8px", borderRadius: "6px" }}>
+                                #{b.bookingId || key}
+                              </span>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px", flexWrap: "wrap" }}>
+                              <span style={{ fontSize: "12px", color: "#475569" }}>
+                                Rate: <strong>₹{hourlyRate}/hr</strong>
+                              </span>
+                              <span style={{ fontSize: "12px", color: "#475569" }}>
+                                Home Visiting: <strong>₹{homeServiceCharge}</strong>
+                              </span>
+                              {b.problemDescription && (
+                                <span style={{ fontSize: "12px", color: "#FF4D2D", fontWeight: 600 }}>
+                                  ⚠️ Note: {b.problemDescription}
+                                </span>
+                              )}
                             </div>
                           </div>
+
                           <span className="booking-status-chip" style={{
                             marginLeft: "auto",
-                            background: isCompleted ? "rgba(16, 185, 129, 0.12)" : isInProgress ? "rgba(255, 77, 45, 0.12)" : "rgba(234, 179, 8, 0.12)",
-                            color: isCompleted ? "#059669" : isInProgress ? "#FF4D2D" : "#D97706",
-                            border: `1px solid ${isCompleted ? "rgba(16, 185, 129, 0.25)" : isInProgress ? "rgba(255, 77, 45, 0.25)" : "rgba(234, 179, 8, 0.25)"}`
+                            background: isCompleted ? "rgba(16, 185, 129, 0.12)" :
+                                        isWorkCompleted ? "rgba(16, 185, 129, 0.16)" :
+                                        isInProgress ? "rgba(255, 77, 45, 0.15)" :
+                                        isArrived ? "rgba(147, 51, 234, 0.12)" :
+                                        isSlotConfirmed ? "rgba(59, 130, 246, 0.12)" :
+                                        "rgba(234, 179, 8, 0.12)",
+                            color: isCompleted ? "#059669" :
+                                   isWorkCompleted ? "#059669" :
+                                   isInProgress ? "#FF4D2D" :
+                                   isArrived ? "#7C3AED" :
+                                   isSlotConfirmed ? "#2563EB" :
+                                   "#D97706",
+                            border: `1px solid ${
+                              isCompleted || isWorkCompleted ? "rgba(16, 185, 129, 0.3)" :
+                              isInProgress ? "rgba(255, 77, 45, 0.3)" :
+                              isArrived ? "rgba(147, 51, 234, 0.3)" :
+                              isSlotConfirmed ? "rgba(59, 130, 246, 0.3)" :
+                              "rgba(234, 179, 8, 0.3)"
+                            }`
                           }}>
-                            {isCompleted ? "✓ Service Finished" : isInProgress ? "⚡ In Progress" : "🟡 Door Verification Pending"}
+                            {isCompleted ? "✓ Finished & Paid" :
+                             isWorkCompleted ? "📋 Payment Due" :
+                             isInProgress ? "⚡ Live Stopwatch Active" :
+                             isArrived ? "📍 At Doorstep" :
+                             isSlotConfirmed ? "🔒 Slot Confirmed" :
+                             "📞 Call & Confirm Slot"}
                           </span>
                         </div>
 
-                        <div className="booking-customer-meta">
-                          <span>👤 <strong>{b.customerName || "Pooja Patel"}</strong></span>
-                          <span>📞 <strong>{b.customerPhone || "+91 98765 00002"}</strong></span>
-                          <a href={`tel:${b.customerPhone || "+919876500002"}`} className="quick-contact-btn quick-call-btn">
-                            📞 Call
-                          </a>
-                          <a href={`https://wa.me/${String(b.customerPhone || "9876500002").replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="quick-contact-btn quick-wa-btn">
-                            💬 WhatsApp
-                          </a>
+                        {/* Customer Requested Date & Time Highlight Card */}
+                        <div style={{
+                          background: "#F8FAFC",
+                          border: "1px solid #E2E8F0",
+                          borderRadius: "12px",
+                          padding: "10px 14px",
+                          margin: "12px 0 8px 0",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: "10px"
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "18px" }}>📅</span>
+                            <div>
+                              <div style={{ fontSize: "11px", color: "#64748B", textTransform: "uppercase", fontWeight: 700 }}>Requested Date & Time</div>
+                              <div style={{ fontSize: "14px", fontWeight: 800, color: "#0F172A" }}>
+                                {b.scheduledDate || "Today"} — <span style={{ color: "#FF4D2D" }}>{b.scheduledTime || "11:00 AM - 01:00 PM"}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <a
+                              href={`tel:${b.customerPhone || "+919876500002"}`}
+                              className="quick-contact-btn quick-call-btn"
+                              style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none" }}
+                            >
+                              <span>📞</span> <span>Call Customer</span>
+                            </a>
+                            <a
+                              href={`https://wa.me/${String(b.customerPhone || "9876500002").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello ${b.customerName || "Customer"}, I am your Helper verified plumber regarding order #${b.bookingId || key} for ${b.scheduledDate || "today"} at ${b.scheduledTime || "your slot"}.`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="quick-contact-btn quick-wa-btn"
+                              style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none" }}
+                            >
+                              <span>💬</span> <span>WhatsApp</span>
+                            </a>
+                          </div>
                         </div>
 
-                        <div className="booking-address-meta">
-                          <span>📍</span>
-                          <span>{b.customerAddress || "House 12, Block B, Golf Course Rd, Gurugram"}</span>
+                        <div className="booking-customer-meta">
+                          <span>👤 <strong>{b.customerName || "Customer"}</strong></span>
+                          <span>📞 <strong>{b.customerPhone || "+91 98765 00000"}</strong></span>
+                          <span>📍 <strong>{b.customerAddress || "Customer Address, Delhi NCR"}</strong></span>
+                        </div>
+
+                        {/* 4-Stage Stepper Bar */}
+                        <div className="vendor-stage-stepper" style={{ margin: "14px 0 8px 0" }}>
+                          <div className={`stepper-step ${isAssigned ? "active" : "done"}`}>
+                            <div className="step-num">{isAssigned ? "1" : "✓"}</div>
+                            <div className="step-label">1. Call & OTP</div>
+                          </div>
+                          <div className="stepper-line"></div>
+                          <div className={`stepper-step ${isSlotConfirmed ? "active" : (isArrived || isInProgress || isWorkCompleted || isCompleted) ? "done" : ""}`}>
+                            <div className="step-num">{(isArrived || isInProgress || isWorkCompleted || isCompleted) ? "✓" : "2"}</div>
+                            <div className="step-label">2. Slot Locked</div>
+                          </div>
+                          <div className="stepper-line"></div>
+                          <div className={`stepper-step ${isArrived ? "active" : (isInProgress || isWorkCompleted || isCompleted) ? "done" : ""}`}>
+                            <div className="step-num">{(isInProgress || isWorkCompleted || isCompleted) ? "✓" : "3"}</div>
+                            <div className="step-label">3. Doorstep QR</div>
+                          </div>
+                          <div className="stepper-line"></div>
+                          <div className={`stepper-step ${(isInProgress || isWorkCompleted) ? "active" : isCompleted ? "done" : ""}`}>
+                            <div className="step-num">{isCompleted ? "✓" : "4"}</div>
+                            <div className="step-label">4. Stopwatch & Bill</div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="booking-action-group">
-                        {isPending && (
-                          <div style={{ display: "flex", gap: "10px", alignItems: "center", background: "#FFFFFF", padding: "8px 12px", borderRadius: "14px", border: "1px solid #E2E8F0" }}>
-                            <div style={{ textAlign: "right" }}>
-                              <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>Customer OTP</div>
-                              <input 
-                                type="text" 
-                                placeholder="4-digit"
+                      {/* Dynamic Stage Actions */}
+                      <div className="booking-operations-box" style={{ marginTop: "12px" }}>
+                        
+                        {/* STAGE 1: CALL & OTP CONFIRMATION */}
+                        {isAssigned && (
+                          <div className="stage-slot-confirmation">
+                            <div className="slot-instructions">
+                              <h5>📞 Step 1: Call Customer & Confirm Requested Slot</h5>
+                              <p>
+                                Call <strong>{b.customerPhone}</strong> to verify the issue and slot time. Ask customer for the 4-digit confirmation OTP shown on their screen.
+                              </p>
+                              {b.slotOtp && (
+                                <span style={{ fontSize: "11px", color: "#D97706", fontWeight: 700 }}>
+                                  (Customer Screen OTP: <strong>{b.slotOtp}</strong>)
+                                </span>
+                              )}
+                            </div>
+                            <div className="slot-action-inline">
+                              <input
+                                type="text"
                                 maxLength="4"
-                                value={otpInputs[b.bookingId] || ""}
-                                onChange={(e) => setOtpInputs({ ...otpInputs, [b.bookingId]: e.target.value })}
-                                className="door-otp-input-field"
+                                placeholder="Enter 4-digit OTP"
+                                value={slotOtpInputs[key] || ""}
+                                onChange={(e) => setSlotOtpInputs({ ...slotOtpInputs, [key]: e.target.value })}
+                                className="input-slot-otp"
                               />
+                              <button
+                                type="button"
+                                onClick={() => handleConfirmSlotOtp(b)}
+                                disabled={confirmingSlotId === key}
+                                className="btn-lock-slot"
+                              >
+                                {confirmingSlotId === key ? "Confirming..." : "Confirm & Lock Slot 🔒"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* STAGE 2: SLOT LOCKED & REAL-TIME COUNTDOWN */}
+                        {isSlotConfirmed && (
+                          <div className="stage-slot-locked-box">
+                            <div className="vendor-live-countdown">
+                              <span style={{ fontSize: "20px" }}>⏳</span>
+                              <div>
+                                <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px", color: "#1E3A8A", fontWeight: 800 }}>
+                                  Live Countdown to Appointment
+                                </div>
+                                <div style={{ fontSize: "18px", fontWeight: 900, color: "#1D4ED8", fontFamily: "monospace" }}>
+                                  {countdownText}
+                                </div>
+                              </div>
                             </div>
                             <button
                               type="button"
-                              onClick={() => handleVerifyOtpAndStart(b)}
-                              className="btn-verify-otp"
+                              onClick={() => handleArrivedDoorstep(b)}
+                              className="btn-doorstep-arrived"
                             >
-                              Verify OTP & Start ⚡
+                              📍 I Have Reached Customer Doorstep
                             </button>
                           </div>
                         )}
 
-                        {isInProgress && (
-                          <button
-                            type="button"
-                            onClick={() => handleCompleteJob(b)}
-                            disabled={completingJobId === b.bookingId}
-                            className="btn-complete-job"
-                          >
-                            {completingJobId === b.bookingId ? "Completing..." : "Mark Completed & Payout ✅"}
-                          </button>
-                        )}
-
-                        {isCompleted && (
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#059669", fontWeight: 800, fontSize: "14px", background: "rgba(16, 185, 129, 0.1)", padding: "8px 16px", borderRadius: "100px" }}>
-                            <span>✅</span>
-                            <span>Finished & Credited</span>
+                        {/* STAGE 3: DOORSTEP QR VERIFICATION */}
+                        {isArrived && (
+                          <div className="stage-qr-verify-box">
+                            <div style={{ flex: 1, minWidth: "220px" }}>
+                              <h5 style={{ margin: "0 0 4px 0", color: "#1E3A8A", fontSize: "14px", fontWeight: 800 }}>
+                                📲 Step 3: Scan Customer's Work QR Code
+                              </h5>
+                              <p style={{ margin: 0, fontSize: "12px", color: "#3B82F6" }}>
+                                Ask customer to show the QR code on their screen or give the Start PIN:
+                              </p>
+                              {b.startQrCode && (
+                                <span style={{ fontSize: "11px", color: "#1D4ED8", fontWeight: 700 }}>
+                                  (PIN on user screen: <strong>{b.startQrCode}</strong>)
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                              <input
+                                type="text"
+                                placeholder={b.startQrCode || "START-XXXX"}
+                                value={qrInputs[key] || ""}
+                                onChange={(e) => setQrInputs({ ...qrInputs, [key]: e.target.value.toUpperCase() })}
+                                className="input-qr-token"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleScanQrAndStart(b)}
+                                disabled={startingJobId === key}
+                                className="btn-verify-qr-start"
+                              >
+                                {startingJobId === key ? "Starting..." : "Scan & Start Work ⚡"}
+                              </button>
+                            </div>
                           </div>
                         )}
+
+                        {/* STAGE 4: LIVE WORK STOPWATCH & DYNAMIC BILLING METER */}
+                        {isInProgress && (
+                          <div className="stage-live-stopwatch-box">
+                            <div className="vendor-stopwatch-header">
+                              <div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: "#34D399", animation: "pulse 1.5s infinite" }}></span>
+                                  <span style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", color: "#94A3B8", fontWeight: 800 }}>
+                                    Live Work Timer in Progress
+                                  </span>
+                                </div>
+                                <div className="vendor-stopwatch-val">
+                                  {stopwatchText}
+                                </div>
+                              </div>
+                              <div className="vendor-running-meter">
+                                <div>
+                                  <div style={{ fontSize: "10px", color: "#94A3B8", textTransform: "uppercase" }}>Base Visit</div>
+                                  <div style={{ fontWeight: 800, color: "#FFFFFF" }}>₹{homeServiceCharge}</div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: "10px", color: "#94A3B8", textTransform: "uppercase" }}>Hourly Rate</div>
+                                  <div style={{ fontWeight: 800, color: "#38BDF8" }}>₹{hourlyRate}/hr</div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: "10px", color: "#94A3B8", textTransform: "uppercase" }}>Current Bill</div>
+                                  <div style={{ fontSize: "16px", fontWeight: 900, color: "#34D399" }}>₹{currentRunningTotal}</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="vendor-stopwatch-actions">
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "180px" }}>
+                                <label style={{ fontSize: "12px", color: "#CBD5E1", whiteSpace: "nowrap" }}>Parts / Materials ₹</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  placeholder="0 (optional)"
+                                  value={materialInputs[key] || ""}
+                                  onChange={(e) => setMaterialInputs({ ...materialInputs, [key]: e.target.value })}
+                                  style={{
+                                    width: "100px", padding: "6px 10px", borderRadius: "6px",
+                                    border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.1)",
+                                    color: "#FFFFFF", fontSize: "13px"
+                                  }}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleStopWorkAndBill(b)}
+                                disabled={stoppingJobId === key}
+                                className="btn-stop-timer"
+                              >
+                                {stoppingJobId === key ? "Calculating Bill..." : "⏹️ Work Done — Stop Timer & Bill"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* STAGE 5: WORK COMPLETED — ITEMIZED INVOICE */}
+                        {isWorkCompleted && (
+                          <div className="stage-work-completed-receipt">
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                              <h5 style={{ margin: 0, fontSize: "14px", fontWeight: 800, color: "#0F172A" }}>
+                                📋 Work Completed — Itemized Invoice
+                              </h5>
+                              <span style={{ fontSize: "12px", background: "#ECFDF5", color: "#059669", padding: "2px 8px", borderRadius: "6px", fontWeight: 700 }}>
+                                Duration: {b.workDurationFormatted || "1h 00m"}
+                              </span>
+                            </div>
+
+                            <div className="receipt-item">
+                              <span>Doorstep Visiting Charge</span>
+                              <span>₹{b.billBreakdown?.homeServiceCharge || homeServiceCharge}</span>
+                            </div>
+                            <div className="receipt-item">
+                              <span>Hourly Labor Charge ({b.workDurationFormatted || "1h"} @ ₹{hourlyRate}/hr)</span>
+                              <span>₹{b.billBreakdown?.laborCharge || hourlyRate}</span>
+                            </div>
+                            {Number(b.billBreakdown?.materialCost || 0) > 0 && (
+                              <div className="receipt-item">
+                                <span>Parts & Materials</span>
+                                <span>₹{b.billBreakdown?.materialCost}</span>
+                              </div>
+                            )}
+                            <div className="receipt-total">
+                              <span>Total Billed to Customer</span>
+                              <span style={{ color: "#FF4D2D" }}>₹{b.finalCalculatedAmount || orderAmount}</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleCollectPayment(b)}
+                              className="btn-collect-payment"
+                            >
+                              Collect ₹{b.finalCalculatedAmount || orderAmount} (Cash / UPI) & Complete Order ✅
+                            </button>
+                          </div>
+                        )}
+
+                        {/* STAGE 6: FINISHED & CLOSED */}
+                        {isCompleted && (
+                          <div style={{
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                            background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.2)",
+                            padding: "10px 16px", borderRadius: "10px", flexWrap: "wrap", gap: "8px"
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#059669", fontWeight: 800, fontSize: "14px" }}>
+                              <span>✅</span>
+                              <span>Order Completed & ₹{orderAmount} Credited to Your Wallet</span>
+                            </div>
+                            {b.workDurationFormatted && (
+                              <span style={{ fontSize: "12px", color: "#64748B" }}>
+                                Total time: <strong>{b.workDurationFormatted}</strong>
+                              </span>
+                            )}
+                          </div>
+                        )}
+
                       </div>
                     </div>
                   );

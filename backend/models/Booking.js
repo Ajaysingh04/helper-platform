@@ -47,10 +47,12 @@ const BookingSchema = new mongoose.Schema(
         "requested",
         "searching_provider",
         "assigned",
+        "slot_confirmed",
         "accepted",
         "on_the_way",
         "arrived",
         "in_progress",
+        "work_completed",
         "completed",
         "cancelled",
         "disputed",
@@ -61,9 +63,28 @@ const BookingSchema = new mongoose.Schema(
         "Completed",
         "Cancelled"
       ],
-      default: "requested",
+      default: "assigned",
       index: true
     },
+
+    // Problem Notes
+    problemDescription: { type: String, default: "" },
+
+    // Security & Slot Confirmation Protocol
+    slotOtp: { type: String, default: () => Math.floor(1000 + Math.random() * 9000).toString() },
+    slotConfirmed: { type: Boolean, default: false },
+    slotConfirmedAt: { type: Date },
+    startQrCode: { type: String },
+
+    // Live Work Stopwatch & Dynamic Hourly Tracking
+    workStartedAt: { type: Date },
+    workEndedAt: { type: Date },
+    workDurationSeconds: { type: Number, default: 0 },
+    workDurationFormatted: { type: String, default: "0m" },
+    homeServiceCharge: { type: Number, default: 149 },
+    hourlyRate: { type: Number, default: 299 },
+    finalCalculatedAmount: { type: Number },
+    billBreakdown: { type: mongoose.Schema.Types.Mixed },
 
     // Security OTP Protocol
     security: {
@@ -74,11 +95,12 @@ const BookingSchema = new mongoose.Schema(
 
     isEmergency: { type: Boolean, default: false, index: true },
     scheduledDate: { type: String, default: () => new Date().toISOString().split("T")[0] },
-    scheduledTime: { type: String, default: "Immediate Dispatch" },
+    scheduledTime: { type: String, default: "11:00 AM" },
+    scheduledTimestamp: { type: Number },
     
     // Algorithmic Pricing Breakdown
     pricing: {
-      baseAmount: { type: Number, default: 299 },
+      baseAmount: { type: Number, default: 149 },
       distanceCharge: { type: Number, default: 0 },
       emergencyCharge: { type: Number, default: 0 },
       nightSurgeCharge: { type: Number, default: 0 },

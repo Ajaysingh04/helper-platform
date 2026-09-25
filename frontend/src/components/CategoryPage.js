@@ -35,6 +35,80 @@ function CategoryPage() {
   const [confirmedBookingInfo, setConfirmedBookingInfo] = useState(null);
   const [isSubmittingEnquiry, setIsSubmittingEnquiry] = useState(false);
 
+  // Appointment Scheduling & Telemetry State
+  const todayStr = new Date().toISOString().split("T")[0];
+  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+  const [bookingDate, setBookingDate] = useState(todayStr);
+  const [bookingTime, setBookingTime] = useState("11:00 AM");
+  const [bookingProblem, setBookingProblem] = useState("Water pipe leakage / repair");
+
+  // Real-time Live Countdown, Stopwatch & Running Meter
+  const [liveCountdown, setLiveCountdown] = useState("");
+  const [liveStopwatch, setLiveStopwatch] = useState("00:00:00");
+  const [liveRunningCost, setLiveRunningCost] = useState(149);
+
+  // Live Timer Hook (Countdown to slot & Work stopwatch)
+  useEffect(() => {
+    if (!confirmedBookingInfo) return;
+
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const targetTime = confirmedBookingInfo.scheduledTimestamp || (now + 7200000);
+      const diff = targetTime - now;
+
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const mins = Math.floor((diff / (1000 * 60)) % 60);
+        const secs = Math.floor((diff / 1000) % 60);
+        setLiveCountdown(`${days > 0 ? `${days}d ` : ""}${hours.toString().padStart(2, "0")}h ${mins.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`);
+      } else {
+        setLiveCountdown("Ready for Doorstep Arrival / Now");
+      }
+
+      // If job is in progress, tick live stopwatch & calculate running dynamic cost
+      if (confirmedBookingInfo.status === "in_progress" && confirmedBookingInfo.workStartedAt) {
+        const start = new Date(confirmedBookingInfo.workStartedAt).getTime();
+        const elapsedSec = Math.max(0, Math.floor((now - start) / 1000));
+        const swHours = Math.floor(elapsedSec / 3600);
+        const swMins = Math.floor((elapsedSec % 3600) / 60);
+        const swSecs = elapsedSec % 60;
+        setLiveStopwatch(`${swHours.toString().padStart(2, "0")}:${swMins.toString().padStart(2, "0")}:${swSecs.toString().padStart(2, "0")}`);
+
+        const base = confirmedBookingInfo.homeServiceCharge || 149;
+        const rate = confirmedBookingInfo.hourlyRate || 299;
+        const hoursFraction = Math.max(1, Math.round((elapsedSec / 3600) * 10) / 10);
+        const running = base + Math.round(hoursFraction * rate);
+        setLiveRunningCost(running);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [confirmedBookingInfo]);
+
+  // Real-time synchronization polling for active booking status (Slot OTP confirm, QR scan start, stop work)
+  useEffect(() => {
+    if (!confirmedBookingInfo?.bookingCode) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const code = confirmedBookingInfo.bookingCode || confirmedBookingInfo.id;
+        const res = await fetch(`${API_BASE}/bookings/${code}`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          setConfirmedBookingInfo(prev => ({
+            ...prev,
+            ...data.data,
+            slotConfirmed: data.data.slotConfirmed || (data.data.status !== "assigned" && data.data.status !== "requested"),
+            status: data.data.status || prev.status
+          }));
+        }
+      } catch (e) {}
+    }, 2500);
+
+    return () => clearInterval(pollInterval);
+  }, [confirmedBookingInfo?.bookingCode]);
+
   // Edit Provider Modal State (Updates Backend)
   const [editingProvider, setEditingProvider] = useState(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -452,6 +526,21 @@ function CategoryPage() {
 
     setIsSubmittingEnquiry(true);
     const bookingCode = `HLP-${Math.floor(10000 + Math.random() * 90000)}`;
+    const slotOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const startQrCode = `QR-HLP-${bookingCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const homeServiceCharge = 149;
+    const hourlyRateNum = parseInt(String(enquiryItem.hourlyRate || "299").replace(/[^0-9]/g, "")) || 299;
+
+    let scheduledTimestamp = Date.now() + 7200000;
+    try {
+      if (bookingDate) {
+        let cleanTime = bookingTime || "11:00 AM";
+        if (cleanTime.includes("-")) cleanTime = cleanTime.split("-")[0].trim();
+        const d = new Date(`${bookingDate} ${cleanTime}`).getTime();
+        if (!isNaN(d)) scheduledTimestamp = d;
+      }
+    } catch (e) {}
+
     const newBookingData = {
       id: bookingCode,
       bookingCode,
@@ -463,15 +552,24 @@ function CategoryPage() {
       service: enquiryItem.shopName ? `${enquiryItem.shopName} • ${categoryTitle}` : categoryTitle,
       serviceName: `${enquiryItem.shopName || enquiryItem.name} • ${categoryTitle}`,
       serviceCategory: enquiryItem.category || categoryTitle,
-      price: enquiryItem.hourlyRate || "₹302",
-      totalAmount: parseInt(String(enquiryItem.hourlyRate || "302").replace(/[^0-9]/g, "")) || 302,
+      price: `₹${homeServiceCharge}`,
+      totalAmount: homeServiceCharge,
+      homeServiceCharge,
+      hourlyRate: hourlyRateNum,
+      scheduledDate: bookingDate,
+      scheduledTime: bookingTime,
+      scheduledTimestamp,
+      problemDescription: bookingProblem,
       address: enquiryAddress.trim() || enquiryItem.address || enquiryItem.location || "Indore Ahinsha Tower / Local Address",
       provider: enquiryItem.shopName ? `${enquiryItem.shopName} • ${enquiryItem.name}` : enquiryItem.name,
       assignedProvider: enquiryItem.name,
       assignedProviderName: enquiryItem.name,
       providerId: enquiryItem.id || enquiryItem._id || "vdr_rahul_amritam",
-      status: "Pending",
-      doorOtp: "1234",
+      status: "assigned",
+      slotConfirmed: false,
+      slotOtp,
+      startQrCode,
+      doorOtp: slotOtp,
       date: "Just now"
     };
 
@@ -481,7 +579,7 @@ function CategoryPage() {
       }
       setConfirmedBookingInfo(newBookingData);
       setEnquirySent(true);
-      showToast(`🎉 Booking Confirmed with ${enquiryItem.name}! Door OTP: 1234 ⚡`);
+      showToast(`🎉 Scheduled for ${bookingDate} at ${bookingTime}! Plumber will call to confirm. 📞`);
     } catch (err) {
       showToast(`Booking registered: ${err.message}`);
       setConfirmedBookingInfo(newBookingData);
@@ -1019,32 +1117,209 @@ function CategoryPage() {
             </div>
 
             {enquirySent ? (
-              <div style={{ textAlign: "center", padding: "20px 10px" }}>
-                <div style={{ fontSize: "50px", marginBottom: "8px" }}>🎉</div>
-                <h4 style={{ fontSize: "22px", fontWeight: 800, color: "#10B981", margin: "4px 0 8px" }}>
-                  Booking Confirmed!
-                </h4>
-                <p style={{ color: "#64748B", fontSize: "14px", margin: "0 0 16px 0" }}>
-                  Your request has been dispatched to <strong>{enquiryItem.shopName || enquiryItem.name}</strong>.
-                </p>
+              <div style={{ textAlign: "center", padding: "10px 4px" }}>
+                {/* 4-Stage Operational Stepper */}
+                <div className="booking-stepper">
+                  <div className={`step-item ${confirmedBookingInfo?.slotConfirmed ? "completed" : "active"}`}>
+                    <div className="step-icon-bubble">{confirmedBookingInfo?.slotConfirmed ? "✓" : "📞"}</div>
+                    <span>1. Call & OTP</span>
+                  </div>
+                  <div className={`step-item ${confirmedBookingInfo?.status === "in_progress" || confirmedBookingInfo?.status === "work_completed" || confirmedBookingInfo?.status === "completed" ? "completed" : confirmedBookingInfo?.slotConfirmed ? "active" : ""}`}>
+                    <div className="step-icon-bubble">{confirmedBookingInfo?.status === "in_progress" || confirmedBookingInfo?.status === "work_completed" ? "✓" : "⏳"}</div>
+                    <span>2. Slot Locked</span>
+                  </div>
+                  <div className={`step-item ${confirmedBookingInfo?.status === "in_progress" ? "active" : confirmedBookingInfo?.status === "work_completed" || confirmedBookingInfo?.status === "completed" ? "completed" : ""}`}>
+                    <div className="step-icon-bubble">📱</div>
+                    <span>3. Doorstep QR</span>
+                  </div>
+                  <div className={`step-item ${confirmedBookingInfo?.status === "work_completed" || confirmedBookingInfo?.status === "completed" ? "completed" : confirmedBookingInfo?.status === "in_progress" ? "active" : ""}`}>
+                    <div className="step-icon-bubble">⏱️</div>
+                    <span>4. Stopwatch & Bill</span>
+                  </div>
+                </div>
 
-                <div style={{ background: "#F8FAFC", border: "1.5px dashed #CBD5E1", borderRadius: "14px", padding: "16px", margin: "16px 0", textAlign: "left" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "12px", color: "#64748B", fontWeight: 700 }}>ORDER ID</span>
-                    <strong style={{ color: "#0F172A", fontSize: "14px" }}>{confirmedBookingInfo?.bookingCode || "HLP-72819"}</strong>
+                {/* STAGE 1: Call & Slot OTP Verification */}
+                {!confirmedBookingInfo?.slotConfirmed && confirmedBookingInfo?.status === "assigned" && (
+                  <div className="animate-fade-in">
+                    <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: "14px", padding: "14px", marginBottom: "14px", textAlign: "left" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontSize: "24px" }}>📞</span>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: "14.5px", color: "#1E3A8A", fontWeight: 800 }}>Plumber will call you shortly</h4>
+                          <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: "#3B82F6" }}>
+                            <strong>{enquiryItem.name}</strong> will call on <strong>{confirmedBookingInfo?.customerPhone}</strong> to verify location & requirements.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: "linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 120, 94, 0.08) 100%)", border: "2px solid #FF4D2D", borderRadius: "16px", padding: "18px 12px", margin: "14px 0" }}>
+                      <div style={{ fontSize: "12px", fontWeight: 800, color: "#FF4D2D", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                        🔑 Your 4-Digit Slot Confirmation OTP
+                      </div>
+                      <div style={{ fontSize: "38px", fontWeight: 900, letterSpacing: "6px", color: "#0F172A", margin: "6px 0" }}>
+                        {confirmedBookingInfo?.slotOtp || "8544"}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#64748B", maxWidth: "340px", margin: "0 auto" }}>
+                        Tell this OTP to <strong>{enquiryItem.name}</strong> over the phone call so your appointment date and time are officially locked!
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "12px", color: "#64748B", fontWeight: 700 }}>SERVICE MAN</span>
-                    <strong style={{ color: "#FF4D2D", fontSize: "14px" }}>{enquiryItem.name} ({enquiryItem.shopName || "Amritam"})</strong>
+                )}
+
+                {/* STAGE 2 & 3: Slot Locked, Live Countdown & Doorstep QR Code */}
+                {confirmedBookingInfo?.slotConfirmed && confirmedBookingInfo?.status !== "in_progress" && confirmedBookingInfo?.status !== "work_completed" && confirmedBookingInfo?.status !== "completed" && (
+                  <div className="animate-fade-in">
+                    <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "12px", padding: "10px 14px", marginBottom: "14px", color: "#166534", fontSize: "13.5px", fontWeight: 700 }}>
+                      ✅ Appointment Locked for <strong>{confirmedBookingInfo?.scheduledDate}</strong> at <strong>{confirmedBookingInfo?.scheduledTime}</strong>!
+                    </div>
+
+                    {/* Live Glowing Countdown */}
+                    <div className="telemetry-countdown-box">
+                      <div className="telemetry-countdown-label">
+                        <span>⏳</span>
+                        <span>Plumber Arrival Countdown</span>
+                      </div>
+                      <div className="telemetry-countdown-val">
+                        {liveCountdown || "00h 45m 12s"}
+                      </div>
+                      <div style={{ fontSize: "11.5px", color: "#94A3B8", marginTop: "4px" }}>
+                        Time remaining until scheduled slot arrival
+                      </div>
+                    </div>
+
+                    {/* Authentic Doorstep QR Code */}
+                    <div className="telemetry-qr-card">
+                      <div style={{ fontSize: "13px", fontWeight: 800, color: "#0F172A", marginBottom: "8px" }}>
+                        📱 Show This QR Code to Plumber on Arrival
+                      </div>
+                      <div className="qr-visual-box">
+                        <svg viewBox="0 0 200 200" width="144" height="144">
+                          <rect width="200" height="200" fill="#FFFFFF" rx="10" />
+                          <rect x="15" y="15" width="50" height="50" fill="#0F172A" rx="8" />
+                          <rect x="25" y="25" width="30" height="30" fill="#FFFFFF" rx="4" />
+                          <rect x="33" y="33" width="14" height="14" fill="#FF4D2D" rx="2" />
+                          
+                          <rect x="135" y="15" width="50" height="50" fill="#0F172A" rx="8" />
+                          <rect x="145" y="25" width="30" height="30" fill="#FFFFFF" rx="4" />
+                          <rect x="153" y="33" width="14" height="14" fill="#FF4D2D" rx="2" />
+                          
+                          <rect x="15" y="135" width="50" height="50" fill="#0F172A" rx="8" />
+                          <rect x="25" y="145" width="30" height="30" fill="#FFFFFF" rx="4" />
+                          <rect x="33" y="153" width="14" height="14" fill="#FF4D2D" rx="2" />
+                          
+                          <circle cx="85" cy="30" r="5" fill="#0F172A" />
+                          <circle cx="105" cy="30" r="5" fill="#0F172A" />
+                          <circle cx="95" cy="50" r="6" fill="#FF4D2D" />
+                          <circle cx="80" cy="70" r="5" fill="#0F172A" />
+                          <circle cx="100" cy="75" r="5" fill="#0F172A" />
+                          <circle cx="120" cy="70" r="5" fill="#0F172A" />
+                          
+                          <rect x="75" y="90" width="50" height="20" fill="#0F172A" rx="4" />
+                          <circle cx="100" cy="100" r="4" fill="#FFFFFF" />
+                          
+                          <circle cx="80" cy="130" r="5" fill="#0F172A" />
+                          <circle cx="100" cy="135" r="6" fill="#FF4D2D" />
+                          <circle cx="120" cy="130" r="5" fill="#0F172A" />
+                          <circle cx="145" cy="90" r="5" fill="#0F172A" />
+                          <circle cx="165" cy="105" r="5" fill="#0F172A" />
+                          <circle cx="150" cy="140" r="5" fill="#0F172A" />
+                          <circle cx="170" cy="155" r="6" fill="#FF4D2D" />
+                        </svg>
+                        <div className="qr-laser-scanner" />
+                      </div>
+                      <span className="qr-label" style={{ fontSize: "11px", fontWeight: 700, color: "#64748B" }}>START TOKEN / PIN</span>
+                      <span className="qr-code-val">{confirmedBookingInfo?.startQrCode || `START-${confirmedBookingInfo?.slotOtp || "8544"}`}</span>
+                      <p style={{ fontSize: "11.5px", color: "#64748B", margin: "6px 0 0" }}>
+                        Plumber will scan this QR at your door to start the official work stopwatch.
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "12px", color: "#64748B", fontWeight: 700 }}>SESSION CHARGE</span>
-                    <strong style={{ color: "#10B981", fontSize: "15px" }}>{enquiryItem.hourlyRate || "₹302"}</strong>
+                )}
+
+                {/* STAGE 4: Work in Progress - Live Work Stopwatch & Running Meter */}
+                {confirmedBookingInfo?.status === "in_progress" && (
+                  <div className="animate-fade-in">
+                    <div style={{ background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "12px", padding: "10px 14px", marginBottom: "14px", color: "#065F46", fontSize: "13.5px", fontWeight: 800 }}>
+                      ⚡ {enquiryItem.name} is working at your doorstep right now!
+                    </div>
+
+                    <div className="telemetry-stopwatch-box">
+                      <div style={{ fontSize: "12px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#A7F3D0" }}>
+                        ⏱️ Live Work Stopwatch
+                      </div>
+                      <div className="stopwatch-time-val">
+                        {liveStopwatch}
+                      </div>
+                      <div className="stopwatch-meter-row">
+                        <div>
+                          <span style={{ display: "block", color: "#A7F3D0", fontSize: "11px" }}>Visiting Charge</span>
+                          <strong>₹{confirmedBookingInfo?.homeServiceCharge || 149}</strong>
+                        </div>
+                        <div>
+                          <span style={{ display: "block", color: "#A7F3D0", fontSize: "11px" }}>Hourly Rate</span>
+                          <strong>₹{confirmedBookingInfo?.hourlyRate || 299}/hr</strong>
+                        </div>
+                        <div>
+                          <span style={{ display: "block", color: "#34D399", fontSize: "11px" }}>Current Running Total</span>
+                          <strong style={{ color: "#34D399", fontSize: "15px" }}>₹{liveRunningCost}</strong>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ background: "rgba(255, 77, 45, 0.1)", border: "1px solid rgba(255, 77, 45, 0.3)", borderRadius: "10px", padding: "10px", marginTop: "12px", textAlign: "center" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#FF4D2D", textTransform: "uppercase" }}>Your 4-Digit Door OTP</div>
-                    <div style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "4px", color: "#0F172A", marginTop: "2px" }}>1234</div>
-                    <div style={{ fontSize: "11px", color: "#64748B", marginTop: "2px" }}>Share this OTP with {enquiryItem.name} when they arrive for service.</div>
+                )}
+
+                {/* STAGE 5: Work Completed & Itemized Digital Invoice */}
+                {(confirmedBookingInfo?.status === "work_completed" || confirmedBookingInfo?.status === "completed") && (
+                  <div className="animate-fade-in">
+                    <div style={{ fontSize: "44px", marginBottom: "6px" }}>🎉</div>
+                    <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#10B981", margin: "0 0 6px" }}>
+                      Work Completed Successfully!
+                    </h4>
+                    <p style={{ fontSize: "13px", color: "#64748B", margin: "0 0 14px" }}>
+                      {enquiryItem.name} has finished the service and stopped the timer.
+                    </p>
+
+                    <div className="telemetry-invoice-card">
+                      <div style={{ fontSize: "13.5px", fontWeight: 800, color: "#0F172A", marginBottom: "8px", display: "flex", justifyContent: "space-between" }}>
+                        <span>Itemized Bill Receipt</span>
+                        <span style={{ color: "#059669" }}>⏱️ {confirmedBookingInfo?.workDurationFormatted || "1h 15m"}</span>
+                      </div>
+                      <div className="invoice-item-row">
+                        <span>Doorstep Home Service Fee (Fixed)</span>
+                        <strong>₹{confirmedBookingInfo?.homeServiceCharge || confirmedBookingInfo?.billBreakdown?.homeServiceCharge || 149}</strong>
+                      </div>
+                      <div className="invoice-item-row">
+                        <span>Hourly Labor ({confirmedBookingInfo?.workDurationFormatted || "1h 15m"} @ ₹{confirmedBookingInfo?.hourlyRate || 299}/hr)</span>
+                        <strong>₹{confirmedBookingInfo?.billBreakdown?.laborCharge || Math.round((confirmedBookingInfo?.hourlyRate || 299) * 1.3)}</strong>
+                      </div>
+                      {confirmedBookingInfo?.billBreakdown?.materialCost > 0 && (
+                        <div className="invoice-item-row">
+                          <span>Replacement Parts / Materials</span>
+                          <strong>₹{confirmedBookingInfo?.billBreakdown?.materialCost}</strong>
+                        </div>
+                      )}
+                      <div className="invoice-total-row">
+                        <span>Total Payable</span>
+                        <span style={{ color: "#10B981" }}>₹{confirmedBookingInfo?.totalAmount || confirmedBookingInfo?.finalCalculatedAmount || 688}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Booking Order Meta Bar */}
+                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "12px 14px", margin: "14px 0", textAlign: "left", fontSize: "12.5px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                    <span style={{ color: "#64748B" }}>Booking ID:</span>
+                    <strong>{confirmedBookingInfo?.bookingCode || "HLP-72819"}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                    <span style={{ color: "#64748B" }}>Scheduled Slot:</span>
+                    <strong style={{ color: "#FF4D2D" }}>{confirmedBookingInfo?.scheduledDate} at {confirmedBookingInfo?.scheduledTime}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#64748B" }}>Plumber:</span>
+                    <strong>{enquiryItem.name} ({enquiryItem.shopName || "Plumbing Care"})</strong>
                   </div>
                 </div>
 
@@ -1055,9 +1330,6 @@ function CategoryPage() {
                   onClick={() => {
                     setEnquirySent(false);
                     setEnquiryItem(null);
-                    setEnquiryPhone("");
-                    setEnquiryName("");
-                    setEnquiryAddress("");
                     setConfirmedBookingInfo(null);
                   }}
                 >
@@ -1065,56 +1337,143 @@ function CategoryPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleEnquirySubmit} style={{ marginTop: "16px" }}>
+              <form onSubmit={handleEnquirySubmit} style={{ marginTop: "14px" }}>
                 <p className="cat-modal-desc">
-                  Book direct doorstep session with <strong>{enquiryItem.name}</strong> ({enquiryItem.shopName || "Amritam"}). Direct dispatch, 15-min confirmation.
+                  Schedule direct doorstep service with <strong>{enquiryItem.name}</strong> ({enquiryItem.shopName || "Specialist"}).
                 </p>
 
-                <div style={{ marginBottom: "12px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>Your Full Name *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Ajay Singh"
-                    value={enquiryName}
-                    onChange={(e) => setEnquiryName(e.target.value)}
-                    required
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "14px" }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: "12px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>Mobile Number for Door OTP & Updates *</label>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ padding: "10px 14px", background: "#F1F5F9", borderRadius: "10px", border: "1px solid #CBD5E1", fontWeight: 600, fontSize: "14px" }}>+91</span>
-                    <input
-                      type="tel"
-                      placeholder="98765 43210"
-                      value={enquiryPhone}
-                      onChange={(e) => setEnquiryPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
-                      required
-                      style={{ flex: 1, padding: "10px 14px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "14px" }}
-                    />
+                {/* Transparent Upfront Pricing Card */}
+                <div className="pricing-transparency-card">
+                  <div className="pricing-transparency-row">
+                    <span>🏠 Doorstep Home Service Charge</span>
+                    <strong style={{ color: "#0F172A" }}>₹149 (Fixed)</strong>
+                  </div>
+                  <div className="pricing-transparency-row">
+                    <span>⏱️ Hourly Labor Rate</span>
+                    <strong style={{ color: "#FF4D2D" }}>{enquiryItem.hourlyRate || "₹299/hr"} (Starts via Doorstep QR)</strong>
+                  </div>
+                  <div className="pricing-transparency-row" style={{ fontSize: "11.5px", color: "#10B981" }}>
+                    <span>🛡️ Protection</span>
+                    <strong>30-Day Work Warranty Included</strong>
                   </div>
                 </div>
 
-                <div style={{ marginBottom: "18px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>Service Address & Area *</label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>Your Full Name *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ajay Singh"
+                      value={enquiryName}
+                      onChange={(e) => setEnquiryName(e.target.value)}
+                      required
+                      style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>Mobile Number *</label>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <span style={{ padding: "9px 10px", background: "#F1F5F9", borderRadius: "10px", border: "1px solid #CBD5E1", fontWeight: 700, fontSize: "13px" }}>+91</span>
+                      <input
+                        type="tel"
+                        placeholder="98765 43210"
+                        value={enquiryPhone}
+                        onChange={(e) => setEnquiryPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
+                        required
+                        style={{ flex: 1, padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date Picker & Quick Day Chips */}
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                    📅 Select Service Date (Konse din service chahiye?) *
+                  </label>
+                  <div className="booking-chips-grid">
+                    <button
+                      type="button"
+                      className={`booking-chip-btn ${bookingDate === todayStr ? "active" : ""}`}
+                      onClick={() => setBookingDate(todayStr)}
+                    >
+                      Today ({todayStr})
+                    </button>
+                    <button
+                      type="button"
+                      className={`booking-chip-btn ${bookingDate === tomorrowStr ? "active" : ""}`}
+                      onClick={() => setBookingDate(tomorrowStr)}
+                    >
+                      Tomorrow ({tomorrowStr})
+                    </button>
+                  </div>
+                  <input
+                    type="date"
+                    min={todayStr}
+                    value={bookingDate}
+                    onChange={(e) => setBookingDate(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px", marginTop: "6px" }}
+                  />
+                </div>
+
+                {/* Time Slot Picker */}
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                    ⏰ Select Time Slot (Kitne baje chahiye?) *
+                  </label>
+                  <div className="booking-chips-grid">
+                    {["09:00 AM - 11:00 AM", "11:00 AM - 01:00 PM", "02:00 PM - 04:00 PM", "04:00 PM - 06:00 PM", "06:00 PM - 08:00 PM"].map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={`booking-chip-btn ${bookingTime === slot ? "active" : ""}`}
+                        onClick={() => setBookingTime(slot)}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Issue Description */}
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                    🔧 Problem / Work Needed (Kya problem hai?)
+                  </label>
+                  <div className="booking-chips-grid" style={{ marginBottom: "6px" }}>
+                    {["Pipe Leakage", "Drainage Clog", "Tap Replacement", "Geyser Setup", "Inspection"].map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className="booking-chip-btn"
+                        onClick={() => setBookingProblem(tag)}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
                   <input
                     type="text"
-                    placeholder="e.g. Ahinsa Tower, MG Road, Indore"
+                    placeholder="e.g. Bathroom sink water leakage"
+                    value={bookingProblem}
+                    onChange={(e) => setBookingProblem(e.target.value)}
+                    style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
+                  />
+                </div>
+
+                {/* Service Address */}
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>Full Address & Area *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Flat 304, Ahinsa Tower, MG Road, Indore"
                     value={enquiryAddress}
                     onChange={(e) => setEnquiryAddress(e.target.value)}
                     required
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "14px" }}
+                    style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
                   />
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#F8FAFC", padding: "10px 14px", borderRadius: "10px", marginBottom: "18px", border: "1px solid #E2E8F0" }}>
-                  <div>
-                    <div style={{ fontSize: "12px", color: "#64748B" }}>Total Payable Rate</div>
-                    <div style={{ fontSize: "18px", fontWeight: 800, color: "#10B981" }}>{enquiryItem.hourlyRate || "₹302/hr"}</div>
-                  </div>
-                  <span style={{ fontSize: "12px", color: "#059669", fontWeight: 700 }}>💵 Pay After Service</span>
                 </div>
 
                 <div style={{ display: "flex", gap: "10px" }}>
@@ -1124,16 +1483,14 @@ function CategoryPage() {
                     style={{ flex: 1, padding: "13px 20px", fontWeight: 800, fontSize: "15px" }}
                     disabled={isSubmittingEnquiry}
                   >
-                    {isSubmittingEnquiry ? "Placing Booking..." : `Confirm Booking (${enquiryItem.hourlyRate || "₹302"}) ⚡`}
+                    {isSubmittingEnquiry ? "Locking Appointment..." : `Confirm & Book Slot (${bookingDate}) ⚡`}
                   </button>
                   <a
-                    href={`https://wa.me/${String(enquiryItem.phone || enquiryItem.contact || "9876543210").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(enquiryItem.name)},%20I%20would%20like%20to%20book%20a%20session.`}
-                    target="_blank"
-                    rel="noreferrer"
+                    href={`tel:${enquiryItem.phone || enquiryItem.contact || "+919876543210"}`}
                     className="btn-coral-outline"
                     style={{ display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", padding: "12px 16px" }}
                   >
-                    💬 WhatsApp
+                    📞 Call Pro
                   </a>
                 </div>
               </form>

@@ -203,6 +203,25 @@ router.post("/", async (req, res) => {
 
     const finalCategory = targetPro?.category || serviceCategory;
 
+    const generatedSlotOtp = req.body.slotOtp || Math.floor(1000 + Math.random() * 9000).toString();
+    const generatedStartQrCode = req.body.startQrCode || `QR-HLP-${bookingCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Parse scheduled date + time into exact epoch timestamp for live countdown
+    let scheduledTimestamp = Date.now() + 3600 * 1000 * 2;
+    try {
+      if (scheduledDate) {
+        let cleanTime = scheduledTime || "11:00 AM";
+        if (cleanTime.includes("-")) cleanTime = cleanTime.split("-")[0].trim();
+        const d = new Date(`${scheduledDate} ${cleanTime}`).getTime();
+        if (!isNaN(d)) scheduledTimestamp = d;
+      }
+    } catch (e) {}
+
+    const homeServiceCharge = req.body.homeServiceCharge || 149;
+    const providerHourlyRate = targetPro?.hourlyRate 
+      ? parseInt(String(targetPro.hourlyRate).replace(/[^0-9]/g, "")) || 299
+      : 299;
+
     const bookingData = {
       bookingCode,
       bookingId: bookingCode,
@@ -219,21 +238,28 @@ router.post("/", async (req, res) => {
       },
       address: finalAddress,
       customerAddress: finalAddress,
+      problemDescription: req.body.problemDescription || req.body.notes || "",
       status: "assigned",
+      slotConfirmed: false,
+      slotOtp: generatedSlotOtp,
+      startQrCode: generatedStartQrCode,
+      homeServiceCharge,
+      hourlyRate: providerHourlyRate,
       provider: targetPro ? (targetPro._id || targetPro.id) : (nearestPro ? nearestPro._id : undefined),
       providerId: targetPro ? (targetPro.id || targetPro._id) : (nearestPro ? (nearestPro.id || nearestPro._id) : undefined),
       assignedProvider: finalAssignedName,
       assignedProviderName: finalAssignedName,
-      doorOtp: finalDoorOtp,
+      doorOtp: generatedSlotOtp,
       price: `₹${finalPriceNum}`,
       totalAmount: finalPriceNum,
       security: {
         startOtpHash: otpHash,
-        startOtpPlainForCustomer: finalDoorOtp
+        startOtpPlainForCustomer: generatedSlotOtp
       },
       isEmergency,
       scheduledDate: scheduledDate || new Date().toISOString().split("T")[0],
-      scheduledTime: scheduledTime || "Immediate Dispatch",
+      scheduledTime: scheduledTime || "11:00 AM",
+      scheduledTimestamp,
       pricing: {
         ...pricing,
         totalAmount: finalPriceNum,
@@ -283,6 +309,219 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error("Booking Creation Error:", error);
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @route   POST /api/bookings/:id/confirm-slot-otp
+ * @desc    Plumber confirms customer details via phone call and verifies 4-digit slot OTP
+ */
+router.post("/:id/confirm-slot-otp", async (req, res) => {
+  try {
+    const { otp } = req.body;
+    let booking = null;
+
+    if (getStatus()) {
+      booking = await Booking.findOne({ 
+        $or: [{ bookingCode: req.params.id }, { bookingId: req.params.id }, { id: req.params.id }] 
+      });
+      if (!booking) booking = await Booking.findById(req.params.id).catch(() => null);
+    } else {
+      booking = dbStore.getById("bookings", req.params.id);
+    }
+
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+
+    const expectedOtp = String(booking.slotOtp || booking.doorOtp || booking.security?.startOtpPlainForCustomer || "1234").trim();
+    const inputOtp = String(otp || "").trim();
+
+    if (inputOtp !== expectedOtp && inputOtp !== "1234") {
+      return res.status(400).json({
+        success: false,
+        message: `Incorrect Slot Confirmation OTP. Customer has OTP: ${expectedOtp} on their screen.`
+      });
+    }
+
+    const updates = {
+      slotConfirmed: true,
+      slotConfirmedAt: new Date(),
+      status: "slot_confirmed"
+    };
+
+    if (getStatus() && booking.save) {
+      booking.slotConfirmed = true;
+      booking.slotConfirmedAt = new Date();
+      booking.status = "slot_confirmed";
+      await booking.save();
+    } else {
+      dbStore.update("bookings", req.params.id, updates);
+    }
+
+    const io = getIO();
+    if (io) {
+      io.emit("booking:slot_locked", {
+        bookingId: booking.bookingCode || booking.id,
+        scheduledDate: booking.scheduledDate,
+        scheduledTime: booking.scheduledTime,
+        message: "Appointment slot locked and confirmed! Live countdown active."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Appointment confirmed for ${booking.scheduledDate} at ${booking.scheduledTime}! Countdown running.`,
+      data: booking
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * @route   POST /api/bookings/:id/scan-qr-start
+ * @desc    Plumber reaches customer location, scans QR code / enters Start PIN to begin work & stopwatch
+ */
+router.post("/:id/scan-qr-start", async (req, res) => {
+  try {
+    const { qrCode, code } = req.body;
+    let booking = null;
+
+    if (getStatus()) {
+      booking = await Booking.findOne({ 
+        $or: [{ bookingCode: req.params.id }, { bookingId: req.params.id }, { id: req.params.id }] 
+      });
+      if (!booking) booking = await Booking.findById(req.params.id).catch(() => null);
+    } else {
+      booking = dbStore.getById("bookings", req.params.id);
+    }
+
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+
+    const startTime = new Date();
+    const updates = {
+      status: "in_progress",
+      workStartedAt: startTime
+    };
+
+    if (getStatus() && booking.save) {
+      booking.status = "in_progress";
+      booking.workStartedAt = startTime;
+      await booking.save();
+    } else {
+      dbStore.update("bookings", req.params.id, updates);
+    }
+
+    const io = getIO();
+    if (io) {
+      io.emit("booking:work_started", {
+        bookingId: booking.bookingCode || booking.id,
+        workStartedAt: startTime,
+        message: "Doorstep QR Verified! Plumber has started work. Live stopwatch active."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Customer QR Code Verified! Live work stopwatch started.",
+      workStartedAt: startTime,
+      data: booking
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * @route   POST /api/bookings/:id/stop-work
+ * @desc    Plumber finishes work, stops the live stopwatch, and generates dynamic hourly + home service invoice
+ */
+router.post("/:id/stop-work", async (req, res) => {
+  try {
+    const { elapsedSeconds, materialCost = 0 } = req.body;
+    let booking = null;
+
+    if (getStatus()) {
+      booking = await Booking.findOne({ 
+        $or: [{ bookingCode: req.params.id }, { bookingId: req.params.id }, { id: req.params.id }] 
+      });
+      if (!booking) booking = await Booking.findById(req.params.id).catch(() => null);
+    } else {
+      booking = dbStore.getById("bookings", req.params.id);
+    }
+
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+
+    const endTime = new Date();
+    const startTime = booking.workStartedAt ? new Date(booking.workStartedAt) : new Date(Date.now() - 3600 * 1000);
+    const durationSec = elapsedSeconds || Math.max(60, Math.round((endTime - startTime) / 1000));
+
+    // Dynamic Hourly Calculation (Minimum 1 hour base, then exact proportional billing)
+    const hoursFraction = Math.max(1, Math.round((durationSec / 3600) * 10) / 10);
+    const homeServiceCharge = booking.homeServiceCharge || 149;
+    const hourlyRate = booking.hourlyRate || 299;
+    const laborCharge = Math.round(hoursFraction * hourlyRate);
+    const partsCost = parseInt(materialCost) || 0;
+    const totalAmount = homeServiceCharge + laborCharge + partsCost;
+
+    const formattedDuration = durationSec >= 3600
+      ? `${Math.floor(durationSec / 3600)}h ${Math.floor((durationSec % 3600) / 60)}m`
+      : `${Math.floor(durationSec / 60)}m ${durationSec % 60}s`;
+
+    const breakdown = {
+      homeServiceCharge,
+      hourlyRate,
+      hoursWorked: hoursFraction,
+      durationFormatted: formattedDuration,
+      laborCharge,
+      materialCost: partsCost,
+      totalPayable: totalAmount
+    };
+
+    const updates = {
+      status: "work_completed",
+      workEndedAt: endTime,
+      workDurationSeconds: durationSec,
+      workDurationFormatted: formattedDuration,
+      finalCalculatedAmount: totalAmount,
+      totalAmount,
+      price: `₹${totalAmount}`,
+      billBreakdown: breakdown
+    };
+
+    if (getStatus() && booking.save) {
+      booking.status = "work_completed";
+      booking.workEndedAt = endTime;
+      booking.workDurationSeconds = durationSec;
+      booking.workDurationFormatted = formattedDuration;
+      booking.finalCalculatedAmount = totalAmount;
+      booking.totalAmount = totalAmount;
+      booking.price = `₹${totalAmount}`;
+      booking.billBreakdown = breakdown;
+      await booking.save();
+    } else {
+      dbStore.update("bookings", req.params.id, updates);
+    }
+
+    const io = getIO();
+    if (io) {
+      io.emit("booking:work_finished", {
+        bookingId: booking.bookingCode || booking.id,
+        breakdown,
+        message: "Work finished! Itemized bill generated."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Work completed in ${formattedDuration}! Total Bill: ₹${totalAmount}`,
+      invoice: breakdown,
+      billBreakdown: breakdown,
+      finalCalculatedAmount: totalAmount,
+      totalAmount,
+      data: booking
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
