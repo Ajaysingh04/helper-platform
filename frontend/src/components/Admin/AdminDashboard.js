@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { DataContext } from "../../context/DataContext";
+import WeeklyActivityRevenueGraph from "./WeeklyActivityRevenueGraph";
 
 function AdminDashboard({ onNavigateTab }) {
   const { bookings, services, providers, users, tickets, updateBookingStatus } = useContext(DataContext);
@@ -12,16 +13,6 @@ function AdminDashboard({ onNavigateTab }) {
   const pendingBookings = bookings.filter(b => b.status === "Pending").length;
   const verifiedPros = providers.filter(p => p.verified).length;
   const openTickets = tickets.filter(t => t.status === "Open").length;
-
-  const chartData = [
-    { month: "Mon", height: "45%", val: "₹1,400" },
-    { month: "Tue", height: "65%", val: "₹2,100" },
-    { month: "Wed", height: "85%", val: "₹3,400" },
-    { month: "Thu", height: "55%", val: "₹1,800" },
-    { month: "Fri", height: "95%", val: "₹4,200" },
-    { month: "Sat", height: "100%", val: "₹5,100" },
-    { month: "Sun", height: "75%", val: "₹2,900" },
-  ];
 
   return (
     <div className="admin-dashboard-tab animate-fade-in">
@@ -84,31 +75,10 @@ function AdminDashboard({ onNavigateTab }) {
       </div>
 
       {/* Visual Analytics Chart & Quick Status Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "24px", marginBottom: "32px" }}>
+      <div className="admin-analytics-layout-grid">
         
-        {/* Weekly Revenue Chart */}
-        <div className="admin-card-section" style={{ marginBottom: 0 }}>
-          <div className="admin-card-header">
-            <div>
-              <h3>Weekly Service Activity & Revenue</h3>
-              <p>Daily booking volume over the last 7 days</p>
-            </div>
-            <span className="badge-pill">Live Synced</span>
-          </div>
-
-          <div className="chart-bars-container">
-            {chartData.map((bar, idx) => (
-              <div className="chart-bar-column" key={idx}>
-                <div 
-                  className="chart-bar-fill" 
-                  style={{ height: bar.height }}
-                  title={`${bar.month}: ${bar.val}`}
-                ></div>
-                <span className="chart-bar-label">{bar.month}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Real Interactive Weekly Service Activity & Revenue Graph */}
+        <WeeklyActivityRevenueGraph bookings={bookings} />
 
         {/* Quick System Summary */}
         <div className="admin-card-section" style={{ marginBottom: 0 }}>
