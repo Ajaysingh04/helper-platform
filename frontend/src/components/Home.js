@@ -298,96 +298,130 @@ function Home() {
   const ourServicesList = [
     {
       id: "srv-clean",
-      name: "House cleaning",
+      name: "House Cleaning",
       subtitle: "Full deep sanitization",
+      price: "₹399",
+      rating: "4.9",
+      tag: "Cleaning",
       badge: "Popular",
       badgeType: "new",
-      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=500",
       path: "/category/cleaning"
     },
     {
       id: "srv-elec",
       name: "Electrician",
       subtitle: "15-min instant dispatch",
+      price: "₹199",
+      rating: "4.9",
+      tag: "Repairs",
       badge: "Trending",
       badgeType: "sale",
-      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=500",
       path: "/category/electricians"
     },
     {
       id: "srv-plumb",
       name: "Plumbing Fix",
       subtitle: "Leak repairs & fitting",
+      price: "₹249",
+      rating: "4.8",
+      tag: "Repairs",
       badge: null,
-      image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=500",
       path: "/category/plumbers"
     },
     {
       id: "srv-ac",
       name: "AC Repair & Jet",
       subtitle: "Cooling & gas refill",
+      price: "₹499",
+      rating: "5.0",
+      tag: "Appliances",
       badge: "Hot",
       badgeType: "sale",
-      image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=500",
       path: "/category/ac-repair-services"
     },
     {
       id: "srv-paint",
       name: "Wall Painting",
       subtitle: "Dust-free & waterproof",
+      price: "₹599",
+      rating: "4.9",
+      tag: "Home Decor",
       badge: null,
-      image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=500",
       path: "/category/painters"
     },
     {
       id: "srv-salon",
       name: "Salon & Spa",
       subtitle: "Beauty, hair & facial",
+      price: "₹299",
+      rating: "4.9",
+      tag: "Daily Help",
       badge: "New",
       badgeType: "new",
-      image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=500",
       path: "/category/beauty-parlours"
     },
     {
       id: "srv-spa-amritam",
       name: "Body Massage & Spa",
-      subtitle: "Amritam • Ayurvedic & Swedish",
+      subtitle: "Ayurvedic & Swedish",
+      price: "₹302",
+      rating: "5.0",
+      tag: "Daily Help",
       badge: "₹302/hr",
       badgeType: "new",
-      image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=500",
       path: "/category/body-massage-centres"
     },
     {
       id: "srv-carp",
       name: "Carpentry & Locks",
       subtitle: "Furniture & woodwork",
+      price: "₹249",
+      rating: "4.8",
+      tag: "Repairs",
       badge: null,
-      image: "https://images.unsplash.com/photo-1502005229762-ee1b2b8ab98f?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1502005229762-ee1b2b8ab98f?auto=format&fit=crop&q=80&w=500",
       path: "/category/carpenters"
     },
     {
       id: "srv-teach",
       name: "Teaching & Tutors",
       subtitle: "Home & online tuition",
+      price: "₹350",
+      rating: "4.9",
+      tag: "Daily Help",
       badge: "Top Rated",
       badgeType: "sale",
-      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=500",
       path: "/category/schools"
     },
     {
       id: "srv-repair",
       name: "Mobile & Gadget Fix",
       subtitle: "Electronics diagnostic",
+      price: "₹199",
+      rating: "4.7",
+      tag: "Appliances",
       badge: null,
-      image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=500",
       path: "/category/mobile-phone-dealers"
     },
     {
       id: "srv-veg",
       name: "Fresh Groceries",
       subtitle: "Daily organic produce",
-      badge: null,
-      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=400",
+      price: "₹149",
+      rating: "4.8",
+      tag: "Daily Help",
+      badge: "Express",
+      badgeType: "new",
+      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=500",
       path: "/category/grocery-stores"
     }
   ];
@@ -617,17 +651,27 @@ function Home() {
       {/* =========================================================================
           SECTION 1: OUR SERVICES
           ========================================================================= */}
-      <section className="nexora-content-section">
+      <section className="nexora-content-section" id="our-services-section">
         <div className="nexora-section-container">
           
-          <div className="nexora-section-header">
-            <h2 className="nexora-section-title">Our Services</h2>
+          <div className="nexora-section-header" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
+            <div>
+              <div className="pill-tag-coral" style={{ background: "rgba(255, 77, 45, 0.12)", borderColor: "rgba(255, 77, 45, 0.35)", color: "#FF4D2D", display: "inline-flex", marginBottom: "8px" }}>
+                <span>⚡ TOP RATED EXPERTS AT YOUR DOORSTEP</span>
+              </div>
+              <h2 className="nexora-section-title" style={{ margin: 0 }}>Our Services</h2>
+              <p style={{ margin: "6px 0 0", color: "#64748B", fontSize: "14px" }}>
+                Verified local specialists ready for 15-minute express doorstep arrival.
+              </p>
+            </div>
+
             <div className="carousel-nav-arrows">
               <button 
                 type="button" 
                 className="carousel-arrow-btn" 
                 onClick={() => scrollServices("left")}
                 aria-label="Scroll left"
+                title="Scroll Left"
               >
                 ‹
               </button>
@@ -636,6 +680,7 @@ function Home() {
                 className="carousel-arrow-btn" 
                 onClick={() => scrollServices("right")}
                 aria-label="Scroll right"
+                title="Scroll Right"
               >
                 ›
               </button>
@@ -644,14 +689,15 @@ function Home() {
 
           <div className="nexora-services-scroll-track" ref={servicesCarouselRef}>
             {ourServicesList.map((service) => (
-              <Link 
-                to={service.path}
+              <div 
                 className="nexora-service-card" 
                 key={service.id}
-                style={{ cursor: "pointer", textDecoration: "none" }}
-                title={`Explore ${service.name} Servicemen`}
               >
-                <div className="card-thumb-wrapper">
+                <Link 
+                  to={service.path}
+                  className="card-thumb-wrapper" 
+                  title={`Explore ${service.name}`}
+                >
                   <img 
                     src={service.image} 
                     alt={service.name} 
@@ -663,26 +709,41 @@ function Home() {
                       {service.badge}
                     </span>
                   )}
-                </div>
+                  <span className="card-rating-chip">★ {service.rating || "4.9"}</span>
+                </Link>
+
                 <div className="card-info">
-                  <h4 className="service-name">{service.name}</h4>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginTop: "2px" }}>
-                    <p className="service-subtext" style={{ margin: 0 }}>{service.subtitle}</p>
+                  <Link to={service.path} className="service-title-link" title={service.name}>
+                    <h4 className="service-name">{service.name}</h4>
+                  </Link>
+                  <p className="service-subtext">{service.subtitle}</p>
+
+                  <div className="card-footer-row">
+                    <div className="service-price-block">
+                      <span className="price-label">Starts at</span>
+                      <strong className="service-price-val">{service.price || "₹249"}</strong>
+                    </div>
+
                     <button
                       type="button"
-                      className="card-book-mini-btn"
+                      className="card-book-action-btn"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleEnquire({ name: service.name, price: 249, tag: "Repairs" });
+                        handleEnquire({ 
+                          name: service.name, 
+                          price: parseInt(String(service.price || "249").replace(/[^\d]/g, "") || "249", 10), 
+                          tag: service.tag || "Repairs" 
+                        });
                       }}
                       title={`Instant book ${service.name}`}
                     >
-                      Book ⚡
+                      <span>Book</span>
+                      <span className="book-btn-arrow">⚡</span>
                     </button>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 
