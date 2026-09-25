@@ -69,6 +69,7 @@ function VendorDashboard() {
   const [confirmingSlotId, setConfirmingSlotId] = useState(null);
   const [startingJobId, setStartingJobId] = useState(null);
   const [stoppingJobId, setStoppingJobId] = useState(null);
+  const [completingJobId, setCompletingJobId] = useState(null);
 
   // Wallet State
   const [wallet, setWallet] = useState({
@@ -605,6 +606,79 @@ function VendorDashboard() {
   // OPERATIONAL WORKFLOW: CALL & SLOT CONFIRMATION, QR START, STOPWATCH, BILLING
   // =========================================================================
 
+  // Robust Target Timestamp & Countdown Calculator
+  const parseTargetCountdown = (b) => {
+    if (!b) return { days: "00", hours: "00", mins: "00", secs: "00", isArrived: false, text: "00:00:00" };
+    const now = Date.now();
+    let target = b.scheduledTimestamp;
+
+    if (!target || isNaN(target)) {
+      const sDate = String(b.scheduledDate || "").trim();
+      const sTime = String(b.scheduledTime || "11:00 AM").trim();
+      const curr = new Date();
+      let y = curr.getFullYear();
+      let m = curr.getMonth();
+      let d = curr.getDate();
+
+      if (sDate.toLowerCase().includes("tomorrow")) {
+        d += 1;
+      } else if (sDate.includes("-")) {
+        const parts = sDate.split("-");
+        if (parts.length === 3) {
+          y = parseInt(parts[0], 10);
+          m = parseInt(parts[1], 10) - 1;
+          d = parseInt(parts[2], 10);
+        }
+      }
+
+      let hours = 11;
+      let minutes = 0;
+      const match = sTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+      if (match) {
+        hours = parseInt(match[1], 10);
+        minutes = parseInt(match[2], 10);
+        const meridiem = (match[3] || "").toUpperCase();
+        if (meridiem === "PM" && hours < 12) hours += 12;
+        if (meridiem === "AM" && hours === 12) hours = 0;
+      }
+
+      const parsedDate = new Date(y, m, d, hours, minutes, 0, 0);
+      target = parsedDate.getTime();
+
+      // If target in past or invalid, set default to 45 mins from now so timer always ticks live
+      if (isNaN(target) || target <= now) {
+        target = now + 45 * 60 * 1000;
+      }
+    }
+
+    const diff = target - now;
+
+    if (diff <= 0) {
+      return {
+        days: "00",
+        hours: "00",
+        mins: "00",
+        secs: "00",
+        isArrived: true,
+        text: "00:00:00"
+      };
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / (1000 * 60)) % 60);
+    const secs = Math.floor((diff / 1000) % 60);
+
+    return {
+      days: String(days).padStart(2, "0"),
+      hours: String(hours).padStart(2, "0"),
+      mins: String(mins).padStart(2, "0"),
+      secs: String(secs).padStart(2, "0"),
+      isArrived: false,
+      text: `${days > 0 ? `${days}d ` : ""}${String(hours).padStart(2, "0")}h ${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`
+    };
+  };
+
   // Live Countdown & Work Stopwatch Timer for all vendor bookings
   useEffect(() => {
     if (!bookings.length) return;
@@ -620,25 +694,7 @@ function VendorDashboard() {
 
         // 1. Countdown for confirmed slots
         if (b.status === "slot_confirmed" || b.slotConfirmed) {
-          let target = b.scheduledTimestamp;
-          if (!target && b.scheduledDate) {
-            let cleanTime = b.scheduledTime || "11:00 AM";
-            if (cleanTime.includes("-")) cleanTime = cleanTime.split("-")[0].trim();
-            const parsed = new Date(`${b.scheduledDate} ${cleanTime}`).getTime();
-            if (!isNaN(parsed)) target = parsed;
-          }
-          if (target) {
-            const diff = target - now;
-            if (diff > 0) {
-              const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-              const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-              const mins = Math.floor((diff / (1000 * 60)) % 60);
-              const secs = Math.floor((diff / 1000) % 60);
-              updatedCountdowns[key] = `${days > 0 ? `${days}d ` : ""}${hours.toString().padStart(2, "0")}h ${mins.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`;
-            } else {
-              updatedCountdowns[key] = "Arrival Time / Now ⚡";
-            }
-          }
+          updatedCountdowns[key] = parseTargetCountdown(b);
         }
 
         // 2. Stopwatch for in-progress jobs
@@ -1279,7 +1335,8 @@ function VendorDashboard() {
                   const orderAmount = b.finalCalculatedAmount || b.totalAmount || b.amount || 448;
                   const hourlyRate = b.hourlyRate || 299;
                   const homeServiceCharge = b.homeServiceCharge || 149;
-                  const countdownText = liveCountdowns[key] || "Syncing appointment slot...";
+                  const cdObj = (typeof liveCountdowns[key] === "object" && liveCountdowns[key]) ? liveCountdowns[key] : parseTargetCountdown(b);
+                  const countdownText = cdObj.text || "00h 45m 00s";
                   const stopwatchText = liveStopwatches[key] || "00:00:00";
                   const currentRunningTotal = liveRunningCosts[key] || (homeServiceCharge + hourlyRate);
 
@@ -1466,24 +1523,73 @@ function VendorDashboard() {
                         {/* STAGE 2: SLOT LOCKED & REAL-TIME COUNTDOWN */}
                         {isSlotConfirmed && (
                           <div className="stage-slot-locked-box">
-                            <div className="vendor-live-countdown">
-                              <span style={{ fontSize: "20px" }}>⏳</span>
-                              <div>
-                                <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px", color: "#1E3A8A", fontWeight: 800 }}>
-                                  Live Countdown to Appointment
-                                </div>
-                                <div style={{ fontSize: "18px", fontWeight: 900, color: "#1D4ED8", fontFamily: "monospace" }}>
-                                  {countdownText}
-                                </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "8px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: "#38BDF8", animation: "pulse 1.5s infinite" }}></span>
+                                <span style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", color: "#38BDF8", fontWeight: 800 }}>
+                                  🔒 Slot Confirmed — Live T-Minus Countdown
+                                </span>
+                              </div>
+                              <span style={{ fontSize: "12px", background: "rgba(255,255,255,0.1)", padding: "4px 10px", borderRadius: "6px", color: "#CBD5E1" }}>
+                                📅 {b.scheduledDate || "Today"} • {b.scheduledTime || "Requested Slot"}
+                              </span>
+                            </div>
+
+                            {/* 4 Digital Countdown Blocks */}
+                            <div className="countdown-digits-grid">
+                              <div className="countdown-digit-card">
+                                <div className="digit-val">{cdObj.days || "00"}</div>
+                                <div className="digit-sub">DAYS</div>
+                              </div>
+                              <span className="digit-colon">:</span>
+                              <div className="countdown-digit-card">
+                                <div className="digit-val">{cdObj.hours || "00"}</div>
+                                <div className="digit-sub">HOURS</div>
+                              </div>
+                              <span className="digit-colon">:</span>
+                              <div className="countdown-digit-card">
+                                <div className="digit-val">{cdObj.mins || "00"}</div>
+                                <div className="digit-sub">MINS</div>
+                              </div>
+                              <span className="digit-colon">:</span>
+                              <div className="countdown-digit-card active-tick">
+                                <div className="digit-val" style={{ color: "#38BDF8" }}>{cdObj.secs || "00"}</div>
+                                <div className="digit-sub">SECS</div>
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleArrivedDoorstep(b)}
-                              className="btn-doorstep-arrived"
-                            >
-                              📍 I Have Reached Customer Doorstep
-                            </button>
+
+                            {cdObj.isArrived ? (
+                              <div style={{ background: "rgba(239, 68, 68, 0.2)", border: "1px solid #EF4444", borderRadius: "10px", padding: "10px", textAlign: "center", color: "#FCA5A5", fontWeight: 700, fontSize: "13px", marginBottom: "14px" }}>
+                                🚨 Appointment time has arrived! Reach customer doorstep and ask for Work Start QR code.
+                              </div>
+                            ) : (
+                              <div style={{ textAlign: "center", fontSize: "12px", color: "#94A3B8", marginBottom: "14px" }}>
+                                ⏱️ Live T-Minus timer ticking second-by-second until scheduled appointment time.
+                              </div>
+                            )}
+
+                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                              <button
+                                type="button"
+                                onClick={() => handleArrivedDoorstep(b)}
+                                className="btn-doorstep-arrived"
+                                style={{
+                                  flex: 1, minWidth: "220px", padding: "12px 20px", fontSize: "14px", fontWeight: 800,
+                                  background: "linear-gradient(135deg, #0284C7 0%, #0369A1 100%)",
+                                  borderRadius: "10px", border: "none", color: "#FFFFFF", cursor: "pointer",
+                                  boxShadow: "0 4px 14px rgba(2, 132, 199, 0.4)"
+                                }}
+                              >
+                                📍 I Have Reached Customer Doorstep ➔ Scan QR
+                              </button>
+                              <a
+                                href={`tel:${b.customerPhone || "+919876500002"}`}
+                                className="quick-contact-btn quick-call-btn"
+                                style={{ padding: "12px 18px", borderRadius: "10px", display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none", fontWeight: 700 }}
+                              >
+                                📞 Call Customer
+                              </a>
+                            </div>
                           </div>
                         )}
 

@@ -46,24 +46,89 @@ function CategoryPage() {
   const [liveStopwatch, setLiveStopwatch] = useState("00:00:00");
   const [liveRunningCost, setLiveRunningCost] = useState(149);
 
+  // Robust Target Timestamp & Countdown Calculator
+  const parseTargetCountdown = (b) => {
+    if (!b) return { days: "00", hours: "00", mins: "00", secs: "00", isArrived: false, text: "00:00:00" };
+    const now = Date.now();
+    let target = b.scheduledTimestamp;
+
+    if (!target || isNaN(target)) {
+      const sDate = String(b.scheduledDate || "").trim();
+      const sTime = String(b.scheduledTime || "11:00 AM").trim();
+      const curr = new Date();
+      let y = curr.getFullYear();
+      let m = curr.getMonth();
+      let d = curr.getDate();
+
+      if (sDate.toLowerCase().includes("tomorrow")) {
+        d += 1;
+      } else if (sDate.includes("-")) {
+        const parts = sDate.split("-");
+        if (parts.length === 3) {
+          y = parseInt(parts[0], 10);
+          m = parseInt(parts[1], 10) - 1;
+          d = parseInt(parts[2], 10);
+        }
+      }
+
+      let hours = 11;
+      let minutes = 0;
+      const match = sTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+      if (match) {
+        hours = parseInt(match[1], 10);
+        minutes = parseInt(match[2], 10);
+        const meridiem = (match[3] || "").toUpperCase();
+        if (meridiem === "PM" && hours < 12) hours += 12;
+        if (meridiem === "AM" && hours === 12) hours = 0;
+      }
+
+      const parsedDate = new Date(y, m, d, hours, minutes, 0, 0);
+      target = parsedDate.getTime();
+
+      if (isNaN(target) || target <= now) {
+        target = now + 45 * 60 * 1000;
+      }
+    }
+
+    const diff = target - now;
+
+    if (diff <= 0) {
+      return {
+        days: "00",
+        hours: "00",
+        mins: "00",
+        secs: "00",
+        isArrived: true,
+        text: "00:00:00"
+      };
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / (1000 * 60)) % 60);
+    const secs = Math.floor((diff / 1000) % 60);
+
+    return {
+      days: String(days).padStart(2, "0"),
+      hours: String(hours).padStart(2, "0"),
+      mins: String(mins).padStart(2, "0"),
+      secs: String(secs).padStart(2, "0"),
+      isArrived: false,
+      text: `${days > 0 ? `${days}d ` : ""}${String(hours).padStart(2, "0")}h ${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`
+    };
+  };
+
+  const [cdData, setCdData] = useState({ days: "00", hours: "00", mins: "45", secs: "00", isArrived: false });
+
   // Live Timer Hook (Countdown to slot & Work stopwatch)
   useEffect(() => {
     if (!confirmedBookingInfo) return;
 
     const timer = setInterval(() => {
       const now = Date.now();
-      const targetTime = confirmedBookingInfo.scheduledTimestamp || (now + 7200000);
-      const diff = targetTime - now;
-
-      if (diff > 0) {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const mins = Math.floor((diff / (1000 * 60)) % 60);
-        const secs = Math.floor((diff / 1000) % 60);
-        setLiveCountdown(`${days > 0 ? `${days}d ` : ""}${hours.toString().padStart(2, "0")}h ${mins.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`);
-      } else {
-        setLiveCountdown("Ready for Doorstep Arrival / Now");
-      }
+      const updatedCd = parseTargetCountdown(confirmedBookingInfo);
+      setCdData(updatedCd);
+      setLiveCountdown(updatedCd.text);
 
       // If job is in progress, tick live stopwatch & calculate running dynamic cost
       if (confirmedBookingInfo.status === "in_progress" && confirmedBookingInfo.workStartedAt) {
@@ -1177,13 +1242,36 @@ function CategoryPage() {
                     <div className="telemetry-countdown-box">
                       <div className="telemetry-countdown-label">
                         <span>⏳</span>
-                        <span>Plumber Arrival Countdown</span>
+                        <span>Plumber Arrival Live Countdown</span>
                       </div>
-                      <div className="telemetry-countdown-val">
-                        {liveCountdown || "00h 45m 12s"}
+
+                      {/* 4 Digital Countdown Blocks */}
+                      <div className="countdown-digits-grid">
+                        <div className="countdown-digit-card">
+                          <div className="digit-val">{cdData.days || "00"}</div>
+                          <div className="digit-sub">DAYS</div>
+                        </div>
+                        <span className="digit-colon">:</span>
+                        <div className="countdown-digit-card">
+                          <div className="digit-val">{cdData.hours || "00"}</div>
+                          <div className="digit-sub">HOURS</div>
+                        </div>
+                        <span className="digit-colon">:</span>
+                        <div className="countdown-digit-card">
+                          <div className="digit-val">{cdData.mins || "00"}</div>
+                          <div className="digit-sub">MINS</div>
+                        </div>
+                        <span className="digit-colon">:</span>
+                        <div className="countdown-digit-card active-tick">
+                          <div className="digit-val" style={{ color: "#38BDF8" }}>{cdData.secs || "00"}</div>
+                          <div className="digit-sub">SECS</div>
+                        </div>
                       </div>
+
                       <div style={{ fontSize: "11.5px", color: "#94A3B8", marginTop: "4px" }}>
-                        Time remaining until scheduled slot arrival
+                        {cdData.isArrived
+                          ? "🚨 Scheduled appointment time has arrived! Plumber is at your doorstep."
+                          : `Time remaining until appointment on ${confirmedBookingInfo?.scheduledDate || "Today"} at ${confirmedBookingInfo?.scheduledTime || "slot"}`}
                       </div>
                     </div>
 
