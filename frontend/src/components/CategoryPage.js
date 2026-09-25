@@ -1,10 +1,12 @@
-import React, { useContext, useState, useMemo } from "react";
+import React, { useContext, useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { LocationContext } from "../context/LocationContext";
 import { DataContext } from "../context/DataContext";
 import { popularCategories } from "../data/popularCategoriesData";
 import { getServicemanImagesForCategory, getServicemanImage } from "../data/categoryImages";
 import "../css/CategoryPage.css";
+
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 // Global cache for ItemDetailsPage lookup
 export const categoryItemsRegistry = new Map();
@@ -17,10 +19,12 @@ function CategoryPage() {
   const dataContext = useContext(DataContext);
   const updateProviderInContext = dataContext?.updateProvider;
   const addProviderInContext = dataContext?.addProvider;
+  const deleteProviderInContext = dataContext?.deleteProvider;
 
   const [sortBy, setSortBy] = useState("rating");
   const [searchTerm, setSearchTerm] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [backendCategoryProviders, setBackendCategoryProviders] = useState([]);
 
   // Customer Enquiry / Booking Modal State
   const [enquiryItem, setEnquiryItem] = useState(null);
@@ -65,6 +69,30 @@ function CategoryPage() {
   // Normalize category slug & obtain metadata
   const currentSlug = (name || "services").toLowerCase().trim();
 
+  // Fetch real-time providers directly from Backend database for this specific category
+  const fetchCategoryProviders = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/providers?category=${encodeURIComponent(currentSlug)}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setBackendCategoryProviders(data.data);
+      }
+    } catch (e) {
+      console.warn("Category providers backend fetch notice:", e);
+    }
+  }, [currentSlug]);
+
+  useEffect(() => {
+    fetchCategoryProviders();
+  }, [fetchCategoryProviders]);
+
+  // Re-fetch when vendor profile updates in local session
+  useEffect(() => {
+    const handleUpdate = () => fetchCategoryProviders();
+    window.addEventListener("vendor_updated", handleUpdate);
+    return () => window.removeEventListener("vendor_updated", handleUpdate);
+  }, [fetchCategoryProviders]);
+
   const matchedCategory = useMemo(() => {
     return (
       popularCategories.find(
@@ -96,6 +124,54 @@ function CategoryPage() {
     const allProviders = dataContext?.providers || [];
     const cleanCat = categoryTitle.toLowerCase();
     const cleanSlug = currentSlug.replace(/[-_]/g, " ").toLowerCase();
+    const stemSlug = cleanSlug.replace(/s$/, "");
+    const stemCat = cleanCat.replace(/s$/, "");
+
+    // Also check active vendor from localStorage
+    let activeVendor = null;
+    try {
+      const rawV = localStorage.getItem("helper_vendor");
+      if (rawV) activeVendor = JSON.parse(rawV);
+    } catch (e) {}
+
+    // Combine all potential sources: backendCategoryProviders, allProviders, activeVendor
+    const combinedList = [...backendCategoryProviders];
+    allProviders.forEach(p => {
+      if (!combinedList.some(c => (c.id && c.id === p.id) || (c._id && c._id === p._id))) {
+        combinedList.push(p);
+      }
+    });
+
+    if (activeVendor && (activeVendor.name || activeVendor.shopName)) {
+      const vCat = (activeVendor.category || "").toLowerCase();
+      if (vCat.includes(stemSlug) || stemSlug.includes(vCat) || vCat.includes(stemCat) || stemCat.includes(vCat)) {
+        const existingIdx = combinedList.findIndex(p => p.id === activeVendor.id || (p.name && p.name.toLowerCase() === activeVendor.name?.toLowerCase()));
+        const formattedActive = {
+          id: activeVendor.id || `vdr_${Date.now()}`,
+          name: activeVendor.name,
+          shopName: activeVendor.shopName || `${activeVendor.name}'s ${activeVendor.category} Services`,
+          category: activeVendor.category || categoryTitle,
+          serviceCategories: activeVendor.serviceCategories || [activeVendor.category || categoryTitle],
+          phone: activeVendor.phone || "+91 98765 00001",
+          contact: activeVendor.phone || "+91 98765 00001",
+          rating: activeVendor.rating || 5.0,
+          verified: true,
+          status: "Active",
+          franchiseActive: true,
+          distance: activeVendor.distance || "1.2 km",
+          experience: activeVendor.experience || "3+ Years Exp",
+          address: activeVendor.address || activeVendor.location || "Central Zone, Main Market",
+          location: activeVendor.location || "Indore / Delhi NCR",
+          image: activeVendor.image || activeVendor.avatar || "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400",
+          avatar: activeVendor.avatar || activeVendor.image || "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400"
+        };
+        if (existingIdx !== -1) {
+          combinedList[existingIdx] = { ...combinedList[existingIdx], ...formattedActive };
+        } else {
+          combinedList.unshift(formattedActive);
+        }
+      }
+    }
 
     const getTokens = (str) =>
       (str || "")
@@ -104,9 +180,9 @@ function CategoryPage() {
         .split(/\s+/)
         .filter((w) => w.length > 2 && !["and", "the", "for", "hub", "care", "zone", "pro", "services", "centres", "center"].includes(w));
 
-    const catTokens = getTokens(`${cleanCat} ${cleanSlug}`);
+    const catTokens = getTokens(`${cleanCat} ${cleanSlug} ${stemSlug} ${stemCat}`);
 
-    let matching = allProviders.filter((p) => {
+    let matching = combinedList.filter((p) => {
       const pCat = (p.category || "").toLowerCase();
       const pShop = (p.shopName || "").toLowerCase();
       const pName = (p.name || "").toLowerCase();
@@ -117,9 +193,17 @@ function CategoryPage() {
         cleanCat.includes(pCat) ||
         pCat.includes(cleanSlug) ||
         cleanSlug.includes(pCat) ||
+        pCat.includes(stemSlug) ||
+        stemSlug.includes(pCat) ||
         pShop.includes(cleanCat) ||
         pShop.includes(cleanSlug) ||
-        pServiceCats.some((sc) => sc.includes(cleanCat) || cleanCat.includes(sc) || sc.includes(cleanSlug) || cleanSlug.includes(sc));
+        pShop.includes(stemSlug) ||
+        pName.includes(stemSlug) ||
+        pServiceCats.some((sc) => 
+          sc.includes(cleanCat) || cleanCat.includes(sc) || 
+          sc.includes(cleanSlug) || cleanSlug.includes(sc) ||
+          sc.includes(stemSlug) || stemSlug.includes(sc)
+        );
 
       if (directMatch) return true;
 
@@ -133,7 +217,7 @@ function CategoryPage() {
     // Ensure featured partner Rahul Gandhi / Amritam is always prominently at top for Massage & Spa
     const isSpaCategory = cleanCat.includes("massage") || cleanCat.includes("spa") || cleanSlug.includes("massage") || cleanSlug.includes("spa");
     if (isSpaCategory) {
-      const rahul = allProviders.find(p => p.id === "vdr_rahul_amritam" || (p.name && p.name.toLowerCase().includes("rahul")));
+      const rahul = combinedList.find(p => p.id === "vdr_rahul_amritam" || (p.name && p.name.toLowerCase().includes("rahul")));
       if (rahul && !matching.some(m => m.id === rahul.id || m.name === rahul.name)) {
         matching = [rahul, ...matching];
       } else if (rahul) {
@@ -141,62 +225,80 @@ function CategoryPage() {
       }
     }
 
+    // Sort to prioritize active franchise vendors (e.g. Rakesh, Rahul) right at top
+    matching.sort((a, b) => {
+      const aIsActive = a.franchiseActive || a.name?.toLowerCase().includes("rakesh") || a.id?.startsWith("vdr_");
+      const bIsActive = b.franchiseActive || b.name?.toLowerCase().includes("rakesh") || b.id?.startsWith("vdr_");
+      if (aIsActive && !bIsActive) return -1;
+      if (!aIsActive && bIsActive) return 1;
+      return 0;
+    });
+
     // Fallback template items if this category does not yet have custom entries in DB
+    const catImages = getServicemanImagesForCategory(categoryTitle || currentSlug);
+    const seedItems = [
+      {
+        id: `seed_${currentSlug}_1`,
+        name: "Rajesh Kumar (Chief Specialist)",
+        shopName: `Premier ${categoryTitle} Hub`,
+        category: categoryTitle,
+        phone: "+91 98765 43210",
+        distance: "1.1 km",
+        experience: "8+ Years Exp",
+        rating: 4.9,
+        totalReviewsCount: 310,
+        location: "Sector 18, Central Zone",
+        address: "Sector 18, Central Zone, Near Metro",
+        facilities: ["Verified Specialist", "Instant Booking", "Same Day Service", "Warranty Covered"],
+        avatar: catImages[0],
+        image: catImages[0],
+        verified: true
+      },
+      {
+        id: `seed_${currentSlug}_2`,
+        name: "Amit Saxena (Senior Partner)",
+        shopName: `Royal ${categoryTitle} & Services`,
+        category: categoryTitle,
+        phone: "+91 98765 88990",
+        distance: "2.3 km",
+        experience: "10+ Years Exp",
+        rating: 4.8,
+        totalReviewsCount: 240,
+        location: "Ring Road, Commercial Phase",
+        address: "Ring Road, Commercial Phase, North Sector",
+        facilities: ["Top Rated Pro", "Fast Dispatch", "Digital Billing", "Police Verified"],
+        avatar: catImages[1],
+        image: catImages[1],
+        verified: true
+      },
+      {
+        id: `seed_${currentSlug}_3`,
+        name: "Pooja Sharma (Expert Consultant)",
+        shopName: `City Apex ${categoryTitle} Centre`,
+        category: categoryTitle,
+        phone: "+91 98765 11223",
+        distance: "3.5 km",
+        experience: "6+ Years Exp",
+        rating: 4.7,
+        totalReviewsCount: 180,
+        location: "Galleria Commercial Zone",
+        address: "Galleria Commercial Zone, City South",
+        facilities: ["Certified Technicians", "Zero Advance", "Quality Assured", "24/7 Support"],
+        avatar: catImages[2],
+        image: catImages[2],
+        verified: true
+      }
+    ];
+
     if (matching.length === 0) {
-      const catImages = getServicemanImagesForCategory(categoryTitle || currentSlug);
-      matching = [
-        {
-          id: `seed_${currentSlug}_1`,
-          name: "Rajesh Kumar (Chief Specialist)",
-          shopName: `Premier ${categoryTitle} Hub`,
-          category: categoryTitle,
-          phone: "+91 98765 43210",
-          distance: "1.1 km",
-          experience: "8+ Years Exp",
-          rating: 4.9,
-          totalReviewsCount: 310,
-          location: "Sector 18, Central Zone",
-          address: "Sector 18, Central Zone, Near Metro",
-          facilities: ["Verified Specialist", "Instant Booking", "Same Day Service", "Warranty Covered"],
-          avatar: catImages[0],
-          image: catImages[0],
-          verified: true
-        },
-        {
-          id: `seed_${currentSlug}_2`,
-          name: "Amit Saxena (Senior Partner)",
-          shopName: `Royal ${categoryTitle} & Services`,
-          category: categoryTitle,
-          phone: "+91 98765 88990",
-          distance: "2.3 km",
-          experience: "10+ Years Exp",
-          rating: 4.8,
-          totalReviewsCount: 240,
-          location: "Ring Road, Commercial Phase",
-          address: "Ring Road, Commercial Phase, North Sector",
-          facilities: ["Top Rated Pro", "Fast Dispatch", "Digital Billing", "Police Verified"],
-          avatar: catImages[1],
-          image: catImages[1],
-          verified: true
-        },
-        {
-          id: `seed_${currentSlug}_3`,
-          name: "Pooja Sharma (Expert Consultant)",
-          shopName: `City Apex ${categoryTitle} Centre`,
-          category: categoryTitle,
-          phone: "+91 98765 11223",
-          distance: "3.5 km",
-          experience: "6+ Years Exp",
-          rating: 4.7,
-          totalReviewsCount: 180,
-          location: "Galleria Commercial Zone",
-          address: "Galleria Commercial Zone, City South",
-          facilities: ["Certified Technicians", "Zero Advance", "Quality Assured", "24/7 Support"],
-          avatar: catImages[2],
-          image: catImages[2],
-          verified: true
+      matching = seedItems;
+    } else if (matching.length < 3) {
+      // Append seed items so user always sees full options while real providers are on top
+      seedItems.forEach(s => {
+        if (!matching.some(m => m.id === s.id || m.name === s.name)) {
+          matching.push(s);
         }
-      ];
+      });
     }
 
     // Save to global registry so ItemDetailsPage can view any profile
@@ -206,7 +308,20 @@ function CategoryPage() {
     });
 
     return matching;
-  }, [dataContext?.providers, categoryTitle, currentSlug]);
+  }, [backendCategoryProviders, dataContext?.providers, categoryTitle, currentSlug]);
+
+  // Admin delete provider handler
+  const handleDeleteProvider = async (id) => {
+    try {
+      if (deleteProviderInContext) {
+        await deleteProviderInContext(id);
+      }
+      setBackendCategoryProviders(prev => prev.filter(p => String(p.id) !== String(id) && String(p._id) !== String(id)));
+      showToast("🗑️ Provider deleted successfully by Admin from Backend Database");
+    } catch (err) {
+      showToast(`Delete error: ${err.message}`);
+    }
+  };
 
   // Search filtering
   const filtered = useMemo(() => {
@@ -492,14 +607,31 @@ function CategoryPage() {
                   </div>
 
                   {isAdmin && (
-                    <button
-                      type="button"
-                      className="btn-edit-pro-floating"
-                      onClick={() => handleOpenEdit(item)}
-                      title="Edit provider details (Admin Only)"
-                    >
-                      ✏️
-                    </button>
+                    <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", gap: "6px", zIndex: 10 }}>
+                      <button
+                        type="button"
+                        className="btn-edit-pro-floating"
+                        style={{ position: "static" }}
+                        onClick={(e) => { e.stopPropagation(); handleOpenEdit(item); }}
+                        title="Edit provider details (Admin Only)"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-edit-pro-floating"
+                        style={{ position: "static", background: "rgba(239, 68, 68, 0.95)", color: "#fff" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Admin: Remove provider "${item.shopName || item.name}" from database?`)) {
+                            handleDeleteProvider(item.id || item._id);
+                          }
+                        }}
+                        title="Delete provider (Admin Only)"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   )}
 
                   <div className="item-thumbnail-bottom-bar">

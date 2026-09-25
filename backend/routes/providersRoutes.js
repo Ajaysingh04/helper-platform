@@ -15,21 +15,26 @@ router.get("/", async (req, res) => {
       const filter = {};
       if (category) {
         const cleanCat = category.replace(/[-_]/g, " ").trim();
-        const tokens = cleanCat
+        const rawTokens = cleanCat
           .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
           .split(/\s+/)
           .filter(w => w.length > 2 && !["and", "for", "the", "services", "centres", "center", "hub", "care"].includes(w.toLowerCase()));
 
-        const tokenRegexes = tokens.map(t => new RegExp(t, "i"));
+        const allTerms = [cleanCat, category];
+        rawTokens.forEach(t => {
+          allTerms.push(t);
+          if (t.endsWith("ers") && t.length > 4) allTerms.push(t.slice(0, -3), t.slice(0, -1));
+          else if (t.endsWith("s") && t.length > 3) allTerms.push(t.slice(0, -1));
+          else if (t.endsWith("ing") && t.length > 4) allTerms.push(t.slice(0, -3));
+        });
+
+        const tokenRegexes = Array.from(new Set(allTerms.map(t => t.toLowerCase()))).map(t => new RegExp(t, "i"));
 
         filter.$or = [
-          { category: new RegExp(cleanCat, "i") },
-          { category: new RegExp(category, "i") },
-          { shopName: new RegExp(cleanCat, "i") },
-          { serviceCategories: new RegExp(cleanCat, "i") },
           ...tokenRegexes.map(r => ({ category: r })),
           ...tokenRegexes.map(r => ({ serviceCategories: r })),
-          ...tokenRegexes.map(r => ({ shopName: r }))
+          ...tokenRegexes.map(r => ({ shopName: r })),
+          ...tokenRegexes.map(r => ({ name: r }))
         ];
       }
       if (verified !== undefined) filter.verified = verified === "true";
@@ -41,25 +46,32 @@ router.get("/", async (req, res) => {
     if (category) {
       const cleanCat = category.replace(/[-_]/g, " ").toLowerCase().trim();
       const rawCat = category.toLowerCase();
-      const tokens = cleanCat
+      const rawTokens = cleanCat
         .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
         .split(/\s+/)
         .filter(w => w.length > 2 && !["and", "for", "the", "services", "centres", "center", "hub", "care"].includes(w));
 
+      const allTerms = [cleanCat, rawCat];
+      rawTokens.forEach(t => {
+        allTerms.push(t);
+        if (t.endsWith("ers") && t.length > 4) allTerms.push(t.slice(0, -3), t.slice(0, -1));
+        else if (t.endsWith("s") && t.length > 3) allTerms.push(t.slice(0, -1));
+        else if (t.endsWith("ing") && t.length > 4) allTerms.push(t.slice(0, -3));
+      });
+      const uniqueTerms = Array.from(new Set(allTerms));
+
       providers = providers.filter((p) => {
         const pCat = (p.category || "").toLowerCase();
         const pShop = (p.shopName || "").toLowerCase();
+        const pName = (p.name || "").toLowerCase();
         const pServiceCats = (p.serviceCategories || []).map(c => String(c).toLowerCase());
 
-        const direct =
-          pCat.includes(cleanCat) ||
-          pCat.includes(rawCat) ||
-          cleanCat.includes(pCat) ||
-          pShop.includes(cleanCat) ||
-          pServiceCats.some(c => c.includes(cleanCat) || c.includes(rawCat) || cleanCat.includes(c));
-
-        if (direct) return true;
-        return tokens.some(t => pCat.includes(t) || pShop.includes(t) || pServiceCats.some(c => c.includes(t)));
+        return uniqueTerms.some(term => 
+          pCat.includes(term) ||
+          pShop.includes(term) ||
+          pName.includes(term) ||
+          pServiceCats.some(c => c.includes(term))
+        );
       });
     }
     if (verified !== undefined) {
@@ -271,11 +283,14 @@ router.get("/:id/bookings", async (req, res) => {
 
       const vendorBookings = await Booking.find({
         $or: [
+          { provider: provider._id },
+          { provider: provider.id },
+          { providerId: provider.id },
+          { providerId: String(provider._id) },
           { assignedProvider: provider.id },
           { assignedProvider: provider.name },
           { assignedProvider: provider.shopName },
           { assignedProviderName: new RegExp(provider.name, "i") },
-          { provider: provider._id },
           { serviceName: new RegExp(provider.category, "i") },
           { serviceCategory: new RegExp(provider.category, "i") },
           ...tokenRegexes.map(r => ({ serviceName: r })),

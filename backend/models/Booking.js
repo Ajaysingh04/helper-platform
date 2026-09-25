@@ -20,15 +20,23 @@ const BookingSchema = new mongoose.Schema(
     customerName: { type: String, required: true, trim: true },
     customerPhone: { type: String, trim: true },
     
-    provider: { type: mongoose.Schema.Types.ObjectId, ref: "Provider", index: true },
+    provider: { type: mongoose.Schema.Types.Mixed, ref: "Provider", index: true },
+    providerId: { type: String, index: true },
+    assignedProvider: { type: String },
     assignedProviderName: { type: String, default: "Searching Nearest Pro..." },
+    phone: { type: String },
+    address: { type: String },
+    customerAddress: { type: String },
+    price: { type: String },
+    doorOtp: { type: String, default: "1234" },
     
     serviceName: { type: String, required: true, trim: true },
+    service: { type: String },
     serviceCategory: { type: String, default: "General" },
     
     serviceAddress: {
       addressId: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
-      fullAddress: { type: String, required: true },
+      fullAddress: { type: String, default: "Ahinsa Tower, Indore, MP" },
       coordinates: { type: [Number], default: [77.3653, 28.6280] } // [lng, lat]
     },
 

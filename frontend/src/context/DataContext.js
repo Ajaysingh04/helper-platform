@@ -248,28 +248,46 @@ export const DataProvider = ({ children }) => {
       if (activeVendorRaw) {
         const v = JSON.parse(activeVendorRaw);
         if (v && (v.name || v.shopName)) {
-          const matchIdx = list.findIndex(p => p.id === v.id || p.id === "vdr_rahul_amritam" || (p.name && v.name && p.name.toLowerCase() === v.name.toLowerCase()));
+          const vCat = v.category || "General";
+          let relCats = v.serviceCategories && v.serviceCategories.length ? v.serviceCategories : [];
+          if (!relCats.length) {
+            if (vCat.toLowerCase().includes("plumb")) relCats = ["Plumber", "Plumbers", "Plumbing & Sanitary", "Plumbing"];
+            else if (vCat.toLowerCase().includes("massage") || vCat.toLowerCase().includes("spa")) relCats = ["Body Massage Centres", "Body Massage & Spa", "Spa & Wellness", "Beauty Spas", "Massage"];
+            else if (vCat.toLowerCase().includes("electr")) relCats = ["Electrician", "Electricians", "Electrical", "Wiring"];
+            else if (vCat.toLowerCase().includes("clean")) relCats = ["Home Cleaner", "Cleaning", "Deep Cleaning", "Sanitization"];
+            else relCats = [vCat, `${vCat} Services`];
+          }
+
+          const defaultImg = vCat.toLowerCase().includes("plumb") 
+            ? "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400"
+            : vCat.toLowerCase().includes("electr")
+            ? "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400"
+            : vCat.toLowerCase().includes("clean")
+            ? "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400"
+            : "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600";
+
+          const matchIdx = list.findIndex(p => p.id === v.id || (p.name && v.name && p.name.toLowerCase() === v.name.toLowerCase()));
           const formattedVendor = {
-            id: v.id || "vdr_rahul_amritam",
+            id: v.id || `vdr_${Date.now()}`,
             name: v.name,
-            shopName: v.shopName || "Amritam",
-            category: v.category || "Body Massage & Spa",
-            serviceCategories: v.serviceCategories || ["Body Massage & Spa", "Body Massage Centres", "Spa & Wellness", "Massage"],
+            shopName: v.shopName || `${v.name}'s ${vCat} Services`,
+            category: vCat,
+            serviceCategories: relCats,
             phone: v.phone || "+91 98765 00001",
             contact: v.phone || "+91 98765 00001",
-            rating: v.rating || 4.9,
+            rating: v.rating || 5.0,
             status: "Active",
             verified: true,
-            franchiseActive: true,
+            franchiseActive: v.franchiseActive !== false,
             franchisePlan: v.franchisePlan || "monthly",
             franchiseAmount: v.franchiseAmount || 4000,
-            jobsDone: v.jobsCompleted || 48,
-            distance: v.distance || "0.8 km",
-            hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : "₹302/hr",
-            location: v.location || "Indore Ahinsha Tower, MG Road, Indore",
-            address: v.address || v.location || "Ahinsa Tower, MG Road, Indore, Madhya Pradesh",
-            image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
-            avatar: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600"
+            jobsDone: v.jobsCompleted || 12,
+            distance: v.distance || "1.2 km",
+            hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : "₹299/hr",
+            location: v.location || "Indore / Delhi NCR",
+            address: v.address || v.location || "14 Palm Avenue, City Central",
+            image: v.image || v.avatar || defaultImg,
+            avatar: v.avatar || v.image || defaultImg
           };
           if (matchIdx !== -1) {
             list[matchIdx] = { ...list[matchIdx], ...formattedVendor };
@@ -278,7 +296,7 @@ export const DataProvider = ({ children }) => {
           }
         }
       }
-      // Ensure Rahul Gandhi (Amritam) is always present at top
+      // Ensure Rahul Gandhi (Amritam) is always present
       const rahul = initialProviders[0];
       if (!list.some(p => p.id === rahul.id || (p.name && p.name.toLowerCase().includes("rahul")))) {
         list = [rahul, ...list];
@@ -368,10 +386,27 @@ export const DataProvider = ({ children }) => {
         }
         if (srvRes.status === "fulfilled" && srvRes.value?.data?.length) setServices(srvRes.value.data);
         if (prvRes.status === "fulfilled" && prvRes.value?.data?.length) {
-          const fetchedProviders = prvRes.value.data;
+          let fetchedProviders = prvRes.value.data;
           const rahul = initialProviders[0];
           const hasRahul = fetchedProviders.some(p => p.id === rahul.id || p.name === rahul.name);
-          setProviders(hasRahul ? fetchedProviders : [rahul, ...fetchedProviders]);
+          let merged = hasRahul ? fetchedProviders : [rahul, ...fetchedProviders];
+
+          try {
+            const rawV = localStorage.getItem("helper_vendor");
+            if (rawV) {
+              const v = JSON.parse(rawV);
+              if (v && (v.name || v.shopName)) {
+                const matchIdx = merged.findIndex(p => p.id === v.id || (p.name && v.name && p.name.toLowerCase() === v.name.toLowerCase()));
+                if (matchIdx !== -1) {
+                  merged[matchIdx] = { ...merged[matchIdx], ...v };
+                } else {
+                  merged = [v, ...merged];
+                }
+              }
+            }
+          } catch (e) {}
+
+          setProviders(merged);
         }
         if (bkgRes.status === "fulfilled" && bkgRes.value?.data?.length) setBookings(bkgRes.value.data);
         if (sldRes.status === "fulfilled" && sldRes.value?.data?.length) setSlides(sldRes.value.data);
@@ -401,43 +436,63 @@ export const DataProvider = ({ children }) => {
         if (raw) {
           const v = JSON.parse(raw);
           if (v && (v.name || v.shopName)) {
+            const vCat = v.category || "General";
+            let relCats = v.serviceCategories && v.serviceCategories.length ? v.serviceCategories : [];
+            if (!relCats.length) {
+              if (vCat.toLowerCase().includes("plumb")) relCats = ["Plumber", "Plumbers", "Plumbing & Sanitary", "Plumbing"];
+              else if (vCat.toLowerCase().includes("massage") || vCat.toLowerCase().includes("spa")) relCats = ["Body Massage Centres", "Body Massage & Spa", "Spa & Wellness", "Beauty Spas", "Massage"];
+              else if (vCat.toLowerCase().includes("electr")) relCats = ["Electrician", "Electricians", "Electrical", "Wiring"];
+              else if (vCat.toLowerCase().includes("clean")) relCats = ["Home Cleaner", "Cleaning", "Deep Cleaning", "Sanitization"];
+              else relCats = [vCat, `${vCat} Services`];
+            }
+
+            const defaultImg = vCat.toLowerCase().includes("plumb") 
+              ? "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400"
+              : vCat.toLowerCase().includes("electr")
+              ? "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400"
+              : vCat.toLowerCase().includes("clean")
+              ? "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400"
+              : "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600";
+
             setProviders(prev => {
-              const exists = prev.find(p => p.id === v.id || p.id === "vdr_rahul_amritam" || (p.name && v.name && p.name.toLowerCase() === v.name.toLowerCase()));
+              const exists = prev.find(p => p.id === v.id || (p.name && v.name && p.name.toLowerCase() === v.name.toLowerCase()));
               if (exists) {
                 return prev.map(p => (p.id === exists.id) ? {
                   ...p,
                   name: v.name,
                   shopName: v.shopName || p.shopName,
-                  category: v.category || p.category,
-                  serviceCategories: v.serviceCategories || p.serviceCategories || ["Body Massage Centres", "Body Massage & Spa", "Spa & Wellness", "Massage"],
+                  category: vCat,
+                  serviceCategories: relCats,
                   location: v.location || p.location,
                   address: v.address || v.location || p.address,
                   phone: v.phone || p.phone,
                   contact: v.phone || p.contact,
                   franchiseActive: true,
-                  hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : p.hourlyRate
+                  hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : p.hourlyRate,
+                  image: v.image || v.avatar || p.image || defaultImg,
+                  avatar: v.avatar || v.image || p.avatar || defaultImg
                 } : p);
               }
               const newP = {
                 id: v.id || `vdr_${Date.now()}`,
                 name: v.name,
-                shopName: v.shopName || "Amritam",
-                category: v.category || "Body Massage & Spa",
-                serviceCategories: ["Body Massage Centres", "Body Massage & Spa", "Spa & Wellness", "Massage"],
+                shopName: v.shopName || `${v.name}'s ${vCat} Services`,
+                category: vCat,
+                serviceCategories: relCats,
                 phone: v.phone || "+91 98765 00001",
                 contact: v.phone || "+91 98765 00001",
-                rating: 4.9,
+                rating: 5.0,
                 status: "Active",
                 verified: true,
                 franchiseActive: true,
                 franchisePlan: v.franchisePlan || "monthly",
                 franchiseAmount: v.franchiseAmount || 4000,
-                jobsDone: 48,
-                hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : "₹302/hr",
-                location: v.location || "Indore Ahinsha Tower, MG Road, Indore",
-                address: v.address || v.location || "Ahinsa Tower, MG Road, Indore, Madhya Pradesh",
-                image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600",
-                avatar: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600"
+                jobsDone: 12,
+                hourlyRate: v.hourlyRate ? (String(v.hourlyRate).startsWith("₹") ? v.hourlyRate : `₹${v.hourlyRate}/hr`) : "₹299/hr",
+                location: v.location || "Indore / Delhi NCR",
+                address: v.address || v.location || "14 Palm Avenue, City Central",
+                image: v.image || v.avatar || defaultImg,
+                avatar: v.avatar || v.image || defaultImg
               };
               return [newP, ...prev];
             });

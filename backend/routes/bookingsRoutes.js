@@ -102,26 +102,38 @@ router.post("/", async (req, res) => {
     const {
       customerName,
       customerPhone,
+      phone,
       fullAddress,
+      address,
+      customerAddress,
       serviceName,
+      service,
       serviceCategory = "Repairs",
       basePrice = 299,
+      price,
+      totalAmount,
       coordinates = [77.3653, 28.6280],
       isEmergency = false,
       scheduledDate,
       scheduledTime,
       paymentMode = "cash_after_service",
-      couponDiscount = 0
+      couponDiscount = 0,
+      providerId,
+      provider: reqProvider,
+      assignedProvider,
+      assignedProviderName,
+      doorOtp
     } = req.body;
 
-    const finalName = customerName || "Customer";
-    const finalPhone = customerPhone || "9876543210";
-    const finalService = serviceName || "Expert Home Repair";
-    const finalAddress = fullAddress || "Customer Address Provided";
+    const finalName = customerName || req.body.name || "Customer";
+    const finalPhone = customerPhone || phone || "9876543210";
+    const finalService = serviceName || service || "Expert Home Repair";
+    const finalAddress = fullAddress || address || customerAddress || "Indore / Delhi NCR";
+    const finalPriceNum = parseInt(String(totalAmount || price || basePrice || 299).replace(/[^0-9]/g, "")) || 299;
 
     // 1. Calculate Algorithmic Pricing
     const pricing = calculateBookingPrice({
-      baseServicePrice: basePrice,
+      baseServicePrice: finalPriceNum,
       distanceKm: 2.8,
       isEmergency,
       couponDiscount
@@ -129,18 +141,67 @@ router.post("/", async (req, res) => {
 
     // 2. Generate Cryptographically Secure 4-Digit Start OTP
     const { plainOtp, otpHash } = await generateSecureStartOtp();
+    const finalDoorOtp = doorOtp || plainOtp || "1234";
 
-    // 3. Find and Rank Nearby Providers
-    const rankedPros = await findAndRankNearbyProviders({
-      coordinates,
-      category: serviceCategory,
-      isEmergency
-    });
+    // 3. Locate Target Provider (if specific provider was selected/booked)
+    let targetPro = null;
+    const searchId = providerId || (typeof reqProvider === "string" ? reqProvider : null);
+    const searchName = assignedProviderName || assignedProvider || (typeof reqProvider === "string" ? reqProvider : null);
 
-    const nearestPro = rankedPros.length > 0 ? rankedPros[0].provider : null;
+    if (getStatus()) {
+      const mongoose = require("mongoose");
+      if (searchId) {
+        if (mongoose.Types.ObjectId.isValid(searchId)) {
+          targetPro = await Provider.findById(searchId);
+        }
+        if (!targetPro) {
+          targetPro = await Provider.findOne({ id: searchId });
+        }
+      }
+      if (!targetPro && searchName) {
+        const cleanSearchName = searchName.replace(/[•\-,()]/g, " ").trim().split(/\s+/)[0];
+        if (cleanSearchName && cleanSearchName.length >= 2) {
+          targetPro = await Provider.findOne({
+            $or: [
+              { name: new RegExp(cleanSearchName, "i") },
+              { shopName: new RegExp(cleanSearchName, "i") }
+            ]
+          });
+        }
+      }
+    }
+
+    if (!targetPro) {
+      const allPros = dbStore.getAll("providers") || [];
+      targetPro = allPros.find(p => 
+        (searchId && (p.id === searchId || p._id === searchId)) ||
+        (searchName && (
+          (p.name && p.name.toLowerCase().includes(searchName.toLowerCase())) ||
+          (p.shopName && p.shopName.toLowerCase().includes(searchName.toLowerCase())) ||
+          (searchName.toLowerCase().includes((p.name || "").toLowerCase()))
+        ))
+      );
+    }
+
+    // Fallback to auto-dispatching nearest provider if none specifically chosen
+    let nearestPro = targetPro;
+    if (!nearestPro) {
+      const rankedPros = await findAndRankNearbyProviders({
+        coordinates,
+        category: serviceCategory,
+        isEmergency
+      });
+      nearestPro = rankedPros.length > 0 ? rankedPros[0].provider : null;
+    }
 
     // 4. Create Booking in Database
-    const bookingCode = "HLP-" + Math.floor(10000 + Math.random() * 90000);
+    const bookingCode = req.body.id || req.body.bookingCode || ("HLP-" + Math.floor(10000 + Math.random() * 90000));
+
+    const finalAssignedName = targetPro 
+      ? (targetPro.shopName ? `${targetPro.shopName} • ${targetPro.name}` : targetPro.name)
+      : (nearestPro ? nearestPro.name : "Nearest Verified Pro");
+
+    const finalCategory = targetPro?.category || serviceCategory;
 
     const bookingData = {
       bookingCode,
@@ -148,27 +209,40 @@ router.post("/", async (req, res) => {
       id: bookingCode,
       customerName: finalName,
       customerPhone: finalPhone,
+      phone: finalPhone,
       serviceName: finalService,
-      serviceCategory,
+      service: finalService,
+      serviceCategory: finalCategory,
       serviceAddress: {
         fullAddress: finalAddress,
         coordinates
       },
-      status: nearestPro ? "assigned" : "searching_provider",
-      provider: nearestPro ? nearestPro._id : undefined,
-      assignedProviderName: nearestPro ? nearestPro.name : "Nearest Verified Pro",
+      address: finalAddress,
+      customerAddress: finalAddress,
+      status: "assigned",
+      provider: targetPro ? (targetPro._id || targetPro.id) : (nearestPro ? nearestPro._id : undefined),
+      providerId: targetPro ? (targetPro.id || targetPro._id) : (nearestPro ? (nearestPro.id || nearestPro._id) : undefined),
+      assignedProvider: finalAssignedName,
+      assignedProviderName: finalAssignedName,
+      doorOtp: finalDoorOtp,
+      price: `₹${finalPriceNum}`,
+      totalAmount: finalPriceNum,
       security: {
         startOtpHash: otpHash,
-        startOtpPlainForCustomer: plainOtp
+        startOtpPlainForCustomer: finalDoorOtp
       },
       isEmergency,
       scheduledDate: scheduledDate || new Date().toISOString().split("T")[0],
       scheduledTime: scheduledTime || "Immediate Dispatch",
-      pricing,
+      pricing: {
+        ...pricing,
+        totalAmount: finalPriceNum,
+        providerEarningsAmount: Math.round(finalPriceNum * 0.85)
+      },
       paymentMode,
       paymentStatus: paymentMode === "cash_after_service" ? "pending" : "authorized",
       liveTracking: {
-        providerCurrentCoords: nearestPro ? nearestPro.currentLocation?.coordinates : [77.3653, 28.6280],
+        providerCurrentCoords: targetPro?.currentLocation?.coordinates || (nearestPro ? nearestPro.currentLocation?.coordinates : [77.3653, 28.6280]),
         etaMinutes: isEmergency ? 15 : 25,
         distanceRemainingKm: isEmergency ? 1.8 : 3.2,
         lastLocationUpdateAt: new Date()
