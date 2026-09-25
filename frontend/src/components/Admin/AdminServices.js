@@ -49,6 +49,10 @@ function AdminServices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTag, setActiveTag] = useState("All");
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(8);
+
   // Form states
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("💡");
@@ -68,6 +72,35 @@ function AdminServices() {
       return matchSearch && matchTag;
     });
   }, [services, searchTerm, activeTag]);
+
+  // Pagination Calculations
+  const totalPages = Math.max(1, Math.ceil(filteredServices.length / itemsPerPage));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredServices.length);
+  const paginatedServices = filteredServices.slice(startIndex, endIndex);
+
+  const goToPage = (page) => {
+    const target = Math.min(Math.max(1, page), totalPages);
+    setCurrentPage(target);
+    const elem = document.getElementById("admin-services-catalog-header");
+    if (elem) {
+      elem.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (safeCurrentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (safeCurrentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages];
+  };
 
   // Statistics
   const totalCount = services.length;
@@ -120,10 +153,11 @@ function AdminServices() {
       });
     }
     setShowAddModal(false);
+    setCurrentPage(1);
   };
 
   return (
-    <div className="admin-services-tab animate-fade-in">
+    <div className="admin-services-tab animate-fade-in" id="admin-services-catalog-header">
       
       {/* Top Stat Summary Banner */}
       <div className="admin-stats-summary-grid">
@@ -164,7 +198,9 @@ function AdminServices() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
               <h3 style={{ margin: 0 }}>Services Catalog Management</h3>
-              <span className="admin-count-pill">{filteredServices.length} Services</span>
+              <span className="admin-count-pill">
+                Page {safeCurrentPage} of {totalPages} ({filteredServices.length} Services)
+              </span>
             </div>
             <p style={{ margin: "4px 0 0 0" }}>
               Add, edit prices, descriptions, and feature services on the live website
@@ -184,11 +220,23 @@ function AdminServices() {
               type="text"
               placeholder="Search services by title, tag, or description..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="admin-search-input"
             />
             {searchTerm && (
-              <button type="button" className="btn-clear-search" onClick={() => setSearchTerm("")}>✕</button>
+              <button 
+                type="button" 
+                className="btn-clear-search" 
+                onClick={() => {
+                  setSearchTerm("");
+                  setCurrentPage(1);
+                }}
+              >
+                ✕
+              </button>
             )}
           </div>
 
@@ -201,7 +249,10 @@ function AdminServices() {
                   key={t}
                   type="button"
                   className={`admin-tag-chip ${activeTag === t ? "active" : ""}`}
-                  onClick={() => setActiveTag(t)}
+                  onClick={() => {
+                    setActiveTag(t);
+                    setCurrentPage(1);
+                  }}
                 >
                   <span>{t}</span>
                   <span className="tag-chip-count">{count}</span>
@@ -217,65 +268,170 @@ function AdminServices() {
             <span style={{ fontSize: "40px" }}>🔍</span>
             <h4>No matching services found</h4>
             <p>Try searching with another keyword or clear the tag filter.</p>
-            <button className="btn-secondary-outline" onClick={() => { setSearchTerm(""); setActiveTag("All"); }}>
+            <button 
+              className="btn-secondary-outline" 
+              onClick={() => { 
+                setSearchTerm(""); 
+                setActiveTag("All"); 
+                setCurrentPage(1);
+              }}
+            >
               Reset Filters
             </button>
           </div>
         ) : (
-          <div className="services-grid">
-            {filteredServices.map((service) => (
-              <div className="service-card-modern" key={service.id}>
-                
-                {/* Card Top Meta */}
-                <div className="service-card-top-row">
-                  <div className="service-icon-box">
-                    <span className="service-main-icon">{service.icon || "🛠️"}</span>
+          <>
+            <div className="services-grid">
+              {paginatedServices.map((service) => (
+                <div className="service-card-modern" key={service.id}>
+                  
+                  {/* Card Top Meta */}
+                  <div className="service-card-top-row">
+                    <div className="service-icon-box">
+                      <span className="service-main-icon">{service.icon || "🛠️"}</span>
+                    </div>
+                    <div className="service-badges-group">
+                      {service.popular && <span className="popular-badge">🔥 Popular</span>}
+                      <span className="service-badge-tag">★ {service.rating || "4.8"}</span>
+                      <span className="service-sector-pill">{service.tag || "General"}</span>
+                    </div>
                   </div>
-                  <div className="service-badges-group">
-                    {service.popular && <span className="popular-badge">🔥 Popular</span>}
-                    <span className="service-badge-tag">★ {service.rating || "4.8"}</span>
-                    <span className="service-sector-pill">{service.tag || "General"}</span>
+
+                  {/* Info Area */}
+                  <div className="service-info-area">
+                    <h4 className="service-name">{service.name}</h4>
+                    <p className="service-desc">{service.desc || "Standard home care consultation and certified service."}</p>
                   </div>
+
+                  {/* Price Bar */}
+                  <div className="service-price-bar">
+                    <span className="service-price-label">Price Estimate</span>
+                    <strong className="service-price-val">{service.price}</strong>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="service-card-actions">
+                    <button
+                      type="button"
+                      className="btn-card-action edit"
+                      onClick={() => openEditModal(service)}
+                    >
+                      ✏️ Edit Service
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-card-action delete"
+                      title={`Delete ${service.name}`}
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to delete "${service.name}" from catalog?`)) {
+                          deleteService(service.id);
+                        }
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="admin-pagination-wrapper">
+                <div className="admin-pagination-info">
+                  Showing <strong>{startIndex + 1}</strong> - <strong>{endIndex}</strong> of <strong>{filteredServices.length}</strong> services
+                  <span className="pagination-page-indicator">
+                    Page {safeCurrentPage} / {totalPages}
+                  </span>
                 </div>
 
-                {/* Info Area */}
-                <div className="service-info-area">
-                  <h4 className="service-name">{service.name}</h4>
-                  <p className="service-desc">{service.desc || "Standard home care consultation and certified service."}</p>
-                </div>
+                <div className="admin-pagination-controls">
+                  {/* Items per page selector */}
+                  <div className="items-per-page-select-wrapper">
+                    <span>Show:</span>
+                    <select 
+                      value={itemsPerPage} 
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="admin-per-page-select"
+                    >
+                      <option value={6}>6 / page</option>
+                      <option value={8}>8 / page</option>
+                      <option value={12}>12 / page</option>
+                      <option value={24}>24 / page</option>
+                    </select>
+                  </div>
 
-                {/* Price Bar */}
-                <div className="service-price-bar">
-                  <span className="service-price-label">Price Estimate</span>
-                  <strong className="service-price-val">{service.price}</strong>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="service-card-actions">
+                  {/* First button */}
                   <button
                     type="button"
-                    className="btn-card-action edit"
-                    onClick={() => openEditModal(service)}
+                    className="btn-pagination nav-btn"
+                    onClick={() => goToPage(1)}
+                    disabled={safeCurrentPage === 1}
+                    title="First Page"
                   >
-                    ✏️ Edit Service
+                    « First
                   </button>
+
+                  {/* Prev button */}
                   <button
                     type="button"
-                    className="btn-card-action delete"
-                    title={`Delete ${service.name}`}
-                    onClick={() => {
-                      if (window.confirm(`Are you sure you want to delete "${service.name}" from catalog?`)) {
-                        deleteService(service.id);
+                    className="btn-pagination nav-btn"
+                    onClick={() => goToPage(safeCurrentPage - 1)}
+                    disabled={safeCurrentPage === 1}
+                    title="Previous Page"
+                  >
+                    ‹ Prev
+                  </button>
+
+                  {/* Page number buttons */}
+                  <div className="pagination-numbers-list">
+                    {getPageNumbers().map((num, idx) => {
+                      if (num === "...") {
+                        return <span key={`ellipsis-${idx}`} className="pagination-ellipsis">…</span>;
                       }
-                    }}
+                      const isActive = num === safeCurrentPage;
+                      return (
+                        <button
+                          key={num}
+                          type="button"
+                          className={`btn-pagination num-btn ${isActive ? "active" : ""}`}
+                          onClick={() => goToPage(num)}
+                        >
+                          {num}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Next button */}
+                  <button
+                    type="button"
+                    className="btn-pagination nav-btn"
+                    onClick={() => goToPage(safeCurrentPage + 1)}
+                    disabled={safeCurrentPage === totalPages}
+                    title="Next Page"
                   >
-                    🗑️
+                    Next ›
+                  </button>
+
+                  {/* Last button */}
+                  <button
+                    type="button"
+                    className="btn-pagination nav-btn"
+                    onClick={() => goToPage(totalPages)}
+                    disabled={safeCurrentPage === totalPages}
+                    title="Last Page"
+                  >
+                    Last »
                   </button>
                 </div>
-
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 
