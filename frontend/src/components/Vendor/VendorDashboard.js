@@ -58,9 +58,6 @@ function VendorDashboard() {
   const socketRef = useRef(null);
   const [incomingOffer, setIncomingOffer] = useState(null);
   const [offerCountdown, setOfferCountdown] = useState(60);
-  const [otpInputs, setOtpInputs] = useState({});
-  const [verifyingOtpId, setVerifyingOtpId] = useState(null);
-  const [completingJobId, setCompletingJobId] = useState(null);
 
   // Telemetry: Slot Confirmation, Doorstep QR, and Dynamic Stopwatch states
   const [slotOtpInputs, setSlotOtpInputs] = useState({});
@@ -867,7 +864,6 @@ function VendorDashboard() {
   const isFranchiseActive = vendor.franchiseActive || vendor.franchisePlan === "monthly" || vendor.franchisePlan === "annual";
   const completedJobsCount = bookings.filter(b => b.status === "Completed").length || vendor.jobsCompleted || 0;
   const pendingJobsCount = bookings.filter(b => b.status === "Pending" || b.status === "In Progress" || b.status === "assigned").length;
-  const estimatedRevenue = (completedJobsCount * parseInt(String(vendor.hourlyRate).replace(/[^0-9]/g, "") || "299")) || "1,499";
 
   return (
     <div className="vendor-dash-wrapper">

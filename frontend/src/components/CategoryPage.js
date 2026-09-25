@@ -5,8 +5,7 @@ import { DataContext } from "../context/DataContext";
 import { popularCategories } from "../data/popularCategoriesData";
 import { getServicemanImagesForCategory, getServicemanImage } from "../data/categoryImages";
 import "../css/CategoryPage.css";
-
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+import { API_BASE } from "../apiConfig";
 
 // Global cache for ItemDetailsPage lookup
 export const categoryItemsRegistry = new Map();
