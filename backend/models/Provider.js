@@ -29,7 +29,37 @@ const ProviderSchema = new mongoose.Schema(
     verified: { type: Boolean, default: true },
     status: { type: String, default: "Active" },
     bio: { type: String, default: "Certified expert with background verified tools and warranty-backed service." },
-    facilities: [{ type: String }]
+    facilities: [{ type: String }],
+    // Franchise & Membership details (Up to 8 members per shop)
+    franchiseActive: { type: Boolean, default: false },
+    franchisePlan: { type: String, default: "none" }, // "monthly" (₹4000/mo) or "annual" (₹500000/yr)
+    franchiseExpiry: { type: Date },
+    franchiseAmount: { type: Number, default: 0 },
+    teamMembers: [
+      {
+        id: { type: String },
+        name: { type: String },
+        phone: { type: String },
+        role: { type: String },
+        active: { type: Boolean, default: true }
+      }
+    ],
+    // KYC Verification & Documents
+    age: { type: Number },
+    aadhaarNumber: { type: String },
+    aadhaarDoc: { type: String },
+    panNumber: { type: String },
+    panDoc: { type: String },
+    selfieDoc: { type: String },
+    kycStatus: { type: String, default: "pending" }, // "pending", "submitted", "verified"
+    customServices: [
+      {
+        id: { type: String },
+        name: { type: String },
+        price: { type: Number },
+        description: { type: String }
+      }
+    ]
   },
   { timestamps: true }
 );

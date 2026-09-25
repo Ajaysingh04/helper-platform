@@ -369,6 +369,152 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// POST /api/providers/:id/purchase-franchise - Buy Franchise License (₹4,000/mo or ₹5,00,000/yr)
+router.post("/:id/purchase-franchise", async (req, res) => {
+  try {
+    const { plan = "monthly", paymentMethod = "UPI" } = req.body;
+    const amount = plan === "annual" ? 500000 : 4000;
+    const durationDays = plan === "annual" ? 365 : 30;
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + durationDays);
+
+    const franchiseData = {
+      franchiseActive: true,
+      franchisePlan: plan,
+      franchiseAmount: amount,
+      franchiseExpiry: expiryDate,
+      verified: true,
+      status: "Active"
+    };
+
+    let updated = null;
+    if (getStatus()) {
+      const mongoose = require("mongoose");
+      const filter = mongoose.Types.ObjectId.isValid(req.params.id)
+        ? { $or: [{ id: req.params.id }, { _id: req.params.id }] }
+        : { id: req.params.id };
+
+      updated = await Provider.findOneAndUpdate(
+        filter,
+        { $set: franchiseData },
+        { new: true }
+      ).select("-password");
+    }
+
+    const updatedDb = dbStore.update("providers", req.params.id, franchiseData);
+    const result = updated ? updated ? updated.toObject() : updatedDb : updatedDb;
+
+    res.json({
+      success: true,
+      message: `🎉 Congratulations! Helper ${plan === "annual" ? "Annual Master" : "Monthly"} Franchise (₹${amount.toLocaleString()}) activated successfully! Panel unlocked.`,
+      franchise: {
+        plan,
+        amount,
+        expiry: expiryDate,
+        maxMembers: 8,
+        active: true
+      },
+      provider: result || franchiseData
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/providers/:id/documents - Complete Profile Documents (Age, Aadhaar, PAN, Selfie)
+router.post("/:id/documents", async (req, res) => {
+  try {
+    const { age, aadhaarNumber, aadhaarDoc, panNumber, panDoc, selfieDoc } = req.body;
+
+    const docUpdates = {
+      age: parseInt(age) || undefined,
+      aadhaarNumber: (aadhaarNumber || "").trim(),
+      aadhaarDoc: aadhaarDoc || "",
+      panNumber: (panNumber || "").trim().toUpperCase(),
+      panDoc: panDoc || "",
+      selfieDoc: selfieDoc || "",
+      kycStatus: "submitted"
+    };
+
+    // Filter out undefined
+    Object.keys(docUpdates).forEach(k => docUpdates[k] === undefined && delete docUpdates[k]);
+
+    let updated = null;
+    if (getStatus()) {
+      const mongoose = require("mongoose");
+      const filter = mongoose.Types.ObjectId.isValid(req.params.id)
+        ? { $or: [{ id: req.params.id }, { _id: req.params.id }] }
+        : { id: req.params.id };
+
+      updated = await Provider.findOneAndUpdate(
+        filter,
+        { $set: docUpdates },
+        { new: true }
+      ).select("-password");
+    }
+
+    const updatedDb = dbStore.update("providers", req.params.id, docUpdates);
+    const result = updated ? (updated.toObject ? updated.toObject() : updated) : updatedDb;
+
+    res.json({
+      success: true,
+      message: "KYC Documents (Aadhaar, PAN & Selfie) uploaded successfully and submitted for verification!",
+      provider: result || docUpdates
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/providers/:id/members - Manage Shop Team Members (Up to 8 members)
+router.post("/:id/members", async (req, res) => {
+  try {
+    const { member } = req.body;
+    if (!member || !member.name || !member.phone) {
+      return res.status(400).json({ success: false, message: "Member name and phone number required" });
+    }
+
+    let provider = null;
+    if (getStatus()) {
+      provider = await Provider.findOne({ $or: [{ id: req.params.id }, { _id: req.params.id }] });
+    } else {
+      provider = dbStore.getById("providers", req.params.id);
+    }
+
+    const currentMembers = provider?.teamMembers || [];
+    if (currentMembers.length >= 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Maximum shop capacity reached. A single franchise shop can have up to 8 members."
+      });
+    }
+
+    const newMember = {
+      id: `mem_${Date.now()}`,
+      name: member.name.trim(),
+      phone: member.phone.trim(),
+      role: member.role || "Technician / Specialist",
+      active: true
+    };
+
+    const updatedMembers = [...currentMembers, newMember];
+
+    if (getStatus() && provider) {
+      provider.teamMembers = updatedMembers;
+      await provider.save();
+    }
+    dbStore.update("providers", req.params.id, { teamMembers: updatedMembers });
+
+    res.json({
+      success: true,
+      message: `Staff member ${newMember.name} added to shop team (${updatedMembers.length}/8 slots used)`,
+      members: updatedMembers
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // DELETE /api/providers/:id
 router.delete("/:id", async (req, res) => {
   try {

@@ -364,15 +364,17 @@ function CategoryPage() {
               <option value="distance">📍 Nearest Distance (KM)</option>
             </select>
 
-            <button
-              type="button"
-              className="btn-add-pro-header"
-              onClick={() => setShowAddModal(true)}
-              title="Add a new serviceman / center to backend"
-            >
-              <span>+</span>
-              <span>Add Serviceman</span>
-            </button>
+            {localStorage.getItem("helper_admin_auth") === "true" && (
+              <button
+                type="button"
+                className="btn-add-pro-header"
+                onClick={() => setShowAddModal(true)}
+                title="Admin only: Add a new serviceman / center to backend"
+              >
+                <span>🛡️</span>
+                <span>Admin: Add Serviceman</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -648,7 +650,7 @@ function CategoryPage() {
       {/* =========================================================================
           ADD NEW SERVICEMAN MODAL (Saves to Backend)
           ========================================================================= */}
-      {showAddModal && (
+      {localStorage.getItem("helper_admin_auth") === "true" && showAddModal && (
         <div className="cat-preview-modal-overlay" onClick={() => !isAddingPro && setShowAddModal(false)}>
           <div className="cat-preview-modal-box animate-fade-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px" }}>
             <button className="modal-close-btn" onClick={() => setShowAddModal(false)} disabled={isAddingPro}>✕</button>

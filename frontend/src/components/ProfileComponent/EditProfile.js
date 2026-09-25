@@ -2,10 +2,24 @@ import React, { useState } from "react";
 import "../../css/Profile/EditProfile.css";
 
 function EditProfile({ isOpen, onClose }) {
-  const [name, setName] = useState("Ajay Singh");
-  const [email, setEmail] = useState("ajay@gmail.com");
-  const [mobile, setMobile] = useState("9876543210");
-  const [address, setAddress] = useState("Indore, India");
+  const getInitialProfile = () => {
+    try {
+      const stored = localStorage.getItem("helper_user_profile");
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return {
+      name: "Ajay Singh Banafer",
+      email: "ajay@example.com",
+      mobile: "+91 98765 43210",
+      address: "14 Palm Avenue, Metro Zone, City Central"
+    };
+  };
+
+  const initial = getInitialProfile();
+  const [name, setName] = useState(initial.name);
+  const [email, setEmail] = useState(initial.email);
+  const [mobile, setMobile] = useState(initial.mobile);
+  const [address, setAddress] = useState(initial.address);
   const [msg, setMsg] = useState("");
 
   const updateProfile = (e) => {
@@ -16,8 +30,14 @@ function EditProfile({ isOpen, onClose }) {
       return;
     }
 
-    // future: API call here
-    setMsg("Profile updated successfully ✅");
+    const updated = { name, email, mobile, address };
+    localStorage.setItem("helper_user_profile", JSON.stringify(updated));
+    window.dispatchEvent(new Event("user_profile_updated"));
+    setMsg("Profile & Address updated successfully ✅");
+    setTimeout(() => {
+      setMsg("");
+      if (onClose) onClose();
+    }, 1200);
   };
 
   return (

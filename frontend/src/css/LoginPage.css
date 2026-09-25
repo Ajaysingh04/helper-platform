@@ -674,3 +674,115 @@
     align-self: flex-end;
   }
 }
+
+/* ==========================================================================
+   UNIFIED 3-ROLE SELECTOR (ADMIN, SERVICE MAN PANEL, USER)
+   ========================================================================== */
+.login-role-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #F1F5F9;
+  padding: 5px;
+  border-radius: 16px;
+  gap: 6px;
+  margin-bottom: 22px;
+  border: 1px solid #E2E8F0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.role-tab-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #64748B;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.role-tab-btn:hover {
+  color: #0F172A;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.role-tab-btn.active {
+  background: #FFFFFF;
+  color: #0F172A;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.role-tab-btn.active.role-admin {
+  color: #EF4444;
+  border-bottom: 2px solid #EF4444;
+}
+
+.role-tab-btn.active.role-serviceman {
+  color: #FF4D2D;
+  border-bottom: 2px solid #FF4D2D;
+}
+
+.role-tab-btn.active.role-user {
+  color: #0284C7;
+  border-bottom: 2px solid #0284C7;
+}
+
+.role-badge-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 77, 45, 0.12);
+  color: #FF4D2D;
+  font-weight: 800;
+  margin-left: 2px;
+}
+
+/* Service Man Notice banner */
+.shop-capacity-notice {
+  background: rgba(255, 77, 45, 0.08);
+  border: 1px solid rgba(255, 77, 45, 0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 12px 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #9A2C16;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.shop-capacity-notice strong {
+  color: #C23315;
+}
+
+/* Admin PIN box */
+.admin-login-box {
+  background: #FFF5F5;
+  border: 1px solid #FECACA;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 580px) {
+  .login-role-selector {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 4px;
+  }
+  .role-tab-btn {
+    padding: 8px 4px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+}

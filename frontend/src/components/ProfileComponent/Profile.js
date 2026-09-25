@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../css/Profile/Profile.css";
 import EditProfile from "./EditProfile";
@@ -12,12 +12,36 @@ function Profile({ isOpen, onClose }) {
   const { location, fetchLocation } = useContext(LocationContext);
   const { isLoggedIn, logout } = useContext(AuthContext);
 
+  const [storedProfile, setStoredProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem("helper_user_profile");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      name: "Ajay Singh Banafer",
+      mobile: "+91 98765 43210",
+      email: "ajay@example.com",
+      address: "14 Palm Avenue, Metro Zone, City Central"
+    };
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem("helper_user_profile");
+        if (saved) setStoredProfile(JSON.parse(saved));
+      } catch (e) {}
+    };
+    window.addEventListener("user_profile_updated", handleUpdate);
+    return () => window.removeEventListener("user_profile_updated", handleUpdate);
+  }, []);
+
   const user = {
-    name: "Ajay Singh Banafer",
-    mobile: "+91 98765 43210",
-    email: "ajay@example.com",
+    name: storedProfile.name || "Ajay Singh Banafer",
+    mobile: storedProfile.mobile || "+91 98765 43210",
+    email: storedProfile.email || "ajay@example.com",
     role: "Verified Premium Member",
-    address: location ? (location.address || `${location.lat?.toFixed(3)}, ${location.lng?.toFixed(3)}`) : "New Delhi, India",
+    address: storedProfile.address || (location ? (location.address || `${location.lat?.toFixed(3)}, ${location.lng?.toFixed(3)}`) : "New Delhi, India"),
     bookingsCount: "14 Services Completed"
   };
 
