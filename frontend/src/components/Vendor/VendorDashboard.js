@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
+import QrCameraScannerModal from "./QrCameraScannerModal";
 import "../../css/VendorDashboard.css";
 
 const CATEGORIES_LIST = [
@@ -70,6 +71,7 @@ function VendorDashboard() {
   const [startingJobId, setStartingJobId] = useState(null);
   const [stoppingJobId, setStoppingJobId] = useState(null);
   const [completingJobId, setCompletingJobId] = useState(null);
+  const [activeScanningBooking, setActiveScanningBooking] = useState(null);
 
   // Wallet State
   const [wallet, setWallet] = useState({
@@ -772,9 +774,9 @@ function VendorDashboard() {
   };
 
   // 3. Scan Customer QR Code to Start Work & Stopwatch
-  const handleScanQrAndStart = async (booking) => {
+  const handleScanQrAndStart = async (booking, scannedOverrideCode) => {
     const key = booking.bookingId || booking.id || booking._id;
-    const qrCode = qrInputs[key] || booking.startQrCode;
+    const qrCode = scannedOverrideCode || qrInputs[key] || booking.startQrCode;
     setStartingJobId(key);
 
     try {
@@ -801,6 +803,7 @@ function VendorDashboard() {
       showToast(`Work stopwatch started in real time.`);
     } finally {
       setStartingJobId(null);
+      setActiveScanningBooking(null);
     }
   };
 
@@ -1571,7 +1574,10 @@ function VendorDashboard() {
                             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                               <button
                                 type="button"
-                                onClick={() => handleArrivedDoorstep(b)}
+                                onClick={() => {
+                                  handleArrivedDoorstep(b);
+                                  setActiveScanningBooking(b);
+                                }}
                                 className="btn-doorstep-arrived"
                                 style={{
                                   flex: 1, minWidth: "220px", padding: "12px 20px", fontSize: "14px", fontWeight: 800,
@@ -1580,7 +1586,7 @@ function VendorDashboard() {
                                   boxShadow: "0 4px 14px rgba(2, 132, 199, 0.4)"
                                 }}
                               >
-                                📍 I Have Reached Customer Doorstep ➔ Scan QR
+                                📍 I Have Reached Customer Doorstep ➔ Open QR Scanner 📷
                               </button>
                               <a
                                 href={`tel:${b.customerPhone || "+919876500002"}`}
@@ -1601,30 +1607,51 @@ function VendorDashboard() {
                                 📲 Step 3: Scan Customer's Work QR Code
                               </h5>
                               <p style={{ margin: 0, fontSize: "12px", color: "#3B82F6" }}>
-                                Ask customer to show the QR code on their screen or give the Start PIN:
+                                Click below to open camera and scan customer's screen QR code:
                               </p>
                               {b.startQrCode && (
                                 <span style={{ fontSize: "11px", color: "#1D4ED8", fontWeight: 700 }}>
-                                  (PIN on user screen: <strong>{b.startQrCode}</strong>)
+                                  (Customer Screen Token: <strong>{b.startQrCode}</strong>)
                                 </span>
                               )}
                             </div>
-                            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                              <input
-                                type="text"
-                                placeholder={b.startQrCode || "START-XXXX"}
-                                value={qrInputs[key] || ""}
-                                onChange={(e) => setQrInputs({ ...qrInputs, [key]: e.target.value.toUpperCase() })}
-                                className="input-qr-token"
-                              />
+
+                            <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", width: "100%", marginTop: "6px" }}>
+                              {/* Primary: Open Live Camera QR Scanner */}
                               <button
                                 type="button"
-                                onClick={() => handleScanQrAndStart(b)}
-                                disabled={startingJobId === key}
+                                onClick={() => setActiveScanningBooking(b)}
                                 className="btn-verify-qr-start"
+                                style={{
+                                  display: "inline-flex", alignItems: "center", gap: "8px",
+                                  background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                                  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4)",
+                                  padding: "11px 22px", fontSize: "14px"
+                                }}
                               >
-                                {startingJobId === key ? "Starting..." : "Scan & Start Work ⚡"}
+                                <span>📷</span>
+                                <span>Open Camera QR Scanner ⚡</span>
                               </button>
+
+                              {/* Secondary: Manual Token Fallback */}
+                              <div style={{ display: "flex", gap: "6px", alignItems: "center", flex: 1, minWidth: "220px" }}>
+                                <input
+                                  type="text"
+                                  placeholder={b.startQrCode || "START-XXXX"}
+                                  value={qrInputs[key] || ""}
+                                  onChange={(e) => setQrInputs({ ...qrInputs, [key]: e.target.value.toUpperCase() })}
+                                  className="input-qr-token"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleScanQrAndStart(b, qrInputs[key])}
+                                  disabled={startingJobId === key}
+                                  className="btn-verify-qr-start"
+                                  style={{ whiteSpace: "nowrap", padding: "10px 16px" }}
+                                >
+                                  {startingJobId === key ? "Starting..." : "Verify Token ➔"}
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -2297,6 +2324,18 @@ function VendorDashboard() {
         )}
 
       </div>
+
+      {/* Interactive Camera QR Scanner Modal */}
+      <QrCameraScannerModal
+        isOpen={Boolean(activeScanningBooking)}
+        booking={activeScanningBooking}
+        onClose={() => setActiveScanningBooking(null)}
+        onScanSuccess={(scannedCode) => {
+          if (activeScanningBooking) {
+            handleScanQrAndStart(activeScanningBooking, scannedCode);
+          }
+        }}
+      />
     </div>
   );
 }
