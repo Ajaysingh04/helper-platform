@@ -591,7 +591,7 @@ export const DataProvider = ({ children }) => {
 
   const [heroSettings, setHeroSettings] = useState(() => {
     try {
-      const saved = localStorage.getItem("helper_hero_settings_v2");
+      const saved = localStorage.getItem("helper_hero_settings_v3");
       if (saved) {
         return JSON.parse(saved);
       }
@@ -600,7 +600,7 @@ export const DataProvider = ({ children }) => {
       slideSpeed: 2500,
       continuousSlide: true,
       showIndicators: false,
-      imagePosition: "center 18%"
+      imagePosition: "center top"
     };
   });
 
@@ -1166,7 +1166,7 @@ export const DataProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem("helper_hero_settings_v2", JSON.stringify(heroSettings));
+      localStorage.setItem("helper_hero_settings_v3", JSON.stringify(heroSettings));
     } catch (e) {}
   }, [heroSettings]);
 

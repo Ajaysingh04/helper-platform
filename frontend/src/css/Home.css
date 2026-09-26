@@ -30,7 +30,7 @@ body.dark .nexora-home-wrapper {
   top: 76px;
   width: 100%;
   height: calc(100vh - 76px);
-  min-height: 580px;
+  min-height: clamp(620px, 86vh, 880px);
   z-index: 1;
   background-color: #0B1120;
   overflow: hidden;
@@ -49,6 +49,8 @@ body.dark .helper-hero-slider-wrap {
   max-width: 100%;
   margin: 0;
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   overflow: hidden;
   background-color: #0B1120;
@@ -86,7 +88,7 @@ body.dark .helper-hero-slider {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 18%;
+  object-position: center top !important;
   display: block;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: high-quality;
@@ -253,7 +255,7 @@ body.dark .hero-panoramic-overlay {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px 32px 105px;
+  padding: clamp(38px, 5.5vh, 56px) 32px 105px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -289,7 +291,8 @@ body.dark .hero-panoramic-overlay {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-top: 4px;
+  margin-bottom: 14px;
 }
 
 .hero-social-proof-pill {

@@ -144,7 +144,7 @@ function Home() {
     slideSpeed: 2500,
     continuousSlide: true,
     showIndicators: false,
-    imagePosition: "center 18%"
+    imagePosition: "center top"
   };
 
   const heroBanners = dataContext?.heroBanners || [];
@@ -478,7 +478,7 @@ function Home() {
                   src={slide.image || `/images/homepage_${(idx % 5) + 1}.jpg`} 
                   alt={slide.title || `Home Banner ${idx + 1}`}
                   className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
-                  style={{ objectPosition: heroSettings.imagePosition || "center 18%" }}
+                  style={{ objectPosition: (heroSettings.imagePosition && heroSettings.imagePosition !== "center 18%" && heroSettings.imagePosition !== "center 20%") ? heroSettings.imagePosition : "center top" }}
                   loading={idx === 0 ? "eager" : "lazy"}
                   onError={(e) => {
                     e.currentTarget.onerror = null;

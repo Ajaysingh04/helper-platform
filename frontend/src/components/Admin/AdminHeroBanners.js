@@ -434,7 +434,7 @@ function AdminHeroBanners() {
               👤 Image Headroom Focus
             </label>
             <select
-              value={heroSettings.imagePosition || "center 18%"}
+              value={heroSettings.imagePosition || "center top"}
               onChange={(e) => {
                 const val = e.target.value;
                 if (updateHeroSettings) updateHeroSettings({ imagePosition: val });
@@ -452,8 +452,8 @@ function AdminHeroBanners() {
                 outline: "none"
               }}
             >
-              <option value="center 18%">Upper 18% (Perfect Headroom - Recommended)</option>
-              <option value="center 10%">Top 10% (Maximum Headroom)</option>
+              <option value="center top">Center Top (Zero Top Cutoff - Recommended)</option>
+              <option value="center 10%">Top 10% Headroom</option>
               <option value="center center">Center 50% (Standard View)</option>
               <option value="center bottom">Bottom Aligned</option>
             </select>
