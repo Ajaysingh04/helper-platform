@@ -478,7 +478,13 @@ function Home() {
                   src={slide.image || `/images/homepage_${(idx % 5) + 1}.jpg`} 
                   alt={slide.title || `Home Banner ${idx + 1}`}
                   className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
-                  style={{ objectPosition: (heroSettings.imagePosition && heroSettings.imagePosition !== "center 18%" && heroSettings.imagePosition !== "center 20%") ? heroSettings.imagePosition : "center top" }}
+                  style={{
+                    objectPosition: (slide.image?.includes("homepage_5") || slide.id?.includes("experts"))
+                      ? "right top"
+                      : ((heroSettings.imagePosition && heroSettings.imagePosition !== "center 18%" && heroSettings.imagePosition !== "center 20%") 
+                        ? heroSettings.imagePosition 
+                        : "center top")
+                  }}
                   loading={idx === 0 ? "eager" : "lazy"}
                   onError={(e) => {
                     e.currentTarget.onerror = null;
