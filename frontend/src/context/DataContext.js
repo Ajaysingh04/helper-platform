@@ -588,6 +588,21 @@ export const DataProvider = ({ children }) => {
     return initialHeroBanners;
   });
 
+  const [heroSettings, setHeroSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem("helper_hero_settings");
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {}
+    return {
+      slideSpeed: 2500,
+      continuousSlide: true,
+      showIndicators: false,
+      imagePosition: "center 20%"
+    };
+  });
+
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem("helper_users");
     return saved ? JSON.parse(saved) : initialUsers;
@@ -1134,6 +1149,25 @@ export const DataProvider = ({ children }) => {
     });
   };
 
+  const updateHeroSettings = (newSettings) => {
+    setHeroSettings(prev => ({ ...prev, ...newSettings }));
+  };
+
+  // Sync Hero Banners and Hero Settings to localStorage
+  useEffect(() => {
+    try {
+      if (Array.isArray(heroBanners) && heroBanners.length > 0) {
+        localStorage.setItem("helper_hero_banners_v5", JSON.stringify(heroBanners));
+      }
+    } catch (e) {}
+  }, [heroBanners]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("helper_hero_settings", JSON.stringify(heroSettings));
+    } catch (e) {}
+  }, [heroSettings]);
+
   // Users
   const updateUserStatus = async (id, status) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, status } : u));
@@ -1240,6 +1274,7 @@ export const DataProvider = ({ children }) => {
       slides, addSlide, updateSlide, deleteSlide, toggleSlideActive,
       offers, addOffer, updateOffer, deleteOffer, toggleOfferActive,
       heroBanners, addHeroBanner, updateHeroBanner, toggleHeroBannerActive, setActiveHeroBanner, deleteHeroBanner,
+      heroSettings, updateHeroSettings,
       users, updateUserStatus, deleteUser,
       tickets, resolveTicket, addTicket,
       settings, updateSettings, resetAllData

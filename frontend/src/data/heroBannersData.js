@@ -27,10 +27,11 @@ export const initialHeroBanners = [
     city: "📍 INDORE & SURROUNDING REGIONS",
     image: "/images/pinterest_clean_widescreen.jpg",
     active: true,
-    ctaText: "Get a Free Quote ➔",
-    ctaLink: "/services",
-    perk1: "* 12% discount for first time user",
-    perk2: "* 24% discount for repeating clients",
+    ctaText: "Book Cleaning Pro ➔",
+    ctaLink: "/category/cleaning",
+    perk1: "* 100% Police-verified & certified master cleaners",
+    perk2: "* Upfront pricing with 30-day quality warranty",
+    perk3: "* 15-min arrival with live GPS tracking",
     tags: ["Deep Cleaning", "Office Clean", "Floor Vacuum", "Sanitization"],
     createdAt: "2026-09-23"
   },
@@ -95,6 +96,12 @@ export const initialHeroBanners = [
 ];
 
 export const HERO_IMAGE_PRESETS = [
+  {
+    name: "Professional Cleaning Specialist (Clean Living Room)",
+    url: "/images/pinterest_clean_widescreen.jpg",
+    badge: "Spotless Clean",
+    desc: "Friendly professional cleaner in sunlit modern home, crystal clear without any text"
+  },
   {
     name: "50,000+ Verified Experts (Your Image 5)",
     url: "/images/homepage_5_wide.jpg",

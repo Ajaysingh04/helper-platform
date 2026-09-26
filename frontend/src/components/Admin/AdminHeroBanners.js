@@ -11,6 +11,13 @@ function AdminHeroBanners() {
   const toggleHeroBannerActive = dataContext?.toggleHeroBannerActive;
   const setActiveHeroBanner = dataContext?.setActiveHeroBanner;
   const deleteHeroBanner = dataContext?.deleteHeroBanner;
+  const heroSettings = dataContext?.heroSettings || {
+    slideSpeed: 2500,
+    continuousSlide: true,
+    showIndicators: false,
+    imagePosition: "center 20%"
+  };
+  const updateHeroSettings = dataContext?.updateHeroSettings;
 
   const [showModal, setShowModal] = useState(false);
   const [editingBanner, setEditingBanner] = useState(null);
@@ -302,7 +309,157 @@ function AdminHeroBanners() {
         </div>
       )}
 
-      {/* Filter and stats row */}
+      {/* Hero Display Preferences & Automation Controls (Admin Master Access) */}
+      <div
+        style={{
+          marginBottom: "24px",
+          padding: "20px 24px",
+          borderRadius: "16px",
+          background: "var(--bg-card, #FFFFFF)",
+          border: "1.5px solid var(--border-color, #E2E8F0)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.05)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h3 style={{ fontSize: "16px", fontWeight: 800, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "8px", color: "var(--text-main)" }}>
+              <span>⚙️</span> Hero Slider & Framing Preferences
+            </h3>
+            <p style={{ fontSize: "12.5px", color: "var(--text-muted)", margin: 0 }}>
+              Real-time administrative controls for continuous auto-slide, hover behavior, framing headroom & slide indicators.
+            </p>
+          </div>
+          <span style={{ fontSize: "11px", fontWeight: 800, padding: "4px 10px", borderRadius: "999px", background: "#ECFDF5", color: "#059669", border: "1px solid #A7F3D0" }}>
+            ● LIVE HOMEPAGE SYNC ACTIVE
+          </span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+          {/* 1. Slide Speed */}
+          <div style={{ background: "var(--bg-canvas, #F8FAFC)", padding: "12px 14px", borderRadius: "12px", border: "1px solid var(--border-color, #E2E8F0)" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
+              ⏱️ Auto-Slide Interval
+            </label>
+            <select
+              value={heroSettings.slideSpeed || 2500}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                if (updateHeroSettings) updateHeroSettings({ slideSpeed: val });
+                showToast(`Slide duration updated to ${val / 1000}s`);
+              }}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: "1px solid var(--border-color, #CBD5E1)",
+                fontSize: "13px",
+                fontWeight: 600,
+                background: "var(--bg-card, #FFFFFF)",
+                color: "var(--text-main)",
+                outline: "none"
+              }}
+            >
+              <option value={2000}>2.0 Seconds (Fast)</option>
+              <option value={2500}>2.5 Seconds (Smooth & Recommended)</option>
+              <option value={3500}>3.5 Seconds (Relaxed)</option>
+              <option value={5000}>5.0 Seconds (Slow)</option>
+            </select>
+          </div>
+
+          {/* 2. Hover Behavior */}
+          <div style={{ background: "var(--bg-canvas, #F8FAFC)", padding: "12px 14px", borderRadius: "12px", border: "1px solid var(--border-color, #E2E8F0)" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
+              🔄 Hover Motion Mode
+            </label>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                className={`action-pill-btn ${heroSettings.continuousSlide ? "primary" : "secondary"}`}
+                style={{ flex: 1, padding: "8px 6px", fontSize: "11.5px", justifyContent: "center" }}
+                onClick={() => {
+                  if (updateHeroSettings) updateHeroSettings({ continuousSlide: true });
+                  showToast("Hero slider set to Continuous Mode (never pauses on hover)");
+                }}
+              >
+                Continuous (No Pause)
+              </button>
+              <button
+                type="button"
+                className={`action-pill-btn ${!heroSettings.continuousSlide ? "primary" : "secondary"}`}
+                style={{ flex: 1, padding: "8px 6px", fontSize: "11.5px", justifyContent: "center" }}
+                onClick={() => {
+                  if (updateHeroSettings) updateHeroSettings({ continuousSlide: false });
+                  showToast("Hero slider set to Pause on Hover");
+                }}
+              >
+                Pause on Hover
+              </button>
+            </div>
+          </div>
+
+          {/* 3. Indicators Display */}
+          <div style={{ background: "var(--bg-canvas, #F8FAFC)", padding: "12px 14px", borderRadius: "12px", border: "1px solid var(--border-color, #E2E8F0)" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
+              🔢 Bottom Right Controls
+            </label>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                className={`action-pill-btn ${!heroSettings.showIndicators ? "primary" : "secondary"}`}
+                style={{ flex: 1, padding: "8px 6px", fontSize: "11.5px", justifyContent: "center" }}
+                onClick={() => {
+                  if (updateHeroSettings) updateHeroSettings({ showIndicators: false });
+                  showToast("Bottom right 1,2,3,4,5 numbers hidden (Clean View)");
+                }}
+              >
+                Hide (Clean Panoramic)
+              </button>
+              <button
+                type="button"
+                className={`action-pill-btn ${heroSettings.showIndicators ? "primary" : "secondary"}`}
+                style={{ flex: 1, padding: "8px 6px", fontSize: "11.5px", justifyContent: "center" }}
+                onClick={() => {
+                  if (updateHeroSettings) updateHeroSettings({ showIndicators: true });
+                  showToast("Bottom right slide numbers enabled");
+                }}
+              >
+                Show 1, 2, 3...
+              </button>
+            </div>
+          </div>
+
+          {/* 4. Image Framing Headroom */}
+          <div style={{ background: "var(--bg-canvas, #F8FAFC)", padding: "12px 14px", borderRadius: "12px", border: "1px solid var(--border-color, #E2E8F0)" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
+              👤 Image Headroom Focus
+            </label>
+            <select
+              value={heroSettings.imagePosition || "center 20%"}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (updateHeroSettings) updateHeroSettings({ imagePosition: val });
+                showToast(`Image framing set to ${val}`);
+              }}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: "1px solid var(--border-color, #CBD5E1)",
+                fontSize: "13px",
+                fontWeight: 600,
+                background: "var(--bg-card, #FFFFFF)",
+                color: "var(--text-main)",
+                outline: "none"
+              }}
+            >
+              <option value="center 20%">Upper 20% (Prevents Cut-off Faces - Recommended)</option>
+              <option value="center 10%">Top 10% (Maximum Headroom)</option>
+              <option value="center center">Center 50% (Standard View)</option>
+              <option value="center bottom">Bottom Aligned</option>
+            </select>
+          </div>
+        </div>
+      </div>
       <div className="table-controls-bar">
         <div className="search-box-wrap">
           <span className="search-icon">🔍</span>
