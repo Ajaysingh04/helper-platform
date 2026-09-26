@@ -125,16 +125,15 @@ function Home() {
   const heroSlides = (activeBanners.length >= 4 && (activeBanners.some((b) => b.image?.includes("homepage_5")) || activeBanners.some((b) => b.image?.includes("pinterest_clean")))) ? activeBanners : defaultHeroSlides;
 
   const [heroIndex, setHeroIndex] = useState(0);
-  const [isHeroPaused, setIsHeroPaused] = useState(false);
 
-  // 2-Second Auto-Slide Interval
+  // Continuous Auto-Slide Interval (runs continuously without pausing on hover)
   useEffect(() => {
-    if (heroSlides.length <= 1 || isHeroPaused) return;
+    if (heroSlides.length <= 1) return;
     const interval = setInterval(() => {
       setHeroIndex((prev) => (prev + 1) % heroSlides.length);
-    }, 2000);
+    }, 2500);
     return () => clearInterval(interval);
-  }, [heroSlides.length, isHeroPaused]);
+  }, [heroSlides.length]);
 
   // Popular Services & Categories Filter States
   const [homeCatFilter, setHomeCatFilter] = useState("All");
@@ -433,11 +432,7 @@ function Home() {
       {/* =========================================================================
           HERO SECTION: 2-Second Crystal Clear Image Carousel (Pinned under Header)
           ========================================================================= */}
-      <section 
-        className="helper-hero-slider-wrap"
-        onMouseEnter={() => setIsHeroPaused(true)}
-        onMouseLeave={() => setIsHeroPaused(false)}
-      >
+      <section className="helper-hero-slider-wrap">
         <div className="helper-hero-slider">
           {/* Full-Width Auto-Slider with Responsive Picture Elements */}
           {heroSlides.map((slide, idx) => (
@@ -602,40 +597,7 @@ function Home() {
             <div className="hero-panoramic-right hero-right-unobstructed" />
           </div>
 
-          {/* 2-Second Slider Controls & Indicator Dots */}
-          {heroSlides.length > 1 && (
-            <div className="hero-slider-nav-controls">
-              <button
-                type="button"
-                className="hero-slider-arrow prev"
-                onClick={() => setHeroIndex((prev) => (prev > 0 ? prev - 1 : heroSlides.length - 1))}
-                title="Previous Slide"
-              >
-                ‹
-              </button>
-              <div className="hero-slider-dots">
-                {heroSlides.map((_, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={`hero-slider-dot ${i === heroIndex ? "active" : ""}`}
-                    onClick={() => setHeroIndex(i)}
-                    title={`Slide ${i + 1}`}
-                  >
-                    <span>{i + 1}</span>
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="hero-slider-arrow next"
-                onClick={() => setHeroIndex((prev) => (prev < heroSlides.length - 1 ? prev + 1 : 0))}
-                title="Next Slide"
-              >
-                ›
-              </button>
-            </div>
-          )}
+
         </div>
       </section>
 
