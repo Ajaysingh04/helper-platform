@@ -577,20 +577,21 @@ export const DataProvider = ({ children }) => {
 
   const [heroBanners, setHeroBanners] = useState(() => {
     try {
-      const saved = localStorage.getItem("helper_hero_banners_v5");
+      const saved = localStorage.getItem("helper_hero_banners_v9");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 4 && !parsed.some(b => b.image?.includes("helper_full_banner"))) {
-          return parsed;
+        if (Array.isArray(parsed) && parsed.length >= 3) {
+          // Guarantee all banners are active for continuous multi-banner rotation
+          return parsed.map(b => ({ ...b, active: true }));
         }
       }
     } catch (e) {}
-    return initialHeroBanners;
+    return initialHeroBanners.map(b => ({ ...b, active: true }));
   });
 
   const [heroSettings, setHeroSettings] = useState(() => {
     try {
-      const saved = localStorage.getItem("helper_hero_settings");
+      const saved = localStorage.getItem("helper_hero_settings_v2");
       if (saved) {
         return JSON.parse(saved);
       }
@@ -599,7 +600,7 @@ export const DataProvider = ({ children }) => {
       slideSpeed: 2500,
       continuousSlide: true,
       showIndicators: false,
-      imagePosition: "center 20%"
+      imagePosition: "center 18%"
     };
   });
 
@@ -804,7 +805,6 @@ export const DataProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem("helper_providers_v2", JSON.stringify(providers)); }, [providers]);
   useEffect(() => { localStorage.setItem("helper_bookings", JSON.stringify(bookings)); }, [bookings]);
   useEffect(() => { localStorage.setItem("helper_slides", JSON.stringify(slides)); }, [slides]);
-  useEffect(() => { localStorage.setItem("helper_hero_banners_v5", JSON.stringify(heroBanners)); }, [heroBanners]);
   useEffect(() => { localStorage.setItem("helper_users", JSON.stringify(users)); }, [users]);
   useEffect(() => { localStorage.setItem("helper_tickets", JSON.stringify(tickets)); }, [tickets]);
   useEffect(() => { localStorage.setItem("helper_settings", JSON.stringify(settings)); }, [settings]);
@@ -1128,10 +1128,12 @@ export const DataProvider = ({ children }) => {
   };
 
   const setActiveHeroBanner = (id) => {
-    setHeroBanners(prev => prev.map(b => ({
-      ...b,
-      active: (b.id === id || b._id === id)
-    })));
+    setHeroBanners(prev => {
+      const target = prev.find(b => b.id === id || b._id === id);
+      if (!target) return prev;
+      const others = prev.filter(b => b.id !== target.id && b._id !== target._id);
+      return [{ ...target, active: true }, ...others.map(b => ({ ...b, active: true }))];
+    });
   };
 
   const deleteHeroBanner = (id) => {
@@ -1157,14 +1159,14 @@ export const DataProvider = ({ children }) => {
   useEffect(() => {
     try {
       if (Array.isArray(heroBanners) && heroBanners.length > 0) {
-        localStorage.setItem("helper_hero_banners_v5", JSON.stringify(heroBanners));
+        localStorage.setItem("helper_hero_banners_v9", JSON.stringify(heroBanners));
       }
     } catch (e) {}
   }, [heroBanners]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("helper_hero_settings", JSON.stringify(heroSettings));
+      localStorage.setItem("helper_hero_settings_v2", JSON.stringify(heroSettings));
     } catch (e) {}
   }, [heroSettings]);
 

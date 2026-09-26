@@ -72,7 +72,7 @@ export const initialHeroBanners = [
     subtitle: "Leak repairs, tap fittings, pipe drainage & hospital-grade deep sanitization. Trusted by 25,000+ happy homes.",
     badge: "✨ 5-STAR HYGIENE & QUALITY GUARANTEE",
     city: "📍 AT YOUR DOORSTEP",
-    image: "/images/homepage_3.jpg",
+    image: "/images/homepage_plumbing_wide.jpg",
     active: true,
     ctaText: "Explore Plumbers ➔",
     ctaLink: "/category/plumbers",

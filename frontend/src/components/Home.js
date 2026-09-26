@@ -94,7 +94,7 @@ function Home() {
     },
     {
       id: "slide-3",
-      image: "/images/homepage_3.jpg",
+      image: "/images/homepage_plumbing_wide.jpg",
       title: "Expert Plumbing & Sparkle Deep Clean.",
       highlight: "Spotless Clean Guaranteed.",
       subtitle: "Leak repairs, tap fittings, pipe drainage & hospital-grade deep sanitization. Trusted by 25,000+ homes.",
@@ -124,25 +124,26 @@ function Home() {
     slideSpeed: 2500,
     continuousSlide: true,
     showIndicators: false,
-    imagePosition: "center 20%"
+    imagePosition: "center 18%"
   };
 
   const heroBanners = dataContext?.heroBanners || [];
   const activeBanners = heroBanners.filter((b) => b.active !== false && !b.image?.includes("helper_full_banner"));
-  const heroSlides = activeBanners.length > 0 ? activeBanners : defaultHeroSlides;
+  const heroSlides = (activeBanners && activeBanners.length >= 2) 
+    ? activeBanners 
+    : (heroBanners && heroBanners.length >= 2 ? heroBanners.map(b => ({ ...b, active: true })) : defaultHeroSlides);
+  const safeHeroSlides = (heroSlides && heroSlides.length >= 2) ? heroSlides : defaultHeroSlides;
 
   const [heroIndex, setHeroIndex] = useState(0);
-  const [isHeroHovered, setIsHeroHovered] = useState(false);
 
-  // Auto-Slide Interval (controlled by Admin Preferences)
+  // Continuous Auto-Slide Interval (slides smoothly and continuously without stopping on hover)
   useEffect(() => {
-    if (heroSlides.length <= 1) return;
-    if (!heroSettings.continuousSlide && isHeroHovered) return;
+    if (!safeHeroSlides || safeHeroSlides.length <= 1) return;
     const interval = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % heroSlides.length);
+      setHeroIndex((prev) => (prev + 1) % safeHeroSlides.length);
     }, heroSettings.slideSpeed || 2500);
     return () => clearInterval(interval);
-  }, [heroSlides.length, heroSettings.slideSpeed, heroSettings.continuousSlide, isHeroHovered]);
+  }, [safeHeroSlides, heroSettings.slideSpeed]);
 
   // Popular Services & Categories Filter States
   const [homeCatFilter, setHomeCatFilter] = useState("All");
@@ -441,14 +442,10 @@ function Home() {
       {/* =========================================================================
           HERO SECTION: 2-Second Crystal Clear Image Carousel (Pinned under Header)
           ========================================================================= */}
-      <section 
-        className="helper-hero-slider-wrap"
-        onMouseEnter={() => { if (!heroSettings.continuousSlide) setIsHeroHovered(true); }}
-        onMouseLeave={() => { if (!heroSettings.continuousSlide) setIsHeroHovered(false); }}
-      >
+      <section className="helper-hero-slider-wrap">
         <div className="helper-hero-slider">
           {/* Full-Width Auto-Slider with Responsive Picture Elements */}
-          {heroSlides.map((slide, idx) => (
+          {safeHeroSlides.map((slide, idx) => (
             <div 
               key={slide.id || idx} 
               className={`hero-slide-item ${idx === heroIndex ? "active" : ""}`}
@@ -461,7 +458,7 @@ function Home() {
                   src={slide.image || `/images/homepage_${(idx % 5) + 1}.jpg`} 
                   alt={slide.title || `Home Banner ${idx + 1}`}
                   className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
-                  style={{ objectPosition: heroSettings.imagePosition || "center 20%" }}
+                  style={{ objectPosition: heroSettings.imagePosition || "center 18%" }}
                   loading={idx === 0 ? "eager" : "lazy"}
                   onError={(e) => {
                     e.currentTarget.onerror = null;
@@ -610,43 +607,6 @@ function Home() {
             {/* Right Column: Kept completely open & unobscured so all 14+ professionals & airplane are 100% visible */}
             <div className="hero-panoramic-right hero-right-unobstructed" />
           </div>
-
-          {/* Optional Slider Controls & Indicators (Toggled by Admin Settings) */}
-          {heroSettings.showIndicators && heroSlides.length > 1 && (
-            <div className="hero-slider-nav-controls">
-              <button
-                type="button"
-                className="hero-slider-arrow prev"
-                onClick={() => setHeroIndex((prev) => (prev > 0 ? prev - 1 : heroSlides.length - 1))}
-                title="Previous Slide"
-              >
-                ‹
-              </button>
-              <div className="hero-slider-dots">
-                {heroSlides.map((_, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={`hero-slider-dot ${i === heroIndex ? "active" : ""}`}
-                    onClick={() => setHeroIndex(i)}
-                    title={`Slide ${i + 1}`}
-                  >
-                    <span>{i + 1}</span>
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="hero-slider-arrow next"
-                onClick={() => setHeroIndex((prev) => (prev < heroSlides.length - 1 ? prev + 1 : 0))}
-                title="Next Slide"
-              >
-                ›
-              </button>
-            </div>
-          )}
-
-
         </div>
       </section>
 
