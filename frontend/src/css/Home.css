@@ -27,11 +27,11 @@ body.dark .nexora-home-wrapper {
 
 .helper-hero-slider-wrap {
   position: sticky;
-  top: 76px;
+  top: 0;
   width: 100%;
-  height: calc(100vh - 76px);
-  min-height: 440px;
-  max-height: calc(100vh - 76px);
+  height: 100vh;
+  min-height: 480px;
+  max-height: 100vh;
   z-index: 1;
   background-color: #0B1120;
   overflow: hidden;
@@ -258,7 +258,7 @@ body.dark .hero-panoramic-overlay {
   height: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: clamp(14px, 2vh, 24px) clamp(18px, 2.5vw, 36px) clamp(44px, 6vh, 60px);
+  padding: clamp(76px, 11vh, 96px) clamp(18px, 2.5vw, 36px) clamp(44px, 6vh, 60px);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1153,11 +1153,11 @@ body.dark .hero-search-input {
 /* Compact and balanced scaling for short laptop screens (e.g. 1366x768 with browser bars = ~517px-680px inner height) */
 @media (max-height: 850px) {
   .helper-hero-slider-wrap {
-    height: calc(100vh - 76px);
+    height: 100vh;
     min-height: 420px;
   }
   .hero-panoramic-grid {
-    padding: 14px 20px clamp(42px, 6vh, 55px);
+    padding: clamp(70px, 9.5vh, 82px) 20px clamp(42px, 6vh, 55px);
     gap: 12px;
     align-items: flex-start;
   }
@@ -1260,7 +1260,7 @@ body.dark .hero-search-input {
 
 @media (max-height: 540px) {
   .hero-panoramic-grid {
-    padding: 6px 16px 36px;
+    padding: 64px 16px 36px;
   }
   .hero-studio-subtitle {
     display: none;
@@ -1390,7 +1390,7 @@ body.dark .hero-search-input {
     font-size: 9px;
   }
   .hero-panoramic-grid {
-    padding: 4px 12px 32px;
+    padding: 60px 12px 32px;
   }
 }
 

@@ -10,37 +10,43 @@
   z-index: 1000;
   padding: 6px 20px;
   width: 100%;
-  background: #FFFFFF;
+  background: transparent;
   border-bottom: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Homepage Hero Header: Always blends seamlessly with dark hero canvas without white bar */
-.header-floating-wrapper.home-header:not(.scrolled) {
-  background: #080D1A !important;
+/* Homepage Hero Header: Floats directly over the full-page hero banner without taking flow space */
+.header-floating-wrapper.home-header {
+  margin-bottom: -76px;
+  background: transparent !important;
   box-shadow: none !important;
+  pointer-events: none;
 }
 
-body.dark .header-floating-wrapper {
+.header-floating-wrapper.home-header .header-pill-bar {
+  pointer-events: auto;
+}
+
+/* Other non-home pages have standard clean background */
+.header-floating-wrapper:not(.home-header) {
+  background: #FFFFFF;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+body.dark .header-floating-wrapper:not(.home-header) {
   background: #0B0F19;
-  border-bottom: none;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
-body.dark .header-floating-wrapper.home-header:not(.scrolled) {
-  background: #080D1A !important;
-  box-shadow: none !important;
-}
-
-.header-floating-wrapper.scrolled {
+.header-floating-wrapper.scrolled:not(.home-header) {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
-body.dark .header-floating-wrapper.scrolled {
+body.dark .header-floating-wrapper.scrolled:not(.home-header) {
   background: rgba(11, 15, 25, 0.95);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
