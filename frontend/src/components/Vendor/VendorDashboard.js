@@ -70,7 +70,7 @@ function VendorDashboard() {
   const [confirmingSlotId, setConfirmingSlotId] = useState(null);
   const [startingJobId, setStartingJobId] = useState(null);
   const [stoppingJobId, setStoppingJobId] = useState(null);
-  const [completingJobId, setCompletingJobId] = useState(null);
+  const [, setCompletingJobId] = useState(null);
   const [activeScanningBooking, setActiveScanningBooking] = useState(null);
 
   // Wallet State
@@ -341,6 +341,7 @@ function VendorDashboard() {
     if (vendor?.id || vendor?._id) {
       fetchBookings(vendor.id || vendor._id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendor?.id]);
 
   // Toggle Online / Offline Status
@@ -370,7 +371,7 @@ function VendorDashboard() {
 
     try {
       const vId = vendor?.id || vendor?._id || "vdr_default";
-      const response = await fetch(`${API_BASE}/providers/${vId}/purchase-franchise`, {
+      await fetch(`${API_BASE}/providers/${vId}/purchase-franchise`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan, paymentMethod: "UPI_INSTANT" })
@@ -921,7 +922,6 @@ function VendorDashboard() {
   }
 
   const isFranchiseActive = vendor.franchiseActive || vendor.franchisePlan === "monthly" || vendor.franchisePlan === "annual";
-  const completedJobsCount = bookings.filter(b => b.status === "Completed").length || vendor.jobsCompleted || 0;
   const pendingJobsCount = bookings.filter(b => b.status === "Pending" || b.status === "In Progress" || b.status === "assigned").length;
 
   return (
@@ -1339,7 +1339,6 @@ function VendorDashboard() {
                   const hourlyRate = b.hourlyRate || 299;
                   const homeServiceCharge = b.homeServiceCharge || 149;
                   const cdObj = (typeof liveCountdowns[key] === "object" && liveCountdowns[key]) ? liveCountdowns[key] : parseTargetCountdown(b);
-                  const countdownText = cdObj.text || "00h 45m 00s";
                   const stopwatchText = liveStopwatches[key] || "00:00:00";
                   const currentRunningTotal = liveRunningCosts[key] || (homeServiceCharge + hourlyRate);
 

@@ -7,7 +7,7 @@
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "client": "npm start --prefix frontend",
     "server": "npm start --prefix backend",
-    "build": "npm run build --prefix frontend && node -e \"const fs=require('fs'); fs.cpSync('frontend/build', 'build', {recursive:true, force:true});\"",
+    "build": "CI=false npm run build --prefix frontend && node -e \"const fs=require('fs'); fs.cpSync('frontend/build', 'build', {recursive:true, force:true});\"",
     "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend"
   },
   "workspaces": [

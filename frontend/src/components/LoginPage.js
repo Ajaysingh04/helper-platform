@@ -84,6 +84,7 @@ function LoginPage() {
     if (roleParam && ["admin", "serviceman", "user"].includes(roleParam)) {
       setSelectedRole(roleParam);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
   // ----------------------------------------------------

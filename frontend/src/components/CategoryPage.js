@@ -102,7 +102,7 @@ function CategoryPage() {
   const [bookingProblem, setBookingProblem] = useState("Water pipe leakage / repair");
 
   // Real-time Live Countdown, Stopwatch & Running Meter
-  const [liveCountdown, setLiveCountdown] = useState("");
+  const [, setLiveCountdown] = useState("");
   const [liveStopwatch, setLiveStopwatch] = useState("00:00:00");
   const [liveRunningCost, setLiveRunningCost] = useState(149);
 
@@ -231,6 +231,7 @@ function CategoryPage() {
     }, 2500);
 
     return () => clearInterval(pollInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confirmedBookingInfo?.bookingCode]);
 
   // Edit Provider Modal State (Updates Backend)
