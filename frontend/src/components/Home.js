@@ -25,21 +25,20 @@ function Home() {
   // Next Page Overlapping Sheet Ref & Smooth Scroll Handler
   const nextSectionRef = useRef(null);
 
-  const handleScrollToNextPage = () => {
+  const handleScrollToNextPage = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (nextSectionRef.current) {
-      const headerOffset = 76;
-      const elementPosition = nextSectionRef.current.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      });
+      nextSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
-      window.scrollTo({
-        top: window.innerHeight - 76,
-        behavior: "smooth"
-      });
+      const secondPage = document.getElementById("home-second-page") || document.getElementById("our-services-section");
+      if (secondPage) {
+        secondPage.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        window.scrollTo({
+          top: window.innerHeight - 76,
+          behavior: "smooth"
+        });
+      }
     }
   };
 
@@ -630,7 +629,7 @@ function Home() {
           </div>
 
           {/* =========================================================================
-              NEXT PAGE INTERACTIVE PORTAL (Bottom Center Animated Button)
+              NEXT PAGE INTERACTIVE ANIMATED BUTTON (Bottom Center)
               Full animation with bouncing arrow, pulsing ripple, and smooth scroll
               ========================================================================= */}
           <div className="hero-next-page-anchor">
@@ -638,23 +637,27 @@ function Home() {
               type="button"
               className="hero-next-page-btn"
               onClick={handleScrollToNextPage}
-              aria-label="Scroll to next page: Explore Services"
-              title="Next Page: Explore All Services"
+              aria-label="Next Page"
+              title="Next Page — Click to scroll down"
             >
-              <div className="next-page-ripple-ring" />
-              <div className="next-page-glow-aura" />
-              
+              <span className="next-page-ripple-ring ring-1" />
+              <span className="next-page-ripple-ring ring-2" />
+              <span className="next-page-glow-aura" />
+
               <div className="next-page-btn-inner">
-                <div className="next-page-pill-badge">
-                  <span className="next-page-pulse-dot" />
-                  <span className="next-page-badge-text">NEXT PAGE</span>
+                {/* Animated Mouse Scroll Wheel */}
+                <div className="next-page-mouse-icon">
+                  <div className="mouse-wheel-dot" />
                 </div>
 
-                <div className="next-page-title-row">
-                  <span className="next-page-label">Explore Services</span>
-                  <div className="next-page-animated-arrow">
-                    <span className="arrow-chevron arrow-1">↓</span>
-                  </div>
+                <div className="next-page-text-content">
+                  <span className="next-page-bold-title">NEXT PAGE</span>
+                  <span className="next-page-hint-text">Click to scroll</span>
+                </div>
+
+                {/* Big Bouncing Down Arrow */}
+                <div className="next-page-arrow-pill">
+                  <span className="bouncing-down-arrow">↓</span>
                 </div>
               </div>
             </button>
