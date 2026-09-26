@@ -72,6 +72,13 @@ export const CATEGORY_IMAGE_REGISTRY = {
     "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&q=80&w=600"  // Wellness massage pro
   ],
 
+  // Car Rental, Cab Hire & Taxi Fleets
+  carRental: [
+    "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600", // Modern luxury car fleet
+    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600", // Sports & luxury car rental
+    "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=600"  // Premium rental car ready for hire
+  ],
+
   // Car Repair, Mechanics & Auto Services
   auto: [
     "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&q=80&w=600", // Auto mechanic working with wrench under car
@@ -242,8 +249,13 @@ export function getServicemanImagesForCategory(categoryName = "") {
     return CATEGORY_IMAGE_REGISTRY.spa;
   }
 
-  // Car, Bike & Auto Mechanics
-  if (text.includes("car") || text.includes("bike") || text.includes("auto") || text.includes("mechanic") || text.includes("motor") || text.includes("vehicle") || text.includes("taxi")) {
+  // Car Rental, Bike On Rent, Taxi & Fleets
+  if (text.includes("rental") || text.includes("rent") || text.includes("taxi") || text.includes("fleet") || text.includes("cab")) {
+    return CATEGORY_IMAGE_REGISTRY.carRental;
+  }
+
+  // Car Repair, Mechanics & Auto Services
+  if (text.includes("car") || text.includes("bike") || text.includes("auto") || text.includes("mechanic") || text.includes("motor") || text.includes("vehicle")) {
     return CATEGORY_IMAGE_REGISTRY.auto;
   }
 

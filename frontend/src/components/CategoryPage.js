@@ -11,6 +11,66 @@ import { API_BASE } from "../apiConfig";
 export const categoryItemsRegistry = new Map();
 export const realData = [];
 
+const stemWord = (w) => (w || "").toLowerCase().trim()
+  .replace(/ies$/, "")
+  .replace(/try$/, "t")
+  .replace(/y$/, "")
+  .replace(/ers$/, "")
+  .replace(/er$/, "")
+  .replace(/ing$/, "")
+  .replace(/s$/, "");
+
+function matchesCategory(provider, reqCategory, categoryTitle) {
+  if (!provider) return false;
+  const cleanReq = (reqCategory || "").toLowerCase().replace(/[-_]/g, " ").trim();
+  const cleanTitle = (categoryTitle || "").toLowerCase().replace(/[-_]/g, " ").trim();
+  const reqStem = stemWord(cleanReq);
+  
+  const pCat = (provider.category || "").toLowerCase().replace(/[-_]/g, " ").trim();
+  const pServiceCats = (provider.serviceCategories || []).map(c => String(c).toLowerCase().replace(/[-_]/g, " ").trim());
+  const pShop = (provider.shopName || "").toLowerCase().replace(/[-_]/g, " ").trim();
+
+  // 1. Direct equality / stem match on category or serviceCategories
+  const allCats = [pCat, ...pServiceCats];
+  for (const c of allCats) {
+    if (!c) continue;
+    if (c === cleanReq || c === cleanTitle) return true;
+    const cStem = stemWord(c);
+    if ((cStem === reqStem || cStem === stemWord(cleanTitle)) && cStem.length >= 4) return true;
+    
+    const escaped = cleanReq.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp("\\b" + escaped + "s?\\b", "i").test(c)) return true;
+  }
+
+  // 2. Token overlap: require whole words
+  const reqTokens = cleanReq
+    .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !["and", "for", "the", "services", "centres", "center", "hub", "care"].includes(w));
+
+  if (reqTokens.length === 0) return false;
+
+  // If query has multiple tokens (e.g. 'car rental'), require matching all tokens as whole words or full phrase
+  if (reqTokens.length >= 2) {
+    const matchAll = reqTokens.every(tok => {
+      const escaped = tok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const wordRegex = new RegExp("\\b" + escaped + "s?\\b", "i");
+      return wordRegex.test(pCat) || wordRegex.test(pShop) || pServiceCats.some(sc => wordRegex.test(sc));
+    });
+    if (matchAll) return true;
+
+    const escapedPhrase = cleanReq.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp("\\b" + escapedPhrase + "s?\\b", "i").test(pShop)) return true;
+    return false;
+  }
+
+  // Single token query: must match as a standalone whole word
+  const singleTok = reqTokens[0];
+  const escaped = singleTok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const wordRegex = new RegExp("\\b" + escaped + "s?\\b", "i");
+  return wordRegex.test(pCat) || wordRegex.test(pShop) || pServiceCats.some(sc => wordRegex.test(sc));
+}
+
 function CategoryPage() {
   const { name } = useParams();
   const navigate = useNavigate();
@@ -311,45 +371,8 @@ function CategoryPage() {
       }
     }
 
-    const getTokens = (str) =>
-      (str || "")
-        .toLowerCase()
-        .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
-        .split(/\s+/)
-        .filter((w) => w.length > 2 && !["and", "the", "for", "hub", "care", "zone", "pro", "services", "centres", "center"].includes(w));
-
-    const catTokens = getTokens(`${cleanCat} ${cleanSlug} ${stemSlug} ${stemCat}`);
-
     let matching = combinedList.filter((p) => {
-      const pCat = (p.category || "").toLowerCase();
-      const pShop = (p.shopName || "").toLowerCase();
-      const pName = (p.name || "").toLowerCase();
-      const pServiceCats = (p.serviceCategories || []).map((c) => String(c).toLowerCase());
-
-      const directMatch =
-        pCat.includes(cleanCat) ||
-        cleanCat.includes(pCat) ||
-        pCat.includes(cleanSlug) ||
-        cleanSlug.includes(pCat) ||
-        pCat.includes(stemSlug) ||
-        stemSlug.includes(pCat) ||
-        pShop.includes(cleanCat) ||
-        pShop.includes(cleanSlug) ||
-        pShop.includes(stemSlug) ||
-        pName.includes(stemSlug) ||
-        pServiceCats.some((sc) => 
-          sc.includes(cleanCat) || cleanCat.includes(sc) || 
-          sc.includes(cleanSlug) || cleanSlug.includes(sc) ||
-          sc.includes(stemSlug) || stemSlug.includes(sc)
-        );
-
-      if (directMatch) return true;
-
-      // Token overlap matching (e.g. massage, spa, salon, plumbing) with prefix / stem matching
-      const pTokens = getTokens(`${pCat} ${pShop} ${pName} ${pServiceCats.join(" ")}`);
-      return catTokens.some((t) => 
-        pTokens.some(pt => pt.startsWith(t) || t.startsWith(pt) || pt.includes(t) || t.includes(pt))
-      );
+      return matchesCategory(p, currentSlug, categoryTitle);
     });
 
     // Ensure featured partner Rahul Gandhi / Amritam is always prominently at top for Massage & Spa
@@ -683,8 +706,8 @@ function CategoryPage() {
               <span className="category-tag-pill">
                 {categoryIcon} {categoryTag} • DIRECTORY
               </span>
-              <h1 className="category-heading" style={{ margin: "4px 0 0 0" }}>
-                {categoryTitle}{" "}
+              <h1 className="category-heading">
+                <span className="category-heading-title">{categoryTitle}</span>
                 <span className="category-count-badge">
                   ({sortedData.length} Verified Centres • {categoryCount})
                 </span>

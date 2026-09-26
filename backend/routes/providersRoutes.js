@@ -5,74 +5,126 @@ const Booking = require("../models/Booking");
 const dbStore = require("../data/dbStore");
 const { getStatus } = require("../config/db");
 
+const stemWord = (w) => (w || "").toLowerCase().trim()
+  .replace(/ies$/, "")
+  .replace(/try$/, "t")
+  .replace(/y$/, "")
+  .replace(/ers$/, "")
+  .replace(/er$/, "")
+  .replace(/ing$/, "")
+  .replace(/s$/, "");
+
+function matchesCategory(provider, reqCategory) {
+  if (!reqCategory) return true;
+  const cleanReq = reqCategory.toLowerCase().replace(/[-_]/g, " ").trim();
+  const reqStem = stemWord(cleanReq);
+  
+  const pCat = (provider.category || "").toLowerCase().replace(/[-_]/g, " ").trim();
+  const pServiceCats = (provider.serviceCategories || []).map(c => String(c).toLowerCase().replace(/[-_]/g, " ").trim());
+  const pShop = (provider.shopName || "").toLowerCase().replace(/[-_]/g, " ").trim();
+
+  // 1. Exact or stem match on category or serviceCategories
+  const allCats = [pCat, ...pServiceCats];
+  for (const c of allCats) {
+    if (!c) continue;
+    if (c === cleanReq) return true;
+    const cStem = stemWord(c);
+    if (cStem === reqStem && cStem.length >= 4) return true;
+    const escaped = cleanReq.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp("\\b" + escaped + "s?\\b", "i").test(c)) return true;
+  }
+
+  // 2. Token overlap: require whole words
+  const reqTokens = cleanReq
+    .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !["and", "for", "the", "services", "centres", "center", "hub", "care"].includes(w));
+
+  if (reqTokens.length === 0) return false;
+
+  // If query has multiple tokens (e.g. 'car rental'), require matching all tokens as whole words or full phrase
+  if (reqTokens.length >= 2) {
+    const matchAll = reqTokens.every(tok => {
+      const escaped = tok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const wordRegex = new RegExp("\\b" + escaped + "s?\\b", "i");
+      return wordRegex.test(pCat) || wordRegex.test(pShop) || pServiceCats.some(sc => wordRegex.test(sc));
+    });
+    if (matchAll) return true;
+
+    const escapedPhrase = cleanReq.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp("\\b" + escapedPhrase + "s?\\b", "i").test(pShop)) return true;
+    return false;
+  }
+
+  // Single token query: must match as a standalone whole word
+  const singleTok = reqTokens[0];
+  const escaped = singleTok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const wordRegex = new RegExp("\\b" + escaped + "s?\\b", "i");
+  return wordRegex.test(pCat) || wordRegex.test(pShop) || pServiceCats.some(sc => wordRegex.test(sc));
+}
+
 // GET /api/providers - List all providers with optional filter
 router.get("/", async (req, res) => {
   try {
     const { category, verified } = req.query;
-    console.log("[providers route] getStatus():", getStatus());
 
     if (getStatus()) {
       const filter = {};
       if (category) {
         const cleanCat = category.replace(/[-_]/g, " ").trim();
-        const rawTokens = cleanCat
+        const reqTokens = cleanCat
           .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
           .split(/\s+/)
           .filter(w => w.length > 2 && !["and", "for", "the", "services", "centres", "center", "hub", "care"].includes(w.toLowerCase()));
 
-        const allTerms = [cleanCat, category];
-        rawTokens.forEach(t => {
-          allTerms.push(t);
-          if (t.endsWith("ers") && t.length > 4) allTerms.push(t.slice(0, -3), t.slice(0, -1));
-          else if (t.endsWith("s") && t.length > 3) allTerms.push(t.slice(0, -1));
-          else if (t.endsWith("ing") && t.length > 4) allTerms.push(t.slice(0, -3));
-        });
+        const escapedPhrase = cleanCat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const phraseRegex = new RegExp("\\b" + escapedPhrase + "s?\\b", "i");
 
-        const tokenRegexes = Array.from(new Set(allTerms.map(t => t.toLowerCase()))).map(t => new RegExp(t, "i"));
+        if (reqTokens.length >= 2) {
+          const tokenRegexes = reqTokens.map(tok => {
+            const esc = tok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const r = new RegExp("\\b" + esc + "s?\\b", "i");
+            return {
+              $or: [
+                { category: r },
+                { serviceCategories: r },
+                { shopName: r }
+              ]
+            };
+          });
 
-        filter.$or = [
-          ...tokenRegexes.map(r => ({ category: r })),
-          ...tokenRegexes.map(r => ({ serviceCategories: r })),
-          ...tokenRegexes.map(r => ({ shopName: r })),
-          ...tokenRegexes.map(r => ({ name: r }))
-        ];
+          filter.$or = [
+            { category: phraseRegex },
+            { serviceCategories: phraseRegex },
+            { shopName: phraseRegex },
+            { $and: tokenRegexes }
+          ];
+        } else if (reqTokens.length === 1) {
+          const esc = reqTokens[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const wordRegex = new RegExp("\\b" + esc + "s?\\b", "i");
+          filter.$or = [
+            { category: wordRegex },
+            { serviceCategories: wordRegex },
+            { shopName: wordRegex }
+          ];
+        } else {
+          filter.category = phraseRegex;
+        }
       }
       if (verified !== undefined) filter.verified = verified === "true";
-      const providers = await Provider.find(filter).select("-password").sort({ createdAt: -1 });
+      let providers = await Provider.find(filter).select("-password").sort({ createdAt: -1 });
+
+      // Secondary precision guarantee pass
+      if (category) {
+        providers = providers.filter(p => matchesCategory(p, category));
+      }
+
       return res.json({ success: true, count: providers.length, data: providers });
     }
 
     let providers = dbStore.getAll("providers");
     if (category) {
-      const cleanCat = category.replace(/[-_]/g, " ").toLowerCase().trim();
-      const rawCat = category.toLowerCase();
-      const rawTokens = cleanCat
-        .replace(/[&/\\#,+()$~%.'":*?<>{}]/g, " ")
-        .split(/\s+/)
-        .filter(w => w.length > 2 && !["and", "for", "the", "services", "centres", "center", "hub", "care"].includes(w));
-
-      const allTerms = [cleanCat, rawCat];
-      rawTokens.forEach(t => {
-        allTerms.push(t);
-        if (t.endsWith("ers") && t.length > 4) allTerms.push(t.slice(0, -3), t.slice(0, -1));
-        else if (t.endsWith("s") && t.length > 3) allTerms.push(t.slice(0, -1));
-        else if (t.endsWith("ing") && t.length > 4) allTerms.push(t.slice(0, -3));
-      });
-      const uniqueTerms = Array.from(new Set(allTerms));
-
-      providers = providers.filter((p) => {
-        const pCat = (p.category || "").toLowerCase();
-        const pShop = (p.shopName || "").toLowerCase();
-        const pName = (p.name || "").toLowerCase();
-        const pServiceCats = (p.serviceCategories || []).map(c => String(c).toLowerCase());
-
-        return uniqueTerms.some(term => 
-          pCat.includes(term) ||
-          pShop.includes(term) ||
-          pName.includes(term) ||
-          pServiceCats.some(c => c.includes(term))
-        );
-      });
+      providers = providers.filter(p => matchesCategory(p, category));
     }
     if (verified !== undefined) {
       providers = providers.filter((p) => String(p.verified) === verified);

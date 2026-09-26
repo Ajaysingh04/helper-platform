@@ -68,14 +68,22 @@ body.dark .category-back-btn:hover {
 
 .category-heading {
   font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 800;
   letter-spacing: -0.025em;
   color: #0B0F19;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 body.dark .category-heading {
   color: #FFFFFF;
+}
+
+.category-heading-title {
+  color: inherit;
 }
 
 .category-count-badge {
@@ -914,6 +922,12 @@ body.dark .btn-add-pro-header {
 
   .category-heading {
     font-size: 22px !important;
+    line-height: 1.25;
+    gap: 6px;
+  }
+
+  .category-count-badge {
+    font-size: 13px !important;
   }
 
   .category-controls {
