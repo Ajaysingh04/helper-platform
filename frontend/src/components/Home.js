@@ -60,10 +60,10 @@ function Home() {
       highlight: "Starts Here.",
       subtitle: "Professional cleaning services for offices, homes, and commercial spaces — done right, every time.",
       badge: "⭐ TRUSTED BY 10,000+ HOMES & BUSINESSES",
-      ctaText: "Get a Free Quote",
-      ctaLink: "/services",
-      perk1: "* 12% discount for first time user",
-      perk2: "* 24% discount for repeating clients",
+      ctaText: "Book Cleaning Pro",
+      ctaLink: "/category/cleaning",
+      perk1: "* 100% Police-verified & certified master cleaners",
+      perk2: "* Upfront pricing with 30-day quality warranty",
       perk3: "* 15-min arrival with live GPS tracking"
     },
     {
