@@ -51,7 +51,7 @@ body.dark .helper-hero-slider-wrap {
   margin: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   overflow: hidden;
   background-color: #0B1120;
@@ -258,7 +258,7 @@ body.dark .hero-panoramic-overlay {
   height: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: clamp(20px, 3vh, 32px) clamp(18px, 2.5vw, 36px) clamp(55px, 8vh, 75px);
+  padding: clamp(14px, 2vh, 24px) clamp(18px, 2.5vw, 36px) clamp(44px, 6vh, 60px);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -266,12 +266,12 @@ body.dark .hero-panoramic-overlay {
   box-sizing: border-box;
 }
 
-@media (max-width: 1040px) {
+@media (max-width: 860px) {
   .hero-panoramic-grid {
     flex-direction: column;
     align-items: flex-start;
-    padding: 24px 18px clamp(55px, 8vh, 75px);
-    gap: 20px;
+    padding: 20px 16px clamp(50px, 7vh, 70px);
+    gap: 16px;
   }
   .hero-panoramic-overlay {
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.8) 100%);
@@ -1150,33 +1150,42 @@ body.dark .hero-search-input {
   }
 }
 
-/* Compact and balanced scaling for short laptop screens (e.g. 1366x768 with browser bars = ~517px inner height) */
-@media (max-height: 680px) {
+/* Compact and balanced scaling for short laptop screens (e.g. 1366x768 with browser bars = ~517px-680px inner height) */
+@media (max-height: 850px) {
   .helper-hero-slider-wrap {
     height: calc(100vh - 76px);
     min-height: 420px;
   }
   .hero-panoramic-grid {
-    padding: 20px 24px clamp(50px, 7vh, 65px);
+    padding: 14px 20px clamp(42px, 6vh, 55px);
     gap: 12px;
     align-items: flex-start;
   }
   .hero-panoramic-left {
-    margin-top: 2px;
+    margin-top: 0;
   }
   .hero-top-social-row {
     margin-top: 0;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
+  }
+  .hero-social-proof-pill {
+    padding: 4px 12px;
+  }
+  .social-proof-label {
+    font-size: 11.5px;
+  }
+  .hero-live-pill {
+    padding: 4px 12px;
   }
   .hero-studio-headline {
-    font-size: clamp(20px, 2.5vw, 28px);
-    margin-bottom: 4px;
+    font-size: clamp(19px, 2.3vw, 25px);
+    margin-bottom: 3px;
     line-height: 1.1;
   }
   .hero-studio-subtitle {
-    font-size: 12px;
-    line-height: 1.35;
-    margin-bottom: 6px;
+    font-size: 11.5px;
+    line-height: 1.3;
+    margin-bottom: 5px;
     max-width: 480px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -1184,83 +1193,204 @@ body.dark .hero-search-input {
     overflow: hidden;
   }
   .hero-search-wrapper {
-    margin-bottom: 6px;
-    padding: 3px 5px 3px 14px;
+    margin-bottom: 5px;
+    padding: 2px 4px 2px 12px;
   }
   .hero-search-btn {
-    padding: 7px 16px;
-    font-size: 12px;
+    padding: 6px 14px;
+    font-size: 11.5px;
   }
   .hero-quick-tags {
-    margin-bottom: 6px;
-    gap: 5px;
+    margin-bottom: 5px;
+    gap: 4px;
   }
   .quick-service-chip {
-    padding: 3px 10px;
-    font-size: 11px;
+    padding: 2px 8px;
+    font-size: 10.5px;
   }
   .hero-primary-cta-row {
-    margin-bottom: 6px;
-    gap: 8px;
-  }
-  .hero-find-expert-btn {
-    padding: 7px 16px;
-    font-size: 12px;
-  }
-  .hero-active-perk-badge {
-    padding: 6px 10px;
-    font-size: 11.5px;
-  }
-  .hero-trust-bar {
-    padding: 5px 12px;
-    gap: 12px;
-    border-radius: 10px;
-  }
-  .trust-item {
+    margin-bottom: 5px;
     gap: 6px;
   }
-  .trust-icon {
-    font-size: 14px;
-  }
-  .trust-text strong {
+  .hero-find-expert-btn {
+    padding: 6px 14px;
     font-size: 11.5px;
   }
+  .hero-active-perk-badge {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .hero-trust-bar {
+    padding: 3px 10px;
+    gap: 10px;
+    border-radius: 8px;
+  }
+  .trust-item {
+    gap: 5px;
+  }
+  .trust-icon {
+    font-size: 13px;
+  }
+  .trust-text strong {
+    font-size: 11px;
+  }
   .trust-text span {
-    font-size: 10px;
+    font-size: 9.5px;
   }
   .hero-next-page-anchor {
-    bottom: 8px;
+    bottom: 6px;
   }
   .hero-next-page-btn {
-    padding: 6px 16px 6px 12px;
+    padding: 5px 14px 5px 10px;
   }
   .next-page-bold-title {
-    font-size: 12px;
+    font-size: 11.5px;
   }
   .next-page-hint-text {
-    font-size: 9px;
+    font-size: 8.5px;
   }
   .next-page-arrow-pill {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
   }
   .bouncing-down-arrow {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
 
-@media (max-height: 520px) {
-  .hero-top-social-row {
-    display: none;
+@media (max-height: 540px) {
+  .hero-panoramic-grid {
+    padding: 6px 16px 36px;
   }
   .hero-studio-subtitle {
     display: none;
   }
+  .hero-top-social-row {
+    margin-bottom: 2px;
+  }
+  .hero-social-proof-pill {
+    padding: 3px 10px;
+  }
+  .social-proof-label {
+    font-size: 10.5px;
+  }
+  .cluster-avatar {
+    width: 20px;
+    height: 20px;
+    margin-left: -5px;
+  }
+  .hero-live-pill {
+    padding: 3px 10px;
+  }
+  .live-pill-city {
+    font-size: 10px;
+  }
+  .hero-studio-headline {
+    font-size: 18px;
+    margin-bottom: 2px;
+    line-height: 1.1;
+  }
+  .hero-search-wrapper {
+    margin-bottom: 3px;
+    padding: 2px 4px 2px 10px;
+  }
+  .hero-search-input {
+    font-size: 11px;
+    height: 30px;
+  }
+  .hero-search-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
   .hero-quick-tags {
-    display: none;
+    margin-bottom: 3px;
+    gap: 3px;
+  }
+  .quick-service-chip {
+    padding: 2px 6px;
+    font-size: 9.5px;
+  }
+  .hero-primary-cta-row {
+    margin-bottom: 3px;
+    gap: 6px;
+  }
+  .hero-find-expert-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+  .hero-active-perk-badge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  .hero-trust-bar {
+    padding: 2px 8px;
+    gap: 8px;
+  }
+  .trust-item {
+    gap: 4px;
+  }
+  .trust-icon {
+    font-size: 12px;
+  }
+  .trust-text strong {
+    font-size: 10px;
+  }
+  .trust-text span {
+    font-size: 8.5px;
   }
   .hero-next-page-anchor {
-    bottom: 6px;
+    bottom: 4px;
+  }
+  .hero-next-page-btn {
+    padding: 4px 12px 4px 8px;
+  }
+  .next-page-bold-title {
+    font-size: 10.5px;
+  }
+  .next-page-hint-text {
+    font-size: 8px;
+  }
+  .next-page-arrow-pill {
+    width: 20px;
+    height: 20px;
+  }
+  .bouncing-down-arrow {
+    font-size: 10px;
+  }
+}
+
+@media (max-height: 460px) {
+  .hero-top-social-row {
+    display: flex;
+    margin-bottom: 2px;
+    gap: 6px;
+  }
+  .hero-social-proof-pill {
+    padding: 2px 8px;
+  }
+  .social-proof-label {
+    font-size: 10px;
+  }
+  .cluster-avatar {
+    width: 18px;
+    height: 18px;
+  }
+  .hero-live-pill {
+    padding: 2px 8px;
+  }
+  .live-pill-city {
+    font-size: 9.5px;
+  }
+  .hero-quick-tags {
+    margin-bottom: 2px;
+    gap: 2px;
+  }
+  .quick-service-chip {
+    padding: 1px 5px;
+    font-size: 9px;
+  }
+  .hero-panoramic-grid {
+    padding: 4px 12px 32px;
   }
 }
 

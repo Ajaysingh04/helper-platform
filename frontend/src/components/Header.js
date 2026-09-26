@@ -52,9 +52,11 @@ function Header() {
     return location.pathname === path ? "active" : "";
   };
 
+  const isHome = location.pathname === "/";
+
   return (
     <>
-      <header className={`header-floating-wrapper ${scrolled ? "scrolled" : ""}`}>
+      <header className={`header-floating-wrapper ${isHome ? "home-header" : ""} ${scrolled ? "scrolled" : ""}`}>
         <div className="header-pill-bar nexora-header-bar">
           
           {/* Brand Logo: HELPER GO */}
