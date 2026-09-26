@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../css/Home.css";
 import LoginModal from "./LoginModal";
@@ -21,6 +21,27 @@ function Home() {
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
   const [activeLiveBooking, setActiveLiveBooking] = useState(null);
   const [copiedCode, setCopiedCode] = useState(null);
+
+  // Next Page Overlapping Sheet Ref & Smooth Scroll Handler
+  const nextSectionRef = useRef(null);
+
+  const handleScrollToNextPage = () => {
+    if (nextSectionRef.current) {
+      const headerOffset = 76;
+      const elementPosition = nextSectionRef.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    } else {
+      window.scrollTo({
+        top: window.innerHeight - 76,
+        behavior: "smooth"
+      });
+    }
+  };
 
   const handleCopyCode = (code) => {
     if (!code) return;
@@ -607,16 +628,50 @@ function Home() {
             {/* Right Column: Kept completely open & unobscured so all 14+ professionals & airplane are 100% visible */}
             <div className="hero-panoramic-right hero-right-unobstructed" />
           </div>
+
+          {/* =========================================================================
+              NEXT PAGE INTERACTIVE PORTAL (Bottom Center Animated Button)
+              Full animation with bouncing arrow, pulsing ripple, and smooth scroll
+              ========================================================================= */}
+          <div className="hero-next-page-anchor">
+            <button
+              type="button"
+              className="hero-next-page-btn"
+              onClick={handleScrollToNextPage}
+              aria-label="Scroll to next page: Explore Services"
+              title="Next Page: Explore All Services"
+            >
+              <div className="next-page-ripple-ring" />
+              <div className="next-page-glow-aura" />
+              
+              <div className="next-page-btn-inner">
+                <div className="next-page-pill-badge">
+                  <span className="next-page-pulse-dot" />
+                  <span className="next-page-badge-text">NEXT PAGE</span>
+                </div>
+
+                <div className="next-page-title-row">
+                  <span className="next-page-label">Explore Services</span>
+                  <div className="next-page-animated-arrow">
+                    <span className="arrow-chevron arrow-1">↓</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
       </section>
 
       {/* =========================================================================
           3D STACKING SHEET: Slides Up and Layers OVER the Hero Section
           ========================================================================= */}
-      <div className="home-3d-stack-sheet">
-        {/* Subtle 3D Card Pill Handle */}
-        <div className="sheet-3d-handle-bar">
-          <div className="sheet-3d-pill" />
+      <div className="home-3d-stack-sheet" ref={nextSectionRef} id="home-second-page">
+        {/* Physical 3D Card Handle Bar & Drag Pill */}
+        <div className="sheet-3d-handle-bar" onClick={handleScrollToNextPage} style={{ cursor: "pointer" }} title="Click to reveal full page">
+          <div className="sheet-3d-drag-indicator">
+            <div className="sheet-3d-pill" />
+            <span className="sheet-edge-label">Explore 100+ Doorstep Services & Categories</span>
+          </div>
         </div>
 
       {/* =========================================================================
