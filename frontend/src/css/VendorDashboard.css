@@ -3,19 +3,40 @@
    Modern Glassmorphism & SaaS Aesthetics (Helper Pro Platform)
    ========================================================================== */
 
+:root {
+  --vendor-primary: #FF4D2D;
+  --vendor-primary-hover: #E03E1F;
+  --vendor-primary-glow: rgba(255, 77, 45, 0.28);
+  --vendor-success: #10B981;
+  --vendor-success-glow: rgba(16, 185, 129, 0.25);
+  --vendor-warning: #F59E0B;
+  --vendor-info: #0284C7;
+  --vendor-dark-bg: #0F172A;
+  --vendor-card-bg: #FFFFFF;
+  --vendor-surface-subtle: #F8FAFC;
+  --vendor-border-color: #E2E8F0;
+  --vendor-border-subtle: rgba(226, 232, 240, 0.85);
+  --vendor-text-main: #0F172A;
+  --vendor-text-muted: #64748B;
+  --vendor-text-light: #94A3B8;
+  --vendor-font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --vendor-font-mono: "Space Grotesk", "SF Mono", monospace;
+}
+
 .vendor-dash-wrapper {
   min-height: 100vh;
-  padding: 36px 24px 90px;
+  padding: 32px 20px 90px;
   background: 
-    radial-gradient(circle at 10% 15%, rgba(255, 77, 45, 0.035) 0%, transparent 45%),
-    radial-gradient(circle at 90% 85%, rgba(14, 165, 233, 0.035) 0%, transparent 45%),
+    radial-gradient(circle at 10% 15%, rgba(255, 77, 45, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(14, 165, 233, 0.04) 0%, transparent 45%),
     #F8FAFC;
-  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #0F172A;
+  font-family: var(--vendor-font-sans);
+  color: var(--vendor-text-main);
+  box-sizing: border-box;
 }
 
 .vendor-dash-container {
-  max-width: 1240px;
+  max-width: 1260px;
   margin: 0 auto;
 }
 
@@ -24,24 +45,24 @@
    ========================================================================== */
 .vendor-dash-header {
   background: #FFFFFF;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--vendor-border-subtle);
   border-radius: 24px;
-  padding: 26px 32px;
+  padding: 24px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 22px;
+  gap: 20px;
   box-shadow: 
     0 10px 30px -4px rgba(15, 23, 42, 0.05),
     0 2px 6px -1px rgba(15, 23, 42, 0.02);
   margin-bottom: 24px;
-  transition: box-shadow 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .vendor-dash-header:hover {
   box-shadow: 
-    0 16px 36px -4px rgba(15, 23, 42, 0.07),
+    0 16px 36px -4px rgba(15, 23, 42, 0.08),
     0 4px 10px -2px rgba(15, 23, 42, 0.03);
 }
 
@@ -50,18 +71,19 @@
   align-items: center;
   gap: 20px;
   flex-wrap: wrap;
+  flex: 1 1 auto;
 }
 
 .vendor-avatar-circle {
-  width: 66px;
-  height: 66px;
-  border-radius: 20px;
+  width: 68px;
+  height: 68px;
+  border-radius: 22px;
   background: linear-gradient(135deg, #FF4D2D 0%, #FF785E 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 32px;
-  box-shadow: 0 8px 24px rgba(255, 77, 45, 0.28);
+  box-shadow: 0 8px 24px var(--vendor-primary-glow);
   flex-shrink: 0;
   position: relative;
 }
@@ -69,58 +91,67 @@
 .vendor-avatar-circle::after {
   content: "✓";
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  width: 20px;
-  height: 20px;
+  bottom: -3px;
+  right: -3px;
+  width: 22px;
+  height: 22px;
   background: #10B981;
   color: #FFFFFF;
-  border: 2px solid #FFFFFF;
+  border: 2.5px solid #FFFFFF;
   border-radius: 50%;
   font-size: 11px;
   font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+}
+
+.vendor-header-title {
+  flex: 1 1 auto;
 }
 
 .vendor-header-title h2 {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: #0F172A;
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.vendor-verified-pill {
-  font-size: 11.5px;
-  font-weight: 800;
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 3px 10px;
-  border-radius: 100px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.vendor-sub-pills {
+  margin: 0 0 10px 0;
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
+.vendor-verified-pill {
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 4px 10px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vendor-sub-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .vendor-cat-badge {
   background: rgba(255, 77, 45, 0.08);
   color: #FF4D2D;
-  border: 1px solid rgba(255, 77, 45, 0.2);
-  padding: 5px 14px;
+  border: 1px solid rgba(255, 77, 45, 0.22);
+  padding: 5px 12px;
   border-radius: 100px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -128,19 +159,20 @@
 }
 
 .vendor-location-tag {
-  color: #64748B;
-  font-size: 13px;
+  color: #475569;
+  font-size: 12.5px;
   font-weight: 600;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
   background: #F1F5F9;
+  border: 1px solid #E2E8F0;
   padding: 5px 12px;
   border-radius: 100px;
 }
 
 .vendor-owner-tag {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #475569;
   background: #F8FAFC;
@@ -150,20 +182,20 @@
 }
 
 .vendor-capacity-badge {
-  font-size: 12.5px;
+  font-size: 12px;
   background: rgba(16, 185, 129, 0.1);
   color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.22);
-  padding: 5px 13px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 5px 12px;
   border-radius: 100px;
   font-weight: 700;
 }
 
 .vendor-franchise-badge {
-  font-size: 12.5px;
-  background: linear-gradient(135deg, rgba(254, 243, 199, 0.8) 0%, rgba(253, 230, 138, 0.6) 100%);
+  font-size: 12px;
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.9) 0%, rgba(253, 230, 138, 0.7) 100%);
   color: #B45309;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  border: 1px solid rgba(245, 158, 11, 0.4);
   padding: 5px 13px;
   border-radius: 100px;
   font-weight: 800;
@@ -175,20 +207,20 @@
 .vendor-header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .btn-franchise-manage {
   background: #FFFBEB;
   color: #B45309;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  border: 1px solid rgba(245, 158, 11, 0.45);
   border-radius: 100px;
   padding: 9px 18px;
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -197,6 +229,7 @@
 .btn-franchise-manage:hover {
   background: #FEF3C7;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
 }
 
 .vendor-status-toggle {
@@ -215,17 +248,18 @@
 .vendor-status-toggle.online {
   background: #ECFDF5;
   color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .vendor-status-toggle.online:hover {
   background: #D1FAE5;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .vendor-status-toggle.offline {
   background: #FEF2F2;
   color: #DC2626;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .status-dot-pulse {
@@ -249,7 +283,7 @@
   color: #64748B;
   border: 1px solid #E2E8F0;
   border-radius: 100px;
-  padding: 9px 18px;
+  padding: 9px 16px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -263,27 +297,29 @@
 }
 
 /* ==========================================================================
-   2. STATS 4-COLUMN CARDS GRID
+   2. STATS 4-COLUMN CARDS GRID (BENTO AESTHETICS)
    ========================================================================== */
 .vendor-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
   margin-bottom: 24px;
 }
 
 .vendor-stat-card {
   background: #FFFFFF;
-  border: 1px solid rgba(226, 232, 240, 0.85);
+  border: 1px solid var(--vendor-border-subtle);
   border-radius: 20px;
-  padding: 22px 24px;
+  padding: 20px 22px;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   box-shadow: 
     0 4px 16px -2px rgba(15, 23, 42, 0.03),
     0 1px 3px rgba(15, 23, 42, 0.02);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .vendor-stat-card:hover {
@@ -295,38 +331,46 @@
 }
 
 .vendor-stat-icon {
-  width: 54px;
-  height: 54px;
+  width: 52px;
+  height: 52px;
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 24px;
   flex-shrink: 0;
 }
 
 .stat-icon-rate {
   background: #EEF2FF;
   color: #4F46E5;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.12);
 }
 
 .stat-icon-pending {
   background: #FEF3C7;
   color: #D97706;
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.15);
 }
 
 .stat-icon-jobs {
   background: #ECFDF5;
   color: #059669;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.14);
 }
 
 .stat-icon-revenue {
   background: #FFF1EE;
   color: #FF4D2D;
+  box-shadow: 0 6px 16px rgba(255, 77, 45, 0.15);
+}
+
+.vendor-stat-info {
+  flex: 1;
 }
 
 .vendor-stat-info h4 {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #64748B;
   text-transform: uppercase;
@@ -335,21 +379,23 @@
 }
 
 .vendor-stat-val {
-  font-size: 26px;
+  font-family: var(--vendor-font-mono);
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: #0F172A;
   margin-bottom: 2px;
+  line-height: 1.2;
 }
 
 .vendor-stat-sub {
-  font-size: 12px;
+  font-size: 11.5px;
   color: #94A3B8;
   font-weight: 500;
 }
 
 /* ==========================================================================
-   3. SEGMENTED NAVIGATION TABS BAR (NEVER CUTS OFF)
+   3. SEGMENTED NAVIGATION TABS BAR
    ========================================================================== */
 .vendor-dash-tabs {
   display: flex;
@@ -360,12 +406,12 @@
   gap: 6px;
   margin-bottom: 24px;
   overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
 
 .vendor-dash-tabs::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
 }
 
 .vendor-dash-tab-btn {
@@ -389,7 +435,7 @@
 
 .vendor-dash-tab-btn:hover {
   color: #0F172A;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .vendor-dash-tab-btn.active {
@@ -403,9 +449,9 @@
    ========================================================================== */
 .vendor-tab-content-card {
   background: #FFFFFF;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--vendor-border-subtle);
   border-radius: 24px;
-  padding: 32px;
+  padding: 30px;
   box-shadow: 
     0 10px 30px -4px rgba(15, 23, 42, 0.04),
     0 2px 6px rgba(15, 23, 42, 0.02);
@@ -428,6 +474,28 @@
   font-weight: 800;
   color: #0F172A;
   margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.btn-demo-quick {
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  color: #334155;
+  padding: 9px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-demo-quick:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+  color: #0F172A;
 }
 
 /* ==========================================================================
@@ -436,212 +504,547 @@
 .vendor-bookings-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .vendor-booking-card {
-  background: #F8FAFC;
+  background: #FFFFFF;
   border: 1px solid #E2E8F0;
+  border-left-width: 5px;
   border-radius: 20px;
   padding: 22px 24px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  transition: all 0.25s ease;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+  box-shadow: 
+    0 4px 16px -2px rgba(15, 23, 42, 0.03),
+    0 1px 3px rgba(15, 23, 42, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  overflow: hidden;
-}
-
-.vendor-booking-card::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 5px;
-  background: #FF4D2D;
-  border-radius: 4px 0 0 4px;
+  box-sizing: border-box;
 }
 
 .vendor-booking-card:hover {
-  background: #FFFFFF;
   border-color: #CBD5E1;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.08);
   transform: translateY(-2px);
 }
 
 .booking-details-group {
-  flex: 1 1 55%;
+  width: 100%;
 }
 
 .booking-service-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 14px;
   flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
 .booking-service-title-row h4 {
-  font-size: 17px;
+  font-size: 16.5px;
   font-weight: 800;
   color: #0F172A;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .booking-status-chip {
-  padding: 4px 12px;
+  padding: 5px 13px;
   border-radius: 100px;
   font-size: 11.5px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Customer Requested Date & Time Highlight Card */
+.booking-schedule-bar {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 12px 18px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .booking-customer-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: 13.5px;
+  gap: 10px;
+  font-size: 13px;
   color: #475569;
   margin: 6px 0;
   flex-wrap: wrap;
+}
+
+.booking-customer-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
 }
 
 .booking-customer-meta strong {
   color: #0F172A;
 }
 
-.booking-address-meta {
-  font-size: 13px;
-  color: #64748B;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 4px 0 8px 0;
-}
-
-.booking-meta-bottom {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 12.5px;
-  color: #94A3B8;
-  flex-wrap: wrap;
-}
-
-.booking-price-badge {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 2px 10px;
-  border-radius: 6px;
-  font-weight: 800;
-}
-
-.booking-action-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* Door OTP Box & Buttons */
-.door-otp-input-field {
-  width: 105px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1.5px solid #CBD5E1;
-  background: #FFFFFF;
-  color: #0F172A;
-  text-align: center;
-  font-weight: 800;
-  font-size: 15px;
-  letter-spacing: 2px;
-  transition: all 0.2s ease;
-}
-
-.door-otp-input-field:focus {
-  border-color: #FF4D2D;
-  box-shadow: 0 0 0 3px rgba(255, 77, 45, 0.15);
-  outline: none;
-}
-
-.btn-verify-otp {
-  padding: 10px 20px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #FF4D2D 0%, #E03E1F 100%);
-  color: #FFFFFF;
-  font-weight: 800;
-  font-size: 13.5px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 77, 45, 0.25);
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-verify-otp:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(255, 77, 45, 0.35);
-}
-
-.btn-complete-job {
-  padding: 10px 22px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  color: #FFFFFF;
-  font-weight: 800;
-  font-size: 13.5px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-complete-job:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
-}
-
-/* Call & WhatsApp Quick Buttons */
+/* Quick Contact Buttons (Call & WhatsApp) */
 .quick-contact-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 10px;
   font-size: 12.5px;
   font-weight: 700;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
 .quick-call-btn {
-  background: #F1F5F9;
-  color: #0F172A;
-  border: 1px solid #CBD5E1;
+  background: #0F172A;
+  color: #FFFFFF !important;
+  border: 1px solid #0F172A;
 }
 
 .quick-call-btn:hover {
-  background: #E2E8F0;
+  background: #1E293B;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
 }
 
 .quick-wa-btn {
-  background: #ECFDF5;
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: #10B981;
+  color: #FFFFFF !important;
+  border: 1px solid #059669;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
 .quick-wa-btn:hover {
-  background: #D1FAE5;
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
 }
 
 /* ==========================================================================
-   6. FRANCHISE ACTIVATION HERO BANNER
+   6. 4-STAGE MODERN STEPPER BAR
+   ========================================================================== */
+.vendor-stage-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F8FAFC;
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  margin: 12px 0 6px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #94A3B8;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.stepper-step.active {
+  color: #FF4D2D;
+}
+
+.stepper-step.done {
+  color: #059669;
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.stepper-step.active .step-num {
+  background: #FF4D2D;
+  color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(255, 77, 45, 0.25);
+}
+
+.stepper-step.done .step-num {
+  background: #10B981;
+  color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+}
+
+.stepper-line {
+  flex: 1;
+  height: 3px;
+  background: #E2E8F0;
+  margin: 0 10px;
+  min-width: 12px;
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.stepper-line.filled {
+  background: #10B981;
+}
+
+/* ==========================================================================
+   7. STAGE OPERATION CONSOLES
+   ========================================================================== */
+.booking-operations-box {
+  width: 100%;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px dashed #E2E8F0;
+}
+
+/* Stage 1: Slot Confirmation */
+.stage-slot-confirmation {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slot-instructions h5 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #92400E;
+}
+
+.slot-instructions p {
+  margin: 0 0 6px 0;
+  font-size: 12.5px;
+  color: #B45309;
+}
+
+.slot-action-inline {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input-slot-otp {
+  width: 160px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #FCD34D;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 3px;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  font-family: var(--vendor-font-mono);
+}
+
+.input-slot-otp:focus {
+  outline: none;
+  border-color: #D97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+}
+
+.btn-lock-slot {
+  background: #D97706;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+}
+
+.btn-lock-slot:hover {
+  background: #B45309;
+  transform: translateY(-1px);
+}
+
+/* Stage 2: Slot Locked & T-Minus Countdown */
+.stage-slot-locked-box {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  border: 1.5px solid rgba(59, 130, 246, 0.4);
+  border-radius: 16px;
+  padding: 20px 22px;
+  color: #FFFFFF;
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.45);
+}
+
+.countdown-digits-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 14px 0 16px 0;
+  flex-wrap: wrap;
+}
+
+.countdown-digit-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-width: 62px;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.countdown-digit-card.active-tick {
+  border-color: #38BDF8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.45);
+}
+
+.digit-val {
+  font-family: var(--vendor-font-mono);
+  font-size: 28px;
+  font-weight: 900;
+  color: #FFFFFF;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+}
+
+.digit-sub {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94A3B8;
+  letter-spacing: 1px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.digit-colon {
+  font-family: var(--vendor-font-mono);
+  font-size: 26px;
+  font-weight: 900;
+  color: #38BDF8;
+  animation: pulseColon 1s infinite;
+}
+
+@keyframes pulseColon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.95); }
+}
+
+.btn-doorstep-arrived {
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+}
+
+.btn-doorstep-arrived:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Stage 3: Doorstep QR Verification */
+.stage-qr-verify-box {
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.input-qr-token {
+  flex: 1;
+  min-width: 140px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #C4B5FD;
+  font-size: 14px;
+  font-weight: 700;
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.input-qr-token:focus {
+  outline: none;
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+}
+
+.btn-verify-qr-start {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-verify-qr-start:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+/* Stage 4: Live Work Stopwatch & Billing Meter */
+.stage-live-stopwatch-box {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  color: #FFFFFF;
+  border-radius: 16px;
+  padding: 18px 22px;
+  border: 1.5px solid rgba(52, 211, 153, 0.3);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
+}
+
+.vendor-stopwatch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.vendor-stopwatch-val {
+  font-family: var(--vendor-font-mono);
+  font-size: 32px;
+  font-weight: 900;
+  color: #34D399;
+  text-shadow: 0 0 16px rgba(52, 211, 153, 0.5);
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+.vendor-running-meter {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+}
+
+.vendor-stopwatch-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 12px;
+}
+
+.btn-stop-timer {
+  background: #EF4444;
+  color: #FFFFFF;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-stop-timer:hover {
+  background: #DC2626;
+  transform: translateY(-1px);
+}
+
+/* Stage 5: Itemized Invoice */
+.stage-work-completed-receipt {
+  background: #F8FAFC;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-top: 10px;
+}
+
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  color: #475569;
+  padding: 6px 0;
+}
+
+.receipt-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 17px;
+  font-weight: 900;
+  color: #0F172A;
+  padding-top: 10px;
+  margin-top: 8px;
+  border-top: 1px solid #CBD5E1;
+}
+
+.btn-collect-payment {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+  width: 100%;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+.btn-collect-payment:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   8. FRANCHISE HERO BANNER & MODAL PLANS
    ========================================================================== */
 .franchise-gate-hero {
   background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
@@ -674,9 +1077,9 @@
 
 .franchise-plans-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-  margin-top: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+  margin-top: 30px;
   text-align: left;
 }
 
@@ -684,7 +1087,7 @@
   background: rgba(30, 41, 59, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 22px;
-  padding: 30px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -722,9 +1125,10 @@
 }
 
 .plan-amount {
-  font-size: 38px;
+  font-size: 34px;
   font-weight: 900;
   color: #FFFFFF;
+  font-family: var(--vendor-font-mono);
 }
 
 .plan-cycle {
@@ -736,7 +1140,7 @@
 .plan-perks-list {
   list-style: none;
   padding: 0;
-  margin: 16px 0 26px 0;
+  margin: 16px 0 24px 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -746,16 +1150,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
+  font-size: 13.5px;
   color: #E2E8F0;
 }
 
 .btn-activate-plan {
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   border-radius: 12px;
   border: none;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -787,13 +1191,13 @@
 }
 
 /* ==========================================================================
-   7. SHOP MEMBERS MANAGEMENT (UP TO 8 MEMBERS)
-   ========================================================================= */
+   9. SHOP MEMBERS MANAGEMENT
+   ========================================================================== */
 .member-meter-box {
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
   border-radius: 18px;
-  padding: 22px 26px;
+  padding: 22px 24px;
   margin-bottom: 24px;
 }
 
@@ -829,7 +1233,7 @@
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
   border-radius: 16px;
-  padding: 18px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -870,11 +1274,11 @@
 }
 
 /* ==========================================================================
-   8. KYC DOCUMENTS & VERIFICATION CARDS
+   10. KYC DOCUMENTS & UPLOAD CARDS
    ========================================================================== */
 .kyc-docs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
   margin: 22px 0;
 }
@@ -883,12 +1287,12 @@
   background: #F8FAFC;
   border: 1.5px dashed #CBD5E1;
   border-radius: 18px;
-  padding: 24px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 14px;
+  gap: 12px;
   transition: all 0.25s ease;
 }
 
@@ -905,7 +1309,7 @@
 
 .doc-preview-box {
   width: 100%;
-  height: 160px;
+  height: 150px;
   border-radius: 12px;
   overflow: hidden;
   background: #E2E8F0;
@@ -924,16 +1328,17 @@
 .doc-upload-label {
   display: block;
   width: 100%;
-  padding: 10px;
+  padding: 9px 14px;
   background: #FFFFFF;
   border: 1px solid #CBD5E1;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: #0F172A;
   cursor: pointer;
   text-align: center;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .doc-upload-label:hover {
@@ -941,8 +1346,12 @@
   border-color: #94A3B8;
 }
 
+.doc-file-input {
+  display: none;
+}
+
 /* ==========================================================================
-   9. FORMS, SETTINGS & WORK MANAGEMENT
+   11. FORMS & INPUTS
    ========================================================================== */
 .vendor-settings-form {
   display: grid;
@@ -1003,21 +1412,39 @@
   padding-left: 32px;
 }
 
+.btn-primary-glow {
+  background: linear-gradient(135deg, #FF4D2D 0%, #E03E1F 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-primary-glow:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
 .work-items-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 18px;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .work-item-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 14px 18px;
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
-  border-radius: 14px;
+  border-radius: 12px;
   transition: all 0.2s ease;
 }
 
@@ -1028,475 +1455,130 @@
 }
 
 .work-item-name {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   color: #0F172A;
 }
 
 .work-item-rate {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 900;
   color: #059669;
 }
 
 /* ==========================================================================
-   10. MOBILE & TABLET RESPONSIVENESS
+   12. WALLET & ADMIN TABLES
    ========================================================================== */
-@media (max-width: 900px) {
+.admin-table-container {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  margin-top: 14px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.admin-table th {
+  background: #F8FAFC;
+  color: #475569;
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #F1F5F9;
+  color: #1E293B;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   13. COMPREHENSIVE RESPONSIVENESS (MOBILE / TABLET)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .vendor-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .vendor-dash-wrapper {
+    padding: 20px 14px 70px;
+  }
+
   .vendor-dash-header {
     flex-direction: column;
     align-items: flex-start;
     padding: 20px;
+    gap: 16px;
   }
+
   .vendor-header-actions {
     width: 100%;
     justify-content: flex-start;
   }
+
+  .btn-franchise-manage,
+  .vendor-status-toggle,
+  .btn-vendor-logout {
+    flex: 1 1 auto;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .vendor-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .vendor-tab-content-card {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+
   .vendor-settings-form {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 640px) {
-  .vendor-dash-wrapper {
-    padding: 20px 14px 60px;
-  }
-  .vendor-tab-content-card {
-    padding: 20px 16px;
-    border-radius: 18px;
-  }
-  .vendor-booking-card {
+  .booking-schedule-bar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 10px;
   }
-  .booking-action-group {
-    width: 100%;
-    justify-content: space-between;
+
+  .booking-schedule-bar .quick-contact-btn {
+    flex: 1;
+    justify-content: center;
   }
-  .vendor-stat-card {
-    padding: 16px;
+
+  .booking-customer-meta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
   }
-}
 
-/* ==========================================================================
-   11. HIGH-TECH VENDOR OPERATION CARD & LIVE STOPWATCH STYLES
-   ========================================================================== */
-
-.booking-operations-box {
-  width: 100%;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px dashed #E2E8F0;
-}
-
-.booking-operations-box {
-  width: 100%;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px dashed #E2E8F0;
-}
-
-.vendor-stage-stepper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #F8FAFC;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid #E2E8F0;
-  margin: 14px 0 8px 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.stepper-step {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #94A3B8;
-  white-space: nowrap;
-}
-
-.stepper-step.active {
-  color: #FF4D2D;
-}
-
-.stepper-step.done {
-  color: #10B981;
-}
-
-.step-num {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #E2E8F0;
-  color: #64748B;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-
-.stepper-step.active .step-num {
-  background: #FF4D2D;
-  color: #FFFFFF;
-  box-shadow: 0 0 10px rgba(255, 77, 45, 0.4);
-}
-
-.stepper-step.done .step-num {
-  background: #10B981;
-  color: #FFFFFF;
-}
-
-.stepper-line {
-  flex: 1;
-  height: 2px;
-  background: #E2E8F0;
-  margin: 0 8px;
-  min-width: 6px;
-}
-
-/* Slot Confirmation Section */
-.stage-slot-confirmation {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.slot-instructions h5 {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 800;
-  color: #92400E;
-}
-
-.slot-instructions p {
-  margin: 0 0 6px 0;
-  font-size: 12.5px;
-  color: #B45309;
-}
-
-.slot-action-inline {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.input-slot-otp {
-  width: 140px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1.5px solid #FCD34D;
-  font-size: 16px;
-  font-weight: 800;
-  text-align: center;
-  letter-spacing: 3px;
-  background: #FFFFFF;
-  box-sizing: border-box;
-}
-
-.input-slot-otp:focus {
-  outline: none;
-  border-color: #D97706;
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
-}
-
-.btn-lock-slot {
-  background: #D97706;
-  color: #FFFFFF;
-  border: none;
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-lock-slot:hover {
-  background: #B45309;
-}
-
-/* Slot Confirmed & Countdown Active */
-.stage-slot-locked-box {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-  border: 1.5px solid rgba(59, 130, 246, 0.4);
-  border-radius: 16px;
-  padding: 20px;
-  color: #FFFFFF;
-  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.45);
-}
-
-.countdown-digits-grid {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: 14px 0 16px 0;
-  flex-wrap: wrap;
-}
-
-.countdown-digit-card {
-  background: rgba(15, 23, 42, 0.85);
-  border: 1.5px solid rgba(56, 189, 248, 0.35);
-  border-radius: 12px;
-  padding: 10px 14px;
-  min-width: 62px;
-  text-align: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-}
-
-.countdown-digit-card.active-tick {
-  border-color: #38BDF8;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.45);
-}
-
-.digit-val {
-  font-family: 'Space Grotesk', monospace;
-  font-size: 28px;
-  font-weight: 900;
-  color: #FFFFFF;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-}
-
-.digit-sub {
-  font-size: 10px;
-  font-weight: 800;
-  color: #94A3B8;
-  letter-spacing: 1px;
-  margin-top: 4px;
-  text-transform: uppercase;
-}
-
-.digit-colon {
-  font-family: 'Space Grotesk', monospace;
-  font-size: 26px;
-  font-weight: 900;
-  color: #38BDF8;
-  animation: pulseColon 1s infinite;
-}
-
-@keyframes pulseColon {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(0.95); }
-}
-
-.vendor-live-countdown {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-
-.btn-doorstep-arrived {
-  background: #0284C7;
-  color: #FFFFFF;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-doorstep-arrived:hover {
-  background: #0369A1;
-}
-
-/* Doorstep QR Verification Box */
-.stage-qr-verify-box {
-  background: #F5F3FF;
-  border: 1px solid #DDD6FE;
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.input-qr-token {
-  flex: 1;
-  min-width: 140px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1.5px solid #C4B5FD;
-  font-size: 14px;
-  font-weight: 700;
-  background: #FFFFFF;
-  box-sizing: border-box;
-}
-
-.input-qr-token:focus {
-  outline: none;
-  border-color: #7C3AED;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
-}
-
-.btn-verify-qr-start {
-  background: #FF4D2D;
-  color: #FFFFFF;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 77, 45, 0.25);
-  transition: all 0.2s ease;
-}
-
-.btn-verify-qr-start:hover {
-  background: #E03E1F;
-}
-
-/* Live Work Stopwatch in Plumber Dashboard */
-.stage-live-stopwatch-box {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-  color: #FFFFFF;
-  border-radius: 14px;
-  padding: 16px 20px;
-  border: 1.5px solid rgba(52, 211, 153, 0.3);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
-}
-
-.vendor-stopwatch-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
-.vendor-stopwatch-val {
-  font-family: 'Space Grotesk', monospace;
-  font-size: 32px;
-  font-weight: 900;
-  color: #34D399;
-  text-shadow: 0 0 16px rgba(52, 211, 153, 0.5);
-  letter-spacing: 0.04em;
-  margin-top: 4px;
-}
-
-.vendor-running-meter {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-size: 12.5px;
-}
-
-.vendor-stopwatch-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-top: 12px;
-  flex-wrap: wrap;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 12px;
-}
-
-.btn-stop-timer {
-  background: #EF4444;
-  color: #FFFFFF;
-  border: none;
-  padding: 10px 22px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
-  transition: all 0.2s ease;
-}
-
-.btn-stop-timer:hover {
-  background: #DC2626;
-}
-
-/* Itemized Final Receipt in Plumber Dashboard */
-.stage-work-completed-receipt {
-  background: #F8FAFC;
-  border: 1.5px dashed #CBD5E1;
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-top: 10px;
-}
-
-.receipt-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13.5px;
-  color: #475569;
-  padding: 6px 0;
-}
-
-.receipt-total {
-  display: flex;
-  justify-content: space-between;
-  font-size: 17px;
-  font-weight: 900;
-  color: #0F172A;
-  padding-top: 10px;
-  margin-top: 8px;
-  border-top: 1px solid #CBD5E1;
-}
-
-.btn-collect-payment {
-  background: #10B981;
-  color: #FFFFFF;
-  border: none;
-  padding: 11px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 12px;
-  width: 100%;
-}
-
-.btn-collect-payment:hover {
-  background: #059669;
-}
-
-/* ==========================================================================
-   MOBILE & TABLET RESPONSIVE RULES FOR OPERATIONAL VENDOR CARDS
-   ========================================================================== */
-@media (max-width: 768px) {
   .vendor-stage-stepper {
-    padding: 8px 10px;
+    padding: 10px 12px;
   }
 
   .stepper-step {
-    font-size: 10.5px;
-    gap: 4px;
+    font-size: 11px;
+    gap: 5px;
   }
 
   .step-num {
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
+    width: 22px;
+    height: 22px;
+    font-size: 10.5px;
   }
 
   .stepper-line {
@@ -1536,10 +1618,21 @@
 }
 
 @media (max-width: 480px) {
+  .vendor-avatar-circle {
+    width: 56px;
+    height: 56px;
+    font-size: 26px;
+    border-radius: 18px;
+  }
+
+  .vendor-header-title h2 {
+    font-size: 20px;
+  }
+
   .vendor-stage-stepper {
     flex-wrap: wrap;
-    gap: 6px;
-    justify-content: flex-start;
+    gap: 8px;
+    justify-content: space-between;
   }
 
   .stepper-line {
@@ -1547,10 +1640,10 @@
   }
 
   .stepper-step {
-    font-size: 10px;
-    padding: 3px 6px;
+    font-size: 10.5px;
+    padding: 4px 8px;
     background: #FFFFFF;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid #E2E8F0;
   }
 
@@ -1567,20 +1660,35 @@
     width: 100%;
   }
 
+  .countdown-digits-grid {
+    gap: 6px;
+  }
+
+  .countdown-digit-card {
+    min-width: 48px;
+    padding: 8px 10px;
+  }
+
+  .digit-val {
+    font-size: 22px;
+  }
+
+  .digit-colon {
+    font-size: 20px;
+  }
+
   .vendor-stopwatch-val {
     font-size: 26px;
   }
 
-  .vendor-live-countdown {
+  .booking-service-title-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: 10px;
   }
 
-  .quick-call-btn,
-  .quick-wa-btn {
-    flex: 1;
-    text-align: center;
-    justify-content: center;
+  .booking-status-chip {
+    margin-left: 0;
+    align-self: flex-start;
   }
 }

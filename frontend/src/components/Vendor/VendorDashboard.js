@@ -1412,18 +1412,7 @@ function VendorDashboard() {
                         </div>
 
                         {/* Customer Requested Date & Time Highlight Card */}
-                        <div style={{
-                          background: "#F8FAFC",
-                          border: "1px solid #E2E8F0",
-                          borderRadius: "12px",
-                          padding: "10px 14px",
-                          margin: "12px 0 8px 0",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          flexWrap: "wrap",
-                          gap: "10px"
-                        }}>
+                        <div className="booking-schedule-bar">
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ fontSize: "18px" }}>📅</span>
                             <div>
@@ -1434,11 +1423,10 @@ function VendorDashboard() {
                             </div>
                           </div>
 
-                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                             <a
                               href={`tel:${b.customerPhone || "+919876500002"}`}
                               className="quick-contact-btn quick-call-btn"
-                              style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none" }}
                             >
                               <span>📞</span> <span>Call Customer</span>
                             </a>
@@ -1447,7 +1435,6 @@ function VendorDashboard() {
                               target="_blank"
                               rel="noreferrer"
                               className="quick-contact-btn quick-wa-btn"
-                              style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none" }}
                             >
                               <span>💬</span> <span>WhatsApp</span>
                             </a>
@@ -1461,22 +1448,22 @@ function VendorDashboard() {
                         </div>
 
                         {/* 4-Stage Stepper Bar */}
-                        <div className="vendor-stage-stepper" style={{ margin: "14px 0 8px 0" }}>
+                        <div className="vendor-stage-stepper">
                           <div className={`stepper-step ${isAssigned ? "active" : "done"}`}>
                             <div className="step-num">{isAssigned ? "1" : "✓"}</div>
                             <div className="step-label">1. Call & OTP</div>
                           </div>
-                          <div className="stepper-line"></div>
+                          <div className={`stepper-line ${!isAssigned ? "filled" : ""}`}></div>
                           <div className={`stepper-step ${isSlotConfirmed ? "active" : (isArrived || isInProgress || isWorkCompleted || isCompleted) ? "done" : ""}`}>
                             <div className="step-num">{(isArrived || isInProgress || isWorkCompleted || isCompleted) ? "✓" : "2"}</div>
                             <div className="step-label">2. Slot Locked</div>
                           </div>
-                          <div className="stepper-line"></div>
+                          <div className={`stepper-line ${(isArrived || isInProgress || isWorkCompleted || isCompleted) ? "filled" : ""}`}></div>
                           <div className={`stepper-step ${isArrived ? "active" : (isInProgress || isWorkCompleted || isCompleted) ? "done" : ""}`}>
                             <div className="step-num">{(isInProgress || isWorkCompleted || isCompleted) ? "✓" : "3"}</div>
                             <div className="step-label">3. Doorstep QR</div>
                           </div>
-                          <div className="stepper-line"></div>
+                          <div className={`stepper-line ${(isInProgress || isWorkCompleted || isCompleted) ? "filled" : ""}`}></div>
                           <div className={`stepper-step ${(isInProgress || isWorkCompleted) ? "active" : isCompleted ? "done" : ""}`}>
                             <div className="step-num">{isCompleted ? "✓" : "4"}</div>
                             <div className="step-label">4. Stopwatch & Bill</div>
@@ -1485,7 +1472,7 @@ function VendorDashboard() {
                       </div>
 
                       {/* Dynamic Stage Actions */}
-                      <div className="booking-operations-box" style={{ marginTop: "12px" }}>
+                      <div className="booking-operations-box">
                         
                         {/* STAGE 1: CALL & OTP CONFIRMATION */}
                         {isAssigned && (
@@ -1871,47 +1858,48 @@ function VendorDashboard() {
 
             {/* Custom Work Offerings Manager */}
             <div>
-              <h4 style={{ fontSize: "17px", fontWeight: 800, color: "#FFFFFF", marginBottom: "6px" }}>
+              <h4 style={{ fontSize: "17px", fontWeight: 800, color: "#0F172A", marginBottom: "6px" }}>
                 Add Custom Work & Task Offerings
               </h4>
-              <p style={{ fontSize: "13.5px", color: "#94A3B8", margin: "0 0 16px 0" }}>
+              <p style={{ fontSize: "13.5px", color: "#64748B", margin: "0 0 16px 0" }}>
                 Add specific tasks and repair jobs customers can book directly from your shop profile.
               </p>
 
               <form onSubmit={handleAddCustomWork} style={{ display: "grid", gridTemplateColumns: "1fr 140px 120px auto", gap: "10px", alignItems: "flex-end" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#CBD5E1", display: "block", marginBottom: "4px" }}>Work / Service Title</label>
+                  <label style={{ fontSize: "12px", color: "#475569", display: "block", marginBottom: "4px", fontWeight: 700 }}>Work / Service Title</label>
                   <input 
                     type="text"
                     placeholder="e.g. Water Tank Deep Cleaning"
                     value={newServiceName}
                     onChange={(e) => setNewServiceName(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #475569", background: "rgba(15,23,42,0.6)", color: "#FFF" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A" }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#CBD5E1", display: "block", marginBottom: "4px" }}>Price (₹)</label>
+                  <label style={{ fontSize: "12px", color: "#475569", display: "block", marginBottom: "4px", fontWeight: 700 }}>Price (₹)</label>
                   <input 
                     type="number"
                     placeholder="e.g. 599"
                     value={newServicePrice}
                     onChange={(e) => setNewServicePrice(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #475569", background: "rgba(15,23,42,0.6)", color: "#FFF" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A" }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#CBD5E1", display: "block", marginBottom: "4px" }}>Duration</label>
+                  <label style={{ fontSize: "12px", color: "#475569", display: "block", marginBottom: "4px", fontWeight: 700 }}>Duration</label>
                   <input 
                     type="text"
                     placeholder="45 mins"
                     value={newServiceTime}
                     onChange={(e) => setNewServiceTime(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #475569", background: "rgba(15,23,42,0.6)", color: "#FFF" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A" }}
                   />
                 </div>
                 <button
                   type="submit"
-                  style={{ padding: "11px 18px", borderRadius: "8px", border: "none", background: "#FF4D2D", color: "#FFF", fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}
+                  className="btn-primary-glow"
+                  style={{ padding: "10px 18px", whiteSpace: "nowrap" }}
                 >
                   + Add Work
                 </button>
@@ -1969,7 +1957,7 @@ function VendorDashboard() {
             {/* Meter Bar */}
             <div className="member-meter-box">
               <div className="member-meter-header">
-                <span style={{ fontWeight: 800, color: "#FFFFFF", fontSize: "14px" }}>
+                <span style={{ fontWeight: 800, color: "#0F172A", fontSize: "14px" }}>
                   Franchise License Capacity: {teamMembers.length} of 8 Member Slots Used
                 </span>
                 <span style={{ fontSize: "13px", color: teamMembers.length >= 8 ? "#EF4444" : "#10B981", fontWeight: 700 }}>
@@ -2132,7 +2120,7 @@ function VendorDashboard() {
                 {/* 1. Aadhaar Card Photo */}
                 <div className={`kyc-doc-card ${kycForm.aadhaarDoc ? "completed" : ""}`}>
                   <span style={{ fontSize: "24px" }}>🪪</span>
-                  <strong style={{ color: "#FFFFFF", fontSize: "14px" }}>Aadhaar Card Document</strong>
+                  <strong style={{ color: "#0F172A", fontSize: "14px" }}>Aadhaar Card Document</strong>
                   <div className="doc-preview-box">
                     {kycForm.aadhaarDoc ? (
                       <img src={kycForm.aadhaarDoc} alt="Aadhaar" className="doc-preview-img" />
@@ -2157,7 +2145,7 @@ function VendorDashboard() {
                 {/* 2. PAN Card Photo */}
                 <div className={`kyc-doc-card ${kycForm.panDoc ? "completed" : ""}`}>
                   <span style={{ fontSize: "24px" }}>💳</span>
-                  <strong style={{ color: "#FFFFFF", fontSize: "14px" }}>PAN Card Document</strong>
+                  <strong style={{ color: "#0F172A", fontSize: "14px" }}>PAN Card Document</strong>
                   <div className="doc-preview-box">
                     {kycForm.panDoc ? (
                       <img src={kycForm.panDoc} alt="PAN" className="doc-preview-img" />
@@ -2182,7 +2170,7 @@ function VendorDashboard() {
                 {/* 3. Live Selfie Photo */}
                 <div className={`kyc-doc-card ${kycForm.selfieDoc ? "completed" : ""}`}>
                   <span style={{ fontSize: "24px" }}>🤳</span>
-                  <strong style={{ color: "#FFFFFF", fontSize: "14px" }}>Live Selfie Photo</strong>
+                  <strong style={{ color: "#0F172A", fontSize: "14px" }}>Live Selfie Photo</strong>
                   <div className="doc-preview-box">
                     {kycForm.selfieDoc ? (
                       <img src={kycForm.selfieDoc} alt="Live Selfie" className="doc-preview-img" />
@@ -2234,56 +2222,57 @@ function VendorDashboard() {
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "28px" }}>
-              <div style={{ background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "16px", padding: "24px" }}>
-                <div style={{ fontSize: "13px", color: "#94A3B8", textTransform: "uppercase" }}>Available Wallet Balance</div>
-                <div style={{ fontSize: "36px", fontWeight: 900, color: "#10B981", margin: "6px 0" }}>
+              <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "16px", padding: "24px" }}>
+                <div style={{ fontSize: "13px", color: "#64748B", textTransform: "uppercase", fontWeight: 700 }}>Available Wallet Balance</div>
+                <div style={{ fontSize: "36px", fontWeight: 900, color: "#10B981", margin: "6px 0", fontFamily: "var(--vendor-font-mono)" }}>
                   ₹{wallet.balance.toLocaleString()}
                 </div>
-                <p style={{ fontSize: "12px", color: "#64748B", margin: 0 }}>Instant withdrawal available 24/7</p>
+                <p style={{ fontSize: "12.5px", color: "#64748B", margin: 0 }}>Instant withdrawal available 24/7</p>
               </div>
 
-              <div style={{ background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "16px", padding: "24px" }}>
-                <div style={{ fontSize: "13px", color: "#94A3B8", textTransform: "uppercase" }}>Franchise Plan License</div>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "#FF4D2D", margin: "6px 0" }}>
+              <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "16px", padding: "24px" }}>
+                <div style={{ fontSize: "13px", color: "#64748B", textTransform: "uppercase", fontWeight: 700 }}>Franchise Plan License</div>
+                <div style={{ fontSize: "22px", fontWeight: 800, color: "#FF4D2D", margin: "6px 0" }}>
                   {vendor.franchisePlan === "annual" ? "₹5,00,000 / 1 Year Master" : "₹4,000 / Monthly Plan"}
                 </div>
-                <p style={{ fontSize: "12px", color: "#64748B", margin: 0 }}>Capacity: Up to 8 Shop Members</p>
+                <p style={{ fontSize: "12.5px", color: "#64748B", margin: 0 }}>Capacity: Up to 8 Shop Members</p>
               </div>
             </div>
 
             {/* Withdraw form */}
             <form onSubmit={handleWithdraw} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "12px", alignItems: "flex-end", marginBottom: "28px" }}>
               <div>
-                <label style={{ fontSize: "12.5px", color: "#CBD5E1", display: "block", marginBottom: "4px" }}>Transfer Amount (₹)</label>
+                <label style={{ fontSize: "12.5px", color: "#475569", display: "block", marginBottom: "4px", fontWeight: 700 }}>Transfer Amount (₹)</label>
                 <input 
                   type="number"
                   placeholder="Min ₹100"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #475569", background: "rgba(15,23,42,0.6)", color: "#FFF" }}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A" }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: "12.5px", color: "#CBD5E1", display: "block", marginBottom: "4px" }}>UPI ID / VPA</label>
+                <label style={{ fontSize: "12.5px", color: "#475569", display: "block", marginBottom: "4px", fontWeight: 700 }}>UPI ID / VPA</label>
                 <input 
                   type="text"
                   placeholder="partner@okaxis / 9876500001@paytm"
                   value={withdrawUpi}
                   onChange={(e) => setWithdrawUpi(e.target.value)}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #475569", background: "rgba(15,23,42,0.6)", color: "#FFF" }}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A" }}
                 />
               </div>
               <button
                 type="submit"
                 disabled={withdrawing || wallet.balance < 100}
-                style={{ padding: "11px 22px", borderRadius: "8px", border: "none", background: "#FF4D2D", color: "#FFF", fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}
+                className="btn-primary-glow"
+                style={{ padding: "11px 22px", whiteSpace: "nowrap" }}
               >
                 {withdrawing ? "Transferring..." : "Withdraw to Bank ⚡"}
               </button>
             </form>
 
             {/* Transactions Ledger */}
-            <h4 style={{ color: "#FFFFFF", fontSize: "16px", marginBottom: "12px" }}>Recent Wallet Ledger Transactions</h4>
+            <h4 style={{ color: "#0F172A", fontSize: "16px", fontWeight: 800, marginBottom: "12px" }}>Recent Wallet Ledger Transactions</h4>
             <div className="admin-table-container">
               <table className="admin-table">
                 <thead>
