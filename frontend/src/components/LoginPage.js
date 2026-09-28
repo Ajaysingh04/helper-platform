@@ -115,6 +115,8 @@ function LoginPage() {
   const [userPhone, setUserPhone] = useState("");
   const [userAddress, setUserAddress] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [userConfirmPassword, setUserConfirmPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
 
   // Customer OTP State
@@ -319,6 +321,11 @@ function LoginPage() {
     if (isRegister) {
       if (!userName.trim() || !userEmail.trim() || !userPassword) {
         setErrorMessage("Please provide your name, email, and password to register.");
+        return;
+      }
+
+      if (userConfirmPassword && userPassword !== userConfirmPassword) {
+        setErrorMessage("Passwords do not match. Please verify your confirm password.");
         return;
       }
 
@@ -967,26 +974,42 @@ function LoginPage() {
                       <label className="pin-input-label">Create Password *</label>
                       <div className="pin-input-field-wrap">
                         <input 
-                          type="password" 
+                          type={showPassword ? "text" : "password"} 
                           placeholder="Min 4 chars"
                           value={vendorData.password}
                           onChange={(e) => setVendorData({ ...vendorData, password: e.target.value })}
                           className="pin-input-field"
                           required
                         />
+                        <button 
+                          type="button" 
+                          className="pin-password-toggle"
+                          onClick={() => setShowPassword(!showPassword)}
+                          title={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? "🙈" : "👁️"}
+                        </button>
                       </div>
                     </div>
                     <div className="pin-input-group">
                       <label className="pin-input-label">Confirm Password *</label>
                       <div className="pin-input-field-wrap">
                         <input 
-                          type="password" 
+                          type={showConfirmPassword ? "text" : "password"} 
                           placeholder="Repeat password"
                           value={vendorData.confirmPassword}
                           onChange={(e) => setVendorData({ ...vendorData, confirmPassword: e.target.value })}
                           className="pin-input-field"
                           required
                         />
+                        <button 
+                          type="button" 
+                          className="pin-password-toggle"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          title={showConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                          {showConfirmPassword ? "🙈" : "👁️"}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1134,11 +1157,11 @@ function LoginPage() {
 
                   {/* Password */}
                   <div className="pin-input-group">
-                    <label className="pin-input-label">Password *</label>
+                    <label className="pin-input-label">{isRegister ? "Create Password *" : "Password *"}</label>
                     <div className="pin-input-field-wrap">
                       <input 
                         type={showPassword ? "text" : "password"} 
-                        placeholder="Enter password" 
+                        placeholder={isRegister ? "Create password" : "Enter password"} 
                         value={userPassword}
                         onChange={(e) => setUserPassword(e.target.value)}
                         className="pin-input-field"
@@ -1148,11 +1171,37 @@ function LoginPage() {
                         type="button" 
                         className="pin-password-toggle"
                         onClick={() => setShowPassword(!showPassword)}
+                        title={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? "🙈" : "👁️"}
                       </button>
                     </div>
                   </div>
+
+                  {/* Confirm Password in Signup Mode */}
+                  {isRegister && (
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Confirm Password *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type={showConfirmPassword ? "text" : "password"} 
+                          placeholder="Repeat password" 
+                          value={userConfirmPassword}
+                          onChange={(e) => setUserConfirmPassword(e.target.value)}
+                          className="pin-input-field"
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="pin-password-toggle"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          title={showConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                          {showConfirmPassword ? "🙈" : "👁️"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Registered demo helper pill in login mode */}
                   {!isRegister && (
