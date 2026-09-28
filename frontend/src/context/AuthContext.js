@@ -28,11 +28,15 @@ export const AuthProvider = ({ children }) => {
         return {
           name: p.name || "Customer",
           role: "Customer",
-          email: p.email || p.mobile || ""
+          email: p.email || p.mobile || "",
+          mobile: p.mobile || "",
+          avatar: p.avatar || "",
+          address: p.address || "",
+          city: p.city || ""
         };
       }
     } catch (e) {}
-    return { name: "Ajay Singh Banafer", role: "Member", email: "ajay@example.com" };
+    return { name: "Ajay Singh Banafer", role: "Member", email: "ajay@example.com", avatar: "" };
   });
 
   const checkAuth = useCallback(() => {
@@ -58,10 +62,14 @@ export const AuthProvider = ({ children }) => {
           setCurrentUser({
             name: p.name || "Customer",
             role: "Customer",
-            email: p.email || p.mobile || ""
+            email: p.email || p.mobile || "",
+            mobile: p.mobile || "",
+            avatar: p.avatar || "",
+            address: p.address || "",
+            city: p.city || ""
           });
         } else {
-          setCurrentUser({ name: "Ajay Singh Banafer", role: "Member", email: "ajay@example.com" });
+          setCurrentUser({ name: "Ajay Singh Banafer", role: "Member", email: "ajay@example.com", avatar: "" });
         }
       } catch (e) {}
     } else {

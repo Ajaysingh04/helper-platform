@@ -163,7 +163,11 @@ function Header() {
                     aria-expanded={accountMenuOpen}
                   >
                     <div className="profile-avatar-circle">
-                      <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                      {currentUser?.avatar ? (
+                        <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                      ) : (
+                        <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                      )}
                     </div>
                     <div className="account-btn-text">
                       <span className="acc-label">ACCOUNT</span>
@@ -179,7 +183,11 @@ function Header() {
                     <div className="account-dropdown-menu animate-fade-up">
                       <div className="dropdown-user-header">
                         <div className="dropdown-avatar-circle">
-                          <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                          {currentUser?.avatar ? (
+                            <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                          ) : (
+                            <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                          )}
                         </div>
                         <div className="dropdown-user-info">
                           <strong className="dropdown-user-name">{currentUser?.name || "Verified User"}</strong>
@@ -377,7 +385,11 @@ function Header() {
               <div className="mobile-logged-section">
                 <div className="mobile-user-card">
                   <div className="dropdown-avatar-circle">
-                    <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                    {currentUser?.avatar ? (
+                      <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    ) : (
+                      <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                    )}
                   </div>
                   <div className="dropdown-user-info">
                     <strong className="dropdown-user-name">{currentUser?.name || "Verified User"}</strong>
