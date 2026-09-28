@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FLOATING PILL HEADER (Beew Studio / 5U AI Inspired)
+   FLOATING PILL HEADER - EXECUTIVE ULTRA-RESPONSIVE DESIGN SYSTEM
    ========================================================================== */
 
 .header-floating-wrapper {
@@ -8,15 +8,14 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  padding: 6px 20px;
+  padding: 8px 20px;
   width: 100%;
   background: transparent;
-  border-bottom: none;
-  box-shadow: none;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Homepage Hero Header: Floats directly over the full-page hero banner without taking flow space */
+/* Homepage Hero Header: floats over hero */
 .header-floating-wrapper.home-header {
   margin-bottom: -76px;
   background: transparent !important;
@@ -28,290 +27,69 @@
   pointer-events: auto;
 }
 
-/* Other non-home pages have standard clean background */
+/* Non-home pages have standard clean background */
 .header-floating-wrapper:not(.home-header) {
-  background: #FFFFFF;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  background: rgba(248, 249, 251, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 228, 233, 0.6);
 }
 
 body.dark .header-floating-wrapper:not(.home-header) {
-  background: #0B0F19;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  background: rgba(11, 15, 25, 0.85);
+  border-bottom-color: rgba(31, 41, 55, 0.6);
 }
 
-.header-floating-wrapper.scrolled:not(.home-header) {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+.header-floating-wrapper.scrolled {
+  padding: 6px 20px;
 }
 
-body.dark .header-floating-wrapper.scrolled:not(.home-header) {
-  background: rgba(11, 15, 25, 0.95);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
-
+/* The Main Floating Pill Container */
 .header-pill-bar {
-  max-width: 1220px;
+  max-width: 1240px;
   margin: 0 auto;
-  height: 64px;
-  background: rgba(255, 255, 255, 0.92);
+  height: 60px;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(226, 228, 233, 0.85);
+  border: 1px solid #E2E4E9;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px 0 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.02);
+  transition: all 0.25s ease;
+  position: relative;
 }
 
 body.dark .header-pill-bar {
-  background: rgba(15, 20, 31, 0.92);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  background: rgba(17, 24, 39, 0.95);
+  border-color: #1F2937;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 
 .header-floating-wrapper.scrolled .header-pill-bar {
   background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  border-color: rgba(208, 213, 221, 0.9);
+  border-color: #CBD5E1;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.09);
 }
 
 body.dark .header-floating-wrapper.scrolled .header-pill-bar {
-  background: rgba(11, 15, 25, 0.98);
+  background: rgba(15, 20, 31, 0.98);
+  border-color: #374151;
 }
 
-/* ================= Brand Logo ================= */
+/* ==========================================================================
+   1. BRAND LOGO (HELPER GO)
+   ========================================================================== */
+
 .header-left {
   display: flex;
   align-items: center;
-}
-
-.app-logo-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
-
-.logo-pill-badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #0B0F19;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease;
-}
-
-body.dark .logo-pill-badge {
-  background: var(--coral);
-}
-
-.app-logo-link:hover .logo-pill-badge {
-  transform: scale(1.08) rotate(-6deg);
-}
-
-.app-name {
-  color: var(--text-main);
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  display: flex;
-  align-items: center;
-}
-
-.app-name .dot {
-  color: var(--coral);
-  font-size: 24px;
-  line-height: 0;
-  margin-left: 2px;
-}
-
-/* ================= Nav Links ================= */
-.header-nav {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   flex-shrink: 0;
 }
 
-.header-nav .nav-link {
-  padding: 8px 13px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-decoration: none;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-.header-nav .nav-link:hover {
-  color: var(--text-main);
-  background: var(--surface-input);
-}
-
-.header-nav .nav-link.active {
-  color: var(--text-main);
-  background: rgba(0, 0, 0, 0.05);
-}
-
-body.dark .header-nav .nav-link.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: #FFFFFF;
-}
-
-/* ================= Right Section ================= */
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-book-btn {
-  padding: 9px 20px !important;
-  font-size: 12.5px !important;
-}
-
-.theme-toggle-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border-color);
-  background: var(--surface-input);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.theme-toggle-btn:hover {
-  background: #FFFFFF;
-  border-color: #D0D5DD;
-  transform: rotate(20deg);
-}
-
-.login-trigger-btn {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-main);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.login-trigger-btn:hover {
-  background: #FFFFFF;
-  border-color: #98A2B3;
-}
-
-.profile-avatar-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--coral) 0%, #ff8c75 100%);
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(255, 77, 45, 0.3);
-}
-
-.mobile-nav-toggle {
-  display: none;
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  color: var(--text-main);
-  cursor: pointer;
-  padding: 6px;
-}
-
-/* ================= Responsive ================= */
-@media (max-width: 1200px) {
-  .header-location-pill {
-    max-width: 150px;
-    padding: 5px 10px;
-    font-size: 11.5px;
-  }
-  .header-nav {
-    gap: 2px;
-  }
-  .header-nav .nav-link {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-  .nexora-account-btn {
-    padding: 3px 6px;
-    gap: 5px;
-  }
-  .account-btn-text .acc-action {
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 992px) {
-  .header-news-hide-mobile {
-    display: none;
-  }
-  
-  .header-nav {
-    display: none;
-  }
-
-  .header-nav.mobile-open {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 76px;
-    left: 20px;
-    right: 20px;
-    background: var(--surface-card);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 16px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
-    gap: 8px;
-  }
-
-  .mobile-nav-toggle {
-    display: block;
-  }
-}
-
-@media (max-width: 580px) {
-  .header-floating-wrapper {
-    top: 8px;
-    padding: 0 10px;
-  }
-  .header-pill-bar {
-    height: 58px;
-    padding: 0 12px;
-  }
-  .header-book-btn {
-    display: none;
-  }
-}
-
-/* ================= Nexora GO Header Styles ================= */
 .nexora-logo-link {
   display: flex;
   flex-direction: column;
@@ -322,14 +100,15 @@ body.dark .header-nav .nav-link.active {
 .nexora-brand-mark {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .nexora-brand-text {
+  font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
   font-size: 20px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  color: #0F172A;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0B0F19;
 }
 
 body.dark .nexora-brand-text {
@@ -339,7 +118,7 @@ body.dark .nexora-brand-text {
 .nexora-go-badge {
   background: linear-gradient(135deg, #FF6B4E 0%, #FF3D1F 100%);
   color: #FFFFFF;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 6px;
@@ -350,7 +129,7 @@ body.dark .nexora-brand-text {
 .nexora-sub-tag {
   font-size: 8.5px;
   font-weight: 700;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.06em;
   color: #64748B;
   text-transform: uppercase;
 }
@@ -359,20 +138,76 @@ body.dark .nexora-sub-tag {
   color: #94A3B8;
 }
 
-/* Location Selector Pill */
+/* ==========================================================================
+   2. DESKTOP CENTER NAVIGATION
+   ========================================================================== */
+
+.header-nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.header-nav-desktop .nav-link {
+  padding: 7px 14px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #525866;
+  text-decoration: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.header-nav-desktop .nav-link:hover {
+  color: #0B0F19;
+  background: #F1F5F9;
+}
+
+body.dark .header-nav-desktop .nav-link:hover {
+  color: #FFFFFF;
+  background: #1E293B;
+}
+
+.header-nav-desktop .nav-link.active {
+  color: #0B0F19;
+  background: #E2E8F0;
+}
+
+body.dark .header-nav-desktop .nav-link.active {
+  background: #374151;
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   3. RIGHT CONTROLS SECTION
+   ========================================================================== */
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Location Selector Pill (Desktop) */
 .header-location-pill {
   display: flex;
   align-items: center;
   gap: 6px;
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 9999px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
-  max-width: 220px;
+  max-width: 170px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -386,13 +221,14 @@ body.dark .header-location-pill {
 }
 
 .header-location-pill:hover {
-  background: #EFF6FF;
-  border-color: #3B82F6;
-  color: #1D4ED8;
+  background: #FFF1EE;
+  border-color: rgba(255, 77, 45, 0.3);
+  color: #FF4D2D;
 }
 
 .loc-pin-icon {
-  font-size: 14px;
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 .loc-text {
@@ -404,56 +240,64 @@ body.dark .header-location-pill {
 /* Cart Button */
 .header-cart-btn {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
+  color: #334155;
   text-decoration: none;
-  font-size: 16px;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 body.dark .header-cart-btn {
   background: #1E293B;
   border-color: #334155;
+  color: #CBD5E1;
 }
 
 .header-cart-btn:hover {
   background: #EFF6FF;
   border-color: #3B82F6;
-  transform: scale(1.05);
+  color: #2563EB;
+  transform: translateY(-1px);
 }
 
 .cart-badge-dot {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #FF4D2D;
-  border: 2px solid #FFFFFF;
+  border: 1.5px solid #FFFFFF;
 }
 
-/* Nexora Account Button */
+/* Account Button */
+.profile-container {
+  display: flex;
+  align-items: center;
+}
+
 .nexora-account-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 10px;
+  padding: 4px 8px;
+  border-radius: 9999px;
   transition: background 0.2s ease;
 }
 
 .nexora-account-btn:hover {
-  background: rgba(15, 23, 42, 0.05);
+  background: rgba(15, 23, 42, 0.04);
 }
 
 body.dark .nexora-account-btn:hover {
@@ -469,8 +313,14 @@ body.dark .nexora-account-btn:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
   border: 1px solid #BFDBFE;
+  flex-shrink: 0;
+}
+
+body.dark .account-user-icon {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.35);
+  color: #60A5FA;
 }
 
 .account-btn-text {
@@ -481,19 +331,471 @@ body.dark .nexora-account-btn:hover {
 }
 
 .acc-label {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
   color: #64748B;
   letter-spacing: 0.5px;
 }
 
+body.dark .acc-label {
+  color: #94A3B8;
+}
+
 .acc-action {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: #0F172A;
+  color: #0B0F19;
 }
 
 body.dark .acc-action {
   color: #FFFFFF;
 }
 
+.profile-logged-wrap {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.profile-avatar-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF4D2D 0%, #FF785E 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(255, 77, 45, 0.3);
+  border: 1.5px solid #FFFFFF;
+  flex-shrink: 0;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+body.dark .theme-toggle-btn {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.theme-toggle-btn:hover {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  transform: rotate(15deg);
+}
+
+body.dark .theme-toggle-btn:hover {
+  background: #334155;
+}
+
+/* ==========================================================================
+   4. HAMBURGER TOGGLE BUTTON
+   ========================================================================== */
+
+.mobile-nav-toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  color: #0B0F19;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+body.dark .mobile-nav-toggle {
+  background: #1E293B;
+  border-color: #334155;
+  color: #FFFFFF;
+}
+
+.mobile-nav-toggle:hover {
+  background: #E2E8F0;
+}
+
+body.dark .mobile-nav-toggle:hover {
+  background: #334155;
+}
+
+/* Animated Hamburger lines */
+.hamburger-box {
+  width: 18px;
+  height: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.hamburger-inner,
+.hamburger-box::before,
+.hamburger-box::after {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.mobile-nav-toggle.open .hamburger-inner {
+  opacity: 0;
+}
+
+.mobile-nav-toggle.open .hamburger-box::before {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.mobile-nav-toggle.open .hamburger-box::after {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ==========================================================================
+   5. MOBILE SLIDE-DOWN DRAWER & BACKDROP
+   ========================================================================== */
+
+.mobile-nav-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(11, 15, 25, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 998;
+  animation: fadeIn 0.2s ease;
+}
+
+.mobile-nav-drawer {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 12px;
+  right: 12px;
+  background: #FFFFFF;
+  border: 1px solid #E2E4E9;
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: 0 20px 48px rgba(11, 15, 25, 0.18);
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+body.dark .mobile-nav-drawer {
+  background: #111827;
+  border-color: #1F2937;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+}
+
+.mobile-nav-drawer.open {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Mobile Location Row inside Drawer */
+.mobile-drawer-location {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border-radius: 14px;
+  border: 1px solid #ECEEF2;
+  margin-bottom: 12px;
+}
+
+body.dark .mobile-drawer-location {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.mobile-loc-icon {
+  font-size: 16px;
+}
+
+.mobile-loc-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-loc-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #64748B;
+  letter-spacing: 0.05em;
+}
+
+body.dark .mobile-loc-label {
+  color: #94A3B8;
+}
+
+.mobile-loc-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0B0F19;
+}
+
+body.dark .mobile-loc-val {
+  color: #FFFFFF;
+}
+
+.mobile-loc-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* Main Navigation Items inside Drawer */
+.mobile-drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: #334155;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+body.dark .mobile-nav-item {
+  color: #CBD5E1;
+}
+
+.mobile-nav-item:hover {
+  background: #F1F5F9;
+  color: #0B0F19;
+}
+
+body.dark .mobile-nav-item:hover {
+  background: #1E293B;
+  color: #FFFFFF;
+}
+
+.mobile-nav-item.active {
+  background: rgba(255, 77, 45, 0.1);
+  color: #FF4D2D;
+}
+
+body.dark .mobile-nav-item.active {
+  background: rgba(255, 77, 45, 0.18);
+  color: #FF785E;
+}
+
+.item-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.item-text {
+  flex: 1;
+}
+
+.item-arrow {
+  font-size: 14px;
+  color: #94A3B8;
+  transition: transform 0.2s ease;
+}
+
+.mobile-nav-item:hover .item-arrow {
+  transform: translateX(3px);
+  color: #FF4D2D;
+}
+
+/* Drawer Footer */
+.mobile-drawer-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #F1F3F6;
+}
+
+body.dark .mobile-drawer-footer {
+  border-top-color: #1F2937;
+}
+
+.btn-mobile-login {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #FF4D2D 0%, #E53E1F 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-mobile-login:hover {
+  box-shadow: 0 6px 18px rgba(255, 77, 45, 0.45);
+}
+
+.btn-mobile-login.logged {
+  background: #0B0F19;
+  box-shadow: 0 4px 14px rgba(11, 15, 25, 0.25);
+}
+
+body.dark .btn-mobile-login.logged {
+  background: #1E293B;
+  border: 1px solid #374151;
+}
+
+.mobile-emergency-call {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748B;
+  text-decoration: none;
+  padding: 6px 0;
+}
+
+body.dark .mobile-emergency-call {
+  color: #94A3B8;
+}
+
+.mobile-emergency-call strong {
+  color: #FF4D2D;
+}
+
+/* ==========================================================================
+   6. RESPONSIVE BREAKPOINTS (Mobile, Tablet, Desktop)
+   ========================================================================== */
+
+/* Tablets (< 1024px) */
+@media (max-width: 1024px) {
+  .header-nav-desktop {
+    display: none;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+  }
+}
+
+/* Small Tablets & Large Phones (< 768px) */
+@media (max-width: 768px) {
+  .header-floating-wrapper {
+    padding: 6px 14px;
+  }
+
+  /* Hide bulky elements from top bar on mobile (they are now in mobile drawer) */
+  .header-location-pill {
+    display: none;
+  }
+
+  .account-btn-text {
+    display: none;
+  }
+
+  .nexora-account-btn {
+    padding: 0;
+  }
+
+  .nexora-sub-tag {
+    display: none;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+}
+
+/* Mobile Screens (< 480px / 360px) */
+@media (max-width: 480px) {
+  .header-floating-wrapper {
+    padding: 4px 10px;
+  }
+
+  .header-pill-bar {
+    height: 52px;
+    padding: 0 12px;
+  }
+
+  .nexora-brand-text {
+    font-size: 18px;
+  }
+
+  .nexora-go-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .header-cart-btn,
+  .theme-toggle-btn,
+  .mobile-nav-toggle {
+    width: 32px;
+    height: 32px;
+  }
+
+  .account-user-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .profile-avatar-circle {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .mobile-nav-drawer {
+    left: 8px;
+    right: 8px;
+    padding: 14px;
+    border-radius: 20px;
+  }
+}
