@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
 import QrCameraScannerModal from "./QrCameraScannerModal";
@@ -42,9 +42,25 @@ const getCategoryEmoji = (category) => {
 
 function VendorDashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryTab = searchParams.get("tab");
 
   const [vendor, setVendor] = useState(null);
-  const [activeTab, setActiveTab] = useState("bookings");
+  const [activeTab, setActiveTab] = useState(() => {
+    if (queryTab === "profile" || queryTab === "work") return "work";
+    if (queryTab === "kyc") return "kyc";
+    if (queryTab === "members") return "members";
+    if (queryTab === "wallet") return "wallet";
+    return "bookings";
+  });
+
+  useEffect(() => {
+    if (queryTab === "profile" || queryTab === "work") {
+      setActiveTab("work");
+    } else if (queryTab === "kyc" || queryTab === "members" || queryTab === "wallet" || queryTab === "bookings") {
+      setActiveTab(queryTab);
+    }
+  }, [queryTab]);
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
@@ -1479,7 +1495,7 @@ function VendorDashboard() {
             onClick={() => setActiveTab("work")}
           >
             <span>🛠️</span>
-            <span>Categories, Work & Location</span>
+            <span>Vendor Profile & Work</span>
           </button>
 
           <button 
@@ -2054,14 +2070,36 @@ function VendorDashboard() {
           <div className="vendor-tab-content-card animate-fade-in">
             <div className="vendor-card-head">
               <div>
-                <h3>Manage Categories, Phone, Location & Custom Work</h3>
+                <h3>Vendor Profile, Shop & Service Details</h3>
                 <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>
-                  Update your service offerings and shop details displayed across the platform
+                  Update your shop profile, contact info, service offerings and coverage area
                 </span>
               </div>
             </div>
 
             <form onSubmit={handleProfileAndWorkSave} className="vendor-settings-form">
+              <div className="vendor-input-group">
+                <label>Shop / Business Name *</label>
+                <input 
+                  type="text"
+                  value={profileForm.shopName}
+                  onChange={(e) => setProfileForm({ ...profileForm, shopName: e.target.value })}
+                  placeholder="e.g. Ramesh Plumbing Solutions"
+                  required
+                />
+              </div>
+
+              <div className="vendor-input-group">
+                <label>Service Pro / Owner Name *</label>
+                <input 
+                  type="text"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  placeholder="e.g. Ramesh Kumar"
+                  required
+                />
+              </div>
+
               <div className="vendor-input-group">
                 <label>Service Category *</label>
                 <select 

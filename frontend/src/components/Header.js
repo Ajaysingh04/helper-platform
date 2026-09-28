@@ -16,6 +16,48 @@ function Header() {
   const menuRef = useRef(null);
   const accountMenuRef = useRef(null);
 
+  // Vendor Session Detection and live synchronization
+  const [vendorData, setVendorData] = useState(() => {
+    try {
+      const raw = localStorage.getItem("helper_vendor");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const syncVendor = () => {
+      try {
+        const raw = localStorage.getItem("helper_vendor");
+        setVendorData(raw ? JSON.parse(raw) : null);
+      } catch (e) {}
+    };
+    window.addEventListener("vendor_updated", syncVendor);
+    window.addEventListener("storage", syncVendor);
+    return () => {
+      window.removeEventListener("vendor_updated", syncVendor);
+      window.removeEventListener("storage", syncVendor);
+    };
+  }, []);
+
+  const isVendor = Boolean(
+    vendorData ||
+    localStorage.getItem("helper_vendor") ||
+    localStorage.getItem("helper_vendor_token") ||
+    (currentUser?.role && ["partner", "vendor", "serviceman", "provider"].includes(currentUser.role.toLowerCase()))
+  );
+
+  const displayName = isVendor 
+    ? (vendorData?.shopName || vendorData?.name || currentUser?.name || "Service Partner")
+    : (currentUser?.name || "Verified User");
+
+  const displayFirstName = displayName.trim().split(" ")[0] || (isVendor ? "Vendor" : "Account");
+
+  const displayBadge = isVendor
+    ? `${vendorData?.category || "Service"} Partner Pro`
+    : (currentUser?.role || "Active Account");
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 15) {
@@ -150,7 +192,7 @@ function Header() {
               <span className="cart-badge-dot"></span>
             </Link>
 
-            {/* Account / Sign In with Dropdown Menu */}
+              {/* Account / Sign In with Dropdown Menu */}
             <div className="profile-container" ref={accountMenuRef}>
               {isLoggedIn ? (
                 <>
@@ -158,21 +200,26 @@ function Header() {
                     type="button" 
                     className={`nexora-account-btn logged-in ${accountMenuOpen ? "active" : ""}`}
                     onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    title="Account Options"
-                    aria-label="Account Options"
+                    title={isVendor ? "Vendor Account Options" : "Account Options"}
+                    aria-label={isVendor ? "Vendor Account Options" : "Account Options"}
                     aria-expanded={accountMenuOpen}
                   >
-                    <div className="profile-avatar-circle">
-                      {currentUser?.avatar ? (
+                    <div 
+                      className="profile-avatar-circle" 
+                      style={isVendor ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "16px" } : {}}
+                    >
+                      {isVendor ? (
+                        <span>🛠️</span>
+                      ) : currentUser?.avatar ? (
                         <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
                       ) : (
                         <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
                       )}
                     </div>
                     <div className="account-btn-text">
-                      <span className="acc-label">ACCOUNT</span>
+                      <span className="acc-label">{isVendor ? "VENDOR" : "ACCOUNT"}</span>
                       <span className="acc-action">
-                        {(currentUser?.name?.trim()?.split(" ")[0] || "My Account")} 
+                        {displayFirstName} 
                         <span className={`acc-chevron ${accountMenuOpen ? "open" : ""}`}>▾</span>
                       </span>
                     </div>
@@ -182,18 +229,23 @@ function Header() {
                   {accountMenuOpen && (
                     <div className="account-dropdown-menu animate-fade-up">
                       <div className="dropdown-user-header">
-                        <div className="dropdown-avatar-circle">
-                          {currentUser?.avatar ? (
+                        <div 
+                          className="dropdown-avatar-circle" 
+                          style={isVendor ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "18px" } : {}}
+                        >
+                          {isVendor ? (
+                            <span>🛠️</span>
+                          ) : currentUser?.avatar ? (
                             <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
                           ) : (
                             <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
                           )}
                         </div>
                         <div className="dropdown-user-info">
-                          <strong className="dropdown-user-name">{currentUser?.name || "Verified User"}</strong>
+                          <strong className="dropdown-user-name">{displayName}</strong>
                           <span className="dropdown-user-badge">
                             <span className="active-green-dot" />
-                            {currentUser?.role || "Active Account"}
+                            {displayBadge}
                           </span>
                         </div>
                       </div>
@@ -201,24 +253,51 @@ function Header() {
                       <div className="dropdown-menu-divider" />
 
                       <div className="dropdown-menu-list">
-                        {/* Option 1: Profile */}
+                        {/* Option 1: Profile (Opens Vendor Profile if vendor, Customer drawer if customer) */}
                         <button
                           type="button"
                           className="dropdown-menu-item"
                           onClick={() => {
                             setAccountMenuOpen(false);
-                            setDrawerOpen(true);
+                            if (isVendor) {
+                              navigate("/vendor/dashboard?tab=profile");
+                            } else {
+                              setDrawerOpen(true);
+                            }
                           }}
                         >
                           <div className="item-icon-box profile-icon">
-                            <span>👤</span>
+                            <span>{isVendor ? "🛠️" : "👤"}</span>
                           </div>
                           <div className="item-text-box">
-                            <span className="item-title">Profile</span>
-                            <span className="item-sub">View bookings, address & edit profile</span>
+                            <span className="item-title">{isVendor ? "Vendor Profile & Shop" : "Profile"}</span>
+                            <span className="item-sub">
+                              {isVendor ? "Edit shop details, rate, work & categories" : "View bookings, address & edit profile"}
+                            </span>
                           </div>
                           <span className="item-arrow">›</span>
                         </button>
+
+                        {/* If Vendor: Quick link to Orders & Jobs */}
+                        {isVendor && (
+                          <button
+                            type="button"
+                            className="dropdown-menu-item"
+                            onClick={() => {
+                              setAccountMenuOpen(false);
+                              navigate("/vendor/dashboard?tab=bookings");
+                            }}
+                          >
+                            <div className="item-icon-box" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#10B981" }}>
+                              <span>📋</span>
+                            </div>
+                            <div className="item-text-box">
+                              <span className="item-title">Vendor Orders & Bookings</span>
+                              <span className="item-sub">View customer orders, OTP & dispatch</span>
+                            </div>
+                            <span className="item-arrow">›</span>
+                          </button>
+                        )}
 
                         {/* Option 2: Help */}
                         <button
@@ -248,7 +327,11 @@ function Header() {
                           onClick={() => {
                             setAccountMenuOpen(false);
                             logout();
-                            navigate("/login");
+                            if (isVendor) {
+                              navigate("/login?role=serviceman");
+                            } else {
+                              navigate("/login");
+                            }
                           }}
                         >
                           <div className="item-icon-box logout-icon">
@@ -256,7 +339,7 @@ function Header() {
                           </div>
                           <div className="item-text-box">
                             <span className="item-title">Logout</span>
-                            <span className="item-sub">Sign out from your account</span>
+                            <span className="item-sub">{isVendor ? "Sign out from vendor panel" : "Sign out from your account"}</span>
                           </div>
                           <span className="item-arrow logout-arrow">➔</span>
                         </button>
@@ -384,35 +467,60 @@ function Header() {
             ) : (
               <div className="mobile-logged-section">
                 <div className="mobile-user-card">
-                  <div className="dropdown-avatar-circle">
-                    {currentUser?.avatar ? (
+                  <div 
+                    className="dropdown-avatar-circle" 
+                    style={isVendor ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "18px" } : {}}
+                  >
+                    {isVendor ? (
+                      <span>🛠️</span>
+                    ) : currentUser?.avatar ? (
                       <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
                     ) : (
                       <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
                     )}
                   </div>
                   <div className="dropdown-user-info">
-                    <strong className="dropdown-user-name">{currentUser?.name || "Verified User"}</strong>
+                    <strong className="dropdown-user-name">{displayName}</strong>
                     <span className="dropdown-user-badge">
                       <span className="active-green-dot" />
-                      {currentUser?.role || "Active Account"}
+                      {displayBadge}
                     </span>
                   </div>
                 </div>
 
                 <div className="mobile-action-buttons">
-                  {/* Option 1: Profile */}
+                  {/* Option 1: Profile (Vendor Profile or Customer Profile) */}
                   <button 
                     type="button" 
                     className="mobile-acc-btn profile"
                     onClick={() => {
                       setMobileNavOpen(false);
-                      setDrawerOpen(true);
+                      if (isVendor) {
+                        navigate("/vendor/dashboard?tab=profile");
+                      } else {
+                        setDrawerOpen(true);
+                      }
                     }}
                   >
-                    <span>👤 Profile & Bookings</span>
+                    <span>{isVendor ? "🛠️ Vendor Profile & Shop" : "👤 Profile & Bookings"}</span>
                     <span>›</span>
                   </button>
+
+                  {/* Vendor Orders */}
+                  {isVendor && (
+                    <button 
+                      type="button" 
+                      className="mobile-acc-btn"
+                      style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.2)" }}
+                      onClick={() => {
+                        setMobileNavOpen(false);
+                        navigate("/vendor/dashboard?tab=bookings");
+                      }}
+                    >
+                      <span>📋 Vendor Orders & Bookings</span>
+                      <span>›</span>
+                    </button>
+                  )}
 
                   {/* Option 2: Help */}
                   <button 
@@ -434,7 +542,11 @@ function Header() {
                     onClick={() => {
                       setMobileNavOpen(false);
                       logout();
-                      navigate("/login");
+                      if (isVendor) {
+                        navigate("/login?role=serviceman");
+                      } else {
+                        navigate("/login");
+                      }
                     }}
                   >
                     <span>🚪 Logout (Sign Out)</span>
