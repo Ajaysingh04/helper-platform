@@ -111,12 +111,37 @@ function VendorDashboard() {
   const [newServicePrice, setNewServicePrice] = useState("");
   const [newServiceTime, setNewServiceTime] = useState("45 mins");
 
+  // 1-Hour Service Charge Quick Edit State
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [tempRate, setTempRate] = useState("299");
+  const [savingRate, setSavingRate] = useState(false);
+
   // Shop Members State (Capacity: 8 Members)
   const [teamMembers, setTeamMembers] = useState([
-    { id: "mem_1", name: "Ramesh Kumar (Owner / Lead)", phone: "+91 98765 00001", role: "Master Specialist", active: true }
+    { id: "mem_1", name: "Ramesh Kumar (Owner / Lead)", phone: "+91 98765 00001", role: "Master Specialist", active: true, isOwner: true, upiId: "owner@okhdfc" },
+    { id: "mem_2", name: "Sunil Verma", phone: "+91 98112 33445", role: "Senior Technician", active: true, isOwner: false, upiId: "sunil.verma@upi" },
+    { id: "mem_3", name: "Amit Sharma", phone: "+91 97123 44556", role: "Apprentice / Assistant", active: true, isOwner: false, upiId: "amit.plumber@paytm" }
   ]);
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [memberForm, setMemberForm] = useState({ name: "", phone: "", role: "Technician / Specialist" });
+
+  // Worker Payroll & 10% Admin Cut / 90% Worker Net Payout Engine
+  const [workerPayouts, setWorkerPayouts] = useState(() => {
+    const saved = localStorage.getItem("helper_worker_payouts");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      "mem_1": { totalJobs: 12, totalGross: 8400, adminCut: 8400, netPay: 8400, paidOut: 8400, pendingPay: 0, upiId: "owner@okhdfc" },
+      "mem_2": { totalJobs: 6, totalGross: 4200, adminCut: 420, netPay: 3780, paidOut: 2500, pendingPay: 1280, upiId: "sunil.verma@upi" },
+      "mem_3": { totalJobs: 4, totalGross: 2800, adminCut: 280, netPay: 2520, paidOut: 1800, pendingPay: 720, upiId: "amit.plumber@paytm" }
+    };
+  });
+  const [showWorkerPayoutModal, setShowWorkerPayoutModal] = useState(false);
+  const [selectedWorkerForPayout, setSelectedWorkerForPayout] = useState(null);
+  const [payoutAmountInput, setPayoutAmountInput] = useState("");
+  const [payoutUpiInput, setPayoutUpiInput] = useState("");
+  const [processingPayout, setProcessingPayout] = useState(false);
 
   // KYC & Document Verification State
   const [kycForm, setKycForm] = useState({
@@ -142,11 +167,13 @@ function VendorDashboard() {
       try {
         const p = JSON.parse(raw);
         setVendor(p);
+        const currentRate = String(p.hourlyRate || "299").replace(/[^0-9]/g, "");
+        setTempRate(currentRate);
         setProfileForm({
           shopName: p.shopName || `${p.name}'s ${p.category} Services`,
           name: p.name || "",
           category: p.category || "Plumber",
-          hourlyRate: String(p.hourlyRate || "299").replace(/[^0-9]/g, ""),
+          hourlyRate: currentRate,
           location: p.location || "Sector 62, Noida, Delhi NCR",
           phone: p.phone || "",
           altPhone: p.altPhone || "+91 98765 43210",
@@ -159,7 +186,9 @@ function VendorDashboard() {
           setTeamMembers(p.teamMembers);
         } else if (p.name) {
           setTeamMembers([
-            { id: "mem_1", name: `${p.name} (Owner / Lead)`, phone: p.phone || "+91 98765 00001", role: "Master Specialist", active: true }
+            { id: "mem_1", name: `${p.name} (Owner / Lead)`, phone: p.phone || "+91 98765 00001", role: "Master Specialist", active: true, isOwner: true, upiId: "owner@okhdfc" },
+            { id: "mem_2", name: "Sunil Verma", phone: "+91 98112 33445", role: "Senior Technician", active: true, isOwner: false, upiId: "sunil.verma@upi" },
+            { id: "mem_3", name: "Amit Sharma", phone: "+91 97123 44556", role: "Apprentice / Assistant", active: true, isOwner: false, upiId: "amit.plumber@paytm" }
           ]);
         }
 
@@ -487,7 +516,42 @@ function VendorDashboard() {
   };
 
   // =========================================================================
-  // SHOP MEMBERS MANAGEMENT (UP TO 8 MEMBERS)
+  // QUICK 1-HOUR SERVICE CHARGE EDIT HANDLER
+  // =========================================================================
+  const handleQuickRateSave = async (newRate) => {
+    const rateNum = String(newRate).replace(/[^0-9]/g, "");
+    if (!rateNum || parseInt(rateNum) <= 0) {
+      alert("Please enter a valid 1-hour service rate.");
+      return;
+    }
+    setSavingRate(true);
+    const updatedVendor = {
+      ...vendor,
+      hourlyRate: `₹${rateNum}/hr`
+    };
+    setProfileForm(prev => ({ ...prev, hourlyRate: rateNum }));
+    setVendor(updatedVendor);
+    localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
+    window.dispatchEvent(new Event("vendor_updated"));
+
+    try {
+      const vId = vendor?.id || vendor?._id || "vdr_default";
+      await fetch(`${API_BASE}/providers/${vId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hourlyRate: `₹${rateNum}/hr` })
+      });
+      showToast(`⚡ 1-Hour Service Charge updated to ₹${rateNum}/hr!`);
+    } catch (e) {
+      showToast(`⚡ 1-Hour Service Charge saved locally (₹${rateNum}/hr)`);
+    } finally {
+      setSavingRate(false);
+      setShowRateModal(false);
+    }
+  };
+
+  // =========================================================================
+  // SHOP MEMBERS MANAGEMENT (UP TO 8 MEMBERS) & WORKER ZERO-FEE REGISTRATION
   // =========================================================================
   const handleAddMember = async (e) => {
     e.preventDefault();
@@ -501,19 +565,43 @@ function VendorDashboard() {
       return;
     }
 
+    const cleanPhone = memberForm.phone.trim();
+    const upiHandle = `${cleanPhone.replace(/[^0-9]/g, "").slice(-10)}@upi`;
+
     const newMember = {
       id: `mem_${Date.now()}`,
       name: memberForm.name.trim(),
-      phone: memberForm.phone.trim(),
+      phone: cleanPhone,
       role: memberForm.role || "Technician / Specialist",
-      active: true
+      active: true,
+      isOwner: false,
+      upiId: upiHandle
     };
 
     const updated = [...teamMembers, newMember];
     setTeamMembers(updated);
+
+    // Initialize worker's payroll ledger with 0 pending pay and ₹0 franchise fee
+    setWorkerPayouts(prev => {
+      const updatedLedger = {
+        ...prev,
+        [newMember.id]: {
+          totalJobs: 0,
+          totalGross: 0,
+          adminCut: 0,
+          netPay: 0,
+          paidOut: 0,
+          pendingPay: 0,
+          upiId: upiHandle
+        }
+      };
+      localStorage.setItem("helper_worker_payouts", JSON.stringify(updatedLedger));
+      return updatedLedger;
+    });
+
     setMemberForm({ name: "", phone: "", role: "Technician / Specialist" });
     setShowMemberModal(false);
-    showToast(`Member ${newMember.name} added (${updated.length}/8 slots used) 👥`);
+    showToast(`Member ${newMember.name} added! (Franchise fee: ₹0 Free) 👥`);
 
     try {
       const vId = vendor?.id || vendor?._id || "vdr_default";
@@ -539,6 +627,80 @@ function VendorDashboard() {
     setVendor(updatedVendor);
     localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
     showToast("Team member removed from shop.");
+  };
+
+  // Assign worker to job with live 10% admin cut / 90% worker split
+  const handleAssignWorker = (bookingId, workerId) => {
+    setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === bookingId ? {
+      ...b,
+      assignedWorkerId: workerId
+    } : b));
+    const assignedMember = teamMembers.find(m => m.id === workerId);
+    showToast(`Job assigned to ${assignedMember?.name || "Worker"}! 10% Admin Cut / 90% Worker Net calculated. 🛠️`);
+  };
+
+  // Open worker UPI Payout Modal
+  const handleOpenPayoutModal = (worker) => {
+    setSelectedWorkerForPayout(worker);
+    const data = workerPayouts[worker.id] || { pendingPay: 0, upiId: worker.upiId || "worker@upi" };
+    setPayoutAmountInput(String(data.pendingPay || 0));
+    setPayoutUpiInput(data.upiId || worker.upiId || (worker.phone ? `${worker.phone.replace(/[^0-9]/g, "").slice(-10)}@upi` : "worker@upi"));
+    setShowWorkerPayoutModal(true);
+  };
+
+  // Confirm worker UPI Payout disbursement
+  const handleConfirmWorkerPayout = (e) => {
+    e.preventDefault();
+    if (!selectedWorkerForPayout) return;
+    const amt = parseInt(payoutAmountInput);
+    if (!amt || amt <= 0) {
+      alert("Please enter a valid payout amount (min ₹1).");
+      return;
+    }
+
+    const current = workerPayouts[selectedWorkerForPayout.id] || { pendingPay: 0, paidOut: 0 };
+    if (amt > current.pendingPay && current.pendingPay > 0) {
+      if (!window.confirm(`Entered amount (₹${amt}) is greater than current pending due (₹${current.pendingPay}). Proceed with advance worker payout?`)) {
+        return;
+      }
+    }
+
+    setProcessingPayout(true);
+    setTimeout(() => {
+      setWorkerPayouts(prev => {
+        const curr = prev[selectedWorkerForPayout.id] || { totalJobs: 0, totalGross: 0, adminCut: 0, netPay: 0, paidOut: 0, pendingPay: 0, upiId: payoutUpiInput };
+        const updated = {
+          ...prev,
+          [selectedWorkerForPayout.id]: {
+            ...curr,
+            paidOut: (curr.paidOut || 0) + amt,
+            pendingPay: Math.max(0, (curr.pendingPay || 0) - amt),
+            upiId: payoutUpiInput
+          }
+        };
+        localStorage.setItem("helper_worker_payouts", JSON.stringify(updated));
+        return updated;
+      });
+
+      // Record disbursement in Admin Wallet transactions ledger
+      setWallet(prev => ({
+        ...prev,
+        transactions: [
+          {
+            id: `TX-WKR-${Date.now().toString().slice(-4)}`,
+            type: "debit",
+            amount: amt,
+            description: `Worker Payout (90% share) to ${selectedWorkerForPayout.name} via ${payoutUpiInput}`,
+            date: "Just now"
+          },
+          ...prev.transactions
+        ]
+      }));
+
+      setProcessingPayout(false);
+      setShowWorkerPayoutModal(false);
+      showToast(`💸 ₹${amt.toLocaleString()} paid to ${selectedWorkerForPayout.name} via UPI (${payoutUpiInput}) successfully!`);
+    }, 900);
   };
 
   // =========================================================================
@@ -846,7 +1008,7 @@ function VendorDashboard() {
     }
   };
 
-  // 5. Collect Payment & Complete Job
+  // 5. Collect Payment & Complete Job (10% Admin Cut / 90% Worker Net Payout)
   const handleCollectPayment = async (booking) => {
     const key = booking.bookingId || booking.id || booking._id;
     setCompletingJobId(key);
@@ -855,27 +1017,66 @@ function VendorDashboard() {
       await fetch(`${API_BASE}/bookings/${key}/complete`, { method: "POST" });
     } catch (e) {}
 
-    const totalBill = booking.totalAmount || booking.billBreakdown?.totalPayable || 499;
-    const payout = Math.round(totalBill * 0.85);
+    const totalBill = booking.finalCalculatedAmount || booking.totalAmount || booking.billBreakdown?.totalPayable || 499;
+    const assignedWorkerId = booking.assignedWorkerId || "mem_2";
+    const assignedMember = teamMembers.find(m => m.id === assignedWorkerId) || teamMembers[1] || teamMembers[0];
+    const isOwnerJob = assignedWorkerId === "mem_1" || assignedMember?.isOwner;
+
+    // 10% to Vendor Admin, 90% to Worker (or 100% to Admin if owner completed)
+    const adminCut = isOwnerJob ? totalBill : Math.round(totalBill * 0.10);
+    const workerShare = isOwnerJob ? 0 : (totalBill - adminCut);
 
     setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
       ...b,
       status: "completed",
-      paymentStatus: "captured"
+      paymentStatus: "captured",
+      adminCommission: adminCut,
+      workerPayout: workerShare
     } : b));
 
+    // Update Vendor Admin Wallet
     setWallet(prev => ({
       ...prev,
-      balance: prev.balance + payout,
-      totalEarned: prev.totalEarned + payout,
+      balance: prev.balance + adminCut,
+      totalEarned: prev.totalEarned + adminCut,
       transactions: [
-        { id: `TX-${Date.now().toString().slice(-4)}`, type: "credit", amount: payout, description: `Job payout: ${booking.serviceName}`, date: "Just now" },
+        {
+          id: `TX-${Date.now().toString().slice(-4)}`,
+          type: "credit",
+          amount: adminCut,
+          description: isOwnerJob 
+            ? `Self-service payout: ${booking.serviceName}` 
+            : `10% Admin Royalty (${assignedMember?.name || "Worker"}): ${booking.serviceName}`,
+          date: "Just now"
+        },
         ...prev.transactions
       ]
     }));
 
+    // Update Worker Payouts ledger if handled by a worker
+    if (!isOwnerJob) {
+      setWorkerPayouts(prev => {
+        const current = prev[assignedWorkerId] || { totalJobs: 0, totalGross: 0, adminCut: 0, netPay: 0, paidOut: 0, pendingPay: 0, upiId: assignedMember?.upiId || "worker@upi" };
+        const updated = {
+          ...prev,
+          [assignedWorkerId]: {
+            ...current,
+            totalJobs: (current.totalJobs || 0) + 1,
+            totalGross: (current.totalGross || 0) + totalBill,
+            adminCut: (current.adminCut || 0) + adminCut,
+            netPay: (current.netPay || 0) + workerShare,
+            pendingPay: (current.pendingPay || 0) + workerShare
+          }
+        };
+        localStorage.setItem("helper_worker_payouts", JSON.stringify(updated));
+        return updated;
+      });
+    }
+
     setCompletingJobId(null);
-    showToast(`🎉 Payment collected! ₹${payout} credited to shop wallet.`);
+    showToast(isOwnerJob 
+      ? `🎉 ₹${totalBill} credited to shop wallet (Owner completed)!` 
+      : `🎉 Payment Collected! 10% (₹${adminCut}) credited to Admin, 90% (₹${workerShare}) allocated to ${assignedMember?.name || "Worker"}!`);
   };
 
   // Withdraw from Wallet
@@ -1159,10 +1360,23 @@ function VendorDashboard() {
         <div className="vendor-stats-grid">
           <div className="vendor-stat-card">
             <div className="vendor-stat-icon stat-icon-rate">⏱️</div>
-            <div className="vendor-stat-info">
-              <h4>1-Hour Service Charge</h4>
+            <div className="vendor-stat-info" style={{ flex: 1 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "6px" }}>
+                <h4>1-Hour Service Charge</h4>
+                <button
+                  type="button"
+                  className="btn-stat-action"
+                  onClick={() => {
+                    setTempRate(String(profileForm.hourlyRate || "299").replace(/[^0-9]/g, ""));
+                    setShowRateModal(true);
+                  }}
+                  title="Click to edit 1-Hour Service Charge"
+                >
+                  ✏️ Edit Rate
+                </button>
+              </div>
               <div className="vendor-stat-val">₹{profileForm.hourlyRate}/hr</div>
-              <span className="vendor-stat-sub">Standard service rate</span>
+              <span className="vendor-stat-sub">Standard service rate (editable)</span>
             </div>
           </div>
 
@@ -1445,6 +1659,38 @@ function VendorDashboard() {
                           <span>👤 <strong>{b.customerName || "Customer"}</strong></span>
                           <span>📞 <strong>{b.customerPhone || "+91 98765 00000"}</strong></span>
                           <span>📍 <strong>{b.customerAddress || "Customer Address, Delhi NCR"}</strong></span>
+                        </div>
+
+                        {/* Worker Assignment & 10% Admin Cut / 90% Worker Net Split Engine */}
+                        <div className="booking-worker-assign-box">
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", width: "100%" }}>
+                            <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#1E293B" }}>👷 Assigned Worker:</span>
+                            <select
+                              className="select-worker-assign"
+                              value={b.assignedWorkerId || "mem_2"}
+                              onChange={(e) => handleAssignWorker(key, e.target.value)}
+                              disabled={isCompleted}
+                            >
+                              {teamMembers.map(mem => (
+                                <option key={mem.id} value={mem.id}>
+                                  {mem.name} {mem.isOwner ? "(Owner - 100% Payout)" : "(Worker - 90% Net Payout)"}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="franchise-zero-tag">Franchise: ₹0 Free</span>
+                            <div className="payout-split-pill">
+                              <span>💰 Split:</span>
+                              {(b.assignedWorkerId || "mem_2") === "mem_1" ? (
+                                <span style={{ color: "#059669", fontWeight: 800 }}>Admin Retains 100% (₹{orderAmount})</span>
+                              ) : (
+                                <>
+                                  <span style={{ color: "#D97706", fontWeight: 800 }}>10% Admin: ₹{Math.round(orderAmount * 0.10)}</span>
+                                  <span style={{ color: "#94A3B8" }}>•</span>
+                                  <span style={{ color: "#059669", fontWeight: 800 }}>90% Worker Net: ₹{orderAmount - Math.round(orderAmount * 0.10)}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
 
                         {/* 4-Stage Stepper Bar */}
@@ -1732,12 +1978,39 @@ function VendorDashboard() {
                               <span style={{ color: "#FF4D2D" }}>₹{b.finalCalculatedAmount || orderAmount}</span>
                             </div>
 
+                            {/* Revenue Distribution: 10% Admin Royalty / 90% Worker Net */}
+                            <div className="receipt-split-box">
+                              <div style={{ fontSize: "12px", fontWeight: 800, color: "#1E293B", marginBottom: "6px" }}>
+                                💰 Revenue Distribution (10% Admin Cut / 90% Worker Net):
+                              </div>
+                              {(b.assignedWorkerId || "mem_2") === "mem_1" ? (
+                                <div className="receipt-split-item">
+                                  <span>Owner Executed (100% Retained)</span>
+                                  <span style={{ color: "#059669", fontWeight: 800 }}>₹{b.finalCalculatedAmount || orderAmount}</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="receipt-split-item">
+                                    <span>10% Shop Admin Royalty</span>
+                                    <span style={{ color: "#D97706", fontWeight: 800 }}>+₹{Math.round((b.finalCalculatedAmount || orderAmount) * 0.10)}</span>
+                                  </div>
+                                  <div className="receipt-split-item">
+                                    <span>90% Worker Net ({teamMembers.find(m => m.id === (b.assignedWorkerId || "mem_2"))?.name || "Worker"})</span>
+                                    <span style={{ color: "#059669", fontWeight: 800 }}>₹{(b.finalCalculatedAmount || orderAmount) - Math.round((b.finalCalculatedAmount || orderAmount) * 0.10)}</span>
+                                  </div>
+                                </>
+                              )}
+                              <div className="worker-zero-notice">
+                                🛡️ Worker Franchise Fee: ₹0 Free (Franchise license paid by Shop Admin)
+                              </div>
+                            </div>
+
                             <button
                               type="button"
                               onClick={() => handleCollectPayment(b)}
                               className="btn-collect-payment"
                             >
-                              Collect ₹{b.finalCalculatedAmount || orderAmount} (Cash / UPI) & Complete Order ✅
+                              Collect ₹{b.finalCalculatedAmount || orderAmount} & Distribute (10% Admin / 90% Worker) ✅
                             </button>
                           </div>
                         )}
@@ -1751,7 +2024,11 @@ function VendorDashboard() {
                           }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#059669", fontWeight: 800, fontSize: "14px" }}>
                               <span>✅</span>
-                              <span>Order Completed & ₹{orderAmount} Credited to Your Wallet</span>
+                              <span>
+                                {(b.assignedWorkerId || "mem_2") === "mem_1"
+                                  ? `Order Completed: ₹${orderAmount} credited to Shop Admin Wallet`
+                                  : `Order Completed: 10% (₹${b.adminCommission || Math.round(orderAmount * 0.10)}) Admin • 90% (₹${b.workerPayout || (orderAmount - Math.round(orderAmount * 0.10))}) Worker Net`}
+                              </span>
                             </div>
                             {b.workDurationFormatted && (
                               <span style={{ fontSize: "12px", color: "#64748B" }}>
@@ -1954,6 +2231,36 @@ function VendorDashboard() {
               </button>
             </div>
 
+            {/* Worker Zero-Fee Franchise Policy Banner */}
+            <div className="worker-policy-banner">
+              <div className="worker-policy-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  <span className="policy-badge">👑 Shop Admin Franchise</span>
+                  <h4 style={{ margin: 0, color: "#1E293B", fontSize: "16px", fontWeight: 800 }}>
+                    Worker Zero-Payment Policy & 10% Revenue Share Model
+                  </h4>
+                </div>
+                <span className="policy-fee-pill">Worker Franchise Fee: ₹0 Free</span>
+              </div>
+              <p style={{ margin: "8px 0 12px", fontSize: "13.5px", color: "#475569", lineHeight: 1.5 }}>
+                Shop Admin (Franchise Owner) monthly ₹4,000 ya annual ₹5,00,000 franchise charges pay karta hai. Jin workers ko shop admin add karega, <strong>un workers ko koi franchise payment nahi deni padegi (₹0 Free)</strong>. Har customer order par <strong>10% Shop Admin ko commission milega</strong> aur baaki <strong>90% calculate hoke worker ke paas jayega</strong>. Shop Admin yahan se workers ki UPI payments handle kar sakta hai.
+              </p>
+              <div className="policy-pills-row">
+                <div className="policy-pill">
+                  <span>🛡️</span>
+                  <span><strong>₹0 Worker Fee:</strong> Franchise license fully sponsored by Shop Admin</span>
+                </div>
+                <div className="policy-pill">
+                  <span>💼</span>
+                  <span><strong>10% Admin Cut:</strong> Automatically allocated to Shop Admin on completed jobs</span>
+                </div>
+                <div className="policy-pill">
+                  <span>💸</span>
+                  <span><strong>90% Worker Net:</strong> Calculated live and disbursable via UPI</span>
+                </div>
+              </div>
+            </div>
+
             {/* Meter Bar */}
             <div className="member-meter-box">
               <div className="member-meter-header">
@@ -1972,30 +2279,126 @@ function VendorDashboard() {
               </div>
             </div>
 
-            {/* Members Grid */}
-            <div className="team-members-grid">
-              {teamMembers.map((mem, idx) => (
-                <div className="team-member-card" key={mem.id || idx}>
-                  <div className="team-member-avatar">
-                    <span>{idx === 0 ? "👑" : "👨‍🔧"}</span>
-                  </div>
-                  <div className="team-member-info" style={{ flex: 1 }}>
-                    <h4>{mem.name}</h4>
-                    <p>📞 {mem.phone}</p>
-                    <span style={{ fontSize: "11px", color: "#FF4D2D", fontWeight: 700 }}>{mem.role}</span>
-                  </div>
-                  {idx > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMember(mem.id)}
-                      style={{ background: "transparent", border: "none", color: "#EF4444", fontSize: "15px", cursor: "pointer" }}
-                      title="Remove Member"
-                    >
-                      ✕
-                    </button>
-                  )}
+            {/* Worker Payroll Summary Bento Grid */}
+            <div className="worker-payroll-grid">
+              <div className="payroll-stat-card">
+                <span className="payroll-stat-label">Admin Commission Earned (10% Cut)</span>
+                <div className="payroll-stat-val">
+                  ₹{Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.adminCut || 0), 0).toLocaleString()}
                 </div>
-              ))}
+                <span className="payroll-stat-sub">From all worker executed orders</span>
+              </div>
+              <div className="payroll-stat-card">
+                <span className="payroll-stat-label">Total Worker Payouts Disbursed</span>
+                <div className="payroll-stat-val" style={{ color: "#059669" }}>
+                  ₹{Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.paidOut || 0), 0).toLocaleString()}
+                </div>
+                <span className="payroll-stat-sub">Disbursed to workers via UPI</span>
+              </div>
+              <div className="payroll-stat-card">
+                <span className="payroll-stat-label">Total Pending Worker Balance</span>
+                <div className="payroll-stat-val" style={{ color: "#D97706" }}>
+                  ₹{Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.pendingPay || 0), 0).toLocaleString()}
+                </div>
+                <span className="payroll-stat-sub">Ready for instant UPI transfer</span>
+              </div>
+            </div>
+
+            {/* Members & Worker Payroll Grid */}
+            <div className="team-members-grid">
+              {teamMembers.map((mem, idx) => {
+                const isOwner = idx === 0 || mem.isOwner;
+                const pData = workerPayouts[mem.id] || { totalJobs: 0, totalGross: 0, adminCut: 0, netPay: 0, paidOut: 0, pendingPay: 0, upiId: mem.upiId || "worker@upi" };
+
+                return (
+                  <div className={`team-member-card ${!isOwner ? "has-payroll" : ""}`} key={mem.id || idx}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", width: "100%" }}>
+                      <div className="team-member-avatar">
+                        <span>{isOwner ? "👑" : "👨‍🔧"}</span>
+                      </div>
+                      <div className="team-member-info" style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <h4 style={{ margin: 0 }}>{mem.name}</h4>
+                          {isOwner ? (
+                            <span style={{ fontSize: "11px", background: "#FEF3C7", color: "#D97706", padding: "2px 8px", borderRadius: "100px", fontWeight: 800 }}>
+                              👑 Shop Admin (Franchise Owner)
+                            </span>
+                          ) : (
+                            <span className="franchise-zero-tag">
+                              Franchise: ₹0 Free
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ margin: "4px 0 0 0" }}>📞 {mem.phone} • <span style={{ color: "#FF4D2D", fontWeight: 700 }}>{mem.role}</span></p>
+                        <span style={{ fontSize: "11px", color: "#64748B" }}>UPI: <code>{pData.upiId || mem.upiId || "worker@upi"}</code></span>
+                      </div>
+                      {!isOwner && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(mem.id)}
+                          style={{ background: "transparent", border: "none", color: "#EF4444", fontSize: "16px", cursor: "pointer", padding: "4px" }}
+                          title="Remove Member"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* If Worker: Show 10% / 90% Payroll Breakdown & UPI Payout Action */}
+                    {!isOwner && (
+                      <>
+                        <div className="worker-payroll-metrics">
+                          <div className="worker-metric-box">
+                            <span className="metric-label">Completed Jobs</span>
+                            <span className="metric-val">{pData.totalJobs || 0}</span>
+                          </div>
+                          <div className="worker-metric-box">
+                            <span className="metric-label">Total Billed</span>
+                            <span className="metric-val">₹{(pData.totalGross || 0).toLocaleString()}</span>
+                          </div>
+                          <div className="worker-metric-box">
+                            <span className="metric-label">10% Admin Royalty</span>
+                            <span className="metric-val" style={{ color: "#D97706" }}>+₹{(pData.adminCut || 0).toLocaleString()}</span>
+                          </div>
+                          <div className="worker-metric-box">
+                            <span className="metric-label">90% Worker Net</span>
+                            <span className="metric-val" style={{ color: "#059669" }}>₹{(pData.netPay || 0).toLocaleString()}</span>
+                          </div>
+                          <div className="worker-metric-box">
+                            <span className="metric-label">Disbursed (UPI)</span>
+                            <span className="metric-val">₹{(pData.paidOut || 0).toLocaleString()}</span>
+                          </div>
+                          <div className="worker-metric-box" style={{ background: (pData.pendingPay || 0) > 0 ? "#FEF3C7" : "#F1F5F9" }}>
+                            <span className="metric-label">Pending Due</span>
+                            <span className="metric-val" style={{ color: (pData.pendingPay || 0) > 0 ? "#D97706" : "#059669" }}>
+                              ₹{(pData.pendingPay || 0).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", width: "100%", flexWrap: "wrap", gap: "8px" }}>
+                          <span style={{ fontSize: "11.5px", color: "#64748B" }}>
+                            Franchise Fee: <strong>₹0 Paid by Admin</strong>
+                          </span>
+                          {(pData.pendingPay || 0) > 0 ? (
+                            <button
+                              type="button"
+                              className="btn-pay-worker-upi"
+                              onClick={() => handleOpenPayoutModal(mem)}
+                            >
+                              💸 Disburse ₹{(pData.pendingPay || 0).toLocaleString()} via UPI
+                            </button>
+                          ) : (
+                            <span className="badge-settled-worker">
+                              ✓ All Payouts Settled
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Add Member Modal */}
@@ -2324,6 +2727,166 @@ function VendorDashboard() {
           }
         }}
       />
+
+      {/* Quick 1-Hour Service Charge Edit Modal */}
+      {showRateModal && (
+        <div className="cat-preview-modal-overlay" onClick={() => setShowRateModal(false)}>
+          <div className="cat-preview-modal-box animate-fade-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px", background: "#0F172A", border: "1.5px solid #FF4D2D" }}>
+            <button className="modal-close-btn" onClick={() => setShowRateModal(false)}>✕</button>
+            <div style={{ textAlign: "center", marginBottom: "18px" }}>
+              <span style={{ fontSize: "36px" }}>⏱️</span>
+              <h3 style={{ color: "#FFFFFF", fontSize: "20px", fontWeight: 800, margin: "8px 0 4px" }}>
+                Edit 1-Hour Service Charge
+              </h3>
+              <p style={{ color: "#94A3B8", fontSize: "13px", margin: 0 }}>
+                Set your standard hourly service charge for customers in {vendor?.category || "your trade"}.
+              </p>
+            </div>
+
+            {/* Rate Presets */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ fontSize: "12px", color: "#CBD5E1", display: "block", marginBottom: "8px", fontWeight: 700 }}>Quick Presets (Click to select):</label>
+              <div className="rate-presets-row">
+                {["199", "299", "399", "499", "599", "799"].map(preset => (
+                  <button
+                    key={preset}
+                    type="button"
+                    className={`btn-rate-preset ${tempRate === preset ? "active" : ""}`}
+                    onClick={() => setTempRate(preset)}
+                  >
+                    ₹{preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleQuickRateSave(tempRate); }} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ fontSize: "12.5px", color: "#CBD5E1", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                  Hourly Rate (₹ / Hour) *
+                </label>
+                <div style={{ display: "flex", alignItems: "center", background: "rgba(15,23,42,0.6)", border: "1.5px solid #475569", borderRadius: "10px", padding: "0 14px" }}>
+                  <span style={{ color: "#FF4D2D", fontWeight: 800, fontSize: "18px" }}>₹</span>
+                  <input
+                    type="number"
+                    min="50"
+                    max="10000"
+                    value={tempRate}
+                    onChange={(e) => setTempRate(e.target.value)}
+                    required
+                    style={{ flex: 1, padding: "12px 10px", background: "transparent", border: "none", color: "#FFFFFF", fontSize: "18px", fontWeight: 800, outline: "none" }}
+                  />
+                  <span style={{ color: "#94A3B8", fontSize: "14px", fontWeight: 700 }}>/ hour</span>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowRateModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #475569", background: "transparent", color: "#CBD5E1", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingRate}
+                  className="btn-primary-glow"
+                  style={{ flex: 2, padding: "12px", borderRadius: "10px", fontWeight: 800 }}
+                >
+                  {savingRate ? "Updating Rate..." : "Save 1-Hour Rate 💾"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Worker UPI Payout Disbursement Modal */}
+      {showWorkerPayoutModal && selectedWorkerForPayout && (
+        <div className="cat-preview-modal-overlay" onClick={() => setShowWorkerPayoutModal(false)}>
+          <div className="cat-preview-modal-box animate-fade-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "500px", background: "#0F172A", border: "1.5px solid #10B981" }}>
+            <button className="modal-close-btn" onClick={() => setShowWorkerPayoutModal(false)}>✕</button>
+
+            <div style={{ textAlign: "center", marginBottom: "16px" }}>
+              <span style={{ fontSize: "36px" }}>💸</span>
+              <h3 style={{ color: "#FFFFFF", fontSize: "20px", fontWeight: 800, margin: "8px 0 4px" }}>
+                Disburse Payout to {selectedWorkerForPayout.name}
+              </h3>
+              <p style={{ color: "#94A3B8", fontSize: "13px", margin: 0 }}>
+                10% Admin Royalty has already been credited to you. Disburse the 90% share to your worker.
+              </p>
+            </div>
+
+            {/* Worker Due Summary */}
+            <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: "12px", padding: "14px", marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ fontSize: "13px", color: "#CBD5E1" }}>Worker Total Net Earned (90%):</span>
+                <span style={{ fontWeight: 800, color: "#FFFFFF" }}>₹{(workerPayouts[selectedWorkerForPayout.id]?.netPay || 0).toLocaleString()}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ fontSize: "13px", color: "#CBD5E1" }}>Already Disbursed via UPI:</span>
+                <span style={{ fontWeight: 800, color: "#10B981" }}>₹{(workerPayouts[selectedWorkerForPayout.id]?.paidOut || 0).toLocaleString()}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px dashed rgba(255,255,255,0.15)" }}>
+                <span style={{ fontSize: "14px", fontWeight: 800, color: "#FCD34D" }}>Current Pending Due:</span>
+                <span style={{ fontSize: "18px", fontWeight: 900, color: "#FCD34D" }}>₹{(workerPayouts[selectedWorkerForPayout.id]?.pendingPay || 0).toLocaleString()}</span>
+              </div>
+              <div style={{ fontSize: "11px", color: "#94A3B8", marginTop: "8px" }}>
+                🛡️ Franchise Fee for worker: <strong>₹0 Free (Covered by Shop Franchise)</strong>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmWorkerPayout} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div>
+                <label style={{ fontSize: "12.5px", color: "#CBD5E1", display: "block", marginBottom: "4px", fontWeight: 700 }}>
+                  Disbursement Amount (₹) *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={payoutAmountInput}
+                  onChange={(e) => setPayoutAmountInput(e.target.value)}
+                  required
+                  style={{ width: "100%", padding: "11px 14px", borderRadius: "8px", border: "1px solid #475569", background: "rgba(15,23,42,0.6)", color: "#FFFFFF", fontSize: "16px", fontWeight: 800 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12.5px", color: "#CBD5E1", display: "block", marginBottom: "4px", fontWeight: 700 }}>
+                  Worker UPI ID / VPA *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 9811233445@upi / name@okaxis"
+                  value={payoutUpiInput}
+                  onChange={(e) => setPayoutUpiInput(e.target.value)}
+                  required
+                  style={{ width: "100%", padding: "11px 14px", borderRadius: "8px", border: "1px solid #475569", background: "rgba(15,23,42,0.6)", color: "#FFFFFF", fontSize: "14px" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowWorkerPayoutModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #475569", background: "transparent", color: "#CBD5E1", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={processingPayout}
+                  className="btn-primary-glow"
+                  style={{ flex: 2, padding: "12px", borderRadius: "10px", background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", fontWeight: 800 }}
+                >
+                  {processingPayout ? "Processing UPI Transfer..." : `Disburse ₹${payoutAmountInput || "0"} via UPI ⚡`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

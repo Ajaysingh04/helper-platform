@@ -1502,7 +1502,397 @@
 }
 
 /* ==========================================================================
-   13. COMPREHENSIVE RESPONSIVENESS (MOBILE / TABLET)
+   13. 1-HOUR SERVICE CHARGE QUICK-EDIT & WORKER 10% COMMISSION ENGINE STYLES
+   ========================================================================== */
+
+/* Quick Rate Edit Button inside Stat Card */
+.btn-stat-action {
+  background: rgba(255, 77, 45, 0.1);
+  color: #FF4D2D;
+  border: 1px solid rgba(255, 77, 45, 0.3);
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-stat-action:hover {
+  background: #FF4D2D;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(255, 77, 45, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Rate Presets in Modal */
+.rate-presets-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-rate-preset {
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #334155;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-rate-preset:hover,
+.btn-rate-preset.active {
+  background: #FF4D2D;
+  border-color: #FF4D2D;
+  color: #FFFFFF;
+}
+
+/* Worker Assignment Row in Customer Booking Cards */
+.booking-worker-assign-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.select-worker-assign {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #0F172A;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  flex: 1 1 auto;
+  min-width: 220px;
+}
+
+.select-worker-assign:focus {
+  border-color: #FF4D2D;
+  box-shadow: 0 0 0 3px rgba(255, 77, 45, 0.15);
+}
+
+.payout-split-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #065F46;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.payout-split-pill.owner {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #92400E;
+}
+
+.franchise-zero-tag {
+  background: #10B981;
+  color: #FFFFFF;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 800;
+  margin-left: auto;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+
+/* Itemized Receipt 10% / 90% Split */
+.receipt-split-box {
+  background: #F8FAFC;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.receipt-split-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.receipt-split-item.admin-cut {
+  color: #B45309;
+}
+
+.receipt-split-item.worker-cut {
+  color: #047857;
+}
+
+.split-val {
+  font-family: var(--vendor-font-mono);
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.worker-zero-notice {
+  font-size: 11.5px;
+  color: #059669;
+  font-weight: 800;
+  border-top: 1px dashed #CBD5E1;
+  padding-top: 6px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Franchise Sponsorship Policy Hero Banner */
+.worker-policy-banner {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  border-radius: 22px;
+  padding: 26px 28px;
+  color: #FFFFFF;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.35);
+}
+
+.worker-policy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.policy-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+.policy-fee-pill {
+  font-size: 12px;
+  font-weight: 800;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 4px 14px;
+  border-radius: 100px;
+}
+
+.worker-policy-banner h4 {
+  font-size: 19px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.worker-policy-banner p {
+  font-size: 13.5px;
+  color: #CBD5E1;
+  line-height: 1.6;
+  margin: 0 0 18px 0;
+}
+
+.policy-pills-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.policy-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.policy-pill .pill-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.policy-pill .pill-label {
+  font-size: 11px;
+  color: #94A3B8;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.policy-pill .pill-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-top: 2px;
+}
+
+/* Worker Payroll & Commission Bento Grid */
+.worker-payroll-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.payroll-stat-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.payroll-stat-card:hover {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.payroll-stat-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payroll-stat-val {
+  font-family: var(--vendor-font-mono);
+  font-size: 26px;
+  font-weight: 900;
+  color: #0F172A;
+  margin: 6px 0 2px 0;
+  letter-spacing: -0.02em;
+}
+
+.payroll-stat-sub {
+  font-size: 11.5px;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+/* Team Member Worker Card with Payroll */
+.team-member-card.has-payroll {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.worker-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.worker-payroll-metrics {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  text-align: center;
+}
+
+.worker-payroll-metric .metric-label {
+  font-size: 10px;
+  color: #64748B;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.worker-payroll-metric .metric-val {
+  font-family: var(--vendor-font-mono);
+  font-size: 14px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-top: 2px;
+}
+
+.worker-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid #E2E8F0;
+  padding-top: 10px;
+}
+
+.btn-pay-worker-upi {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  white-space: nowrap;
+}
+
+.btn-pay-worker-upi:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.badge-settled-worker {
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   14. COMPREHENSIVE RESPONSIVENESS (MOBILE / TABLET)
    ========================================================================== */
 @media (max-width: 1024px) {
   .vendor-stats-grid {
