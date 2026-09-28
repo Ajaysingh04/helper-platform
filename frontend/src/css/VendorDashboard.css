@@ -1191,87 +1191,8 @@
 }
 
 /* ==========================================================================
-   9. SHOP MEMBERS MANAGEMENT
+   9. SHOP MEMBERS MANAGEMENT (Refer to unified Worker Payroll Section below)
    ========================================================================== */
-.member-meter-box {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 18px;
-  padding: 22px 24px;
-  margin-bottom: 24px;
-}
-
-.member-meter-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.member-meter-bar-track {
-  width: 100%;
-  height: 10px;
-  background: #E2E8F0;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.member-meter-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #10B981 0%, #3B82F6 50%, #FF4D2D 100%);
-  border-radius: 10px;
-  transition: width 0.4s ease;
-}
-
-.team-members-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.team-member-card {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  position: relative;
-  transition: all 0.2s ease;
-}
-
-.team-member-card:hover {
-  background: #FFFFFF;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
-  border-color: #CBD5E1;
-}
-
-.team-member-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: rgba(255, 77, 45, 0.1);
-  border: 1px solid rgba(255, 77, 45, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-
-.team-member-info h4 {
-  font-size: 14.5px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0 0 3px 0;
-}
-
-.team-member-info p {
-  font-size: 12.5px;
-  color: #64748B;
-  margin: 0 0 4px 0;
-}
 
 /* ==========================================================================
    10. KYC DOCUMENTS & UPLOAD CARDS
@@ -1759,32 +1680,243 @@
   margin-top: 2px;
 }
 
+/* ==========================================================================
+   WORKER PAYROLL & TEAM FRANCHISE MANAGEMENT (MODERN SAAS BENTO GRID)
+   ========================================================================== */
+.member-meter-box {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+.member-meter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.meter-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meter-badge {
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(255, 77, 45, 0.1);
+  color: #FF4D2D;
+  border: 1px solid rgba(255, 77, 45, 0.25);
+  padding: 4px 10px;
+  border-radius: 100px;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.meter-title {
+  font-size: 16px;
+  color: #0F172A;
+  font-weight: 700;
+  margin: 0;
+}
+
+.meter-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.meter-availability-pill {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.meter-availability-pill.available {
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+}
+
+.meter-availability-pill.full {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+.btn-add-worker-top {
+  background: linear-gradient(135deg, #FF4D2D 0%, #E03E1F 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.3);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-add-worker-top:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 77, 45, 0.4);
+}
+
+.btn-add-worker-top:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.member-meter-bar-track {
+  width: 100%;
+  height: 12px;
+  background: #E2E8F0;
+  border-radius: 100px;
+  overflow: hidden;
+  margin: 14px 0 16px;
+}
+
+.member-meter-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981 0%, #3B82F6 60%, #FF4D2D 100%);
+  border-radius: 100px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.meter-slots-indicators {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.meter-slot-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.meter-slot-pill.used {
+  background: #F1F5F9;
+  color: #334155;
+  border-color: #CBD5E1;
+}
+
+.meter-slot-pill.used .slot-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.meter-slot-pill.free {
+  background: #F8FAFC;
+  color: #94A3B8;
+  border-color: #E2E8F0;
+}
+
+.meter-slot-pill.free .slot-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #CBD5E1;
+}
+
 /* Worker Payroll & Commission Bento Grid */
 .worker-payroll-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 28px;
 }
 
 .payroll-stat-card {
-  background: #F8FAFC;
+  background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 18px 20px;
+  border-radius: 18px;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+  position: relative;
 }
 
 .payroll-stat-card:hover {
-  background: #FFFFFF;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
   border-color: #CBD5E1;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.stat-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.stat-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.stat-icon-wrap.icon-amber {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+}
+
+.stat-icon-wrap.icon-emerald {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+}
+
+.stat-icon-wrap.icon-orange {
+  background: #FFF7ED;
+  border: 1px solid #FFEDD5;
+}
+
+.stat-badge-chip {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.stat-badge-chip.green {
+  background: #ECFDF5;
+  color: #047857;
+}
+
+.stat-badge-chip.orange {
+  background: #FFF7ED;
+  color: #C2410C;
 }
 
 .payroll-stat-label {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   color: #64748B;
   text-transform: uppercase;
@@ -1792,103 +1924,445 @@
 }
 
 .payroll-stat-val {
-  font-family: var(--vendor-font-mono);
-  font-size: 26px;
+  font-family: var(--vendor-font-mono, monospace);
+  font-size: 30px;
   font-weight: 900;
   color: #0F172A;
-  margin: 6px 0 2px 0;
+  margin: 6px 0 4px 0;
   letter-spacing: -0.02em;
 }
 
+.payroll-stat-val.text-emerald {
+  color: #059669;
+}
+
+.payroll-stat-val.text-amber {
+  color: #D97706;
+}
+
 .payroll-stat-sub {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #94A3B8;
   font-weight: 500;
 }
 
-/* Team Member Worker Card with Payroll */
-.team-member-card.has-payroll {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
+/* Team Member Cards Grid */
+.team-members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 22px;
 }
 
-.worker-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.worker-payroll-metrics {
+.team-member-card {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 10px 14px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  text-align: center;
+  border-radius: 20px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+  transition: all 0.25s ease;
+  position: relative;
 }
 
-.worker-payroll-metric .metric-label {
-  font-size: 10px;
+.team-member-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  border-color: #CBD5E1;
+}
+
+.team-member-card.owner-franchise-card {
+  border: 1.5px solid #FCD34D;
+  background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
+}
+
+.owner-card-ribbon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #FEF3C7;
+  font-size: 12px;
+  font-weight: 800;
+  color: #B45309;
+}
+
+.owner-verified-tag {
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+}
+
+.member-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+  width: 100%;
+}
+
+.team-member-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.team-member-avatar.owner-avatar {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border: 1.5px solid #FCD34D;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+}
+
+.team-member-avatar.worker-avatar {
+  background: linear-gradient(135deg, rgba(255, 77, 45, 0.1) 0%, rgba(255, 77, 45, 0.18) 100%);
+  border: 1.5px solid rgba(255, 77, 45, 0.3);
+}
+
+.team-member-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+
+.member-name-row h4 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+}
+
+.owner-role-badge {
+  font-size: 11px;
+  font-weight: 800;
+  background: #FEF3C7;
+  color: #B45309;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid #FDE68A;
+}
+
+.franchise-zero-tag {
+  font-size: 11px;
+  font-weight: 800;
+  background: #ECFDF5;
+  color: #047857;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid #A7F3D0;
+}
+
+.member-contact-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
   color: #64748B;
-  text-transform: uppercase;
+  margin: 4px 0 6px 0;
+}
+
+.bullet-sep {
+  color: #CBD5E1;
+}
+
+.member-specialty {
+  color: #FF4D2D;
   font-weight: 700;
 }
 
-.worker-payroll-metric .metric-val {
-  font-family: var(--vendor-font-mono);
-  font-size: 14px;
+.member-upi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #475569;
+  background: #F1F5F9;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.member-upi-chip code {
+  color: #0F172A;
+  font-weight: 700;
+  font-family: var(--vendor-font-mono, monospace);
+}
+
+.btn-remove-member {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: #FEE2E2;
+  border: none;
+  color: #DC2626;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.btn-remove-member:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+  transform: scale(1.08);
+}
+
+/* Worker Payroll Metrics Grid: STRICT 3-COLUMN SEPARATION */
+.worker-payroll-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.worker-metric-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  text-align: left;
+  min-width: 0;
+  transition: all 0.2s ease;
+}
+
+.worker-metric-box:hover {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.worker-metric-box .metric-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.worker-metric-box .metric-val {
+  font-family: var(--vendor-font-mono, monospace);
+  font-size: 15px;
   font-weight: 800;
   color: #0F172A;
+  display: block;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   margin-top: 2px;
 }
 
+/* Color Coded Metric Cards */
+.worker-metric-box.metric-admin-royalty {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+}
+
+.worker-metric-box.metric-admin-royalty .metric-label {
+  color: #B45309;
+}
+
+.worker-metric-box.metric-admin-royalty .metric-val {
+  color: #D97706;
+  font-weight: 900;
+}
+
+.worker-metric-box.metric-worker-net {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.worker-metric-box.metric-worker-net .metric-label {
+  color: #047857;
+}
+
+.worker-metric-box.metric-worker-net .metric-val {
+  color: #059669;
+  font-weight: 900;
+}
+
+.worker-metric-box.metric-pending-due {
+  background: #FEF3C7;
+  border-color: #FCD34D;
+}
+
+.worker-metric-box.metric-pending-due .metric-label {
+  color: #B45309;
+}
+
+.worker-metric-box.metric-pending-due .metric-val {
+  color: #D97706;
+  font-weight: 900;
+}
+
+.worker-metric-box.metric-settled {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+}
+
+.worker-metric-box.metric-settled .metric-label {
+  color: #15803D;
+}
+
+.worker-metric-box.metric-settled .metric-val {
+  color: #16A34A;
+}
+
+/* Card Action Footer */
 .worker-card-footer {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px solid #F1F5F9;
   flex-wrap: wrap;
-  gap: 8px;
-  border-top: 1px solid #E2E8F0;
-  padding-top: 10px;
+  gap: 10px;
+  width: 100%;
+}
+
+.worker-franchise-sponsor-note {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.worker-franchise-sponsor-note strong {
+  color: #0F172A;
 }
 
 .btn-pay-worker-upi {
   background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   color: #FFFFFF;
   border: none;
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-size: 12.5px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
   white-space: nowrap;
 }
 
 .btn-pay-worker-upi:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+  filter: brightness(1.05);
+}
+
+.btn-add-staff-pill {
+  background: rgba(255, 77, 45, 0.1);
+  color: #FF4D2D;
+  border: 1px solid rgba(255, 77, 45, 0.3);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-staff-pill:hover:not(:disabled) {
+  background: #FF4D2D;
+  color: #FFFFFF;
 }
 
 .badge-settled-worker {
   background: #ECFDF5;
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #047857;
+  border: 1px solid #A7F3D0;
   padding: 6px 14px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 800;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  white-space: nowrap;
+  gap: 6px;
+}
+
+/* Responsive Media Queries for Worker & Team Franchise Section */
+@media (max-width: 1024px) {
+  .worker-payroll-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .team-members-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .worker-payroll-grid {
+    grid-template-columns: 1fr;
+  }
+  .member-meter-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .meter-header-right {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .worker-payroll-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .worker-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .btn-pay-worker-upi {
+    width: 100%;
+    justify-content: center;
+  }
+  .btn-add-staff-pill {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .member-meter-box {
+    padding: 16px;
+  }
+  .team-member-card {
+    padding: 16px 14px;
+  }
+  .worker-payroll-metrics {
+    grid-template-columns: 1fr;
+  }
+  .meter-slots-indicators {
+    display: none;
+  }
 }
 
 /* ==========================================================================

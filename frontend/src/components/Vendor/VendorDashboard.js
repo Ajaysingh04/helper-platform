@@ -2264,40 +2264,83 @@ function VendorDashboard() {
             {/* Meter Bar */}
             <div className="member-meter-box">
               <div className="member-meter-header">
-                <span style={{ fontWeight: 800, color: "#0F172A", fontSize: "14px" }}>
-                  Franchise License Capacity: {teamMembers.length} of 8 Member Slots Used
-                </span>
-                <span style={{ fontSize: "13px", color: teamMembers.length >= 8 ? "#EF4444" : "#10B981", fontWeight: 700 }}>
-                  {8 - teamMembers.length} Slot(s) Available
-                </span>
+                <div className="meter-header-left">
+                  <div className="meter-title-wrap">
+                    <span className="meter-badge">🏪 FRANCHISE CAPACITY</span>
+                    <h4 className="meter-title">
+                      License Allocation: <strong>{teamMembers.length} of 8 Member Slots Occupied</strong>
+                    </h4>
+                  </div>
+                </div>
+                <div className="meter-header-right">
+                  <span className={`meter-availability-pill ${teamMembers.length >= 8 ? "full" : "available"}`}>
+                    {8 - teamMembers.length} Slot(s) Available
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-add-worker-top"
+                    onClick={() => setShowMemberModal(true)}
+                    disabled={teamMembers.length >= 8}
+                  >
+                    <span>+ Add Staff Member</span>
+                  </button>
+                </div>
               </div>
+              
               <div className="member-meter-bar-track">
                 <div 
                   className="member-meter-bar-fill" 
                   style={{ width: `${(teamMembers.length / 8) * 100}%` }}
                 />
               </div>
+
+              {/* Segmented Slot Indicators */}
+              <div className="meter-slots-indicators">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((slotNum) => {
+                  const isUsed = slotNum <= teamMembers.length;
+                  return (
+                    <div key={slotNum} className={`meter-slot-pill ${isUsed ? "used" : "free"}`}>
+                      <span className="slot-dot" />
+                      <span className="slot-text">Slot {slotNum}: {isUsed ? "Active" : "Free"}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Worker Payroll Summary Bento Grid */}
             <div className="worker-payroll-grid">
-              <div className="payroll-stat-card">
-                <span className="payroll-stat-label">Admin Commission Earned (10% Cut)</span>
+              <div className="payroll-stat-card card-admin-cut">
+                <div className="stat-card-top">
+                  <span className="stat-icon-wrap icon-amber">👑</span>
+                  <span className="stat-badge-chip">10% CUT</span>
+                </div>
+                <span className="payroll-stat-label">Admin Commission Earned</span>
                 <div className="payroll-stat-val">
                   ₹{Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.adminCut || 0), 0).toLocaleString()}
                 </div>
                 <span className="payroll-stat-sub">From all worker executed orders</span>
               </div>
-              <div className="payroll-stat-card">
+
+              <div className="payroll-stat-card card-disbursed">
+                <div className="stat-card-top">
+                  <span className="stat-icon-wrap icon-emerald">✅</span>
+                  <span className="stat-badge-chip green">SETTLED</span>
+                </div>
                 <span className="payroll-stat-label">Total Worker Payouts Disbursed</span>
-                <div className="payroll-stat-val" style={{ color: "#059669" }}>
+                <div className="payroll-stat-val text-emerald">
                   ₹{Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.paidOut || 0), 0).toLocaleString()}
                 </div>
                 <span className="payroll-stat-sub">Disbursed to workers via UPI</span>
               </div>
-              <div className="payroll-stat-card">
+
+              <div className="payroll-stat-card card-pending">
+                <div className="stat-card-top">
+                  <span className="stat-icon-wrap icon-orange">⏳</span>
+                  <span className="stat-badge-chip orange">DUE</span>
+                </div>
                 <span className="payroll-stat-label">Total Pending Worker Balance</span>
-                <div className="payroll-stat-val" style={{ color: "#D97706" }}>
+                <div className="payroll-stat-val text-amber">
                   ₹{Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.pendingPay || 0), 0).toLocaleString()}
                 </div>
                 <span className="payroll-stat-sub">Ready for instant UPI transfer</span>
@@ -2310,92 +2353,167 @@ function VendorDashboard() {
                 const isOwner = idx === 0 || mem.isOwner;
                 const pData = workerPayouts[mem.id] || { totalJobs: 0, totalGross: 0, adminCut: 0, netPay: 0, paidOut: 0, pendingPay: 0, upiId: mem.upiId || "worker@upi" };
 
-                return (
-                  <div className={`team-member-card ${!isOwner ? "has-payroll" : ""}`} key={mem.id || idx}>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", width: "100%" }}>
-                      <div className="team-member-avatar">
-                        <span>{isOwner ? "👑" : "👨‍🔧"}</span>
+                if (isOwner) {
+                  const totalWorkerJobs = Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.totalJobs || 0), 0);
+                  const totalWorkerGross = Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.totalGross || 0), 0);
+                  const totalAdminRoyalty = Object.values(workerPayouts).reduce((acc, curr) => acc + (curr.adminCut || 0), 0);
+
+                  return (
+                    <div className="team-member-card owner-franchise-card" key={mem.id || "owner"}>
+                      <div className="owner-card-ribbon">
+                        <span className="ribbon-title">👑 Shop Admin & Franchise Holder</span>
+                        <span className="owner-verified-tag">✓ Verified Partner</span>
                       </div>
-                      <div className="team-member-info" style={{ flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                          <h4 style={{ margin: 0 }}>{mem.name}</h4>
-                          {isOwner ? (
-                            <span style={{ fontSize: "11px", background: "#FEF3C7", color: "#D97706", padding: "2px 8px", borderRadius: "100px", fontWeight: 800 }}>
-                              👑 Shop Admin (Franchise Owner)
-                            </span>
-                          ) : (
-                            <span className="franchise-zero-tag">
-                              Franchise: ₹0 Free
-                            </span>
-                          )}
+
+                      <div className="member-card-header">
+                        <div className="team-member-avatar owner-avatar">
+                          <span>👑</span>
                         </div>
-                        <p style={{ margin: "4px 0 0 0" }}>📞 {mem.phone} • <span style={{ color: "#FF4D2D", fontWeight: 700 }}>{mem.role}</span></p>
-                        <span style={{ fontSize: "11px", color: "#64748B" }}>UPI: <code>{pData.upiId || mem.upiId || "worker@upi"}</code></span>
+                        <div className="team-member-info">
+                          <div className="member-name-row">
+                            <h4>{mem.name}</h4>
+                            <span className="owner-role-badge">Shop Owner</span>
+                          </div>
+                          <p className="member-contact-line">
+                            <span>📞 {mem.phone}</span>
+                            <span className="bullet-sep">•</span>
+                            <span className="member-specialty">{mem.role || "Franchise Lead"}</span>
+                          </p>
+                          <div className="member-upi-chip">
+                            <span>UPI:</span>
+                            <code>{mem.upiId || "owner@okhdfc"}</code>
+                          </div>
+                        </div>
                       </div>
-                      {!isOwner && (
+
+                      {/* Owner Franchise Matrix */}
+                      <div className="worker-payroll-metrics owner-metrics-grid">
+                        <div className="worker-metric-box">
+                          <span className="metric-label">Staff Members</span>
+                          <span className="metric-val">{Math.max(0, teamMembers.length - 1)} Sponsored</span>
+                        </div>
+                        <div className="worker-metric-box">
+                          <span className="metric-label">Staff Orders</span>
+                          <span className="metric-val">{totalWorkerJobs} Executed</span>
+                        </div>
+                        <div className="worker-metric-box metric-admin-royalty">
+                          <span className="metric-label">10% Royalty Accrued</span>
+                          <span className="metric-val">+₹{totalAdminRoyalty.toLocaleString()}</span>
+                        </div>
+                        <div className="worker-metric-box">
+                          <span className="metric-label">Total Staff Billed</span>
+                          <span className="metric-val">₹{totalWorkerGross.toLocaleString()}</span>
+                        </div>
+                        <div className="worker-metric-box metric-worker-net">
+                          <span className="metric-label">Worker Franchise Fee</span>
+                          <span className="metric-val">₹0 Free</span>
+                        </div>
+                        <div className="worker-metric-box metric-settled">
+                          <span className="metric-label">Franchise License</span>
+                          <span className="metric-val">Active ✓</span>
+                        </div>
+                      </div>
+
+                      <div className="worker-card-footer">
+                        <span className="worker-franchise-sponsor-note">
+                          🛡️ Franchise Fee: <strong>Covered by Shop Admin</strong>
+                        </span>
                         <button
                           type="button"
-                          onClick={() => handleRemoveMember(mem.id)}
-                          style={{ background: "transparent", border: "none", color: "#EF4444", fontSize: "16px", cursor: "pointer", padding: "4px" }}
-                          title="Remove Member"
+                          className="btn-add-staff-pill"
+                          onClick={() => setShowMemberModal(true)}
+                          disabled={teamMembers.length >= 8}
                         >
-                          ✕
+                          + Add Staff ({teamMembers.length}/8)
                         </button>
-                      )}
+                      </div>
+                    </div>
+                  );
+                }
+
+                // WORKER CARD
+                return (
+                  <div className="team-member-card worker-payroll-card" key={mem.id || idx}>
+                    <div className="member-card-header">
+                      <div className="team-member-avatar worker-avatar">
+                        <span>👨‍🔧</span>
+                      </div>
+                      <div className="team-member-info">
+                        <div className="member-name-row">
+                          <h4>{mem.name}</h4>
+                          <span className="franchise-zero-tag">
+                            🛡️ Franchise: ₹0 Free
+                          </span>
+                        </div>
+                        <p className="member-contact-line">
+                          <span>📞 {mem.phone}</span>
+                          <span className="bullet-sep">•</span>
+                          <span className="member-specialty">{mem.role || "Technician"}</span>
+                        </p>
+                        <div className="member-upi-chip">
+                          <span>UPI:</span>
+                          <code>{pData.upiId || mem.upiId || "worker@upi"}</code>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMember(mem.id)}
+                        className="btn-remove-member"
+                        title="Remove Member from Franchise"
+                      >
+                        ✕
+                      </button>
                     </div>
 
-                    {/* If Worker: Show 10% / 90% Payroll Breakdown & UPI Payout Action */}
-                    {!isOwner && (
-                      <>
-                        <div className="worker-payroll-metrics">
-                          <div className="worker-metric-box">
-                            <span className="metric-label">Completed Jobs</span>
-                            <span className="metric-val">{pData.totalJobs || 0}</span>
-                          </div>
-                          <div className="worker-metric-box">
-                            <span className="metric-label">Total Billed</span>
-                            <span className="metric-val">₹{(pData.totalGross || 0).toLocaleString()}</span>
-                          </div>
-                          <div className="worker-metric-box">
-                            <span className="metric-label">10% Admin Royalty</span>
-                            <span className="metric-val" style={{ color: "#D97706" }}>+₹{(pData.adminCut || 0).toLocaleString()}</span>
-                          </div>
-                          <div className="worker-metric-box">
-                            <span className="metric-label">90% Worker Net</span>
-                            <span className="metric-val" style={{ color: "#059669" }}>₹{(pData.netPay || 0).toLocaleString()}</span>
-                          </div>
-                          <div className="worker-metric-box">
-                            <span className="metric-label">Disbursed (UPI)</span>
-                            <span className="metric-val">₹{(pData.paidOut || 0).toLocaleString()}</span>
-                          </div>
-                          <div className="worker-metric-box" style={{ background: (pData.pendingPay || 0) > 0 ? "#FEF3C7" : "#F1F5F9" }}>
-                            <span className="metric-label">Pending Due</span>
-                            <span className="metric-val" style={{ color: (pData.pendingPay || 0) > 0 ? "#D97706" : "#059669" }}>
-                              ₹{(pData.pendingPay || 0).toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
+                    {/* 6-Cell Payroll Breakdown Matrix */}
+                    <div className="worker-payroll-metrics">
+                      <div className="worker-metric-box">
+                        <span className="metric-label">Completed Jobs</span>
+                        <span className="metric-val">{pData.totalJobs || 0}</span>
+                      </div>
+                      <div className="worker-metric-box">
+                        <span className="metric-label">Total Billed</span>
+                        <span className="metric-val">₹{(pData.totalGross || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="worker-metric-box metric-admin-royalty">
+                        <span className="metric-label">10% Admin Royalty</span>
+                        <span className="metric-val">+₹{(pData.adminCut || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="worker-metric-box metric-worker-net">
+                        <span className="metric-label">90% Worker Net</span>
+                        <span className="metric-val">₹{(pData.netPay || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="worker-metric-box">
+                        <span className="metric-label">Disbursed (UPI)</span>
+                        <span className="metric-val">₹{(pData.paidOut || 0).toLocaleString()}</span>
+                      </div>
+                      <div className={`worker-metric-box ${(pData.pendingPay || 0) > 0 ? "metric-pending-due" : "metric-settled"}`}>
+                        <span className="metric-label">Pending Due</span>
+                        <span className="metric-val">
+                          ₹{(pData.pendingPay || 0).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
 
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", width: "100%", flexWrap: "wrap", gap: "8px" }}>
-                          <span style={{ fontSize: "11.5px", color: "#64748B" }}>
-                            Franchise Fee: <strong>₹0 Paid by Admin</strong>
-                          </span>
-                          {(pData.pendingPay || 0) > 0 ? (
-                            <button
-                              type="button"
-                              className="btn-pay-worker-upi"
-                              onClick={() => handleOpenPayoutModal(mem)}
-                            >
-                              💸 Disburse ₹{(pData.pendingPay || 0).toLocaleString()} via UPI
-                            </button>
-                          ) : (
-                            <span className="badge-settled-worker">
-                              ✓ All Payouts Settled
-                            </span>
-                          )}
-                        </div>
-                      </>
-                    )}
+                    <div className="worker-card-footer">
+                      <span className="worker-franchise-sponsor-note">
+                        Worker Fee: <strong>₹0 Paid by Admin</strong>
+                      </span>
+                      {(pData.pendingPay || 0) > 0 ? (
+                        <button
+                          type="button"
+                          className="btn-pay-worker-upi"
+                          onClick={() => handleOpenPayoutModal(mem)}
+                        >
+                          <span>💸 Disburse ₹{(pData.pendingPay || 0).toLocaleString()} via UPI</span>
+                        </button>
+                      ) : (
+                        <span className="badge-settled-worker">
+                          ✓ All Payouts Settled
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
