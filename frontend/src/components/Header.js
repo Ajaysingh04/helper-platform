@@ -26,37 +26,59 @@ function Header() {
     }
   });
 
+  // Admin Session Detection and live synchronization
+  const [adminAuth, setAdminAuth] = useState(() => {
+    return localStorage.getItem("helper_admin_auth") === "true";
+  });
+
   useEffect(() => {
-    const syncVendor = () => {
+    const syncVendorAndAdmin = () => {
       try {
         const raw = localStorage.getItem("helper_vendor");
         setVendorData(raw ? JSON.parse(raw) : null);
       } catch (e) {}
+      setAdminAuth(localStorage.getItem("helper_admin_auth") === "true");
     };
-    window.addEventListener("vendor_updated", syncVendor);
-    window.addEventListener("storage", syncVendor);
+    window.addEventListener("vendor_updated", syncVendorAndAdmin);
+    window.addEventListener("storage", syncVendorAndAdmin);
+    window.addEventListener("auth_state_changed", syncVendorAndAdmin);
     return () => {
-      window.removeEventListener("vendor_updated", syncVendor);
-      window.removeEventListener("storage", syncVendor);
+      window.removeEventListener("vendor_updated", syncVendorAndAdmin);
+      window.removeEventListener("storage", syncVendorAndAdmin);
+      window.removeEventListener("auth_state_changed", syncVendorAndAdmin);
     };
   }, []);
 
-  const isVendor = Boolean(
+  const isAdmin = Boolean(
+    adminAuth ||
+    localStorage.getItem("helper_admin_auth") === "true" ||
+    (currentUser?.role && ["admin", "administrator", "superadmin"].includes(currentUser.role.toLowerCase()))
+  );
+
+  const isVendor = !isAdmin && Boolean(
     vendorData ||
     localStorage.getItem("helper_vendor") ||
     localStorage.getItem("helper_vendor_token") ||
     (currentUser?.role && ["partner", "vendor", "serviceman", "provider"].includes(currentUser.role.toLowerCase()))
   );
 
-  const displayName = isVendor 
-    ? (vendorData?.shopName || vendorData?.name || currentUser?.name || "Service Partner")
-    : (currentUser?.name || "Verified User");
+  let displayName = "Verified User";
+  let displayFirstName = "Account";
+  let displayBadge = "Active Account";
 
-  const displayFirstName = displayName.trim().split(" ")[0] || (isVendor ? "Vendor" : "Account");
-
-  const displayBadge = isVendor
-    ? `${vendorData?.category || "Service"} Partner Pro`
-    : (currentUser?.role || "Active Account");
+  if (isAdmin) {
+    displayName = currentUser?.name || "Super Admin";
+    displayFirstName = "Admin";
+    displayBadge = "Master Administrator 🛡️";
+  } else if (isVendor) {
+    displayName = vendorData?.shopName || vendorData?.name || currentUser?.name || "Service Partner";
+    displayFirstName = displayName.trim().split(" ")[0] || "Vendor";
+    displayBadge = `${vendorData?.category || "Service"} Partner Pro`;
+  } else {
+    displayName = currentUser?.name || "Verified User";
+    displayFirstName = displayName.trim().split(" ")[0] || "Account";
+    displayBadge = currentUser?.role || "Active Account";
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -200,15 +222,23 @@ function Header() {
                     type="button" 
                     className={`nexora-account-btn logged-in ${accountMenuOpen ? "active" : ""}`}
                     onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    title={isVendor ? "Vendor Account Options" : "Account Options"}
-                    aria-label={isVendor ? "Vendor Account Options" : "Account Options"}
+                    title={isAdmin ? "Admin Control Options" : isVendor ? "Vendor Account Options" : "Account Options"}
+                    aria-label={isAdmin ? "Admin Control Options" : isVendor ? "Vendor Account Options" : "Account Options"}
                     aria-expanded={accountMenuOpen}
                   >
                     <div 
                       className="profile-avatar-circle" 
-                      style={isVendor ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "16px" } : {}}
+                      style={
+                        isAdmin
+                          ? { background: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)", color: "#FFFFFF", fontSize: "16px", boxShadow: "0 0 10px rgba(220, 38, 38, 0.4)" }
+                          : isVendor
+                          ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "16px" }
+                          : {}
+                      }
                     >
-                      {isVendor ? (
+                      {isAdmin ? (
+                        <span>🛡️</span>
+                      ) : isVendor ? (
                         <span>🛠️</span>
                       ) : currentUser?.avatar ? (
                         <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
@@ -217,7 +247,7 @@ function Header() {
                       )}
                     </div>
                     <div className="account-btn-text">
-                      <span className="acc-label">{isVendor ? "VENDOR" : "ACCOUNT"}</span>
+                      <span className="acc-label">{isAdmin ? "ADMIN" : isVendor ? "VENDOR" : "ACCOUNT"}</span>
                       <span className="acc-action">
                         {displayFirstName} 
                         <span className={`acc-chevron ${accountMenuOpen ? "open" : ""}`}>▾</span>
@@ -231,9 +261,17 @@ function Header() {
                       <div className="dropdown-user-header">
                         <div 
                           className="dropdown-avatar-circle" 
-                          style={isVendor ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "18px" } : {}}
+                          style={
+                            isAdmin
+                              ? { background: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)", color: "#FFFFFF", fontSize: "18px", boxShadow: "0 0 12px rgba(220, 38, 38, 0.4)" }
+                              : isVendor
+                              ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "18px" }
+                              : {}
+                          }
                         >
-                          {isVendor ? (
+                          {isAdmin ? (
+                            <span>🛡️</span>
+                          ) : isVendor ? (
                             <span>🛠️</span>
                           ) : currentUser?.avatar ? (
                             <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
@@ -253,13 +291,15 @@ function Header() {
                       <div className="dropdown-menu-divider" />
 
                       <div className="dropdown-menu-list">
-                        {/* Option 1: Profile (Opens Vendor Profile if vendor, Customer drawer if customer) */}
+                        {/* Option 1: Profile / Dashboard */}
                         <button
                           type="button"
                           className="dropdown-menu-item"
                           onClick={() => {
                             setAccountMenuOpen(false);
-                            if (isVendor) {
+                            if (isAdmin) {
+                              navigate("/admin");
+                            } else if (isVendor) {
                               navigate("/vendor/dashboard?tab=profile");
                             } else {
                               setDrawerOpen(true);
@@ -267,16 +307,43 @@ function Header() {
                           }}
                         >
                           <div className="item-icon-box profile-icon">
-                            <span>{isVendor ? "🛠️" : "👤"}</span>
+                            <span>{isAdmin ? "🛡️" : isVendor ? "🛠️" : "👤"}</span>
                           </div>
                           <div className="item-text-box">
-                            <span className="item-title">{isVendor ? "Vendor Profile & Shop" : "Profile"}</span>
+                            <span className="item-title">
+                              {isAdmin ? "Admin Control Panel" : isVendor ? "Vendor Profile & Shop" : "Profile"}
+                            </span>
                             <span className="item-sub">
-                              {isVendor ? "Edit shop details, rate, work & categories" : "View bookings, address & edit profile"}
+                              {isAdmin
+                                ? "Platform stats, bookings, providers & master controls"
+                                : isVendor
+                                ? "Edit shop details, rate, work & categories"
+                                : "View bookings, address & edit profile"}
                             </span>
                           </div>
                           <span className="item-arrow">›</span>
                         </button>
+
+                        {/* If Admin: Direct link to Bookings Management */}
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            className="dropdown-menu-item"
+                            onClick={() => {
+                              setAccountMenuOpen(false);
+                              navigate("/admin/bookings");
+                            }}
+                          >
+                            <div className="item-icon-box" style={{ background: "rgba(220, 38, 38, 0.12)", color: "#DC2626" }}>
+                              <span>📊</span>
+                            </div>
+                            <div className="item-text-box">
+                              <span className="item-title">All Customer Bookings</span>
+                              <span className="item-sub">Review, assign and dispatch platform orders</span>
+                            </div>
+                            <span className="item-arrow">›</span>
+                          </button>
+                        )}
 
                         {/* If Vendor: Quick link to Orders & Jobs */}
                         {isVendor && (
@@ -327,7 +394,9 @@ function Header() {
                           onClick={() => {
                             setAccountMenuOpen(false);
                             logout();
-                            if (isVendor) {
+                            if (isAdmin) {
+                              navigate("/login?role=admin");
+                            } else if (isVendor) {
                               navigate("/login?role=serviceman");
                             } else {
                               navigate("/login");
@@ -339,7 +408,13 @@ function Header() {
                           </div>
                           <div className="item-text-box">
                             <span className="item-title">Logout</span>
-                            <span className="item-sub">{isVendor ? "Sign out from vendor panel" : "Sign out from your account"}</span>
+                            <span className="item-sub">
+                              {isAdmin
+                                ? "Sign out from admin control panel"
+                                : isVendor
+                                ? "Sign out from vendor panel"
+                                : "Sign out from your account"}
+                            </span>
                           </div>
                           <span className="item-arrow logout-arrow">➔</span>
                         </button>
@@ -469,9 +544,17 @@ function Header() {
                 <div className="mobile-user-card">
                   <div 
                     className="dropdown-avatar-circle" 
-                    style={isVendor ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "18px" } : {}}
+                    style={
+                      isAdmin
+                        ? { background: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)", color: "#FFFFFF", fontSize: "18px" }
+                        : isVendor
+                        ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "18px" }
+                        : {}
+                    }
                   >
-                    {isVendor ? (
+                    {isAdmin ? (
+                      <span>🛡️</span>
+                    ) : isVendor ? (
                       <span>🛠️</span>
                     ) : currentUser?.avatar ? (
                       <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
@@ -489,25 +572,45 @@ function Header() {
                 </div>
 
                 <div className="mobile-action-buttons">
-                  {/* Option 1: Profile (Vendor Profile or Customer Profile) */}
+                  {/* Option 1: Profile / Dashboard */}
                   <button 
                     type="button" 
                     className="mobile-acc-btn profile"
                     onClick={() => {
                       setMobileNavOpen(false);
-                      if (isVendor) {
+                      if (isAdmin) {
+                        navigate("/admin");
+                      } else if (isVendor) {
                         navigate("/vendor/dashboard?tab=profile");
                       } else {
                         setDrawerOpen(true);
                       }
                     }}
                   >
-                    <span>{isVendor ? "🛠️ Vendor Profile & Shop" : "👤 Profile & Bookings"}</span>
+                    <span>
+                      {isAdmin ? "🛡️ Admin Control Panel" : isVendor ? "🛠️ Vendor Profile & Shop" : "👤 Profile & Bookings"}
+                    </span>
                     <span>›</span>
                   </button>
 
+                  {/* Admin Bookings / Operations */}
+                  {isAdmin && (
+                    <button 
+                      type="button" 
+                      className="mobile-acc-btn"
+                      style={{ background: "rgba(220, 38, 38, 0.08)", border: "1px solid rgba(220, 38, 38, 0.2)" }}
+                      onClick={() => {
+                        setMobileNavOpen(false);
+                        navigate("/admin/bookings");
+                      }}
+                    >
+                      <span>📊 All Customer Orders</span>
+                      <span>›</span>
+                    </button>
+                  )}
+
                   {/* Vendor Orders */}
-                  {isVendor && (
+                  {isVendor && !isAdmin && (
                     <button 
                       type="button" 
                       className="mobile-acc-btn"
@@ -542,7 +645,9 @@ function Header() {
                     onClick={() => {
                       setMobileNavOpen(false);
                       logout();
-                      if (isVendor) {
+                      if (isAdmin) {
+                        navigate("/login?role=admin");
+                      } else if (isVendor) {
                         navigate("/login?role=serviceman");
                       } else {
                         navigate("/login");

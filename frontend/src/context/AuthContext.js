@@ -13,6 +13,14 @@ export const AuthProvider = ({ children }) => {
 
   const [currentUser, setCurrentUser] = useState(() => {
     try {
+      const admin = localStorage.getItem("helper_admin_auth");
+      if (admin === "true") {
+        return {
+          name: "Super Admin",
+          role: "Administrator",
+          email: "admin@helper.com"
+        };
+      }
       const vendor = localStorage.getItem("helper_vendor");
       if (vendor) {
         const p = JSON.parse(vendor);
@@ -50,7 +58,13 @@ export const AuthProvider = ({ children }) => {
 
     if (logged) {
       try {
-        if (vendor) {
+        if (admin === "true") {
+          setCurrentUser({
+            name: "Super Admin",
+            role: "Administrator",
+            email: "admin@helper.com"
+          });
+        } else if (vendor) {
           const p = JSON.parse(vendor);
           setCurrentUser({
             name: p.name || p.shopName || "Vendor Partner",
