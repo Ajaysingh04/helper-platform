@@ -128,7 +128,7 @@ router.post("/login", async (req, res) => {
       return res.status(404).json({
         success: false,
         isNotRegistered: true,
-        message: "Yeh account registered nahi hai. Login karne se pehle kripya Register karein."
+        message: "This account is not registered. Please create an account before logging in."
       });
     }
 
@@ -138,7 +138,7 @@ router.post("/login", async (req, res) => {
       if (!isMatch && user.password !== password) {
         return res.status(401).json({
           success: false,
-          message: "Incorrect password. Kripya sahi password enter karein."
+          message: "Incorrect password. Please enter the correct password."
         });
       }
     }
@@ -188,7 +188,7 @@ router.post("/send-otp", validateOtpPayload, async (req, res) => {
         return res.status(404).json({
           success: false,
           isNotRegistered: true,
-          message: `Yeh mobile number (${cleanPhone}) registered nahi hai. Kripya pehle Register karein.`
+          message: `Mobile number (${cleanPhone}) is not registered. Please register first to log in.`
         });
       }
     }
@@ -248,7 +248,7 @@ router.post("/verify-otp", validateOtpPayload, async (req, res) => {
       return res.status(404).json({
         success: false,
         isNotRegistered: true,
-        message: "Yeh account registered nahi hai. Kripya pehle Register karein."
+        message: "This account is not registered. Please register first to log in."
       });
     }
 

@@ -304,7 +304,7 @@ function LoginPage() {
     setErrorMessage("");
     setNotRegisteredPrompt(false);
     setAuthMethod("password");
-    setSuccessMessage("Register form open ho gaya hai. Kripya apni details bharkar account create karein.");
+    setSuccessMessage("Registration form opened. Please enter your details to create an account.");
   };
 
   // ----------------------------------------------------
@@ -428,7 +428,7 @@ function LoginPage() {
       }
 
       if (data.isNotRegistered || response.status === 404) {
-        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain. Kripya pehle naya account register karein.");
+        setErrorMessage("❌ This account is not registered! Only registered users can log in. Please register first.");
         setNotRegisteredPrompt(true);
         setLoading(false);
         return;
@@ -448,11 +448,11 @@ function LoginPage() {
       );
 
       if (!localMatch) {
-        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain. Kripya pehle naya account register karein.");
+        setErrorMessage("❌ This account is not registered! Only registered users can log in. Please register first.");
         setNotRegisteredPrompt(true);
       } else {
         if (localMatch.password && localMatch.password !== userPassword && userPassword !== "password123") {
-          setErrorMessage("Incorrect password. Kripya sahi password enter karein.");
+          setErrorMessage("Incorrect password. Please enter the correct password.");
         } else {
           localStorage.setItem("helper_user_profile", JSON.stringify(localMatch));
           window.dispatchEvent(new Event("user_profile_updated"));
@@ -472,7 +472,7 @@ function LoginPage() {
       );
 
       if (!localMatch) {
-        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain. Kripya pehle naya account register karein.");
+        setErrorMessage("❌ This account is not registered! Only registered users can log in. Please register first.");
         setNotRegisteredPrompt(true);
       } else {
         localStorage.setItem("helper_user_profile", JSON.stringify(localMatch));
@@ -529,7 +529,7 @@ function LoginPage() {
       }
 
       if (data.isNotRegistered || response.status === 404) {
-        setErrorMessage(`❌ Mobile number (+91 ${cleanPhone}) registered nahi hai. Login sirf registered users hi kar sakte hain.`);
+        setErrorMessage(`❌ Mobile number (+91 ${cleanPhone}) is not registered. Only registered users can log in. Please register first.`);
         setNotRegisteredPrompt(true);
         return;
       }
@@ -539,7 +539,7 @@ function LoginPage() {
       const registeredList = getRegisteredUsers();
       const isRegistered = registeredList.some(u => u.phone && u.phone.replace(/\D/g, "") === cleanPhone.replace(/\D/g, ""));
       if (!isRegistered) {
-        setErrorMessage(`❌ Mobile number (+91 ${cleanPhone}) registered nahi hai. Login sirf registered users hi kar sakte hain.`);
+        setErrorMessage(`❌ Mobile number (+91 ${cleanPhone}) is not registered. Only registered users can log in. Please register first.`);
         setNotRegisteredPrompt(true);
         return;
       }
@@ -577,7 +577,7 @@ function LoginPage() {
           navigate("/");
           return;
         } else if (data.isNotRegistered) {
-          setErrorMessage("❌ Yeh number registered nahi hai. Login sirf registered users hi kar sakte hain.");
+          setErrorMessage("❌ This number is not registered. Only registered users can log in. Please register first.");
           setNotRegisteredPrompt(true);
           return;
         }
@@ -742,9 +742,9 @@ function LoginPage() {
                       gap: "6px"
                     }}
                   >
-                    <span>📝 Naya Account Banayein (Register Now) ➔</span>
+                    <span>📝 Create New Account (Register Now) ➔</span>
                   </button>
-                  <span style={{ fontSize: "11.5px", color: "#7F1D1D" }}>Sirf registered users hi login kar sakte hain</span>
+                  <span style={{ fontSize: "11.5px", color: "#7F1D1D" }}>Only registered accounts can log in</span>
                 </div>
               )}
             </div>

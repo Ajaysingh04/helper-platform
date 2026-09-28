@@ -56,7 +56,7 @@ function LoginModal({ isOpen, onClose }) {
       }
 
       if (data.isNotRegistered || response.status === 404) {
-        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain.");
+        setErrorMessage("❌ This account is not registered! Only registered users can log in. Please register first.");
         return;
       }
 
@@ -65,7 +65,7 @@ function LoginModal({ isOpen, onClose }) {
       const match = registeredList.find(u => u.email && u.email.toLowerCase() === cleanEmail);
 
       if (!match) {
-        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain.");
+        setErrorMessage("❌ This account is not registered! Only registered users can log in. Please register first.");
       } else {
         localStorage.setItem("helper_user_profile", JSON.stringify(match));
         window.dispatchEvent(new Event("user_profile_updated"));
@@ -77,7 +77,7 @@ function LoginModal({ isOpen, onClose }) {
       const match = registeredList.find(u => u.email && u.email.toLowerCase() === cleanEmail);
 
       if (!match) {
-        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain.");
+        setErrorMessage("❌ This account is not registered! Only registered users can log in. Please register first.");
       } else {
         localStorage.setItem("helper_user_profile", JSON.stringify(match));
         window.dispatchEvent(new Event("user_profile_updated"));
@@ -145,7 +145,7 @@ function LoginModal({ isOpen, onClose }) {
                   onClick={(e) => { e.preventDefault(); onClose(); window.location.href = "/login"; }}
                   style={{ color: "#0284C7", fontWeight: 700, textDecoration: "none", fontSize: "12px" }}
                 >
-                  📝 Naya Account Banayein (Register Now) ➔
+                  📝 Create New Account (Register Now) ➔
                 </a>
               </div>
             </div>
