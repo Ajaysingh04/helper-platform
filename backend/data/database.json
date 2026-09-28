@@ -1218,6 +1218,24 @@
   ],
   "providers": [
     {
+      "id": "vdr_1790596374123",
+      "name": "Rakesh",
+      "shopName": "plumber",
+      "category": "Plumber",
+      "hourlyRate": "₹299/hr",
+      "phone": "9589833804",
+      "email": "",
+      "password": "Rakesh@123",
+      "location": "Indore / Delhi NCR",
+      "experience": "3+ Years",
+      "rating": 5,
+      "jobsCompleted": 0,
+      "verified": true,
+      "status": "Active",
+      "bio": "Certified Plumber providing fast, reliable and guaranteed services across the local area.",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"
+    },
+    {
       "id": "vdr_rahul_amritam",
       "name": "Rahul Gandhi",
       "shopName": "Amritam",
@@ -2002,6 +2020,30 @@
     }
   ],
   "users": [
+    {
+      "id": "u_1790595182797",
+      "name": "Ajay Singh",
+      "email": "ajaysinghbanafer1@gmail.com",
+      "phone": "9589310704",
+      "password": "$2b$10$/ZXUzUyqtKMNxH6wkMqt/uflW62UEDpwsDXqQh98bqaihWqqNNLCa",
+      "address": "Mr9-73-Barfani Dham",
+      "role": "customer",
+      "isPhoneVerified": true,
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250",
+      "createdAt": "2026-09-28T11:33:02.797Z"
+    },
+    {
+      "id": "u_1790594846692",
+      "name": "Test New User",
+      "email": "test_1790594846562@example.com",
+      "phone": "9870077606",
+      "password": "$2b$10$DypeqpRIrc/eYseQy0WuKuUGSh3MYZOki1qHrisCTWd8t.KPGHkoW",
+      "address": "Indore, MP",
+      "role": "customer",
+      "isPhoneVerified": true,
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250",
+      "createdAt": "2026-09-28T11:27:26.692Z"
+    },
     {
       "id": "u1",
       "name": "Rahul Sharma",
