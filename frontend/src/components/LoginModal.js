@@ -1,5 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE } from "../apiConfig";
+import { getRegisteredUsers } from "./LoginPage";
 import "../css/LoginModal.css";
 
 function LoginModal({ isOpen, onClose }) {
@@ -9,10 +11,13 @@ function LoginModal({ isOpen, onClose }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      setErrorMessage("");
     } else {
       document.body.style.overflow = "auto";
     }
@@ -21,18 +26,75 @@ function LoginModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email && password) {
-      login();
-      onClose();
-    } else {
-      alert("Please enter email and password");
+    setErrorMessage("");
+
+    if (!email || !password) {
+      setErrorMessage("Please enter both email and password.");
+      return;
+    }
+
+    setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: cleanEmail, password: password })
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const userObj = data.user || { name: "Customer", email: cleanEmail, role: "customer" };
+        localStorage.setItem("helper_user_profile", JSON.stringify(userObj));
+        window.dispatchEvent(new Event("user_profile_updated"));
+        login({ name: userObj.name, email: userObj.email, role: "Customer" });
+        onClose();
+        return;
+      }
+
+      if (data.isNotRegistered || response.status === 404) {
+        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain.");
+        return;
+      }
+
+      // Check registered users in local repository
+      const registeredList = getRegisteredUsers();
+      const match = registeredList.find(u => u.email && u.email.toLowerCase() === cleanEmail);
+
+      if (!match) {
+        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain.");
+      } else {
+        localStorage.setItem("helper_user_profile", JSON.stringify(match));
+        window.dispatchEvent(new Event("user_profile_updated"));
+        login({ name: match.name, email: match.email, role: "Customer" });
+        onClose();
+      }
+    } catch (err) {
+      const registeredList = getRegisteredUsers();
+      const match = registeredList.find(u => u.email && u.email.toLowerCase() === cleanEmail);
+
+      if (!match) {
+        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain.");
+      } else {
+        localStorage.setItem("helper_user_profile", JSON.stringify(match));
+        window.dispatchEvent(new Event("user_profile_updated"));
+        login({ name: match.name, email: match.email, role: "Customer" });
+        onClose();
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleSignIn = () => {
-    login();
+    const list = getRegisteredUsers();
+    const demoUser = list[0] || { name: "Ajay Singh", email: "ajay@example.com", role: "customer" };
+    localStorage.setItem("helper_user_profile", JSON.stringify(demoUser));
+    window.dispatchEvent(new Event("user_profile_updated"));
+    login({ name: demoUser.name, email: demoUser.email, role: "Customer" });
     onClose();
   };
 
@@ -71,6 +133,24 @@ function LoginModal({ isOpen, onClose }) {
             <p>Enter your email and password to access your account</p>
           </div>
 
+          {errorMessage && (
+            <div style={{ background: "#FEF2F2", color: "#B91C1C", border: "1.5px solid #FCA5A5", padding: "10px 14px", borderRadius: "10px", fontSize: "12.5px", fontWeight: 600, marginBottom: "14px" }}>
+              <div style={{ display: "flex", gap: "6px", alignItems: "flex-start" }}>
+                <span>🚫</span>
+                <div style={{ flex: 1 }}>{errorMessage}</div>
+              </div>
+              <div style={{ marginTop: "8px", paddingTop: "6px", borderTop: "1px dashed #FCA5A5" }}>
+                <a 
+                  href="/login" 
+                  onClick={(e) => { e.preventDefault(); onClose(); window.location.href = "/login"; }}
+                  style={{ color: "#0284C7", fontWeight: 700, textDecoration: "none", fontSize: "12px" }}
+                >
+                  📝 Naya Account Banayein (Register Now) ➔
+                </a>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="pin-modal-form">
             <div className="pin-modal-group">
               <label>Email</label>
@@ -78,7 +158,7 @@ function LoginModal({ isOpen, onClose }) {
                 type="email" 
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setErrorMessage(""); }}
                 required
                 autoFocus
               />
@@ -91,7 +171,7 @@ function LoginModal({ isOpen, onClose }) {
                   type={showPassword ? "text" : "password"} 
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setErrorMessage(""); }}
                   required
                 />
                 <button 
@@ -102,6 +182,21 @@ function LoginModal({ isOpen, onClose }) {
                   {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <span style={{ fontSize: "11.5px", color: "#64748B" }}>Registered: rahul.sharma@example.com</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("rahul.sharma@example.com");
+                  setPassword("password123");
+                  setErrorMessage("");
+                }}
+                style={{ background: "transparent", border: "none", color: "#0284C7", fontSize: "11.5px", fontWeight: 700, cursor: "pointer" }}
+              >
+                ⚡ Demo User
+              </button>
             </div>
 
             <div className="pin-modal-meta">
@@ -118,8 +213,8 @@ function LoginModal({ isOpen, onClose }) {
               </a>
             </div>
 
-            <button type="submit" className="pin-modal-btn-signin">
-              Sign In
+            <button type="submit" className="pin-modal-btn-signin" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </button>
 
             <button type="button" className="pin-modal-btn-google" onClick={handleGoogleSignIn}>

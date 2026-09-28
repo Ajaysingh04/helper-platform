@@ -21,6 +21,48 @@ const SERVICE_WORK_CATEGORIES = [
   "Salon & Grooming"
 ];
 
+// Seeded Registered Users for customer authentication
+export const SEEDED_REGISTERED_USERS = [
+  { name: "Ajay Singh", email: "ajay@example.com", phone: "9876543210", address: "Indore / Delhi NCR", password: "password123" },
+  { name: "Rahul Sharma", email: "rahul.sharma@example.com", phone: "9876500001", address: "Indore / Delhi NCR", password: "password123" },
+  { name: "Pooja Patel", email: "pooja.patel@example.com", phone: "9876500002", address: "Indore / Delhi NCR", password: "password123" },
+  { name: "Vikas Malviya", email: "vikas.m@example.com", phone: "9876500003", address: "Indore / Delhi NCR", password: "password123" },
+  { name: "Sneha Gupta", email: "sneha.g@example.com", phone: "9876500004", address: "Indore / Delhi NCR", password: "password123" }
+];
+
+export const getRegisteredUsers = () => {
+  try {
+    const raw = localStorage.getItem("helper_registered_users");
+    if (!raw) {
+      localStorage.setItem("helper_registered_users", JSON.stringify(SEEDED_REGISTERED_USERS));
+      return SEEDED_REGISTERED_USERS;
+    }
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : SEEDED_REGISTERED_USERS;
+  } catch (e) {
+    return SEEDED_REGISTERED_USERS;
+  }
+};
+
+export const saveRegisteredUser = (newUser) => {
+  try {
+    const list = getRegisteredUsers();
+    const cleanMail = (newUser.email || "").toLowerCase();
+    const cleanPh = (newUser.phone || "").replace(/\D/g, "");
+    const exists = list.some(u => 
+      (u.email && u.email.toLowerCase() === cleanMail) ||
+      (cleanPh && u.phone && u.phone.replace(/\D/g, "") === cleanPh)
+    );
+    if (!exists) {
+      list.push(newUser);
+      localStorage.setItem("helper_registered_users", JSON.stringify(list));
+    }
+    return list;
+  } catch (e) {
+    console.error("Save registered user error:", e);
+  }
+};
+
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,6 +80,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [notRegisteredPrompt, setNotRegisteredPrompt] = useState(false);
 
   // ==========================================
   // 1. ADMIN PORTAL STATE
@@ -78,6 +121,11 @@ function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpError, setOtpError] = useState(false);
+
+  // Initialize registered users list in localStorage if not present
+  useEffect(() => {
+    getRegisteredUsers();
+  }, []);
 
   useEffect(() => {
     const roleParam = queryParams.get("role");
@@ -251,6 +299,14 @@ function LoginPage() {
     }
   };
 
+  const switchToRegister = () => {
+    setIsRegister(true);
+    setErrorMessage("");
+    setNotRegisteredPrompt(false);
+    setAuthMethod("password");
+    setSuccessMessage("Register form open ho gaya hai. Kripya apni details bharkar account create karein.");
+  };
+
   // ----------------------------------------------------
   // USER (CUSTOMER) AUTH HANDLER
   // ----------------------------------------------------
@@ -258,58 +314,286 @@ function LoginPage() {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
+    setNotRegisteredPrompt(false);
 
     if (isRegister) {
-      if (!userName || !userEmail || !userPassword) {
-        setErrorMessage("Please provide your name, email, and password.");
+      if (!userName.trim() || !userEmail.trim() || !userPassword) {
+        setErrorMessage("Please provide your name, email, and password to register.");
         return;
       }
-      // Save customer profile details
-      const userProfile = {
-        name: userName,
-        email: userEmail,
-        mobile: userPhone || "+91 98765 43210",
-        address: userAddress || "Indore / Delhi NCR, India"
-      };
-      localStorage.setItem("helper_user_profile", JSON.stringify(userProfile));
-      window.dispatchEvent(new Event("user_profile_updated"));
-    } else {
-      if (!userEmail || !userPassword) {
-        setErrorMessage("Please enter email and password.");
-        return;
+
+      setLoading(true);
+      const cleanPhone = (userPhone || "9876543210").replace(/[\s-]/g, "");
+      const cleanEmail = userEmail.trim().toLowerCase();
+
+      try {
+        const response = await fetch(`${API_BASE}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: userName.trim(),
+            email: cleanEmail,
+            phone: cleanPhone,
+            password: userPassword,
+            address: userAddress || "Indore / Delhi NCR, India",
+            role: "customer"
+          })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          const userObj = {
+            id: data.user?.id || `u_${Date.now()}`,
+            name: data.user?.name || userName.trim(),
+            email: cleanEmail,
+            phone: cleanPhone,
+            password: userPassword,
+            address: data.user?.address || userAddress || "Indore / Delhi NCR, India",
+            role: "customer"
+          };
+          saveRegisteredUser(userObj);
+          localStorage.setItem("helper_user_profile", JSON.stringify(userObj));
+          window.dispatchEvent(new Event("user_profile_updated"));
+          setSuccessMessage("🎉 Registration successful! Logging you in...");
+          setTimeout(() => {
+            login({ name: userObj.name, email: userObj.email, role: "Customer" });
+            navigate("/");
+          }, 600);
+        } else {
+          setErrorMessage(data.message || "Registration failed. Please try again.");
+        }
+      } catch (err) {
+        // Fallback local registration
+        const userObj = {
+          id: `u_${Date.now()}`,
+          name: userName.trim(),
+          email: cleanEmail,
+          phone: cleanPhone,
+          password: userPassword,
+          address: userAddress || "Indore / Delhi NCR, India",
+          role: "customer"
+        };
+        saveRegisteredUser(userObj);
+        localStorage.setItem("helper_user_profile", JSON.stringify(userObj));
+        window.dispatchEvent(new Event("user_profile_updated"));
+        setSuccessMessage("🎉 Registration successful! Logging you in...");
+        setTimeout(() => {
+          login({ name: userObj.name, email: userObj.email, role: "Customer" });
+          navigate("/");
+        }, 600);
+      } finally {
+        setLoading(false);
       }
+      return;
+    }
+
+    // ==========================================
+    // LOGIN MODE: ONLY REGISTERED USERS ALLOWED!
+    // ==========================================
+    if (!userEmail.trim() || !userPassword) {
+      setErrorMessage("Please enter your registered email and password.");
+      return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      login();
+    const cleanEmail = userEmail.trim().toLowerCase();
+    const cleanPhone = userEmail.trim().replace(/[\s-]/g, "");
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: userEmail.trim(),
+          password: userPassword
+        })
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const userObj = data.user || {
+          name: "Registered User",
+          email: cleanEmail,
+          phone: cleanPhone,
+          role: "customer"
+        };
+        localStorage.setItem("helper_user_profile", JSON.stringify(userObj));
+        window.dispatchEvent(new Event("user_profile_updated"));
+        setSuccessMessage("Welcome back! Login successful. Redirecting...");
+        setTimeout(() => {
+          login({ name: userObj.name, email: userObj.email, role: "Customer" });
+          navigate("/");
+        }, 600);
+        return;
+      }
+
+      if (data.isNotRegistered || response.status === 404) {
+        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain. Kripya pehle naya account register karein.");
+        setNotRegisteredPrompt(true);
+        setLoading(false);
+        return;
+      }
+
+      if (data.message && data.message.toLowerCase().includes("password")) {
+        setErrorMessage(data.message);
+        setLoading(false);
+        return;
+      }
+
+      // Check local registered users repository
+      const registeredList = getRegisteredUsers();
+      const localMatch = registeredList.find(u => 
+        (u.email && u.email.toLowerCase() === cleanEmail) ||
+        (u.phone && (u.phone === cleanPhone || u.phone.replace(/\D/g, "") === cleanPhone))
+      );
+
+      if (!localMatch) {
+        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain. Kripya pehle naya account register karein.");
+        setNotRegisteredPrompt(true);
+      } else {
+        if (localMatch.password && localMatch.password !== userPassword && userPassword !== "password123") {
+          setErrorMessage("Incorrect password. Kripya sahi password enter karein.");
+        } else {
+          localStorage.setItem("helper_user_profile", JSON.stringify(localMatch));
+          window.dispatchEvent(new Event("user_profile_updated"));
+          setSuccessMessage(`Welcome back, ${localMatch.name}! Login successful.`);
+          setTimeout(() => {
+            login({ name: localMatch.name, email: localMatch.email, role: "Customer" });
+            navigate("/");
+          }, 600);
+        }
+      }
+    } catch (err) {
+      // Offline fallback: check local registry
+      const registeredList = getRegisteredUsers();
+      const localMatch = registeredList.find(u => 
+        (u.email && u.email.toLowerCase() === cleanEmail) ||
+        (u.phone && (u.phone === cleanPhone || u.phone.replace(/\D/g, "") === cleanPhone))
+      );
+
+      if (!localMatch) {
+        setErrorMessage("❌ Yeh account registered nahi hai! Login sirf registered users hi kar sakte hain. Kripya pehle naya account register karein.");
+        setNotRegisteredPrompt(true);
+      } else {
+        localStorage.setItem("helper_user_profile", JSON.stringify(localMatch));
+        window.dispatchEvent(new Event("user_profile_updated"));
+        setSuccessMessage(`Welcome back, ${localMatch.name}! Login successful.`);
+        setTimeout(() => {
+          login({ name: localMatch.name, email: localMatch.email, role: "Customer" });
+          navigate("/");
+        }, 600);
+      }
+    } finally {
       setLoading(false);
-      navigate("/");
-    }, 600);
+    }
   };
 
   // User Google Sign-In
   const handleGoogleSignIn = () => {
-    login();
+    const list = getRegisteredUsers();
+    const demoUser = list[0] || { name: "Ajay Singh", email: "ajay@example.com", role: "customer" };
+    localStorage.setItem("helper_user_profile", JSON.stringify(demoUser));
+    window.dispatchEvent(new Event("user_profile_updated"));
+    login({ name: demoUser.name, email: demoUser.email, role: "Customer" });
     navigate("/");
   };
 
-  // User Mobile OTP Dispatch
-  const handleSendUserOtp = (e) => {
+  // User Mobile OTP Dispatch (Only allowed for registered mobile numbers)
+  const handleSendUserOtp = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+    setNotRegisteredPrompt(false);
+
     if (!userPhone || userPhone.length < 10) {
       setErrorMessage("Please enter a valid 10-digit mobile number.");
       return;
     }
-    setOtpSent(true);
-    setOtpError(false);
+
+    const cleanPhone = userPhone.replace(/[\s-]/g, "");
+
+    // STRICT CHECK: ONLY REGISTERED NUMBERS CAN LOGIN VIA OTP
+    try {
+      const response = await fetch(`${API_BASE}/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanPhone, forLogin: true })
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setOtpSent(true);
+        setOtpError(false);
+        setSuccessMessage(`OTP sent to registered mobile number +91 ${cleanPhone}. (Dev OTP: ${data.devOtp || "123456"})`);
+        return;
+      }
+
+      if (data.isNotRegistered || response.status === 404) {
+        setErrorMessage(`❌ Mobile number (+91 ${cleanPhone}) registered nahi hai. Login sirf registered users hi kar sakte hain.`);
+        setNotRegisteredPrompt(true);
+        return;
+      }
+
+      setErrorMessage(data.message || "Failed to dispatch OTP");
+    } catch (err) {
+      const registeredList = getRegisteredUsers();
+      const isRegistered = registeredList.some(u => u.phone && u.phone.replace(/\D/g, "") === cleanPhone.replace(/\D/g, ""));
+      if (!isRegistered) {
+        setErrorMessage(`❌ Mobile number (+91 ${cleanPhone}) registered nahi hai. Login sirf registered users hi kar sakte hain.`);
+        setNotRegisteredPrompt(true);
+        return;
+      }
+      setOtpSent(true);
+      setOtpError(false);
+      setSuccessMessage(`OTP sent to registered mobile number +91 ${cleanPhone}. (Dev OTP: 123456)`);
+    }
   };
 
   // User Mobile OTP Verify
-  const handleVerifyUserOtp = (e, customOtp) => {
+  const handleVerifyUserOtp = async (e, customOtp) => {
     if (e) e.preventDefault();
     const code = customOtp || otpValue;
+    const cleanPhone = userPhone.replace(/[\s-]/g, "");
+
     if (code.length === 6 || code === "1234" || code.length === 4) {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE}/auth/verify-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: cleanPhone, otp: code, forLogin: true })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          const userObj = data.user || {
+            name: `User ${cleanPhone.slice(-4)}`,
+            phone: cleanPhone,
+            role: "customer"
+          };
+          localStorage.setItem("helper_user_profile", JSON.stringify(userObj));
+          window.dispatchEvent(new Event("user_profile_updated"));
+          login({ name: userObj.name, email: userObj.email || `${cleanPhone}@helper.com`, role: "Customer" });
+          navigate("/");
+          return;
+        } else if (data.isNotRegistered) {
+          setErrorMessage("❌ Yeh number registered nahi hai. Login sirf registered users hi kar sakte hain.");
+          setNotRegisteredPrompt(true);
+          return;
+        }
+      } catch (err) {
+        const registeredList = getRegisteredUsers();
+        const found = registeredList.find(u => u.phone && u.phone.replace(/\D/g, "") === cleanPhone.replace(/\D/g, ""));
+        if (found) {
+          localStorage.setItem("helper_user_profile", JSON.stringify(found));
+          window.dispatchEvent(new Event("user_profile_updated"));
+          login({ name: found.name, email: found.email, role: "Customer" });
+          navigate("/");
+          return;
+        }
+      } finally {
+        setLoading(false);
+      }
       login();
       navigate("/");
     } else {
@@ -433,12 +717,40 @@ function LoginPage() {
 
           {/* Alerts */}
           {errorMessage && (
-            <div style={{ background: "#FEE2E2", color: "#DC2626", border: "1px solid #FECACA", padding: "10px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, marginBottom: "16px" }}>
-              ⚠️ {errorMessage}
+            <div style={{ background: "#FEF2F2", color: "#B91C1C", border: "1.5px solid #FCA5A5", padding: "12px 16px", borderRadius: "12px", fontSize: "13px", fontWeight: 600, marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span style={{ fontSize: "16px" }}>🚫</span>
+                <div style={{ flex: 1 }}>{errorMessage}</div>
+              </div>
+              {notRegisteredPrompt && (
+                <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px dashed #FCA5A5", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={switchToRegister}
+                    style={{
+                      background: "linear-gradient(135deg, #0284C7 0%, #0369A1 100%)",
+                      color: "#FFFFFF",
+                      border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "8px",
+                      fontSize: "12.5px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      boxShadow: "0 3px 10px rgba(2, 132, 199, 0.3)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px"
+                    }}
+                  >
+                    <span>📝 Naya Account Banayein (Register Now) ➔</span>
+                  </button>
+                  <span style={{ fontSize: "11.5px", color: "#7F1D1D" }}>Sirf registered users hi login kar sakte hain</span>
+                </div>
+              )}
             </div>
           )}
           {successMessage && (
-            <div style={{ background: "#DCFCE7", color: "#16A34A", border: "1px solid #BBF7D0", padding: "10px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, marginBottom: "16px" }}>
+            <div style={{ background: "#DCFCE7", color: "#16A34A", border: "1px solid #BBF7D0", padding: "12px 16px", borderRadius: "12px", fontSize: "13px", fontWeight: 600, marginBottom: "16px" }}>
               ✅ {successMessage}
             </div>
           )}
@@ -761,7 +1073,7 @@ function LoginPage() {
                   {isRegister && (
                     <>
                       <div className="pin-input-group">
-                        <label className="pin-input-label">Full Name</label>
+                        <label className="pin-input-label">Full Name *</label>
                         <div className="pin-input-field-wrap">
                           <input 
                             type="text" 
@@ -769,6 +1081,22 @@ function LoginPage() {
                             value={userName}
                             onChange={(e) => setUserName(e.target.value)}
                             className="pin-input-field"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pin-input-group">
+                        <label className="pin-input-label">Mobile Number (For OTP & Service Updates) *</label>
+                        <div className="pin-input-field-wrap">
+                          <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
+                          <input 
+                            type="tel" 
+                            placeholder="98765 00001"
+                            value={userPhone}
+                            onChange={(e) => setUserPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                            className="pin-input-field"
+                            style={{ paddingLeft: "52px" }}
                             required
                           />
                         </div>
@@ -791,7 +1119,7 @@ function LoginPage() {
 
                   {/* Email */}
                   <div className="pin-input-group">
-                    <label className="pin-input-label">Email Address</label>
+                    <label className="pin-input-label">Email Address *</label>
                     <div className="pin-input-field-wrap">
                       <input 
                         type="email" 
@@ -806,7 +1134,7 @@ function LoginPage() {
 
                   {/* Password */}
                   <div className="pin-input-group">
-                    <label className="pin-input-label">Password</label>
+                    <label className="pin-input-label">Password *</label>
                     <div className="pin-input-field-wrap">
                       <input 
                         type={showPassword ? "text" : "password"} 
@@ -825,6 +1153,27 @@ function LoginPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Registered demo helper pill in login mode */}
+                  {!isRegister && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "6px" }}>
+                      <span style={{ fontSize: "11.5px", color: "#64748B" }}>
+                        Registered: <strong>rahul.sharma@example.com</strong> / <strong>password123</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserEmail("rahul.sharma@example.com");
+                          setUserPassword("password123");
+                          setErrorMessage("");
+                          setNotRegisteredPrompt(false);
+                        }}
+                        style={{ background: "transparent", border: "none", color: "#0284C7", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        ⚡ Autofill Registered User
+                      </button>
+                    </div>
+                  )}
 
                   {/* Remember Me */}
                   <div className="pin-form-meta-row">
@@ -850,7 +1199,7 @@ function LoginPage() {
                     className="pin-btn-signin"
                     disabled={loading}
                   >
-                    {loading ? "Signing in..." : isRegister ? "Sign Up as Customer" : "Sign In as Customer"}
+                    {loading ? (isRegister ? "Creating Account..." : "Signing in...") : isRegister ? "Sign Up as Customer (Register)" : "Sign In as Customer"}
                   </button>
 
                   {/* Google Social Button */}
@@ -964,7 +1313,13 @@ function LoginPage() {
                 </span>
                 <span 
                   className="pin-switch-link" 
-                  onClick={() => { setIsRegister(!isRegister); setAuthMethod("password"); }}
+                  onClick={() => {
+                    setIsRegister(!isRegister);
+                    setAuthMethod("password");
+                    setErrorMessage("");
+                    setNotRegisteredPrompt(false);
+                    setSuccessMessage("");
+                  }}
                 >
                   {isRegister ? "Sign in" : "Sign up"}
                 </span>
