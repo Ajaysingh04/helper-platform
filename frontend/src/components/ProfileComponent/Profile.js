@@ -162,7 +162,14 @@ function Profile({ isOpen, onClose }) {
 
         {isLoggedIn && (
           <div className="drawer-footer-logout">
-            <button className="drawer-logout-btn" onClick={logout}>
+            <button 
+              className="drawer-logout-btn" 
+              onClick={() => {
+                logout();
+                onClose();
+                navigate("/login");
+              }}
+            >
               Sign Out of Account 🚪
             </button>
           </div>

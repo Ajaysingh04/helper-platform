@@ -113,6 +113,7 @@ function LoginPage() {
         localStorage.setItem("helper_admin_auth", "true");
         localStorage.setItem("helper_admin_role", "superadmin");
         if (data.token) localStorage.setItem("helper_admin_token", data.token);
+        login({ name: "Super Admin", role: "Administrator", email: "admin@helper.com" });
         setSuccessMessage("Super Admin authenticated successfully! Redirecting...");
         setTimeout(() => {
           navigate("/admin");
@@ -121,6 +122,7 @@ function LoginPage() {
         // Fallback for instant local admin access
         localStorage.setItem("helper_admin_auth", "true");
         localStorage.setItem("helper_admin_role", "superadmin");
+        login({ name: "Super Admin", role: "Administrator", email: "admin@helper.com" });
         setSuccessMessage("Admin Access Granted! Loading Admin Control Panel...");
         setTimeout(() => {
           navigate("/admin");
@@ -132,6 +134,7 @@ function LoginPage() {
       if (adminPin === "admin123" || adminPin === "1234") {
         localStorage.setItem("helper_admin_auth", "true");
         localStorage.setItem("helper_admin_role", "superadmin");
+        login({ name: "Super Admin", role: "Administrator", email: "admin@helper.com" });
         setSuccessMessage("Admin Access Granted! Loading Admin Control Panel...");
         setTimeout(() => {
           navigate("/admin");
@@ -191,6 +194,7 @@ function LoginPage() {
 
       localStorage.setItem("helper_vendor", JSON.stringify(data.vendor));
       if (data.token) localStorage.setItem("helper_vendor_token", data.token);
+      login({ name: data.vendor?.name || data.vendor?.shopName || "Vendor Partner", role: "Partner", email: data.vendor?.phone || "" });
 
       setSuccessMessage("Registration successful! Redirecting to Franchise Activation...");
       setTimeout(() => {
@@ -234,6 +238,7 @@ function LoginPage() {
 
       localStorage.setItem("helper_vendor", JSON.stringify(data.vendor));
       if (data.token) localStorage.setItem("helper_vendor_token", data.token);
+      login({ name: data.vendor?.name || data.vendor?.shopName || "Vendor Partner", role: "Partner", email: data.vendor?.phone || "" });
 
       setSuccessMessage("Welcome back! Loading Service Man Panel...");
       setTimeout(() => {

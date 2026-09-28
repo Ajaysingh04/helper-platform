@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 import { API_BASE } from "../../apiConfig";
 import "../../css/VendorAuth.css";
 
@@ -20,6 +21,7 @@ const AVAILABLE_CATEGORIES = [
 function VendorAuth({ defaultTab = "register" }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useContext(AuthContext);
 
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [errorMsg, setErrorMsg] = useState("");
@@ -127,6 +129,7 @@ function VendorAuth({ defaultTab = "register" }) {
       // Save vendor session to localStorage
       localStorage.setItem("helper_vendor", JSON.stringify(data.vendor));
       localStorage.setItem("helper_vendor_token", data.token);
+      login({ name: data.vendor?.name || data.vendor?.shopName || "Vendor Partner", role: "Partner", email: data.vendor?.phone || "" });
 
       setSuccessMsg("Registration successful! Redirecting to your Partner Dashboard...");
       setTimeout(() => {
@@ -170,6 +173,7 @@ function VendorAuth({ defaultTab = "register" }) {
 
       localStorage.setItem("helper_vendor", JSON.stringify(data.vendor));
       localStorage.setItem("helper_vendor_token", data.token);
+      login({ name: data.vendor?.name || data.vendor?.shopName || "Vendor Partner", role: "Partner", email: data.vendor?.phone || "" });
 
       setSuccessMsg("Login successful! Welcome back.");
       setTimeout(() => {

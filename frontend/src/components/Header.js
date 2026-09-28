@@ -6,13 +6,15 @@ import "../css/Header.css";
 
 function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const { isLoggedIn } = useContext(AuthContext);
+  const { isLoggedIn, currentUser, logout } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const menuRef = useRef(null);
+  const accountMenuRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,10 +28,28 @@ function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Auto close mobile nav on route change
+  // Auto close menus on route change
   useEffect(() => {
     setMobileNavOpen(false);
+    setAccountMenuOpen(false);
   }, [location.pathname]);
+
+  // Close account dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    if (accountMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [accountMenuOpen]);
 
   // Close mobile nav on escape key or outside click
   useEffect(() => {
@@ -130,20 +150,112 @@ function Header() {
               <span className="cart-badge-dot"></span>
             </Link>
 
-            {/* Account / Sign In */}
-            <div className="profile-container">
+            {/* Account / Sign In with Dropdown Menu */}
+            <div className="profile-container" ref={accountMenuRef}>
               {isLoggedIn ? (
-                <button 
-                  type="button" 
-                  className="profile-logged-wrap" 
-                  onClick={() => setDrawerOpen(!drawerOpen)}
-                  title="Open User Profile"
-                  aria-label="User Profile"
-                >
-                  <div className="profile-avatar-circle">
-                    <span>A</span>
-                  </div>
-                </button>
+                <>
+                  <button 
+                    type="button" 
+                    className={`nexora-account-btn logged-in ${accountMenuOpen ? "active" : ""}`}
+                    onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                    title="Account Options"
+                    aria-label="Account Options"
+                    aria-expanded={accountMenuOpen}
+                  >
+                    <div className="profile-avatar-circle">
+                      <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                    </div>
+                    <div className="account-btn-text">
+                      <span className="acc-label">ACCOUNT</span>
+                      <span className="acc-action">
+                        {(currentUser?.name?.trim()?.split(" ")[0] || "My Account")} 
+                        <span className={`acc-chevron ${accountMenuOpen ? "open" : ""}`}>▾</span>
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {accountMenuOpen && (
+                    <div className="account-dropdown-menu animate-fade-up">
+                      <div className="dropdown-user-header">
+                        <div className="dropdown-avatar-circle">
+                          <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                        </div>
+                        <div className="dropdown-user-info">
+                          <strong className="dropdown-user-name">{currentUser?.name || "Verified User"}</strong>
+                          <span className="dropdown-user-badge">
+                            <span className="active-green-dot" />
+                            {currentUser?.role || "Active Account"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="dropdown-menu-divider" />
+
+                      <div className="dropdown-menu-list">
+                        {/* Option 1: Profile */}
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          onClick={() => {
+                            setAccountMenuOpen(false);
+                            setDrawerOpen(true);
+                          }}
+                        >
+                          <div className="item-icon-box profile-icon">
+                            <span>👤</span>
+                          </div>
+                          <div className="item-text-box">
+                            <span className="item-title">Profile</span>
+                            <span className="item-sub">View bookings, address & edit profile</span>
+                          </div>
+                          <span className="item-arrow">›</span>
+                        </button>
+
+                        {/* Option 2: Help */}
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          onClick={() => {
+                            setAccountMenuOpen(false);
+                            navigate("/help");
+                          }}
+                        >
+                          <div className="item-icon-box help-icon">
+                            <span>❓</span>
+                          </div>
+                          <div className="item-text-box">
+                            <span className="item-title">Help & Support</span>
+                            <span className="item-sub">FAQ, contact helpline & customer care</span>
+                          </div>
+                          <span className="item-arrow">›</span>
+                        </button>
+
+                        <div className="dropdown-menu-divider" />
+
+                        {/* Option 3: Logout */}
+                        <button
+                          type="button"
+                          className="dropdown-menu-item logout-item"
+                          onClick={() => {
+                            setAccountMenuOpen(false);
+                            logout();
+                            navigate("/login");
+                          }}
+                        >
+                          <div className="item-icon-box logout-icon">
+                            <span>🚪</span>
+                          </div>
+                          <div className="item-text-box">
+                            <span className="item-title">Logout</span>
+                            <span className="item-sub">Sign out from your account</span>
+                          </div>
+                          <span className="item-arrow logout-arrow">➔</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <button
                   type="button"
@@ -262,17 +374,62 @@ function Header() {
                 <span>→</span>
               </button>
             ) : (
-              <button 
-                type="button" 
-                className="btn-mobile-login logged"
-                onClick={() => {
-                  setMobileNavOpen(false);
-                  setDrawerOpen(true);
-                }}
-              >
-                <span>Open Profile & Bookings</span>
-                <span>👤</span>
-              </button>
+              <div className="mobile-logged-section">
+                <div className="mobile-user-card">
+                  <div className="dropdown-avatar-circle">
+                    <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                  </div>
+                  <div className="dropdown-user-info">
+                    <strong className="dropdown-user-name">{currentUser?.name || "Verified User"}</strong>
+                    <span className="dropdown-user-badge">
+                      <span className="active-green-dot" />
+                      {currentUser?.role || "Active Account"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mobile-action-buttons">
+                  {/* Option 1: Profile */}
+                  <button 
+                    type="button" 
+                    className="mobile-acc-btn profile"
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      setDrawerOpen(true);
+                    }}
+                  >
+                    <span>👤 Profile & Bookings</span>
+                    <span>›</span>
+                  </button>
+
+                  {/* Option 2: Help */}
+                  <button 
+                    type="button" 
+                    className="mobile-acc-btn help"
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      navigate("/help");
+                    }}
+                  >
+                    <span>❓ Help & Support</span>
+                    <span>›</span>
+                  </button>
+
+                  {/* Option 3: Logout */}
+                  <button 
+                    type="button" 
+                    className="mobile-acc-btn logout"
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      logout();
+                      navigate("/login");
+                    }}
+                  >
+                    <span>🚪 Logout (Sign Out)</span>
+                    <span>➔</span>
+                  </button>
+                </div>
+              </div>
             )}
 
             <a href="tel:+919876543210" className="mobile-emergency-call">
