@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo } from "react";
+import React, { useState, useContext, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { DataContext } from "../context/DataContext";
 import "../css/Services.css";
@@ -148,6 +148,7 @@ function ServiceIcon({ type }) {
 function Services() {
   const dataContext = useContext(DataContext);
   const rawList = dataContext?.services?.length ? dataContext.services : defaultServices;
+  const gridTopRef = useRef(null);
 
   // Enrich with icons & defaults if raw data doesn't have it
   const servicesList = useMemo(() => {
@@ -185,6 +186,10 @@ function Services() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("popular");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(8);
 
   const categories = [
     { id: "All", label: "All Services" },
@@ -231,6 +236,29 @@ function Services() {
 
     return result;
   }, [servicesList, activeFilter, searchQuery, sortBy]);
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery, sortBy, itemsPerPage]);
+
+  // Pagination slicing
+  const totalPages = Math.ceil(filteredServices.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredServices.length);
+  const paginatedServices = useMemo(() => {
+    return filteredServices.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredServices, startIndex, itemsPerPage]);
+
+  // Smooth scroll to top of service catalog on page change
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      if (gridTopRef.current) {
+        gridTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
 
   return (
     <div className="services-page-wrapper">
@@ -313,10 +341,10 @@ function Services() {
             </div>
           </div>
 
-          {/* Quick Bar: Results count & Sort Dropdown */}
-          <div className="services-meta-bar">
+          {/* Quick Bar: Results count, Per-page & Sort Dropdown */}
+          <div className="services-meta-bar" ref={gridTopRef}>
             <div className="meta-results-count">
-              <span>Showing <strong>{filteredServices.length}</strong> verified services</span>
+              <span>Showing <strong>{filteredServices.length ? startIndex + 1 : 0}–{endIndex}</strong> of <strong>{filteredServices.length}</strong> services</span>
               {activeFilter !== "All" && (
                 <button 
                   type="button" 
@@ -328,13 +356,29 @@ function Services() {
               )}
             </div>
 
-            <div className="meta-sort-box">
-              <span className="sort-label">Sort:</span>
-              <div className="sort-select-wrapper">
+            <div className="meta-controls-right">
+              {/* Items Per Page Selector */}
+              <div className="meta-per-page-box">
+                <span className="control-label">Per page:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="control-dropdown"
+                >
+                  <option value={8}>8</option>
+                  <option value={12}>12</option>
+                  <option value={16}>16</option>
+                  <option value={24}>24</option>
+                </select>
+              </div>
+
+              {/* Sort selector */}
+              <div className="meta-sort-box">
+                <span className="control-label">Sort:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="sort-dropdown"
+                  className="control-dropdown"
                 >
                   <option value="popular">Most Popular</option>
                   <option value="rating">Highest Rated</option>
@@ -379,68 +423,119 @@ function Services() {
         </section>
 
         {/* ================= Services Bento Grid ================= */}
-        {filteredServices.length > 0 ? (
-          <div className="services-bento-grid">
-            {filteredServices.map((item) => (
-              <div className="service-bento-card" key={item.id}>
-                
-                {/* Card Top: Icon & Tags */}
-                <div className="card-header-row">
-                  <div className="service-icon-box">
-                    <ServiceIcon type={item.iconType} />
-                  </div>
-                  <div className="card-badge-cluster">
-                    {item.popular && (
-                      <span className="badge-flame">
-                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                        POPULAR
-                      </span>
-                    )}
-                    <span className="badge-status-pill">{item.speed || "VERIFIED"}</span>
-                  </div>
-                </div>
-
-                {/* Card Main Info */}
-                <div className="card-main-content">
-                  <div className="service-title-row">
-                    <h3 className="service-card-title">{item.name}</h3>
-                  </div>
-
-                  <p className="service-card-desc">
-                    {item.desc || "Certified professionals for reliable and prompt doorstep completion."}
-                  </p>
-
-                  <div className="service-meta-stats">
-                    <span className="stat-rating">
-                      <span className="star-char">★</span> {item.rating || 4.9}
-                    </span>
-                    <span className="stat-bullet">•</span>
-                    <span className="stat-bookings">{item.bookings || "850+"} jobs done</span>
-                  </div>
-                </div>
-
-                {/* Card Bottom: Price & Action */}
-                <div className="card-bottom-footer">
-                  <div className="price-tag-wrap">
-                    <span className="price-lead-label">Starts at</span>
-                    <div className="price-figure">
-                      <span className="price-num">{item.price || "₹199"}</span>
+        {paginatedServices.length > 0 ? (
+          <>
+            <div className="services-bento-grid">
+              {paginatedServices.map((item) => (
+                <div className="service-bento-card" key={item.id}>
+                  
+                  {/* Card Top: Icon & Tags */}
+                  <div className="card-header-row">
+                    <div className="service-icon-box">
+                      <ServiceIcon type={item.iconType} />
+                    </div>
+                    <div className="card-badge-cluster">
+                      {item.popular && (
+                        <span className="badge-flame">
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                          POPULAR
+                        </span>
+                      )}
+                      <span className="badge-status-pill">{item.speed || "VERIFIED"}</span>
                     </div>
                   </div>
 
-                  <Link 
-                    to={`/category/${(item.category || item.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`} 
-                    className="btn-book-service"
-                  >
-                    <span>Book Now</span>
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
-                  </Link>
+                  {/* Card Main Info */}
+                  <div className="card-main-content">
+                    <div className="service-title-row">
+                      <h3 className="service-card-title">{item.name}</h3>
+                    </div>
+
+                    <p className="service-card-desc">
+                      {item.desc || "Certified professionals for reliable and prompt doorstep completion."}
+                    </p>
+
+                    <div className="service-meta-stats">
+                      <span className="stat-rating">
+                        <span className="star-char">★</span> {item.rating || 4.9}
+                      </span>
+                      <span className="stat-bullet">•</span>
+                      <span className="stat-bookings">{item.bookings || "850+"} jobs done</span>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Price & Action */}
+                  <div className="card-bottom-footer">
+                    <div className="price-tag-wrap">
+                      <span className="price-lead-label">Starts at</span>
+                      <div className="price-figure">
+                        <span className="price-num">{item.price || "₹199"}</span>
+                      </div>
+                    </div>
+
+                    <Link 
+                      to={`/category/${(item.category || item.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`} 
+                      className="btn-book-service"
+                    >
+                      <span>Book Now</span>
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                    </Link>
+                  </div>
+
+                  <div className="card-hover-ambient-glow" />
+                </div>
+              ))}
+            </div>
+
+            {/* ================= Professional Pagination Bar ================= */}
+            {totalPages > 1 && (
+              <div className="services-pagination-bar">
+                <div className="pagination-count-indicator">
+                  <span>
+                    Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> ({filteredServices.length} total capabilities)
+                  </span>
                 </div>
 
-                <div className="card-hover-ambient-glow" />
+                <div className="pagination-action-controls">
+                  <button
+                    type="button"
+                    className="pagination-nav-btn prev-btn"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    title="Go to previous page"
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>
+                    <span>Previous</span>
+                  </button>
+
+                  <div className="pagination-pages-group">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        className={`pagination-num-btn ${currentPage === pageNum ? "active" : ""}`}
+                        onClick={() => handlePageChange(pageNum)}
+                        title={`Page ${pageNum}`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pagination-nav-btn next-btn"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    title="Go to next page"
+                  >
+                    <span>Next</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           /* Empty Search State */
           <div className="services-empty-state">

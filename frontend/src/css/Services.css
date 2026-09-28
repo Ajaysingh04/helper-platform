@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SERVICES & CAPABILITIES PAGE STYLES - EXECUTIVE BENTO DESIGN SYSTEM
+   SERVICES & CAPABILITIES PAGE STYLES - EXECUTIVE BENTO & PAGINATION
    ========================================================================== */
 
 .services-page-wrapper {
@@ -69,7 +69,7 @@ body.dark .srv-glow {
 .services-studio-hero {
   text-align: center;
   max-width: 880px;
-  margin: 20px auto 44px;
+  margin: 16px auto 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -88,7 +88,7 @@ body.dark .srv-glow {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
   backdrop-filter: blur(8px);
 }
 
@@ -115,12 +115,12 @@ body.dark .hero-pill-badge {
 
 .services-studio-title {
   font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
-  font-size: clamp(34px, 5.2vw, 56px);
+  font-size: clamp(30px, 4.8vw, 54px);
   font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.035em;
   color: #0B0F19;
-  margin: 0 0 18px;
+  margin: 0 0 16px;
 }
 
 body.dark .services-studio-title {
@@ -135,11 +135,11 @@ body.dark .services-studio-title {
 }
 
 .services-studio-subtitle {
-  font-size: clamp(15.5px, 2vw, 17.5px);
+  font-size: clamp(14.5px, 1.8vw, 17px);
   line-height: 1.65;
   color: #525866;
   max-width: 660px;
-  margin: 0 auto 30px;
+  margin: 0 auto 28px;
 }
 
 body.dark .services-studio-subtitle {
@@ -153,7 +153,7 @@ body.dark .services-studio-subtitle {
 .services-search-wrapper {
   width: 100%;
   max-width: 680px;
-  margin: 0 auto 24px;
+  margin: 0 auto 20px;
 }
 
 .search-bar-glass {
@@ -197,6 +197,7 @@ body.dark .search-bar-glass {
   outline: none;
   padding: 8px 0;
   font-family: inherit;
+  min-width: 0;
 }
 
 body.dark .search-input-field {
@@ -220,6 +221,7 @@ body.dark .search-input-field {
   cursor: pointer;
   transition: all 0.2s ease;
   margin-right: 4px;
+  flex-shrink: 0;
 }
 
 body.dark .search-clear-btn {
@@ -232,11 +234,11 @@ body.dark .search-clear-btn {
   color: #0F172A;
 }
 
-/* Category Tabs Scrollbar */
+/* Category Tabs Horizontal Scroll */
 .category-tabs-container {
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto 20px;
+  max-width: 1040px;
+  margin: 0 auto 18px;
   position: relative;
 }
 
@@ -245,7 +247,7 @@ body.dark .search-clear-btn {
   align-items: center;
   gap: 10px;
   overflow-x: auto;
-  padding: 6px 4px;
+  padding: 6px 4px 10px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -271,6 +273,7 @@ body.dark .search-clear-btn {
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  flex-shrink: 0;
 }
 
 body.dark .cat-tab-btn {
@@ -325,14 +328,14 @@ body.dark .cat-count-badge {
   color: #94A3B8;
 }
 
-/* Metadata Bar (Count + Sort) */
+/* Metadata Bar (Count, Per-page & Sort) */
 .services-meta-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 1000px;
-  margin: 8px auto 0;
+  max-width: 1040px;
+  margin: 6px auto 0;
   padding: 0 4px;
   flex-wrap: wrap;
   gap: 12px;
@@ -344,6 +347,7 @@ body.dark .cat-count-badge {
   gap: 10px;
   font-size: 13px;
   color: #64748B;
+  flex-wrap: wrap;
 }
 
 body.dark .meta-results-count {
@@ -375,23 +379,31 @@ body.dark .meta-results-count strong {
   color: #FFFFFF;
 }
 
+.meta-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.meta-per-page-box,
 .meta-sort-box {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.sort-label {
+.control-label {
   font-size: 12.5px;
   font-weight: 600;
   color: #64748B;
 }
 
-body.dark .sort-label {
+body.dark .control-label {
   color: #94A3B8;
 }
 
-.sort-dropdown {
+.control-dropdown {
   background: #FFFFFF;
   border: 1px solid #CBD5E1;
   border-radius: 8px;
@@ -402,12 +414,17 @@ body.dark .sort-label {
   outline: none;
   cursor: pointer;
   font-family: inherit;
+  transition: border-color 0.2s ease;
 }
 
-body.dark .sort-dropdown {
+body.dark .control-dropdown {
   background: #111827;
   border-color: #374151;
   color: #E2E8F0;
+}
+
+.control-dropdown:focus {
+  border-color: #FF4D2D;
 }
 
 /* ==========================================================================
@@ -421,8 +438,8 @@ body.dark .sort-dropdown {
   background: #FFFFFF;
   border: 1px solid #E2E4E9;
   border-radius: 20px;
-  padding: 20px 24px;
-  margin-bottom: 48px;
+  padding: 18px 24px;
+  margin-bottom: 44px;
   box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03);
 }
 
@@ -439,7 +456,7 @@ body.dark .services-trust-bar {
 }
 
 .trust-icon-dot {
-  font-size: 24px;
+  font-size: 22px;
   flex-shrink: 0;
 }
 
@@ -474,7 +491,7 @@ body.dark .trust-bar-item span {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
-  margin-bottom: 80px;
+  margin-bottom: 48px;
 }
 
 .service-bento-card {
@@ -526,6 +543,7 @@ body.dark .service-bento-card:hover {
   align-items: center;
   justify-content: center;
   transition: transform 0.22s ease;
+  flex-shrink: 0;
 }
 
 .service-bento-card:hover .service-icon-box {
@@ -713,6 +731,142 @@ body.dark .price-num {
   color: #FFFFFF;
 }
 
+/* ==========================================================================
+   5. PROFESSIONAL PAGINATION CONTROLS
+   ========================================================================== */
+
+.services-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1px solid #E2E4E9;
+  border-radius: 20px;
+  padding: 18px 28px;
+  margin-bottom: 80px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+body.dark .services-pagination-bar {
+  background: #111827;
+  border-color: #1F2937;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+.pagination-count-indicator {
+  font-size: 13.5px;
+  color: #64748B;
+}
+
+body.dark .pagination-count-indicator {
+  color: #94A3B8;
+}
+
+.pagination-count-indicator strong {
+  color: #0B0F19;
+}
+
+body.dark .pagination-count-indicator strong {
+  color: #FFFFFF;
+}
+
+.pagination-action-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+body.dark .pagination-nav-btn {
+  background: #1E293B;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+
+.pagination-nav-btn:hover:not(:disabled) {
+  background: #0B0F19;
+  border-color: #0B0F19;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(11, 15, 25, 0.15);
+}
+
+body.dark .pagination-nav-btn:hover:not(:disabled) {
+  background: #FF4D2D;
+  border-color: #FF4D2D;
+  color: #FFFFFF;
+}
+
+.pagination-nav-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pagination-pages-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-num-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #E2E4E9;
+  background: #FFFFFF;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+body.dark .pagination-num-btn {
+  background: #1E293B;
+  border-color: #334155;
+  color: #CBD5E1;
+}
+
+.pagination-num-btn:hover:not(.active) {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+body.dark .pagination-num-btn:hover:not(.active) {
+  background: #334155;
+  color: #FFFFFF;
+}
+
+.pagination-num-btn.active {
+  background: #FF4D2D;
+  border-color: #FF4D2D;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.4);
+}
+
 /* Empty Search State */
 .services-empty-state {
   text-align: center;
@@ -775,7 +929,7 @@ body.dark .services-empty-state p {
 }
 
 /* ==========================================================================
-   5. ENTERPRISE & COMMERCIAL BANNER
+   6. ENTERPRISE & COMMERCIAL BANNER
    ========================================================================== */
 
 .services-enterprise-banner {
@@ -921,7 +1075,7 @@ body.dark .services-empty-state p {
 }
 
 /* ==========================================================================
-   6. RESPONSIVE MEDIA QUERIES
+   7. RESPONSIVE BREAKPOINTS (Mobile, Tablet, Desktop)
    ========================================================================== */
 
 /* Laptops & Tablets (< 1200px) */
@@ -932,12 +1086,12 @@ body.dark .services-empty-state p {
 
   .services-trust-bar {
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: 18px;
   }
 }
 
-/* Tablets (< 900px) */
-@media (max-width: 900px) {
+/* Tablets (< 920px) */
+@media (max-width: 920px) {
   .services-bento-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 18px;
@@ -958,12 +1112,16 @@ body.dark .services-empty-state p {
   .btn-enterprise-secondary {
     flex: 1;
   }
+
+  .services-pagination-bar {
+    padding: 16px 20px;
+  }
 }
 
 /* Mobile Screens (< 640px) */
 @media (max-width: 640px) {
   .services-page-wrapper {
-    padding: 24px 0 60px;
+    padding: 20px 0 60px;
   }
 
   .services-container {
@@ -971,31 +1129,90 @@ body.dark .services-empty-state p {
   }
 
   .services-studio-hero {
-    margin: 10px auto 32px;
+    margin: 8px auto 28px;
   }
 
   .search-bar-glass {
-    padding: 5px 8px 5px 16px;
+    padding: 5px 8px 5px 14px;
   }
 
   .search-input-field {
     font-size: 13.5px;
   }
 
+  .services-meta-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .meta-controls-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .services-trust-bar {
     grid-template-columns: 1fr;
-    padding: 18px 20px;
-    gap: 16px;
+    padding: 16px;
+    gap: 14px;
+    margin-bottom: 32px;
   }
 
   .services-bento-grid {
     grid-template-columns: 1fr;
     gap: 16px;
+    margin-bottom: 36px;
   }
 
   .service-bento-card {
-    padding: 20px;
+    padding: 20px 18px;
     border-radius: 18px;
+  }
+
+  .card-bottom-footer {
+    align-items: center;
+  }
+
+  .btn-book-service {
+    padding: 9px 18px;
+    font-size: 13px;
+  }
+
+  /* Mobile Pagination */
+  .services-pagination-bar {
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 16px;
+    border-radius: 16px;
+    gap: 14px;
+    margin-bottom: 56px;
+  }
+
+  .pagination-count-indicator {
+    font-size: 12.5px;
+    text-align: center;
+  }
+
+  .pagination-action-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pagination-nav-btn {
+    padding: 8px 14px;
+    font-size: 12.5px;
+  }
+
+  .pagination-num-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  /* Enterprise Banner Mobile */
+  .services-enterprise-banner {
+    padding: 32px 20px;
+    border-radius: 22px;
   }
 
   .enterprise-actions {
