@@ -58,8 +58,7 @@ router.post("/register", async (req, res) => {
     let savedUser = null;
     if (getStatus()) {
       savedUser = await User.create({
-        ...newUser,
-        password: password
+        ...newUser
       });
     } else {
       savedUser = dbStore.insert("users", newUser);
