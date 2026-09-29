@@ -271,7 +271,9 @@ function AdminProviders() {
                 const isActive = filterType === st.id;
                 let specificClass = "";
                 if (st.id === "All") specificClass = "seg-all";
-                else if (st.id === "Verified") specificClass = "seg-active";
+                else if (st.id === "Verified") specificClass = "seg-verified";
+                else if (st.id === "Pending") specificClass = "seg-pending";
+                else if (st.id === "Franchise") specificClass = "seg-franchise";
 
                 return (
                   <button
@@ -285,6 +287,9 @@ function AdminProviders() {
                   >
                     <span>{st.icon}</span>
                     <span>{st.label}</span>
+                    {isActive && (st.id === "Verified" || st.id === "Franchise") && (
+                      <span className="seg-live-dot" />
+                    )}
                     <span className="seg-count-badge">{st.count}</span>
                   </button>
                 );
