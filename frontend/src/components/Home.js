@@ -155,15 +155,19 @@ function Home() {
   const safeHeroSlides = (heroSlides && heroSlides.length >= 2) ? heroSlides : defaultHeroSlides;
 
   const [heroIndex, setHeroIndex] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
 
-  // Continuous Auto-Slide Interval (slides smoothly and continuously without stopping on hover)
+  // Auto-Slide Interval (respects slideSpeed and pause-on-hover setting)
   useEffect(() => {
     if (!safeHeroSlides || safeHeroSlides.length <= 1) return;
+    if (isHeroPaused && !heroSettings.continuousSlide) return;
+
+    const speed = Math.max(1000, Number(heroSettings.slideSpeed) || 2500);
     const interval = setInterval(() => {
       setHeroIndex((prev) => (prev + 1) % safeHeroSlides.length);
-    }, heroSettings.slideSpeed || 2500);
+    }, speed);
     return () => clearInterval(interval);
-  }, [safeHeroSlides, heroSettings.slideSpeed]);
+  }, [safeHeroSlides, heroSettings.slideSpeed, isHeroPaused, heroSettings.continuousSlide]);
 
   // Popular Services & Categories Filter States
   const [homeCatFilter, setHomeCatFilter] = useState("All");
@@ -462,7 +466,15 @@ function Home() {
       {/* =========================================================================
           HERO SECTION: 2-Second Crystal Clear Image Carousel (Pinned under Header)
           ========================================================================= */}
-      <section className="helper-hero-slider-wrap">
+      <section 
+        className="helper-hero-slider-wrap"
+        onMouseEnter={() => {
+          if (!heroSettings.continuousSlide) setIsHeroPaused(true);
+        }}
+        onMouseLeave={() => {
+          if (!heroSettings.continuousSlide) setIsHeroPaused(false);
+        }}
+      >
         <div className="helper-hero-slider">
           {/* Full-Width Auto-Slider with Responsive Picture Elements */}
           {safeHeroSlides.map((slide, idx) => (
@@ -479,11 +491,7 @@ function Home() {
                   alt={slide.title || `Home Banner ${idx + 1}`}
                   className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
                   style={{
-                    objectPosition: (slide.image?.includes("homepage_5") || slide.id?.includes("experts"))
-                      ? "right top"
-                      : ((heroSettings.imagePosition && heroSettings.imagePosition !== "center 18%" && heroSettings.imagePosition !== "center 20%") 
-                        ? heroSettings.imagePosition 
-                        : "center top")
+                    objectPosition: heroSettings.imagePosition || "center top"
                   }}
                   loading={idx === 0 ? "eager" : "lazy"}
                   onError={(e) => {
@@ -668,6 +676,32 @@ function Home() {
               </div>
             </button>
           </div>
+
+          {/* Interactive Slide Numbers / Indicators (Admin Controlled) */}
+          {heroSettings.showIndicators && safeHeroSlides.length > 1 && (
+            <div className="hero-slider-indicators-pill" role="navigation" aria-label="Slide Selection">
+              {safeHeroSlides.map((slide, dotIdx) => (
+                <button
+                  key={slide.id || dotIdx}
+                  type="button"
+                  className={`hero-indicator-dot ${dotIdx === heroIndex ? "active" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setHeroIndex(dotIdx);
+                  }}
+                  aria-label={`Jump to slide ${dotIdx + 1}`}
+                  title={`Slide ${dotIdx + 1}: ${slide.title || "Hero Banner"}`}
+                >
+                  {dotIdx + 1}
+                </button>
+              ))}
+              {isHeroPaused && !heroSettings.continuousSlide && (
+                <span className="hero-indicator-pause-badge" title="Slider paused because cursor is hovering">
+                  ⏸️
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

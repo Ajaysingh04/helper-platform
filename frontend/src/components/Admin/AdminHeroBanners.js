@@ -313,150 +313,195 @@ function AdminHeroBanners() {
       <div
         style={{
           marginBottom: "24px",
-          padding: "20px 24px",
-          borderRadius: "16px",
+          padding: "22px 26px",
+          borderRadius: "18px",
           background: "var(--bg-card, #FFFFFF)",
           border: "1.5px solid var(--border-color, #E2E8F0)",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.05)"
+          boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+          transition: "all 0.3s ease"
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px", flexWrap: "wrap", gap: "12px" }}>
           <div>
-            <h3 style={{ fontSize: "16px", fontWeight: 800, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "8px", color: "var(--text-main)" }}>
-              <span>⚙️</span> Hero Slider & Framing Preferences
+            <h3 style={{ fontSize: "17px", fontWeight: 800, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "10px", color: "var(--text-main)" }}>
+              <span style={{ fontSize: "20px" }}>⚙️</span> Hero Slider & Framing Preferences
             </h3>
-            <p style={{ fontSize: "12.5px", color: "var(--text-muted)", margin: 0 }}>
-              Real-time administrative controls for continuous auto-slide, hover behavior, framing headroom & slide indicators.
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>
+              Live administrative controls for slide speed, hover behavior, camera framing & interactive indicators. Changes instantly update the homepage and persist to the database.
             </p>
           </div>
-          <span style={{ fontSize: "11px", fontWeight: 800, padding: "4px 10px", borderRadius: "999px", background: "#ECFDF5", color: "#059669", border: "1px solid #A7F3D0" }}>
-            ● LIVE HOMEPAGE SYNC ACTIVE
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span className="pref-live-sync-badge">
+              <span className="pref-sync-dot" />
+              DATABASE & LIVE SYNC ACTIVE
+            </span>
+          </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
           {/* 1. Slide Speed */}
-          <div style={{ background: "var(--bg-canvas, #F8FAFC)", padding: "12px 14px", borderRadius: "12px", border: "1px solid var(--border-color, #E2E8F0)" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
-              ⏱️ Auto-Slide Interval
-            </label>
-            <select
-              value={heroSettings.slideSpeed || 2500}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                if (updateHeroSettings) updateHeroSettings({ slideSpeed: val });
-                showToast(`Slide duration updated to ${val / 1000}s`);
-              }}
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                borderRadius: "8px",
-                border: "1px solid var(--border-color, #CBD5E1)",
-                fontSize: "13px",
-                fontWeight: 600,
-                background: "var(--bg-card, #FFFFFF)",
-                color: "var(--text-main)",
-                outline: "none"
-              }}
-            >
-              <option value={2000}>2.0 Seconds (Fast)</option>
-              <option value={2500}>2.5 Seconds (Smooth & Recommended)</option>
-              <option value={3500}>3.5 Seconds (Relaxed)</option>
-              <option value={5000}>5.0 Seconds (Slow)</option>
-            </select>
+          <div className="pref-control-box">
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
+                <span>⏱️</span> Auto-Slide Duration
+              </label>
+              <select
+                className="pref-select-styled"
+                value={heroSettings.slideSpeed || 2500}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (updateHeroSettings) updateHeroSettings({ slideSpeed: val });
+                  showToast(`⚡ Slide interval updated to ${val / 1000}s`);
+                }}
+              >
+                <option value={1500}>1.5 Seconds (Ultra Rapid)</option>
+                <option value={2000}>2.0 Seconds (Fast)</option>
+                <option value={2500}>2.5 Seconds (Smooth & Recommended)</option>
+                <option value={3500}>3.5 Seconds (Relaxed)</option>
+                <option value={5000}>5.0 Seconds (Extended)</option>
+              </select>
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "8px" }}>
+              Current: <strong>{(heroSettings.slideSpeed || 2500) / 1000}s per slide</strong>
+            </div>
           </div>
 
           {/* 2. Hover Behavior */}
-          <div style={{ background: "var(--bg-canvas, #F8FAFC)", padding: "12px 14px", borderRadius: "12px", border: "1px solid var(--border-color, #E2E8F0)" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
-              🔄 Hover Motion Mode
-            </label>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                className={`action-pill-btn ${heroSettings.continuousSlide ? "primary" : "secondary"}`}
-                style={{ flex: 1, padding: "8px 6px", fontSize: "11.5px", justifyContent: "center" }}
-                onClick={() => {
-                  if (updateHeroSettings) updateHeroSettings({ continuousSlide: true });
-                  showToast("Hero slider set to Continuous Mode (never pauses on hover)");
-                }}
-              >
-                Continuous (No Pause)
-              </button>
-              <button
-                type="button"
-                className={`action-pill-btn ${!heroSettings.continuousSlide ? "primary" : "secondary"}`}
-                style={{ flex: 1, padding: "8px 6px", fontSize: "11.5px", justifyContent: "center" }}
-                onClick={() => {
-                  if (updateHeroSettings) updateHeroSettings({ continuousSlide: false });
-                  showToast("Hero slider set to Pause on Hover");
-                }}
-              >
-                Pause on Hover
-              </button>
+          <div className="pref-control-box">
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
+                <span>🔄</span> Hover Motion Mode
+              </label>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  className={`pref-anim-btn ${heroSettings.continuousSlide ? "active" : "inactive"}`}
+                  style={{ flex: 1, padding: "9px 6px", fontSize: "11px" }}
+                  onClick={() => {
+                    if (updateHeroSettings) updateHeroSettings({ continuousSlide: true });
+                    showToast("⚡ Continuous Mode Enabled (Slide never pauses)");
+                  }}
+                >
+                  ⚡ Continuous
+                </button>
+                <button
+                  type="button"
+                  className={`pref-anim-btn ${!heroSettings.continuousSlide ? "active" : "inactive"}`}
+                  style={{ flex: 1, padding: "9px 6px", fontSize: "11px" }}
+                  onClick={() => {
+                    if (updateHeroSettings) updateHeroSettings({ continuousSlide: false });
+                    showToast("⏸️ Pause on Hover Enabled");
+                  }}
+                >
+                  ⏸️ Pause Hover
+                </button>
+              </div>
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "8px" }}>
+              {heroSettings.continuousSlide ? "Keeps rotating non-stop" : "Stops rotating when customer hovers"}
             </div>
           </div>
 
           {/* 3. Indicators Display */}
-          <div style={{ background: "var(--bg-canvas, #F8FAFC)", padding: "12px 14px", borderRadius: "12px", border: "1px solid var(--border-color, #E2E8F0)" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
-              🔢 Bottom Right Controls
-            </label>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                className={`action-pill-btn ${!heroSettings.showIndicators ? "primary" : "secondary"}`}
-                style={{ flex: 1, padding: "8px 6px", fontSize: "11.5px", justifyContent: "center" }}
-                onClick={() => {
-                  if (updateHeroSettings) updateHeroSettings({ showIndicators: false });
-                  showToast("Bottom right 1,2,3,4,5 numbers hidden (Clean View)");
-                }}
-              >
-                Hide (Clean Panoramic)
-              </button>
-              <button
-                type="button"
-                className={`action-pill-btn ${heroSettings.showIndicators ? "primary" : "secondary"}`}
-                style={{ flex: 1, padding: "8px 6px", fontSize: "11.5px", justifyContent: "center" }}
-                onClick={() => {
-                  if (updateHeroSettings) updateHeroSettings({ showIndicators: true });
-                  showToast("Bottom right slide numbers enabled");
-                }}
-              >
-                Show 1, 2, 3...
-              </button>
+          <div className="pref-control-box">
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
+                <span>🔢</span> Slide Controls Pill
+              </label>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  className={`pref-anim-btn ${!heroSettings.showIndicators ? "active" : "inactive"}`}
+                  style={{ flex: 1, padding: "9px 6px", fontSize: "11px" }}
+                  onClick={() => {
+                    if (updateHeroSettings) updateHeroSettings({ showIndicators: false });
+                    showToast("👁️ Clean Panoramic View (Indicators Hidden)");
+                  }}
+                >
+                  👁️ Hide (Clean)
+                </button>
+                <button
+                  type="button"
+                  className={`pref-anim-btn ${heroSettings.showIndicators ? "active" : "inactive"}`}
+                  style={{ flex: 1, padding: "9px 6px", fontSize: "11px" }}
+                  onClick={() => {
+                    if (updateHeroSettings) updateHeroSettings({ showIndicators: true });
+                    showToast("🔢 Interactive 1, 2, 3... Numbers Enabled");
+                  }}
+                >
+                  🔢 Show 1, 2, 3..
+                </button>
+              </div>
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "8px" }}>
+              {heroSettings.showIndicators ? "Interactive numbers visible at bottom" : "Clean border-to-border layout"}
             </div>
           </div>
 
           {/* 4. Image Framing Headroom */}
-          <div style={{ background: "var(--bg-canvas, #F8FAFC)", padding: "12px 14px", borderRadius: "12px", border: "1px solid var(--border-color, #E2E8F0)" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
-              👤 Image Headroom Focus
-            </label>
-            <select
-              value={heroSettings.imagePosition || "center top"}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (updateHeroSettings) updateHeroSettings({ imagePosition: val });
-                showToast(`Image framing set to ${val}`);
-              }}
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                borderRadius: "8px",
-                border: "1px solid var(--border-color, #CBD5E1)",
-                fontSize: "13px",
-                fontWeight: 600,
-                background: "var(--bg-card, #FFFFFF)",
-                color: "var(--text-main)",
-                outline: "none"
-              }}
+          <div className="pref-control-box">
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
+                <span>👤</span> Image Framing Headroom
+              </label>
+              <select
+                className="pref-select-styled"
+                value={heroSettings.imagePosition || "center top"}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (updateHeroSettings) updateHeroSettings({ imagePosition: val });
+                  showToast(`👤 Camera headroom updated to ${val}`);
+                }}
+              >
+                <option value="center top">Center Top (Zero Cutoff - Recommended)</option>
+                <option value="center 10%">Top 10% Headroom</option>
+                <option value="center 20%">Top 20% Headroom</option>
+                <option value="center center">Center 50% (Standard View)</option>
+                <option value="center bottom">Bottom Aligned</option>
+              </select>
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "8px" }}>
+              Focus: <strong>{heroSettings.imagePosition || "center top"}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Interactive Preview Box inside Admin */}
+        <div className="hero-pref-preview-card">
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div className="preview-thumbnail-stage" title="Interactive preview of current framing">
+              <img
+                src={heroBanners[0]?.image || "/images/homepage_1.jpg"}
+                alt="Framing Preview"
+                className="preview-thumbnail-img"
+                style={{ objectPosition: heroSettings.imagePosition || "center top" }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#F8FAFC", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>Live Framing & Motion Simulation</span>
+                <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "6px", background: "rgba(99,102,241,0.25)", color: "#A5B4FC" }}>
+                  {(heroSettings.slideSpeed || 2500) / 1000}s
+                </span>
+              </div>
+              <div style={{ fontSize: "11.5px", color: "#94A3B8", marginTop: "3px" }}>
+                Framing: <strong>{heroSettings.imagePosition || "center top"}</strong> • Mode:{" "}
+                <strong>{heroSettings.continuousSlide ? "Continuous" : "Pause on Hover"}</strong> • Indicators:{" "}
+                <strong>{heroSettings.showIndicators ? "Visible (1,2,3..)" : "Hidden"}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <Link
+              to="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="action-pill-btn success-glow"
+              style={{ padding: "8px 16px", fontSize: "12px", textDecoration: "none", color: "#FFFFFF" }}
             >
-              <option value="center top">Center Top (Zero Top Cutoff - Recommended)</option>
-              <option value="center 10%">Top 10% Headroom</option>
-              <option value="center center">Center 50% (Standard View)</option>
-              <option value="center bottom">Bottom Aligned</option>
-            </select>
+              👁️ View Live on Homepage ↗
+            </Link>
           </div>
         </div>
       </div>

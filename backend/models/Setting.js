@@ -9,9 +9,18 @@ const SettingSchema = new mongoose.Schema(
     supportEmail: { type: String, default: "ajayworkon04@gmail.com" },
     maintenanceMode: { type: Boolean, default: false },
     instantBookingEnabled: { type: Boolean, default: true },
-    taxPercent: { type: String, default: "5%" }
+    taxPercent: { type: String, default: "5%" },
+    heroSettings: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        slideSpeed: 2500,
+        continuousSlide: true,
+        showIndicators: false,
+        imagePosition: "center top"
+      }
+    }
   },
-  { timestamps: true }
+  { timestamps: true, strict: false }
 );
 
-module.exports = mongoose.model("Setting", SettingSchema);
+module.exports = mongoose.models.Setting || mongoose.model("Setting", SettingSchema);

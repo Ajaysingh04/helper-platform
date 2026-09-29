@@ -706,7 +706,12 @@ export const DataProvider = ({ children }) => {
         if (sldRes.status === "fulfilled" && sldRes.value?.data?.length) setSlides(sldRes.value.data);
         if (usrRes.status === "fulfilled" && usrRes.value?.data?.length) setUsers(usrRes.value.data);
         if (tktRes.status === "fulfilled" && tktRes.value?.data?.length) setTickets(tktRes.value.data);
-        if (stgRes.status === "fulfilled" && stgRes.value?.data) setSettings(stgRes.value.data);
+        if (stgRes.status === "fulfilled" && stgRes.value?.data) {
+          setSettings(stgRes.value.data);
+          if (stgRes.value.data.heroSettings) {
+            setHeroSettings(prev => ({ ...prev, ...stgRes.value.data.heroSettings }));
+          }
+        }
       } else {
         setIsApiOnline(false);
         setDbStatusText("Offline / Local Cache");
@@ -1151,8 +1156,25 @@ export const DataProvider = ({ children }) => {
     });
   };
 
-  const updateHeroSettings = (newSettings) => {
-    setHeroSettings(prev => ({ ...prev, ...newSettings }));
+  const updateHeroSettings = async (newSettings) => {
+    let merged;
+    setHeroSettings(prev => {
+      merged = { ...prev, ...newSettings };
+      try {
+        localStorage.setItem("helper_hero_settings_v3", JSON.stringify(merged));
+      } catch (e) {}
+      return merged;
+    });
+
+    try {
+      await fetch(`${API_BASE}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ heroSettings: merged || newSettings })
+      });
+    } catch (err) {
+      console.warn("Could not sync heroSettings to backend API:", err);
+    }
   };
 
   // Sync Hero Banners and Hero Settings to localStorage

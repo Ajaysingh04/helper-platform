@@ -5374,3 +5374,86 @@ body.dark .experts-showcase-card {
     display: none; /* Keep top-left and bottom-left for compact mobile view */
   }
 }
+
+/* ==========================================================================
+   HERO SLIDER INTERACTIVE INDICATORS & NUMBERS (Admin Configurable)
+   ========================================================================== */
+
+.hero-slider-indicators-pill {
+  position: absolute;
+  bottom: 32px;
+  right: 40px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s ease;
+}
+
+.hero-slider-indicators-pill:hover {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.hero-indicator-dot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #CBD5E1;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 0;
+  outline: none;
+}
+
+.hero-indicator-dot:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  transform: scale(1.15);
+  border-color: #6366F1;
+}
+
+.hero-indicator-dot.active {
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+  color: #FFFFFF;
+  border-color: #A5B4FC;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.6);
+  transform: scale(1.12);
+}
+
+.hero-indicator-pause-badge {
+  font-size: 13px;
+  margin-left: 4px;
+  animation: live-sync-pulse 1.5s infinite;
+}
+
+@media (max-width: 768px) {
+  .hero-slider-indicators-pill {
+    bottom: 20px;
+    right: 20px;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .hero-indicator-dot {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+  }
+}

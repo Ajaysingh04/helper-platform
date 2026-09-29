@@ -490,7 +490,13 @@ const initialSettings = {
   supportEmail: "support@helperapp.in",
   serviceRadiusKm: 25,
   autoAssignProviders: true,
-  maintenanceMode: false
+  maintenanceMode: false,
+  heroSettings: {
+    slideSpeed: 2500,
+    continuousSlide: true,
+    showIndicators: false,
+    imagePosition: "center top"
+  }
 };
 
 module.exports = {
