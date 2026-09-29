@@ -600,29 +600,31 @@ function AdminBookings() {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Order ID</th>
-                    <th>Customer Details</th>
-                    <th>Service Requested</th>
-                    <th>Assigned Provider</th>
-                    <th>Location / Address</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Date / Time</th>
-                    <th>Action</th>
+                    <th className="col-order-id">Order ID</th>
+                    <th className="col-customer">Customer Details</th>
+                    <th className="col-service">Service Requested</th>
+                    <th className="col-provider">Assigned Provider</th>
+                    <th className="col-address">Location / Address</th>
+                    <th className="col-amount">Amount</th>
+                    <th className="col-status">Status</th>
+                    <th className="col-date">Date / Time</th>
+                    <th className="col-action">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedBookings.map((booking) => (
                     <tr key={booking.id}>
-                      <td>
-                        <span className="booking-id-tag">{booking.id}</span>
-                        {booking.doorOtp && (
-                          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "3px" }}>
-                            OTP: <strong style={{ color: "var(--primary)" }}>{booking.doorOtp}</strong>
-                          </div>
-                        )}
+                      <td className="col-order-id">
+                        <div className="order-id-cell-box">
+                          <span className="booking-id-tag">{booking.id}</span>
+                          {booking.doorOtp && (
+                            <span className="door-otp-tag" title="Customer Door Security OTP">
+                              OTP: <strong>{booking.doorOtp}</strong>
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td>
+                      <td className="col-customer">
                         <div className="booking-customer-cell">
                           <strong className="booking-cust-name">{booking.customerName}</strong>
                           <a href={`tel:${booking.phone}`} className="booking-cust-phone">
@@ -630,12 +632,12 @@ function AdminBookings() {
                           </a>
                         </div>
                       </td>
-                      <td>
+                      <td className="col-service">
                         <div className="booking-service-badge">
                           <span>{booking.service}</span>
                         </div>
                       </td>
-                      <td>
+                      <td className="col-provider">
                         <select
                           value={booking.provider || ""}
                           onChange={(e) => updateBookingStatus(booking.id, booking.status, e.target.value)}
@@ -647,15 +649,15 @@ function AdminBookings() {
                           ))}
                         </select>
                       </td>
-                      <td style={{ maxWidth: "200px" }}>
+                      <td className="col-address">
                         <div className="booking-address-text" title={booking.address}>
                           📍 {booking.address}
                         </div>
                       </td>
-                      <td>
+                      <td className="col-amount">
                         <strong className="booking-price-tag">{booking.price}</strong>
                       </td>
-                      <td>
+                      <td className="col-status">
                         <select
                           value={booking.status}
                           onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
@@ -667,10 +669,10 @@ function AdminBookings() {
                           <option value="Cancelled">Cancelled</option>
                         </select>
                       </td>
-                      <td>
+                      <td className="col-date">
                         <span className="booking-date-text">{booking.date || "Today"}</span>
                       </td>
-                      <td>
+                      <td className="col-action">
                         <button 
                           className="btn-card-action delete icon-only"
                           onClick={() => {
