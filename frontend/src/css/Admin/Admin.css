@@ -484,18 +484,37 @@
   width: 100%;
   overflow-x: auto;
   border-radius: 14px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.admin-table-container::-webkit-scrollbar-track {
+  background: var(--surface-input);
+  border-radius: 6px;
+}
+
+.admin-table-container::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 6px;
+}
+
+.admin-table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
 }
 
 .admin-table {
   width: 100%;
-  min-width: 1060px;
+  min-width: 900px;
   border-collapse: collapse;
   text-align: left;
 }
 
 .admin-table th {
   background: var(--surface-input);
-  padding: 13px 16px;
+  padding: 12px 10px;
   font-size: 11.5px;
   font-weight: 700;
   text-transform: uppercase;
@@ -506,8 +525,8 @@
 }
 
 .admin-table td {
-  padding: 14px 16px;
-  font-size: 13.5px;
+  padding: 12px 10px;
+  font-size: 13px;
   color: var(--text-main);
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
@@ -2350,52 +2369,65 @@
   text-overflow: ellipsis;
 }
 
+.admin-table.providers-table {
+  min-width: 860px;
+}
+
 .col-prov-profile {
-  width: 270px;
-  min-width: 250px;
+  min-width: 180px;
+  max-width: 220px;
 }
 
 .col-prov-cat {
-  width: 140px;
-  min-width: 130px;
+  width: 110px;
+  min-width: 95px;
   white-space: nowrap;
 }
 
 .col-prov-rate {
-  width: 150px;
-  min-width: 140px;
+  width: 110px;
+  min-width: 95px;
   white-space: nowrap;
 }
 
 .col-prov-contact {
-  width: 160px;
-  min-width: 150px;
+  width: 135px;
+  min-width: 120px;
   white-space: nowrap;
 }
 
 .col-prov-rating {
-  width: 125px;
-  min-width: 115px;
+  width: 105px;
+  min-width: 90px;
   white-space: nowrap;
 }
 
 .col-prov-verify {
-  width: 135px;
-  min-width: 125px;
+  width: 115px;
+  min-width: 100px;
   white-space: nowrap;
 }
 
 .col-prov-franchise {
-  width: 175px;
-  min-width: 165px;
+  width: 120px;
+  min-width: 105px;
   white-space: nowrap;
 }
 
 .col-prov-actions {
-  width: 85px;
-  min-width: 80px;
+  width: 80px;
+  min-width: 75px;
   text-align: center;
   white-space: nowrap;
+  position: sticky;
+  right: 0;
+  background: var(--surface-card, #ffffff);
+  z-index: 5;
+  box-shadow: -3px 0 6px rgba(0, 0, 0, 0.04);
+}
+
+.admin-table th.col-prov-actions {
+  background: var(--surface-input, #F1F3F6);
 }
 
 .provider-rate-tag {

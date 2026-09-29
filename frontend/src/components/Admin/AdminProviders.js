@@ -314,7 +314,7 @@ function AdminProviders() {
           <>
             {/* Desktop Table View (Visible > 992px) */}
             <div className="admin-table-container admin-desktop-table-view">
-              <table className="admin-table">
+              <table className="admin-table providers-table">
                 <thead>
                   <tr>
                     <th className="col-prov-profile">Partner / Business</th>
@@ -389,11 +389,11 @@ function AdminProviders() {
                         <td className="col-prov-franchise">
                           {p.franchiseActive ? (
                             <span className="provider-franchise-badge active">
-                              👑 {p.franchisePlan === "annual" ? "₹5L / yr (Annual)" : "₹4k / mo (Monthly)"}
+                              👑 {p.franchisePlan === "annual" ? "₹5L / yr" : "₹4k / mo"}
                             </span>
                           ) : (
                             <span className="provider-franchise-badge standard">
-                              Standard Partner
+                              Standard
                             </span>
                           )}
                         </td>
