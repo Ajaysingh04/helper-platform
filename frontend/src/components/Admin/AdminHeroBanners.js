@@ -477,27 +477,44 @@ function AdminHeroBanners() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              className="search-clear-btn"
+              onClick={() => setSearchQuery("")}
+              title="Clear search"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         <div className="filters-group">
           <div className="segmented-control">
             <button
-              className={statusFilter === "all" ? "active" : ""}
+              type="button"
+              className={`seg-all ${statusFilter === "all" ? "active" : ""}`}
               onClick={() => setStatusFilter("all")}
             >
-              All ({heroBanners.length})
+              <span>All</span>
+              <span className="seg-count-badge">{heroBanners.length}</span>
             </button>
             <button
-              className={statusFilter === "active" ? "active" : ""}
+              type="button"
+              className={`seg-active ${statusFilter === "active" ? "active" : ""}`}
               onClick={() => setStatusFilter("active")}
             >
-              Active ({activeCount})
+              <span className="seg-live-dot" />
+              <span>Active</span>
+              <span className="seg-count-badge">{activeCount}</span>
             </button>
             <button
-              className={statusFilter === "inactive" ? "active" : ""}
+              type="button"
+              className={`seg-inactive ${statusFilter === "inactive" ? "active" : ""}`}
               onClick={() => setStatusFilter("inactive")}
             >
-              Inactive ({heroBanners.length - activeCount})
+              <span>Inactive</span>
+              <span className="seg-count-badge">{heroBanners.length - activeCount}</span>
             </button>
           </div>
         </div>

@@ -1,8 +1,30 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { DataContext } from "../../context/DataContext";
 
 function AdminUsers() {
   const { users, updateUserStatus, deleteUser } = useContext(DataContext);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const filteredUsers = (users || []).filter((u) => {
+    const q = searchQuery.toLowerCase().trim();
+    const matchSearch =
+      !q ||
+      (u.name && u.name.toLowerCase().includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.phone && u.phone.toLowerCase().includes(q)) ||
+      (u.role && u.role.toLowerCase().includes(q));
+
+    const matchStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && u.status === "Active") ||
+      (statusFilter === "suspended" && u.status !== "Active");
+
+    return matchSearch && matchStatus;
+  });
+
+  const activeCount = (users || []).filter((u) => u.status === "Active").length;
+  const suspendedCount = (users || []).length - activeCount;
 
   return (
     <div className="admin-users-tab animate-fade-in">
@@ -11,6 +33,59 @@ function AdminUsers() {
           <div>
             <h3>User & Customer Database</h3>
             <p>Monitor customer accounts, service history, and access privileges</p>
+          </div>
+        </div>
+
+        {/* Animated Search & Filter Bar */}
+        <div className="table-controls-bar">
+          <div className="search-box-wrap">
+            <span className="search-icon">🔍</span>
+            <input 
+              type="text"
+              placeholder="Search by customer name, email, phone or role..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => setSearchQuery("")}
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="filters-group">
+            <div className="segmented-control">
+              <button 
+                type="button"
+                className={`seg-all ${statusFilter === "all" ? "active" : ""}`}
+                onClick={() => setStatusFilter("all")}
+              >
+                <span>All Users</span>
+                <span className="seg-count-badge">{(users || []).length}</span>
+              </button>
+              <button 
+                type="button"
+                className={`seg-active ${statusFilter === "active" ? "active" : ""}`}
+                onClick={() => setStatusFilter("active")}
+              >
+                <span className="seg-live-dot" />
+                <span>Active</span>
+                <span className="seg-count-badge">{activeCount}</span>
+              </button>
+              <button 
+                type="button"
+                className={`seg-inactive ${statusFilter === "suspended" ? "active" : ""}`}
+                onClick={() => setStatusFilter("suspended")}
+              >
+                <span>Suspended</span>
+                <span className="seg-count-badge">{suspendedCount}</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -28,7 +103,7 @@ function AdminUsers() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {filteredUsers.map((u) => (
                 <tr key={u.id}>
                   <td>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

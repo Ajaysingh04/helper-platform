@@ -221,61 +221,55 @@ function AdminPromotions() {
         </div>
 
         {/* Stats & Search Filter Bar */}
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "space-between", 
-          flexWrap: "wrap", 
-          gap: "14px", 
-          margin: "24px 0 16px",
-          padding: "16px",
-          background: "var(--bg-light)",
-          borderRadius: "16px",
-          border: "1px solid var(--border-color)"
-        }}>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <button 
-              type="button"
-              className={`table-action-btn ${statusFilter === "all" ? "active" : ""}`}
-              style={{ fontWeight: statusFilter === "all" ? 800 : 500 }}
-              onClick={() => setStatusFilter("all")}
-            >
-              All Offers ({totalCount})
-            </button>
-            <button 
-              type="button"
-              className={`table-action-btn ${statusFilter === "active" ? "active" : ""}`}
-              style={{ fontWeight: statusFilter === "active" ? 800 : 500, color: "#10B981" }}
-              onClick={() => setStatusFilter("active")}
-            >
-              🟢 Active on Home ({activeCount})
-            </button>
-            <button 
-              type="button"
-              className={`table-action-btn ${statusFilter === "inactive" ? "active" : ""}`}
-              style={{ fontWeight: statusFilter === "inactive" ? 800 : 500, color: "#94A3B8" }}
-              onClick={() => setStatusFilter("inactive")}
-            >
-              ⚪ Inactive / Hidden ({inactiveCount})
-            </button>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", minWidth: "260px" }}>
+        <div className="table-controls-bar">
+          <div className="search-box-wrap">
+            <span className="search-icon">🔍</span>
             <input 
               type="text"
               placeholder="Search offer by title, coupon code..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                border: "1px solid var(--border-color)",
-                background: "var(--bg-card)",
-                color: "var(--text-main)",
-                fontSize: "13.5px"
-              }}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => setSearchQuery("")}
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="filters-group">
+            <div className="segmented-control">
+              <button 
+                type="button"
+                className={`seg-all ${statusFilter === "all" ? "active" : ""}`}
+                onClick={() => setStatusFilter("all")}
+              >
+                <span>All Offers</span>
+                <span className="seg-count-badge">{totalCount}</span>
+              </button>
+              <button 
+                type="button"
+                className={`seg-active ${statusFilter === "active" ? "active" : ""}`}
+                onClick={() => setStatusFilter("active")}
+              >
+                <span className="seg-live-dot" />
+                <span>Active on Home</span>
+                <span className="seg-count-badge">{activeCount}</span>
+              </button>
+              <button 
+                type="button"
+                className={`seg-inactive ${statusFilter === "inactive" ? "active" : ""}`}
+                onClick={() => setStatusFilter("inactive")}
+              >
+                <span>Inactive / Hidden</span>
+                <span className="seg-count-badge">{inactiveCount}</span>
+              </button>
+            </div>
           </div>
         </div>
 
