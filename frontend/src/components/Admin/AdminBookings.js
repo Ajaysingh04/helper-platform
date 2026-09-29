@@ -45,6 +45,63 @@ function AdminBookings() {
 
   const maxDailyOrders = Math.max(...weeklyOrderTrend.map(d => d.count), 6);
 
+  // Fulfillment Donut Math
+  const fulfillmentRate = totalCount > 0 
+    ? Math.round(((completedCount + inProgressCount) / totalCount) * 100) 
+    : 100;
+  const donutR = 42;
+  const donutCirc = 2 * Math.PI * donutR; // 263.89
+
+  const compPct = totalCount > 0 ? (completedCount / totalCount) : 0;
+  const progPct = totalCount > 0 ? (inProgressCount / totalCount) : 0;
+  const pendPct = totalCount > 0 ? (pendingCount / totalCount) : 0;
+  const cancPct = totalCount > 0 ? (cancelledCount / totalCount) : 0;
+
+  const compLen = compPct * donutCirc;
+  const progLen = progPct * donutCirc;
+  const pendLen = pendPct * donutCirc;
+  const cancLen = cancPct * donutCirc;
+
+  const compOffset = 0;
+  const progOffset = -compLen;
+  const pendOffset = -(compLen + progLen);
+  const cancOffset = -(compLen + progLen + pendLen);
+
+  // 7-Day Intake Flow Graph Math
+  const svgW = 460;
+  const svgH = 100;
+  const padX = 26;
+  const padY = 16;
+  const graphW = svgW - padX * 2;
+  const graphH = svgH - padY * 2;
+
+  const intakePoints = weeklyOrderTrend.map((d, i) => {
+    const x = padX + (i / (weeklyOrderTrend.length - 1)) * graphW;
+    const y = padY + graphH - (d.count / maxDailyOrders) * graphH;
+    return { ...d, x, y };
+  });
+
+  const intakeSpline = useMemo(() => {
+    if (!intakePoints.length) return "";
+    let path = `M ${intakePoints[0].x.toFixed(1)},${intakePoints[0].y.toFixed(1)}`;
+    for (let i = 0; i < intakePoints.length - 1; i++) {
+      const p0 = i > 0 ? intakePoints[i - 1] : intakePoints[0];
+      const p1 = intakePoints[i];
+      const p2 = intakePoints[i + 1];
+      const p3 = i < intakePoints.length - 2 ? intakePoints[i + 2] : p2;
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y + (p3.y - p1.y) / 6;
+
+      path += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+    }
+    return path;
+  }, [intakePoints]);
+
+  const intakeArea = `${intakeSpline} L ${intakePoints[intakePoints.length - 1].x},${padY + graphH} L ${intakePoints[0].x},${padY + graphH} Z`;
+
   // Filter Bookings
   const filtered = useMemo(() => {
     return bookings.filter(b => {
@@ -196,103 +253,241 @@ function AdminBookings() {
           </button>
         </div>
 
-        {/* Visual Graph Layout: Status Progress Bar + Weekly Mini Chart */}
+        {/* Visual Graph Layout: Status Donut Graph + Weekly Intake Flow Spline */}
         <div className="bookings-graph-grid">
           
-          {/* Status Breakdown Segmented Bar */}
+          {/* 1. Order Fulfillment Ratio: Interactive Donut Gauge Graph */}
           <div className="status-progress-block">
             <div className="status-progress-title">
               <span>Order Fulfillment Ratio</span>
-              <strong>{totalCount} Total Inquiries</strong>
+              <strong style={{ color: "#10B981" }}>{fulfillmentRate}% Success Rate</strong>
             </div>
 
-            <div className="status-multi-bar">
-              {totalCount > 0 ? (
-                <>
-                  <div
-                    className="multi-bar-seg completed"
-                    style={{ width: `${(completedCount / totalCount) * 100}%` }}
-                    title={`Completed: ${completedCount} (${Math.round((completedCount / totalCount) * 100)}%)`}
-                    onClick={() => { setFilterStatus("Completed"); setCurrentPage(1); }}
-                  ></div>
-                  <div
-                    className="multi-bar-seg in-progress"
-                    style={{ width: `${(inProgressCount / totalCount) * 100}%` }}
-                    title={`In Progress: ${inProgressCount} (${Math.round((inProgressCount / totalCount) * 100)}%)`}
-                    onClick={() => { setFilterStatus("In Progress"); setCurrentPage(1); }}
-                  ></div>
-                  <div
-                    className="multi-bar-seg pending"
-                    style={{ width: `${(pendingCount / totalCount) * 100}%` }}
-                    title={`Pending: ${pendingCount} (${Math.round((pendingCount / totalCount) * 100)}%)`}
-                    onClick={() => { setFilterStatus("Pending"); setCurrentPage(1); }}
-                  ></div>
-                  <div
-                    className="multi-bar-seg cancelled"
-                    style={{ width: `${(cancelledCount / totalCount) * 100}%` }}
-                    title={`Cancelled: ${cancelledCount} (${Math.round((cancelledCount / totalCount) * 100)}%)`}
-                    onClick={() => { setFilterStatus("Cancelled"); setCurrentPage(1); }}
-                  ></div>
-                </>
-              ) : (
-                <div className="multi-bar-seg empty" style={{ width: "100%" }}></div>
-              )}
-            </div>
+            <div className="fulfillment-donut-flex">
+              {/* SVG Donut Chart */}
+              <div className="donut-svg-stage">
+                <svg viewBox="0 0 100 100">
+                  {/* Background Track */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={donutR}
+                    fill="none"
+                    stroke="rgba(150, 150, 150, 0.15)"
+                    strokeWidth="11"
+                  />
+                  {/* Completed Arc */}
+                  {compLen > 0 && (
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r={donutR}
+                      fill="none"
+                      stroke="#10B981"
+                      strokeWidth="11"
+                      strokeDasharray={`${compLen} ${donutCirc - compLen}`}
+                      strokeDashoffset={compOffset}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dasharray 0.6s ease" }}
+                    />
+                  )}
+                  {/* In Progress Arc */}
+                  {progLen > 0 && (
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r={donutR}
+                      fill="none"
+                      stroke="#6366F1"
+                      strokeWidth="11"
+                      strokeDasharray={`${progLen} ${donutCirc - progLen}`}
+                      strokeDashoffset={progOffset}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dasharray 0.6s ease" }}
+                    />
+                  )}
+                  {/* Pending Arc */}
+                  {pendLen > 0 && (
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r={donutR}
+                      fill="none"
+                      stroke="#F59E0B"
+                      strokeWidth="11"
+                      strokeDasharray={`${pendLen} ${donutCirc - pendLen}`}
+                      strokeDashoffset={pendOffset}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dasharray 0.6s ease" }}
+                    />
+                  )}
+                  {/* Cancelled Arc */}
+                  {cancLen > 0 && (
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r={donutR}
+                      fill="none"
+                      stroke="#EF4444"
+                      strokeWidth="11"
+                      strokeDasharray={`${cancLen} ${donutCirc - cancLen}`}
+                      strokeDashoffset={cancOffset}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dasharray 0.6s ease" }}
+                    />
+                  )}
+                </svg>
 
-            {/* Status Legend Pills */}
-            <div className="status-legend-pills">
-              <span className="legend-chip completed" onClick={() => { setFilterStatus("Completed"); setCurrentPage(1); }}>
-                <span className="chip-dot"></span> Completed ({completedCount})
-              </span>
-              <span className="legend-chip in-progress" onClick={() => { setFilterStatus("In Progress"); setCurrentPage(1); }}>
-                <span className="chip-dot"></span> In Progress ({inProgressCount})
-              </span>
-              <span className="legend-chip pending" onClick={() => { setFilterStatus("Pending"); setCurrentPage(1); }}>
-                <span className="chip-dot"></span> Pending ({pendingCount})
-              </span>
-              <span className="legend-chip cancelled" onClick={() => { setFilterStatus("Cancelled"); setCurrentPage(1); }}>
-                <span className="chip-dot"></span> Cancelled ({cancelledCount})
-              </span>
+                <div className="donut-center-badge">
+                  <strong>{fulfillmentRate}%</strong>
+                  <span>Fulfilled</span>
+                </div>
+              </div>
+
+              {/* Interactive Legend Grid */}
+              <div className="fulfillment-legend-grid">
+                <div
+                  className={`fulfillment-stat-chip ${filterStatus === "Completed" ? "active" : ""}`}
+                  onClick={() => { setFilterStatus("Completed"); setCurrentPage(1); }}
+                  title="Filter Completed orders"
+                >
+                  <span className="chip-label-left">
+                    <span className="chip-dot" style={{ background: "#10B981" }} />
+                    Completed
+                  </span>
+                  <span className="chip-val-right" style={{ color: "#10B981" }}>
+                    {completedCount} <span style={{ opacity: 0.6, fontSize: "10.5px" }}>({Math.round(compPct * 100)}%)</span>
+                  </span>
+                </div>
+
+                <div
+                  className={`fulfillment-stat-chip ${filterStatus === "In Progress" ? "active" : ""}`}
+                  onClick={() => { setFilterStatus("In Progress"); setCurrentPage(1); }}
+                  title="Filter In-Progress orders"
+                >
+                  <span className="chip-label-left">
+                    <span className="chip-dot" style={{ background: "#6366F1" }} />
+                    In Progress
+                  </span>
+                  <span className="chip-val-right" style={{ color: "#6366F1" }}>
+                    {inProgressCount} <span style={{ opacity: 0.6, fontSize: "10.5px" }}>({Math.round(progPct * 100)}%)</span>
+                  </span>
+                </div>
+
+                <div
+                  className={`fulfillment-stat-chip ${filterStatus === "Pending" ? "active" : ""}`}
+                  onClick={() => { setFilterStatus("Pending"); setCurrentPage(1); }}
+                  title="Filter Pending inquiries"
+                >
+                  <span className="chip-label-left">
+                    <span className="chip-dot" style={{ background: "#F59E0B" }} />
+                    Pending
+                  </span>
+                  <span className="chip-val-right" style={{ color: "#F59E0B" }}>
+                    {pendingCount} <span style={{ opacity: 0.6, fontSize: "10.5px" }}>({Math.round(pendPct * 100)}%)</span>
+                  </span>
+                </div>
+
+                <div
+                  className={`fulfillment-stat-chip ${filterStatus === "Cancelled" ? "active" : ""}`}
+                  onClick={() => { setFilterStatus("Cancelled"); setCurrentPage(1); }}
+                  title="Filter Cancelled orders"
+                >
+                  <span className="chip-label-left">
+                    <span className="chip-dot" style={{ background: "#EF4444" }} />
+                    Cancelled
+                  </span>
+                  <span className="chip-val-right" style={{ color: "#EF4444" }}>
+                    {cancelledCount} <span style={{ opacity: 0.6, fontSize: "10.5px" }}>({Math.round(cancPct * 100)}%)</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 7-Day Order Intake Mini-Chart */}
+          {/* 2. 7-Day Order Intake Flow: Real SVG Area & Spline Graph */}
           <div className="weekly-mini-chart-block">
             <div className="status-progress-title">
               <span>7-Day Orders Intake Flow</span>
-              <span className="mini-chart-peak">Peak: Saturday</span>
+              <span className="mini-chart-peak">
+                <span className="seg-live-dot" style={{ width: "6px", height: "6px", marginRight: "4px" }} />
+                Peak: Saturday
+              </span>
             </div>
 
-            <div className="mini-chart-bars-row">
-              {weeklyOrderTrend.map((d, idx) => {
-                const heightPct = Math.round((d.count / maxDailyOrders) * 100);
-                const isHovered = hoveredBarIndex === idx;
+            <div className="intake-flow-chart-wrap">
+              <svg viewBox={`0 0 ${svgW} ${svgH}`} className="intake-svg-stage">
+                <defs>
+                  <linearGradient id="intakeAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366F1" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="#6366F1" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
 
-                return (
-                  <div
+                {/* Subtle horizontal grid lines */}
+                <line x1={padX} y1={padY + graphH} x2={svgW - padX} y2={padY + graphH} stroke="var(--border-color)" strokeDasharray="3 3" opacity="0.6" />
+                <line x1={padX} y1={padY + graphH / 2} x2={svgW - padX} y2={padY + graphH / 2} stroke="var(--border-color)" strokeDasharray="3 3" opacity="0.3" />
+
+                {/* Shaded Area Under Curve */}
+                {intakeArea && (
+                  <path d={intakeArea} fill="url(#intakeAreaGrad)" />
+                )}
+
+                {/* Spline Stroke Curve */}
+                {intakeSpline && (
+                  <path d={intakeSpline} fill="none" stroke="#6366F1" strokeWidth="3" strokeLinecap="round" />
+                )}
+
+                {/* Interactive Day Points */}
+                {intakePoints.map((pt, idx) => {
+                  const isHovered = hoveredBarIndex === idx;
+                  return (
+                    <g
+                      key={pt.day}
+                      className="intake-hover-point"
+                      onMouseEnter={() => setHoveredBarIndex(idx)}
+                      onMouseLeave={() => setHoveredBarIndex(null)}
+                    >
+                      {/* Vertical highlight guideline */}
+                      {isHovered && (
+                        <line x1={pt.x} y1={padY} x2={pt.x} y2={padY + graphH} stroke="#6366F1" strokeWidth="1.5" strokeDasharray="2 2" opacity="0.7" />
+                      )}
+                      <circle cx={pt.x} cy={pt.y} r={isHovered ? 8 : 4.5} fill="#6366F1" className="point-outer" opacity={isHovered ? 0.35 : 0.2} />
+                      <circle cx={pt.x} cy={pt.y} r={isHovered ? 5 : 3} fill={isHovered ? "#FFFFFF" : "#6366F1"} stroke="#6366F1" strokeWidth="2" className="point-inner" />
+                    </g>
+                  );
+                })}
+              </svg>
+
+              {/* Day Labels Row */}
+              <div className="intake-day-labels">
+                {weeklyOrderTrend.map((d, idx) => (
+                  <span
                     key={d.day}
-                    className="mini-bar-col"
+                    className={`intake-day-tag ${hoveredBarIndex === idx ? "active" : ""}`}
                     onMouseEnter={() => setHoveredBarIndex(idx)}
                     onMouseLeave={() => setHoveredBarIndex(null)}
                   >
-                    <div className="mini-bar-track">
-                      <div
-                        className={`mini-bar-fill ${isHovered ? "active" : ""}`}
-                        style={{ height: `${heightPct}%` }}
-                      ></div>
-                    </div>
-                    <span className={`mini-bar-label ${isHovered ? "active" : ""}`}>{d.day}</span>
-                    
-                    {/* Hover Value Tooltip */}
-                    {isHovered && (
-                      <div className="mini-bar-hover-pop animate-scale-up">
-                        <strong>{d.count} Orders</strong>
-                        <span>{d.rev}</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                    {d.day}
+                  </span>
+                ))}
+              </div>
+
+              {/* Hover Value Tooltip Floating Popup */}
+              {hoveredBarIndex !== null && weeklyOrderTrend[hoveredBarIndex] && (
+                <div
+                  className="mini-bar-hover-pop animate-scale-up"
+                  style={{
+                    left: `${intakePoints[hoveredBarIndex]?.x || 200}px`,
+                    top: "-8px",
+                    transform: "translate(-50%, -100%)"
+                  }}
+                >
+                  <strong>{weeklyOrderTrend[hoveredBarIndex].full}</strong>
+                  <span>{weeklyOrderTrend[hoveredBarIndex].count} Bookings</span>
+                  <span style={{ fontSize: "10.5px", color: "var(--text-muted)" }}>{weeklyOrderTrend[hoveredBarIndex].rev} Volume</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -317,56 +512,67 @@ function AdminBookings() {
           </div>
         </div>
 
-        {/* Search & Status Filter Chips Toolbar */}
-        <div className="admin-catalog-toolbar">
-          <div className="admin-search-wrapper">
+        {/* Search & Status Filter Controls Bar */}
+        <div className="table-controls-bar">
+          <div className="search-box-wrap">
             <span className="search-icon">🔍</span>
             <input
               type="text"
-              placeholder="Search by customer, booking ID, phone, or service..."
+              placeholder="Search by customer, booking ID, phone, service, or city..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="admin-search-input"
             />
             {searchQuery && (
               <button
                 type="button"
-                className="btn-clear-search"
+                className="search-clear-btn"
                 onClick={() => {
                   setSearchQuery("");
                   setCurrentPage(1);
                 }}
+                title="Clear Search"
               >
                 ✕
               </button>
             )}
           </div>
 
-          {/* Status Filter Chips */}
-          <div className="admin-tag-chips-wrapper">
-            {[
-              { id: "All", label: "All Orders", count: totalCount },
-              { id: "Pending", label: "Pending", count: pendingCount },
-              { id: "In Progress", label: "In Progress", count: inProgressCount },
-              { id: "Completed", label: "Completed", count: completedCount },
-              { id: "Cancelled", label: "Cancelled", count: cancelledCount }
-            ].map((st) => (
-              <button
-                key={st.id}
-                type="button"
-                className={`admin-tag-chip ${filterStatus === st.id ? "active" : ""}`}
-                onClick={() => {
-                  setFilterStatus(st.id);
-                  setCurrentPage(1);
-                }}
-              >
-                <span>{st.label}</span>
-                <span className="tag-chip-count">{st.count}</span>
-              </button>
-            ))}
+          {/* Segmented Status Filter Tabs with Live Badges */}
+          <div className="filters-group">
+            <div className="segmented-control">
+              {[
+                { id: "All", label: "All Orders", count: totalCount, icon: "📦" },
+                { id: "Pending", label: "Pending", count: pendingCount, icon: "⏳" },
+                { id: "In Progress", label: "In Progress", count: inProgressCount, icon: "⚡" },
+                { id: "Completed", label: "Completed", count: completedCount, icon: "✅" },
+                { id: "Cancelled", label: "Cancelled", count: cancelledCount, icon: "❌" }
+              ].map((st) => {
+                const isActive = filterStatus === st.id;
+                let specificClass = "";
+                if (st.id === "All") specificClass = "seg-all";
+                else if (st.id === "Completed") specificClass = "seg-active";
+                else if (st.id === "Cancelled") specificClass = "seg-inactive";
+
+                return (
+                  <button
+                    key={st.id}
+                    type="button"
+                    className={`${isActive ? "active" : ""} ${specificClass}`}
+                    onClick={() => {
+                      setFilterStatus(st.id);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <span>{st.icon}</span>
+                    <span>{st.label}</span>
+                    <span className="seg-count-badge">{st.count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -389,7 +595,8 @@ function AdminBookings() {
           </div>
         ) : (
           <>
-            <div className="admin-table-container">
+            {/* Desktop Table View (Visible > 992px) */}
+            <div className="admin-table-container admin-desktop-table-view">
               <table className="admin-table">
                 <thead>
                   <tr>
@@ -480,6 +687,98 @@ function AdminBookings() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile & Tablet Card Grid View (Visible <= 992px) */}
+            <div className="admin-mobile-cards-view">
+              {paginatedBookings.map((booking) => (
+                <div key={`card-${booking.id}`} className="admin-order-card">
+                  {/* Card Header: ID, OTP & Status */}
+                  <div className="order-card-header">
+                    <div className="order-card-id-block">
+                      <span className="booking-id-tag">{booking.id}</span>
+                      {booking.doorOtp && (
+                        <span className="order-card-otp" title="Customer Door Security OTP">
+                          OTP: {booking.doorOtp}
+                        </span>
+                      )}
+                    </div>
+                    <select
+                      value={booking.status}
+                      onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
+                      className={`status-select-pill ${getStatusBadgeClass(booking.status)}`}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  {/* Customer Info Row */}
+                  <div className="order-card-cust-row">
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div className="order-card-avatar">
+                        {(booking.customerName || "U").charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <strong className="booking-cust-name">{booking.customerName}</strong>
+                        <a href={`tel:${booking.phone}`} className="booking-cust-phone" style={{ display: "block" }}>
+                          📞 {booking.phone}
+                        </a>
+                      </div>
+                    </div>
+                    <strong className="booking-price-tag">{booking.price}</strong>
+                  </div>
+
+                  {/* Service */}
+                  <div className="order-card-service-row">
+                    <div className="booking-service-badge" style={{ margin: 0 }}>
+                      <span>{booking.service}</span>
+                    </div>
+                  </div>
+
+                  {/* Provider Assignment */}
+                  <div className="order-card-pro-row">
+                    <span style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "600" }}>Provider:</span>
+                    <select
+                      value={booking.provider || ""}
+                      onChange={(e) => updateBookingStatus(booking.id, booking.status, e.target.value)}
+                      className="booking-provider-select"
+                      style={{ flex: 1, maxWidth: "none" }}
+                    >
+                      <option value="Auto Assigned">Auto Assigned</option>
+                      {providers.map(p => (
+                        <option key={p.id} value={p.name}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Address */}
+                  <div className="order-card-address">
+                    <span>📍</span>
+                    <span>{booking.address}</span>
+                  </div>
+
+                  {/* Card Footer: Date & Delete Action */}
+                  <div className="order-card-footer">
+                    <span className="order-card-date">🕒 {booking.date || "Today"}</span>
+                    <div className="order-card-actions">
+                      <button 
+                        className="btn-card-action delete icon-only"
+                        onClick={() => {
+                          if (window.confirm(`Delete booking order "${booking.id}"?`)) {
+                            deleteBooking(booking.id);
+                          }
+                        }}
+                        title="Delete Record"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pagination Controls */}
