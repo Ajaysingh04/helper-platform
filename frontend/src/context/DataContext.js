@@ -961,8 +961,17 @@ export const DataProvider = ({ children }) => {
       serviceCategory: bookingData.serviceCategory || "Body Massage & Spa",
       price: bookingData.price || "₹302",
       totalAmount: parseInt(String(bookingData.price || bookingData.totalAmount || "302").replace(/[^0-9]/g, "")) || 302,
-      status: "Pending",
-      doorOtp: bookingData.doorOtp || "1234",
+      status: bookingData.status || "Pending",
+      slotConfirmed: bookingData.slotConfirmed || false,
+      slotOtp: bookingData.slotOtp || bookingData.doorOtp || "1234",
+      startQrCode: bookingData.startQrCode || `QR-${bookingCode}`,
+      doorOtp: bookingData.doorOtp || bookingData.slotOtp || "1234",
+      homeServiceCharge: bookingData.homeServiceCharge || 149,
+      hourlyRate: bookingData.hourlyRate || 299,
+      scheduledDate: bookingData.scheduledDate || "Today",
+      scheduledTime: bookingData.scheduledTime || "11:00 AM - 01:00 PM",
+      scheduledTimestamp: bookingData.scheduledTimestamp || (Date.now() + 7200000),
+      problemDescription: bookingData.problemDescription || "",
       date: bookingData.date || "Just now",
       address: bookingData.address || "Ahinsa Tower, Indore, MP",
       customerAddress: bookingData.address || "Ahinsa Tower, Indore, MP",
@@ -974,8 +983,29 @@ export const DataProvider = ({ children }) => {
 
     setBookings(prev => [item, ...prev]);
 
+    // Save notification for customer & vendor in LocalStorage
+    try {
+      const existingNotifs = JSON.parse(localStorage.getItem("notifications")) || [];
+      const newNotif = {
+        id: `notif_${Date.now()}`,
+        title: `⚡ Booking Dispatched: ${item.serviceName}`,
+        message: `Order #${item.bookingId} assigned to ${item.assignedProvider}. Customer: ${item.customerName} (${item.customerPhone})`,
+        providerId: item.providerId,
+        bookingId: item.bookingId,
+        date: "Just now",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        read: false
+      };
+      localStorage.setItem("notifications", JSON.stringify([newNotif, ...existingNotifs]));
+
+      // Vendor-specific notification queue
+      const vendorNotifs = JSON.parse(localStorage.getItem("helper_vendor_notifications")) || [];
+      localStorage.setItem("helper_vendor_notifications", JSON.stringify([newNotif, ...vendorNotifs]));
+    } catch (e) {}
+
     // Dispatch real-time booking event so Service Man Panel and Admin receive it instantly
     window.dispatchEvent(new CustomEvent("new_booking_created", { detail: item }));
+    window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: item }));
 
     try {
       const res = await fetch(`${API_BASE}/bookings`, {

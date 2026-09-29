@@ -262,9 +262,13 @@ function VendorDashboard() {
       if (raw) {
         try {
           const p = JSON.parse(raw);
+          const pId = p.id || p._id || "60d0fe4f5311236168a109ca";
           socket.emit("provider:register", {
-            providerId: p.id || p._id || "60d0fe4f5311236168a109ca",
+            providerId: pId,
             location: [77.391029, 28.535516]
+          });
+          socket.emit("provider:register_radar", {
+            providerId: pId
           });
         } catch (e) {}
       }
@@ -273,10 +277,53 @@ function VendorDashboard() {
     socket.on("job:offer_alert", (data) => {
       setIncomingOffer({
         ...data,
+        bookingId: data.bookingId || data.id || data.bookingCode,
         expiresAt: Date.now() + (data.expiresInSeconds || 60) * 1000
       });
       setOfferCountdown(data.expiresInSeconds || 60);
-      showToast(`🔔 NEW JOB OFFER: ${data.serviceName} (₹${data.totalAmount})`);
+      setBookings(prev => {
+        const id = data.bookingId || data.id || data.bookingCode;
+        if (prev.some(b => (b.bookingId || b.id || b._id) === id)) return prev;
+        return [{
+          ...data,
+          bookingId: id,
+          id: id,
+          status: data.status || "assigned",
+          createdAt: "Just now"
+        }, ...prev];
+      });
+      showToast(`🔔 NEW JOB OFFER: ${data.serviceName} (₹${data.totalAmount || data.price}) from ${data.customerName || "Customer"}! ⚡`);
+    });
+
+    socket.on("new_booking_created", (data) => {
+      if (!data) return;
+      const raw = localStorage.getItem("helper_vendor");
+      let myId = null;
+      let myName = "";
+      if (raw) {
+        try {
+          const p = JSON.parse(raw);
+          myId = p.id || p._id;
+          myName = (p.name || "").toLowerCase();
+        } catch (e) {}
+      }
+      const bAssigned = String(data.assignedProvider || data.assignedProviderName || "").toLowerCase();
+      const isForMe = !myId || data.providerId === myId || data.provider === myId || (myName && bAssigned.includes(myName));
+
+      if (isForMe) {
+        const id = data.bookingId || data.id || data.bookingCode;
+        setIncomingOffer({
+          ...data,
+          bookingId: id,
+          expiresAt: Date.now() + 60000
+        });
+        setOfferCountdown(60);
+        setBookings(prev => {
+          if (prev.some(b => (b.bookingId || b.id || b._id) === id)) return prev;
+          return [{ ...data, bookingId: id, id, status: data.status || "assigned", createdAt: "Just now" }, ...prev];
+        });
+        showToast(`🔔 DIRECT CUSTOMER BOOKING: ${data.serviceName || data.service} from ${data.customerName || "Customer"}! ⚡`);
+      }
     });
 
     return () => {
@@ -300,22 +347,40 @@ function VendorDashboard() {
     return () => clearInterval(interval);
   }, [incomingOffer]);
 
-  // Listen for real-time customer bookings
+  // Listen for real-time customer bookings from custom window events
   useEffect(() => {
     const handleNewBooking = (e) => {
       if (e.detail) {
         const newB = e.detail;
-        setBookings(prev => {
-          const exists = prev.some(b => (b.bookingId || b.id) === (newB.bookingId || newB.id));
-          if (exists) return prev;
-          return [newB, ...prev];
-        });
-        showToast(`🔔 NEW CUSTOMER BOOKING: ${newB.serviceName || newB.service} from ${newB.customerName}! ⚡`);
+        const myId = vendor?.id || vendor?._id;
+        const myName = (vendor?.name || "").toLowerCase();
+        const bAssigned = String(newB.assignedProvider || newB.assignedProviderName || "").toLowerCase();
+        const isForMe = !myId || newB.providerId === myId || newB.provider === myId || (myName && bAssigned.includes(myName));
+
+        if (isForMe) {
+          const id = newB.bookingId || newB.id || newB.bookingCode;
+          setIncomingOffer({
+            ...newB,
+            bookingId: id,
+            expiresAt: Date.now() + 60000
+          });
+          setOfferCountdown(60);
+          setBookings(prev => {
+            const exists = prev.some(b => (b.bookingId || b.id || b._id) === id);
+            if (exists) return prev;
+            return [{ ...newB, bookingId: id, id, status: newB.status || "assigned", createdAt: "Just now" }, ...prev];
+          });
+          showToast(`🔔 NEW CUSTOMER BOOKING: ${newB.serviceName || newB.service} from ${newB.customerName}! ⚡`);
+        }
       }
     };
     window.addEventListener("new_booking_created", handleNewBooking);
-    return () => window.removeEventListener("new_booking_created", handleNewBooking);
-  }, []);
+    window.addEventListener("vendor_notification_received", handleNewBooking);
+    return () => {
+      window.removeEventListener("new_booking_created", handleNewBooking);
+      window.removeEventListener("vendor_notification_received", handleNewBooking);
+    };
+  }, [vendor]);
 
   // Fetch Bookings
   const fetchBookings = async (vendorId) => {
@@ -328,55 +393,21 @@ function VendorDashboard() {
       if (data.success && Array.isArray(data.data) && data.data.length > 0) {
         setBookings(data.data);
       } else {
-        const cat = vendor?.category || "Specialist";
-        const catServiceName = cat.includes("Massage") 
-          ? "Full Body Relaxation & Ayurvedic Therapy"
-          : cat.includes("Plumb") 
-          ? "Water Leakage & Pipe Valve Repair"
-          : cat.includes("Electr")
-          ? "Short Circuit & Power Distribution Check"
-          : `${cat} Doorstep Inspection & Care`;
-
-        setBookings([
-          {
-            bookingId: "HLP-91219",
-            serviceName: catServiceName,
-            customerName: "Pooja Patel",
-            customerAddress: "House 12, Block B, Golf Course Rd, Gurugram",
-            customerPhone: "+91 98765 00002",
-            status: "In Progress",
-            totalAmount: 499,
-            doorOtp: "4821",
-            createdAt: "Today, 10:30 AM"
-          },
-          {
-            bookingId: "HLP-89012",
-            serviceName: `${cat} Routine Service & Care`,
-            customerName: "Ananya Roy",
-            customerAddress: "Villa 12, Jaypee Greens, Greater Noida",
-            customerPhone: "+91 97118 89012",
-            status: "Completed",
-            totalAmount: 799,
-            doorOtp: "9012",
-            createdAt: "Yesterday"
-          }
-        ]);
+        // Fallback to locally tracked bookings matching this vendor
+        const localBookings = JSON.parse(localStorage.getItem("helper_bookings")) || [];
+        const myLocal = localBookings.filter(b => 
+          b.providerId === idToFetch || 
+          b.provider === idToFetch ||
+          (vendor?.name && String(b.assignedProvider || "").toLowerCase().includes(vendor.name.toLowerCase()))
+        );
+        if (myLocal.length > 0) {
+          setBookings(myLocal);
+        } else if (Array.isArray(data.data)) {
+          setBookings(data.data);
+        }
       }
     } catch (err) {
-      const cat = vendor?.category || "Specialist";
-      setBookings([
-        {
-          bookingId: "HLP-91219",
-          serviceName: `${cat} Doorstep Inspection & Service`,
-          customerName: "Pooja Patel",
-          customerAddress: "House 12, Block B, Golf Course Rd, Gurugram",
-          customerPhone: "+91 98765 00002",
-          status: "In Progress",
-          totalAmount: 499,
-          doorOtp: "4821",
-          createdAt: "Today, 10:30 AM"
-        }
-      ]);
+      console.warn("fetchBookings error:", err);
     } finally {
       setLoadingBookings(false);
     }
@@ -902,6 +933,43 @@ function VendorDashboard() {
 
     return () => clearInterval(timer);
   }, [bookings]);
+
+  // Accept incoming job/booking directly
+  const handleAcceptBooking = async (booking) => {
+    const key = booking.bookingId || booking.id || booking._id;
+    const vId = vendor?.id || vendor?._id;
+    const vName = vendor?.shopName ? `${vendor.shopName} • ${vendor.name}` : (vendor?.name || "Verified Pro");
+
+    // Optimistic update
+    setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+      ...b,
+      status: "accepted",
+      slotConfirmed: true,
+      assignedProvider: vName,
+      assignedProviderName: vendor?.name || "Verified Pro"
+    } : b));
+
+    if (incomingOffer && (incomingOffer.bookingId === key || incomingOffer.id === key)) {
+      setIncomingOffer(null);
+    }
+    showToast(`🎉 Order #${key} Accepted! Customer has been notified. 🚀`);
+
+    // Socket notification
+    if (socketRef.current) {
+      socketRef.current.emit("job:accept", { bookingId: key, providerId: vId });
+    }
+
+    // Backend call
+    try {
+      await fetch(`${API_BASE}/bookings/${key}/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerId: vId, providerName: vName })
+      });
+    } catch (e) {
+      console.warn("Backend accept booking error:", e);
+    }
+  };
 
   // 1. Confirm Slot OTP after calling customer
   const handleConfirmSlotOtp = async (booking) => {
@@ -1452,24 +1520,10 @@ function VendorDashboard() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setBookings(prev => [{
-                      bookingId: `HLP-${Date.now().toString().slice(-5)}`,
-                      serviceName: incomingOffer.serviceName,
-                      customerName: incomingOffer.customerName || "Customer",
-                      customerAddress: incomingOffer.customerAddress || "Nearby Location",
-                      customerPhone: incomingOffer.customerPhone || "+91 98765 00000",
-                      status: "In Progress",
-                      totalAmount: incomingOffer.totalAmount,
-                      doorOtp: "1234",
-                      createdAt: "Just now"
-                    }, ...prev]);
-                    setIncomingOffer(null);
-                    showToast("Order Accepted! Added to Active Bookings 🚀");
-                  }}
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "#FF4D2D", color: "#FFF", fontWeight: 800 }}
+                  onClick={() => handleAcceptBooking(incomingOffer)}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "#FFF", fontWeight: 800, fontSize: "14px", cursor: "pointer", boxShadow: "0 4px 15px rgba(16, 185, 129, 0.4)" }}
                 >
-                  Accept ({offerCountdown}s) 🚀
+                  ✓ Accept Job ({offerCountdown}s) 🚀
                 </button>
               </div>
             </div>
@@ -1750,14 +1804,38 @@ function VendorDashboard() {
                                 </span>
                               )}
                             </div>
-                            <div className="slot-action-inline">
+                            <div className="slot-action-inline" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                              <button
+                                type="button"
+                                onClick={() => handleAcceptBooking(b)}
+                                className="btn-accept-order"
+                                style={{
+                                  background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                                  color: "#FFF",
+                                  border: "none",
+                                  padding: "10px 18px",
+                                  borderRadius: "10px",
+                                  fontWeight: 800,
+                                  fontSize: "13.5px",
+                                  cursor: "pointer",
+                                  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px"
+                                }}
+                              >
+                                <span>✓</span>
+                                <span>Accept Order (स्वीकार करें)</span>
+                              </button>
+                              <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: 700 }}>OR</span>
                               <input
                                 type="text"
                                 maxLength="4"
-                                placeholder="Enter 4-digit OTP"
+                                placeholder="Customer 4-digit OTP"
                                 value={slotOtpInputs[key] || ""}
                                 onChange={(e) => setSlotOtpInputs({ ...slotOtpInputs, [key]: e.target.value })}
                                 className="input-slot-otp"
+                                style={{ maxWidth: "160px" }}
                               />
                               <button
                                 type="button"

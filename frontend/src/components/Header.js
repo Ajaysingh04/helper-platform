@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import Profile from "./ProfileComponent/Profile";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import SmartSearchModal from "./SmartSearchModal";
 import "../css/Header.css";
 
 function Header() {
@@ -10,11 +11,24 @@ function Header() {
   const [isDark, setIsDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const { isLoggedIn, currentUser, logout } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const accountMenuRef = useRef(null);
+
+  // Global keyboard shortcut for search (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleGlobalSearchKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchModalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalSearchKey);
+    return () => window.removeEventListener("keydown", handleGlobalSearchKey);
+  }, []);
 
   // Vendor Session Detection and live synchronization
   const [vendorData, setVendorData] = useState(() => {
@@ -203,6 +217,19 @@ function Header() {
               <span className="loc-pin-icon">📍</span>
               <span className="loc-text">Musakhedi, Indore</span>
             </div>
+
+            {/* Quick Smart Search Icon & Button */}
+            <button
+              type="button"
+              className="header-quick-search-btn"
+              onClick={() => setSearchModalOpen(true)}
+              title="Search services, categories, car rentals & pros (Ctrl + K)"
+              aria-label="Open Search"
+            >
+              <span className="search-btn-icon">🔍</span>
+              <span className="search-btn-label">Search...</span>
+              <kbd className="search-btn-kbd">⌘K</kbd>
+            </button>
 
             {/* Shopping Cart Icon */}
             <Link to="/services" className="header-cart-btn" title="View Services & Cart" aria-label="View Cart">
@@ -498,6 +525,26 @@ function Header() {
 
           {/* Main Mobile Navigation Links */}
           <nav className="mobile-drawer-links" aria-label="Mobile Navigation">
+            <button
+              type="button"
+              className="mobile-nav-item"
+              onClick={() => {
+                setMobileNavOpen(false);
+                setSearchModalOpen(true);
+              }}
+              style={{
+                width: "100%",
+                background: "linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(255, 77, 45, 0.08) 100%)",
+                border: "1px solid rgba(99, 102, 241, 0.25)",
+                cursor: "pointer",
+                textAlign: "left"
+              }}
+            >
+              <span className="item-icon">🔍</span>
+              <span className="item-text" style={{ color: "#4F46E5", fontWeight: 700 }}>SMART SEARCH & ANALYZER</span>
+              <span className="item-arrow">➔</span>
+            </button>
+
             <Link to="/" className={`mobile-nav-item ${isActive("/")}`} onClick={() => setMobileNavOpen(false)}>
               <span className="item-icon">🏠</span>
               <span className="item-text">HOME</span>
@@ -676,6 +723,12 @@ function Header() {
         onClose={() => setDrawerOpen(false)}
         toggleTheme={toggleTheme}
         isDark={isDark}
+      />
+
+      {/* Smart Search Spotlight Modal with Real-time AI Query Analyzer */}
+      <SmartSearchModal
+        isOpen={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
       />
     </>
   );

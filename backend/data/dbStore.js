@@ -74,6 +74,10 @@ class DBStore {
     return item;
   }
 
+  create(collection, item) {
+    return this.insert(collection, item);
+  }
+
   update(collection, id, updates) {
     if (!this.data[collection]) return null;
     const index = this.data[collection].findIndex((item) => String(item.id) === String(id) || String(item._id) === String(id));

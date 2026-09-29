@@ -25,14 +25,19 @@ function initSocket(io) {
     });
 
     /**
-     * Provider registers to listen for incoming job offers
+     * Provider registers to listen for incoming job offers & bookings
      */
-    socket.on("provider:register_radar", ({ providerId }) => {
+    const handleProviderRegister = ({ providerId }) => {
       if (providerId) {
         socket.join(`provider_${providerId}`);
-        console.log(`👨‍🔧 Provider ${providerId} joined radar dispatch stream`);
+        console.log(`👨‍🔧 Provider ${providerId} joined radar dispatch stream (room: provider_${providerId})`);
+        socket.emit("provider:registered", { success: true, providerId, room: `provider_${providerId}` });
       }
-    });
+    };
+
+    socket.on("provider:register", handleProviderRegister);
+    socket.on("provider:register_radar", handleProviderRegister);
+    socket.on("provider:join", handleProviderRegister);
 
     /**
      * Provider streams real-time GPS coordinates
@@ -73,33 +78,70 @@ function initSocket(io) {
      */
     socket.on("job:accept", async ({ bookingId, providerId }) => {
       try {
-        const booking = await Booking.findById(bookingId);
-        if (!booking) return socket.emit("job:error", { message: "Booking not found" });
+        const { getStatus } = require("../config/db");
+        const dbStore = require("../data/dbStore");
+        let booking = null;
+        let provider = null;
 
-        if (booking.status !== "requested" && booking.status !== "searching_provider") {
-          return socket.emit("job:error", { message: "Job already accepted by another provider" });
+        if (getStatus()) {
+          try {
+            booking = await Booking.findById(bookingId) || await Booking.findOne({ bookingCode: bookingId }) || await Booking.findOne({ id: bookingId });
+            provider = await Provider.findById(providerId) || await Provider.findOne({ id: providerId });
+            if (booking) {
+              booking.status = "accepted";
+              booking.provider = providerId;
+              if (provider) {
+                booking.assignedProvider = provider.shopName ? `${provider.shopName} • ${provider.name}` : provider.name;
+                booking.assignedProviderName = provider.name;
+              }
+              await booking.save();
+            }
+          } catch (e) {}
         }
 
-        const provider = await Provider.findById(providerId);
+        if (!booking) {
+          booking = dbStore.getById("bookings", bookingId);
+          provider = dbStore.getById("providers", providerId);
+          if (booking) {
+            const updates = {
+              status: "accepted",
+              provider: providerId,
+              providerId: providerId,
+              assignedProvider: provider ? (provider.shopName ? `${provider.shopName} • ${provider.name}` : provider.name) : (booking.assignedProvider || "Accepted Pro"),
+              assignedProviderName: provider ? provider.name : (booking.assignedProviderName || "Accepted Pro")
+            };
+            booking = dbStore.update("bookings", bookingId, updates);
+          }
+        }
 
-        booking.status = "accepted";
-        booking.provider = providerId;
-        booking.assignedProviderName = provider ? provider.name : "Assigned Pro";
-        await booking.save();
+        if (!booking) {
+          return socket.emit("job:error", { message: "Booking not found" });
+        }
 
-        // Broadcast to customer
-        io.to(`booking_${bookingId}`).emit("booking:status_changed", {
+        const bId = booking._id || booking.id || booking.bookingCode || bookingId;
+        const bCode = booking.bookingCode || booking.id || bookingId;
+
+        // Broadcast to customer and general tracking room
+        const customerPayload = {
+          bookingId: bId,
+          bookingCode: bCode,
           status: "accepted",
           provider: {
-            id: provider?._id,
-            name: provider?.name,
-            phone: provider?.phone,
-            rating: provider?.rating,
-            avatar: provider?.avatar
+            id: provider?.id || provider?._id || providerId,
+            name: provider?.name || booking.assignedProviderName || "Verified Specialist",
+            shopName: provider?.shopName || "",
+            phone: provider?.phone || "+91 98765 00000",
+            rating: provider?.rating || 4.9,
+            avatar: provider?.avatar || provider?.image || ""
           }
-        });
+        };
 
-        socket.emit("job:assigned_success", { bookingId, status: "accepted" });
+        io.to(`booking_${bId}`).emit("booking:status_changed", customerPayload);
+        io.to(`booking_${bCode}`).emit("booking:status_changed", customerPayload);
+        io.emit("booking:updated", customerPayload);
+
+        socket.emit("job:assigned_success", { bookingId: bId, bookingCode: bCode, status: "accepted" });
+        console.log(`✅ [JOB ACCEPTED] Booking ${bCode} accepted by provider ${providerId}`);
       } catch (err) {
         console.error("Job accept error:", err.message);
       }

@@ -279,36 +279,152 @@ router.post("/", async (req, res) => {
     if (getStatus()) {
       savedBooking = await Booking.create(bookingData);
     } else {
-      savedBooking = dbStore.create("bookings", { ...bookingData, id: bookingCode });
+      savedBooking = dbStore.insert("bookings", { ...bookingData, id: bookingCode });
     }
 
-    // 5. Trigger Real-Time Socket.IO Alert to Nearest Provider
+    // 5. Trigger Real-Time Socket.IO Alert to Target/Nearest Provider
     const io = getIO();
-    if (io && nearestPro) {
-      io.to(`provider_${nearestPro._id}`).emit("job:offer_alert", {
-        bookingId: savedBooking._id || savedBooking.id,
-        bookingCode,
-        customerName: finalName,
-        serviceName: finalService,
-        fullAddress: finalAddress,
-        earningsAmount: pricing.providerEarningsAmount,
-        isEmergency,
-        countdownSeconds: 60
-      });
-      console.log(`📡 [DISPATCH] Alert emitted to provider ${nearestPro.name} for ${bookingCode}`);
+    const alertPro = targetPro || nearestPro;
+    const alertProId = alertPro ? (alertPro.id || alertPro._id) : null;
+    const finalBookingId = savedBooking._id || savedBooking.id || bookingCode;
+
+    const offerAlertData = {
+      bookingId: finalBookingId,
+      id: finalBookingId,
+      bookingCode,
+      customerName: finalName,
+      customerPhone: finalPhone,
+      serviceName: finalService,
+      service: finalService,
+      serviceCategory: finalCategory,
+      fullAddress: finalAddress,
+      customerAddress: finalAddress,
+      address: finalAddress,
+      earningsAmount: pricing.providerEarningsAmount || Math.round(finalPriceNum * 0.85),
+      totalAmount: finalPriceNum,
+      price: `₹${finalPriceNum}`,
+      hourlyRate: providerHourlyRate,
+      homeServiceCharge,
+      slotOtp: generatedSlotOtp,
+      doorOtp: generatedSlotOtp,
+      isEmergency,
+      scheduledDate: bookingData.scheduledDate,
+      scheduledTime: bookingData.scheduledTime,
+      providerId: alertProId,
+      provider: alertProId,
+      assignedProvider: finalAssignedName,
+      assignedProviderName: targetPro?.name || (nearestPro ? nearestPro.name : "Pro"),
+      expiresInSeconds: 60,
+      createdAt: new Date().toISOString()
+    };
+
+    if (io) {
+      if (alertProId) {
+        io.to(`provider_${alertProId}`).emit("job:offer_alert", offerAlertData);
+        if (alertPro?._id && alertPro._id !== alertProId) {
+          io.to(`provider_${alertPro._id}`).emit("job:offer_alert", offerAlertData);
+        }
+      }
+      // Also emit to all connected service providers so open dashboard reacts instantly
+      io.emit("new_booking_created", { ...savedBooking, ...offerAlertData });
+      console.log(`📡 [DISPATCH] Alert emitted to provider ${finalAssignedName} (${alertProId}) for ${bookingCode}`);
     }
+
+    // Save notification into database store
+    try {
+      const newNotification = {
+        id: `notif_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        recipientId: alertProId || "all_vendors",
+        providerId: alertProId,
+        title: `⚡ New Booking: ${finalService}`,
+        message: `${finalName} booked ${finalService} at ${finalAddress}. Slot: ${bookingData.scheduledDate} ${bookingData.scheduledTime}`,
+        bookingId: finalBookingId,
+        bookingCode,
+        amount: finalPriceNum,
+        customerName: finalName,
+        customerPhone: finalPhone,
+        read: false,
+        createdAt: new Date().toISOString()
+      };
+      dbStore.insert("notifications", newNotification);
+    } catch (e) {}
 
     res.status(201).json({
       success: true,
       message: "Booking confirmed & nearest provider dispatched!",
       booking: savedBooking,
       data: savedBooking,
-      bookingId: savedBooking.bookingCode || savedBooking._id,
+      bookingId: savedBooking.bookingCode || savedBooking._id || savedBooking.id,
       startOtp: plainOtp // Visible to customer on confirmation screen
     });
   } catch (error) {
     console.error("Booking Creation Error:", error);
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @route   POST /api/bookings/:id/accept
+ * @desc    Provider accepts incoming booking/job offer
+ */
+router.post("/:id/accept", async (req, res) => {
+  try {
+    const { providerId, providerName } = req.body;
+    let booking = null;
+    let provider = null;
+
+    if (getStatus()) {
+      booking = await Booking.findById(req.params.id) || await Booking.findOne({ bookingCode: req.params.id }) || await Booking.findOne({ id: req.params.id });
+      if (booking) {
+        booking.status = "accepted";
+        if (providerId) booking.provider = providerId;
+        if (providerName) {
+          booking.assignedProvider = providerName;
+          booking.assignedProviderName = providerName;
+        }
+        await booking.save();
+      }
+    }
+
+    if (!booking) {
+      booking = dbStore.getById("bookings", req.params.id);
+      if (booking) {
+        if (providerId) provider = dbStore.getById("providers", providerId);
+        const updates = {
+          status: "accepted",
+          ...(providerId ? { providerId, provider: providerId } : {}),
+          ...(providerName ? { assignedProvider: providerName, assignedProviderName: providerName } : 
+             (provider ? { assignedProvider: provider.shopName ? `${provider.shopName} • ${provider.name}` : provider.name, assignedProviderName: provider.name } : {}))
+        };
+        booking = dbStore.update("bookings", req.params.id, updates);
+      }
+    }
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    const io = getIO();
+    if (io) {
+      const bId = booking._id || booking.id || booking.bookingCode || req.params.id;
+      const bCode = booking.bookingCode || booking.id || req.params.id;
+      const updateData = {
+        bookingId: bId,
+        bookingCode: bCode,
+        status: "accepted",
+        provider: {
+          id: providerId || booking.providerId || booking.provider,
+          name: providerName || booking.assignedProviderName || "Verified Specialist"
+        }
+      };
+      io.to(`booking_${bId}`).emit("booking:status_changed", updateData);
+      io.to(`booking_${bCode}`).emit("booking:status_changed", updateData);
+      io.emit("booking:updated", updateData);
+    }
+
+    res.json({ success: true, message: "Booking accepted successfully!", data: booking, booking });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

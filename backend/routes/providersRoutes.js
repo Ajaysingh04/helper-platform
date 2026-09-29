@@ -364,6 +364,7 @@ router.get("/:id/bookings", async (req, res) => {
       .filter(w => w.length > 2 && !["and", "for", "the", "services"].includes(w));
 
     const vendorBookings = allBookings.filter(b => {
+      if (b.providerId === provider.id || b.providerId === req.params.id || b.provider === provider.id || b.provider === req.params.id) return true;
       const assigned = String(b.assignedProvider || b.assignedProviderName || "").toLowerCase();
       const srv = String(b.serviceName || b.service || "").toLowerCase();
       const srvCat = String(b.serviceCategory || "").toLowerCase();
@@ -377,6 +378,21 @@ router.get("/:id/bookings", async (req, res) => {
     });
 
     res.json({ success: true, count: vendorBookings.length, data: vendorBookings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/providers/:id/notifications - Get notifications for this vendor
+router.get("/:id/notifications", async (req, res) => {
+  try {
+    const allNotifs = dbStore.getAll("notifications") || [];
+    const vendorNotifs = allNotifs.filter(n => 
+      n.recipientId === req.params.id || 
+      n.providerId === req.params.id || 
+      n.recipientId === "all_vendors"
+    );
+    res.json({ success: true, count: vendorNotifs.length, data: vendorNotifs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
