@@ -58,7 +58,10 @@ function AdminDashboard({ onNavigateTab }) {
     setCurrentPage(target);
     const elem = document.getElementById("recent-bookings-inquiries");
     if (elem) {
-      elem.scrollIntoView({ behavior: "smooth", block: "start" });
+      const topOffset = elem.getBoundingClientRect().top + window.pageYOffset - 85;
+      window.scrollTo({ top: Math.max(0, topOffset), left: 0, behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     }
   };
 

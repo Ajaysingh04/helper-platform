@@ -128,9 +128,12 @@ function AdminBookings() {
   const goToPage = (page) => {
     const target = Math.min(Math.max(1, page), totalPages);
     setCurrentPage(target);
-    const elem = document.getElementById("bookings-management-header");
+    const elem = document.getElementById("customer-orders-directory-section") || document.getElementById("bookings-management-header");
     if (elem) {
-      elem.scrollIntoView({ behavior: "smooth", block: "start" });
+      const topOffset = elem.getBoundingClientRect().top + window.pageYOffset - 85;
+      window.scrollTo({ top: Math.max(0, topOffset), left: 0, behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     }
   };
 
@@ -495,7 +498,7 @@ function AdminBookings() {
       </div>
 
       {/* Main Bookings Management Section */}
-      <div className="admin-card-section">
+      <div className="admin-card-section" id="customer-orders-directory-section">
         
         {/* Header & Filter Controls Row */}
         <div className="admin-card-header" style={{ marginBottom: "16px" }}>
