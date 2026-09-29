@@ -1,5 +1,6 @@
 import React, { useContext, useState, useMemo } from "react";
 import { DataContext } from "../../context/DataContext";
+import WeeklyActivityRevenueGraph from "./WeeklyActivityRevenueGraph";
 
 function AdminBookings() {
   const { bookings, updateBookingStatus, deleteBooking, addBooking, providers } = useContext(DataContext);
@@ -170,6 +171,11 @@ function AdminBookings() {
             <div className="summary-card-label">Platform Gross Revenue</div>
           </div>
         </div>
+      </div>
+
+      {/* Real Interactive Weekly Service Activity & Revenue Graph */}
+      <div style={{ marginBottom: "24px" }}>
+        <WeeklyActivityRevenueGraph bookings={bookings} />
       </div>
 
       {/* Visual Orders Analytics & Status Graph Banner */}
