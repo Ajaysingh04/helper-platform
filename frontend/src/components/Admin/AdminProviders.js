@@ -228,9 +228,9 @@ function AdminProviders() {
           </button>
         </div>
 
-        {/* Search & Filter Chips Toolbar */}
-        <div className="admin-catalog-toolbar">
-          <div className="admin-search-wrapper">
+        {/* Search & Filter Controls Bar */}
+        <div className="table-controls-bar">
+          <div className="search-box-wrap">
             <span className="search-icon">🔍</span>
             <input
               type="text"
@@ -240,43 +240,53 @@ function AdminProviders() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="admin-search-input"
             />
             {searchQuery && (
               <button
                 type="button"
-                className="btn-clear-search"
+                className="search-clear-btn"
                 onClick={() => {
                   setSearchQuery("");
                   setCurrentPage(1);
                 }}
+                title="Clear Search"
               >
                 ✕
               </button>
             )}
           </div>
 
-          {/* Filter Chips */}
-          <div className="admin-tag-chips-wrapper">
-            {[
-              { id: "All", label: "All Pros", count: totalCount },
-              { id: "Verified", label: "🛡️ Verified", count: verifiedCount },
-              { id: "Pending", label: "⏳ Pending ID", count: pendingCount },
-              { id: "Franchise", label: "👑 Franchise Elite", count: franchiseCount }
-            ].map((st) => (
-              <button
-                key={st.id}
-                type="button"
-                className={`admin-tag-chip ${filterType === st.id ? "active" : ""}`}
-                onClick={() => {
-                  setFilterType(st.id);
-                  setCurrentPage(1);
-                }}
-              >
-                <span>{st.label}</span>
-                <span className="tag-chip-count">{st.count}</span>
-              </button>
-            ))}
+          {/* Segmented Filter Tabs with Live Badges */}
+          <div className="filters-group">
+            <div className="segmented-control">
+              {[
+                { id: "All", label: "All Pros", count: totalCount, icon: "👥" },
+                { id: "Verified", label: "Verified", count: verifiedCount, icon: "🛡️" },
+                { id: "Pending", label: "Pending ID", count: pendingCount, icon: "⏳" },
+                { id: "Franchise", label: "Franchise Elite", count: franchiseCount, icon: "👑" }
+              ].map((st) => {
+                const isActive = filterType === st.id;
+                let specificClass = "";
+                if (st.id === "All") specificClass = "seg-all";
+                else if (st.id === "Verified") specificClass = "seg-active";
+
+                return (
+                  <button
+                    key={st.id}
+                    type="button"
+                    className={`${isActive ? "active" : ""} ${specificClass}`}
+                    onClick={() => {
+                      setFilterType(st.id);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <span>{st.icon}</span>
+                    <span>{st.label}</span>
+                    <span className="seg-count-badge">{st.count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -299,18 +309,19 @@ function AdminProviders() {
           </div>
         ) : (
           <>
-            <div className="admin-table-container">
+            {/* Desktop Table View (Visible > 992px) */}
+            <div className="admin-table-container admin-desktop-table-view">
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Partner / Business</th>
-                    <th>Category Sector</th>
-                    <th>Hourly Charge</th>
-                    <th>Contact Phone</th>
-                    <th>Rating & Jobs</th>
-                    <th>ID Verification</th>
-                    <th>Franchise Status</th>
-                    <th>Actions</th>
+                    <th className="col-prov-profile">Partner / Business</th>
+                    <th className="col-prov-cat">Category Sector</th>
+                    <th className="col-prov-rate">Hourly Charge</th>
+                    <th className="col-prov-contact">Contact Phone</th>
+                    <th className="col-prov-rating">Rating & Jobs</th>
+                    <th className="col-prov-verify">ID Verification</th>
+                    <th className="col-prov-franchise">Franchise Status</th>
+                    <th className="col-prov-actions">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -320,7 +331,7 @@ function AdminProviders() {
 
                     return (
                       <tr key={p.id}>
-                        <td>
+                        <td className="col-prov-profile">
                           <div className="provider-cell-profile">
                             <img 
                               src={imgSrc} 
@@ -338,30 +349,30 @@ function AdminProviders() {
                           </div>
                         </td>
 
-                        <td>
+                        <td className="col-prov-cat">
                           <span className="service-sector-pill" style={{ fontSize: "12px", fontWeight: 700 }}>
                             {p.category}
                           </span>
                         </td>
 
-                        <td>
+                        <td className="col-prov-rate">
                           <strong className="provider-rate-tag">{p.hourlyRate || "₹299/hr"}</strong>
                         </td>
 
-                        <td>
+                        <td className="col-prov-contact">
                           <a href={`tel:${p.contact || p.phone}`} className="booking-cust-phone">
                             📞 {p.contact || p.phone || "—"}
                           </a>
                         </td>
 
-                        <td>
+                        <td className="col-prov-rating">
                           <div className="provider-rating-box">
                             <span className="provider-stars">★ {p.rating || 4.9}</span>
                             <span className="provider-jobs-count">{p.jobsDone || 0} Delivered</span>
                           </div>
                         </td>
 
-                        <td>
+                        <td className="col-prov-verify">
                           <button
                             type="button"
                             className={`provider-verify-toggle-btn ${p.verified ? "verified" : "pending"}`}
@@ -372,7 +383,7 @@ function AdminProviders() {
                           </button>
                         </td>
 
-                        <td>
+                        <td className="col-prov-franchise">
                           {p.franchiseActive ? (
                             <span className="provider-franchise-badge active">
                               👑 {p.franchisePlan === "annual" ? "₹5L / yr (Annual)" : "₹4k / mo (Monthly)"}
@@ -384,8 +395,8 @@ function AdminProviders() {
                           )}
                         </td>
 
-                        <td>
-                          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <td className="col-prov-actions">
+                          <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center" }}>
                             <button 
                               type="button"
                               className="btn-card-action edit icon-only"
@@ -413,6 +424,105 @@ function AdminProviders() {
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile & Tablet Card Grid View (Visible <= 992px) */}
+            <div className="admin-mobile-cards-view">
+              {paginatedProviders.map((p) => {
+                const fallbackImg = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+                const imgSrc = p.image || p.avatar || fallbackImg;
+
+                return (
+                  <div key={`card-${p.id}`} className="admin-order-card">
+                    {/* Header: Profile & Actions */}
+                    <div className="order-card-header">
+                      <div className="provider-cell-profile">
+                        <img 
+                          src={imgSrc} 
+                          alt={p.name} 
+                          className="provider-avatar-img"
+                          onError={(e) => { e.currentTarget.src = fallbackImg; }}
+                        />
+                        <div>
+                          <strong className="provider-name-title">{p.shopName || p.name}</strong>
+                          {p.shopName && p.name && p.shopName !== p.name && (
+                            <div className="provider-owner-sub">Owner: {p.name}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <button 
+                          type="button"
+                          className="btn-card-action edit icon-only"
+                          onClick={() => openEdit(p)}
+                          title={`Edit ${p.name}`}
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          type="button"
+                          className="btn-card-action delete icon-only"
+                          onClick={() => {
+                            if (window.confirm(`Remove provider "${p.name}" from platform?`)) {
+                              deleteProvider(p.id);
+                            }
+                          }}
+                          title="Delete Partner"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sector & Hourly Rate */}
+                    <div className="order-card-service-row">
+                      <span className="service-sector-pill" style={{ fontSize: "12px", fontWeight: 700 }}>
+                        {p.category}
+                      </span>
+                      <strong className="provider-rate-tag">{p.hourlyRate || "₹299/hr"}</strong>
+                    </div>
+
+                    {/* Contact & Rating Row */}
+                    <div className="order-card-cust-row">
+                      <a href={`tel:${p.contact || p.phone}`} className="booking-cust-phone">
+                        📞 {p.contact || p.phone || "—"}
+                      </a>
+                      <div className="provider-rating-box" style={{ alignItems: "flex-end" }}>
+                        <span className="provider-stars">★ {p.rating || 4.9}</span>
+                        <span className="provider-jobs-count">{p.jobsDone || 0} Delivered</span>
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    <div className="order-card-address">
+                      <span>📍</span>
+                      <span>{p.address || p.location || "City Center"}</span>
+                    </div>
+
+                    {/* Verification & Franchise Status */}
+                    <div className="order-card-footer">
+                      <button
+                        type="button"
+                        className={`provider-verify-toggle-btn ${p.verified ? "verified" : "pending"}`}
+                        onClick={() => updateProvider(p.id, { verified: !p.verified })}
+                        title="Click to toggle ID verification status"
+                      >
+                        {p.verified ? "🛡️ Verified" : "⏳ Pending ID"}
+                      </button>
+
+                      {p.franchiseActive ? (
+                        <span className="provider-franchise-badge active">
+                          👑 {p.franchisePlan === "annual" ? "₹5L / yr" : "₹4k / mo"}
+                        </span>
+                      ) : (
+                        <span className="provider-franchise-badge standard">
+                          Standard Partner
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Pagination Controls */}
