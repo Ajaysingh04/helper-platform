@@ -1218,18 +1218,34 @@ export const DataProvider = ({ children }) => {
   };
 
   // Tickets
-  const resolveTicket = async (id) => {
-    setTickets(prev => prev.map(t => t.id === id ? { ...t, status: "Resolved" } : t));
+  const updateTicketStatus = async (id, status) => {
+    setTickets(prev => prev.map(t => (t.id === id || t._id === id) ? { ...t, status } : t));
 
     try {
       await fetch(`${API_BASE}/tickets/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Resolved" })
+        body: JSON.stringify({ status })
       });
     } catch (err) {
-      console.warn("Backend resolveTicket error:", err);
+      console.warn("Backend updateTicketStatus error:", err);
     }
+  };
+
+  const deleteTicket = async (id) => {
+    setTickets(prev => prev.filter(t => t.id !== id && t._id !== id));
+
+    try {
+      await fetch(`${API_BASE}/tickets/${id}`, {
+        method: "DELETE"
+      });
+    } catch (err) {
+      console.warn("Backend deleteTicket error:", err);
+    }
+  };
+
+  const resolveTicket = async (id) => {
+    return updateTicketStatus(id, "Resolved");
   };
 
   const addTicket = async (ticketData) => {
@@ -1300,7 +1316,7 @@ export const DataProvider = ({ children }) => {
       heroBanners, addHeroBanner, updateHeroBanner, toggleHeroBannerActive, setActiveHeroBanner, deleteHeroBanner,
       heroSettings, updateHeroSettings,
       users, updateUserStatus, deleteUser,
-      tickets, resolveTicket, addTicket,
+      tickets, resolveTicket, updateTicketStatus, deleteTicket, addTicket,
       settings, updateSettings, resetAllData
     }}>
       {children}

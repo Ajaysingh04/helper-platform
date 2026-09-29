@@ -2473,6 +2473,77 @@
   background: var(--surface-card, #ffffff);
 }
 
+/* ============================================================
+   ADMIN CUSTOMER INQUIRIES & SUPPORT TICKETS TABLE STYLES
+   ============================================================ */
+.admin-table.support-table {
+  min-width: 880px;
+}
+
+.col-tk-id {
+  width: 120px;
+  min-width: 110px;
+  white-space: nowrap;
+}
+
+.col-tk-sender {
+  width: 175px;
+  min-width: 160px;
+  white-space: nowrap;
+}
+
+.col-tk-subject {
+  width: 140px;
+  min-width: 125px;
+}
+
+.col-tk-msg {
+  min-width: 180px;
+  max-width: 250px;
+}
+
+.col-tk-date {
+  width: 105px;
+  min-width: 95px;
+  white-space: nowrap;
+}
+
+.col-tk-status {
+  width: 130px;
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.col-tk-actions {
+  width: 105px;
+  min-width: 100px;
+  text-align: center;
+  white-space: nowrap;
+  position: sticky;
+  right: 0;
+  background: var(--surface-card, #ffffff);
+  z-index: 5;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+  border-left: 1px solid var(--border-color, #E2E8F0);
+}
+
+.admin-table th.col-tk-actions {
+  background: var(--surface-input, #F8FAFC);
+}
+
+.admin-table.support-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.admin-table.support-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.035);
+}
+
+.admin-table.support-table tbody tr:hover .col-tk-actions {
+  background: var(--surface-card, #ffffff);
+}
+
+
 .provider-rate-tag {
   display: inline-flex;
   align-items: center;
