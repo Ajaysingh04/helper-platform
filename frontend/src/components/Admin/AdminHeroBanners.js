@@ -402,43 +402,7 @@ function AdminHeroBanners() {
             </div>
           </div>
 
-          {/* 3. Indicators Display */}
-          <div className="pref-control-box">
-            <div>
-              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
-                <span>🔢</span> Slide Controls Pill
-              </label>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  type="button"
-                  className={`pref-anim-btn ${!heroSettings.showIndicators ? "active" : "inactive"}`}
-                  style={{ flex: 1, padding: "9px 6px", fontSize: "11px" }}
-                  onClick={() => {
-                    if (updateHeroSettings) updateHeroSettings({ showIndicators: false });
-                    showToast("👁️ Clean Panoramic View (Indicators Hidden)");
-                  }}
-                >
-                  👁️ Hide (Clean)
-                </button>
-                <button
-                  type="button"
-                  className={`pref-anim-btn ${heroSettings.showIndicators ? "active" : "inactive"}`}
-                  style={{ flex: 1, padding: "9px 6px", fontSize: "11px" }}
-                  onClick={() => {
-                    if (updateHeroSettings) updateHeroSettings({ showIndicators: true });
-                    showToast("🔢 Interactive 1, 2, 3... Numbers Enabled");
-                  }}
-                >
-                  🔢 Show 1, 2, 3..
-                </button>
-              </div>
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "8px" }}>
-              {heroSettings.showIndicators ? "Interactive numbers visible at bottom" : "Clean border-to-border layout"}
-            </div>
-          </div>
-
-          {/* 4. Image Framing Headroom */}
+          {/* 3. Image Framing Headroom */}
           <div className="pref-control-box">
             <div>
               <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 800, marginBottom: "8px", color: "var(--text-main)" }}>
@@ -486,8 +450,7 @@ function AdminHeroBanners() {
               </div>
               <div style={{ fontSize: "11.5px", color: "#94A3B8", marginTop: "3px" }}>
                 Framing: <strong>{heroSettings.imagePosition || "center top"}</strong> • Mode:{" "}
-                <strong>{heroSettings.continuousSlide ? "Continuous" : "Pause on Hover"}</strong> • Indicators:{" "}
-                <strong>{heroSettings.showIndicators ? "Visible (1,2,3..)" : "Hidden"}</strong>
+                <strong>{heroSettings.continuousSlide ? "Continuous" : "Pause on Hover"}</strong> • Layout: <strong>Clean Panoramic</strong>
               </div>
             </div>
           </div>

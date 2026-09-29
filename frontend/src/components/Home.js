@@ -676,32 +676,6 @@ function Home() {
               </div>
             </button>
           </div>
-
-          {/* Interactive Slide Numbers / Indicators (Admin Controlled) */}
-          {heroSettings.showIndicators && safeHeroSlides.length > 1 && (
-            <div className="hero-slider-indicators-pill" role="navigation" aria-label="Slide Selection">
-              {safeHeroSlides.map((slide, dotIdx) => (
-                <button
-                  key={slide.id || dotIdx}
-                  type="button"
-                  className={`hero-indicator-dot ${dotIdx === heroIndex ? "active" : ""}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setHeroIndex(dotIdx);
-                  }}
-                  aria-label={`Jump to slide ${dotIdx + 1}`}
-                  title={`Slide ${dotIdx + 1}: ${slide.title || "Hero Banner"}`}
-                >
-                  {dotIdx + 1}
-                </button>
-              ))}
-              {isHeroPaused && !heroSettings.continuousSlide && (
-                <span className="hero-indicator-pause-badge" title="Slider paused because cursor is hovering">
-                  ⏸️
-                </span>
-              )}
-            </div>
-          )}
         </div>
       </section>
 
