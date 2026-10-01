@@ -513,168 +513,60 @@ function Home() {
             <span className="ambient-sparkle sp-6" />
           </div>
 
-          {/* Ambient Lighting & Scrim Overlays (Ensures Text is 100% Crisp) */}
-          <div className="hero-panoramic-overlay" />
-          <div className="hero-ambient-glow-warm" />
-          <div className="hero-ambient-glow-cyan" />
+          {/* Subtle bottom gradient to ensure search bar and chips stand out cleanly */}
+          <div className="hero-bottom-clean-scrim" />
 
-          {/* Manual Studio Hero Content Overlay */}
-          <div className="container-wrapper hero-panoramic-grid">
-            {/* Left Column: Pinterest-Inspired Razor-Sharp Typography & Search */}
-            <div className="hero-panoramic-left">
-              {/* Top Row: Social Proof Avatars & Live Status Pill (Matching Pinterest Reference) */}
-              <div className="hero-top-social-row">
-                <div className="hero-social-proof-pill">
-                  <span className="social-proof-label">Trusted by 10,000+ happy clients</span>
-                  <span className="social-proof-arrow">➔</span>
-                  <div className="social-avatars-cluster">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=80" alt="Client 1" className="cluster-avatar" />
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80" alt="Client 2" className="cluster-avatar" />
-                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=80" alt="Client 3" className="cluster-avatar" />
-                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=80" alt="Client 4" className="cluster-avatar" />
-                  </div>
-                </div>
-                <div className="hero-live-pill">
-                  <span className="live-pulse-dot" />
-                  <span className="live-pill-city">📍 INDORE & REGION</span>
-                </div>
+          {/* Centered Modern Floating Search Bar & Quick Categories */}
+          <div className="hero-centered-search-container">
+            <form 
+              className="hero-search-wrapper hero-search-centered" 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (homeCatSearch.trim()) {
+                  const element = document.getElementById("popular-service-categories");
+                  if (element) element.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+            >
+              <div className="hero-search-location-chip">
+                <span className="location-pin">📍</span>
+                <span className="location-name">Indore</span>
               </div>
+              <span className="hero-search-divider" />
+              <span className="hero-search-icon">🔍</span>
+              <input
+                type="text"
+                className="hero-search-input"
+                placeholder="Search 'Deep Cleaning', 'AC Repair', 'Plumber', 'Electrician'..."
+                value={homeCatSearch}
+                onChange={(e) => setHomeCatSearch(e.target.value)}
+              />
+              <button type="submit" className="hero-search-btn">
+                <span>Find Service ➔</span>
+              </button>
+            </form>
 
-              {/* Razor-sharp Typography Headline */}
-              <h1 className="hero-studio-headline">
-                {heroSlides[heroIndex]?.title || "Clean Space"}<br />
-                <span className="hero-gradient-highlight">
-                  {heroSlides[heroIndex]?.highlight || "Starts Here."}
-                </span>
-              </h1>
-
-              <p className="hero-studio-subtitle">
-                {heroSlides[heroIndex]?.subtitle || "Professional cleaning services for offices, homes, and commercial spaces — done right, every time."}
-              </p>
-
-              {/* Live Interactive Search Bar */}
-              <form 
-                className="hero-search-wrapper" 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (homeCatSearch.trim()) {
-                    const element = document.getElementById("popular-service-categories");
-                    if (element) element.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
-              >
-                <span className="hero-search-icon">🔍</span>
-                <input
-                  type="text"
-                  className="hero-search-input"
-                  placeholder="Search 'Deep Cleaning', 'AC Repair', 'Plumber'..."
-                  value={homeCatSearch}
-                  onChange={(e) => setHomeCatSearch(e.target.value)}
-                />
-                <button type="submit" className="hero-search-btn">
-                  <span>Find Service ➔</span>
-                </button>
-              </form>
-
-              {/* Quick Tags */}
-              <div className="hero-quick-tags">
-                <span className="quick-tags-label">Popular Now:</span>
-                <div className="quick-tags-list">
-                  <Link to="/category/cleaning" className="quick-service-chip">
-                    <span>🧹 Deep Cleaning</span>
-                  </Link>
-                  <Link to="/category/ac-repair-services" className="quick-service-chip">
-                    <span>❄️ AC Repair</span>
-                  </Link>
-                  <Link to="/category/electricians" className="quick-service-chip">
-                    <span>⚡ Electrician</span>
-                  </Link>
-                  <Link to="/category/plumbers" className="quick-service-chip">
-                    <span>🚰 Plumber</span>
-                  </Link>
-                  <Link to="/category/beauty-parlours" className="quick-service-chip">
-                    <span>💇‍♀️ Salon & Spa</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Primary Hero Action: Find Your Expert / Dynamic Slide CTA */}
-              <div className="hero-primary-cta-row">
-                <Link to={heroSlides[heroIndex]?.ctaLink || "/services"} className="hero-find-expert-btn">
-                  <span className="btn-lightning-glow">⚡</span>
-                  <span>{heroSlides[heroIndex]?.ctaText || "Find Your Expert"}</span>
-                  <span className="btn-arrow-glow">➔</span>
+            {/* Quick Popular Service Chips */}
+            <div className="hero-tags-centered">
+              <span className="quick-tags-label">Popular:</span>
+              <div className="quick-tags-list">
+                <Link to="/category/cleaning" className="quick-service-chip">
+                  <span>🧹 Deep Cleaning</span>
                 </Link>
-
-                <div className="hero-active-perk-badge">
-                  <span className="perk-badge-check">✓</span>
-                  <span>{heroSlides[heroIndex]?.perk1?.replace(/^\*\s*/, '') || "100% Police-verified specialists"}</span>
-                </div>
-              </div>
-
-              {/* Trust Badges Bar */}
-              <div className="hero-trust-bar">
-                <div className="trust-item">
-                  <span className="trust-icon">⭐</span>
-                  <div className="trust-text">
-                    <strong>4.9 / 5</strong>
-                    <span>Customer Trust</span>
-                  </div>
-                </div>
-                <div className="trust-item">
-                  <span className="trust-icon">⚡</span>
-                  <div className="trust-text">
-                    <strong>15 Mins</strong>
-                    <span>Fast Dispatch</span>
-                  </div>
-                </div>
-                <div className="trust-item">
-                  <span className="trust-icon">🛡️</span>
-                  <div className="trust-text">
-                    <strong>100% Verified</strong>
-                    <span>Police-Checked Pros</span>
-                  </div>
-                </div>
+                <Link to="/category/ac-repair-services" className="quick-service-chip">
+                  <span>❄️ AC Repair</span>
+                </Link>
+                <Link to="/category/electricians" className="quick-service-chip">
+                  <span>⚡ Electrician</span>
+                </Link>
+                <Link to="/category/plumbers" className="quick-service-chip">
+                  <span>🚰 Plumber</span>
+                </Link>
+                <Link to="/category/beauty-parlours" className="quick-service-chip">
+                  <span>💇‍♀️ Salon & Spa</span>
+                </Link>
               </div>
             </div>
-
-            {/* Right Column: Kept completely open & unobscured so all 14+ professionals & airplane are 100% visible */}
-            <div className="hero-panoramic-right hero-right-unobstructed" />
-          </div>
-
-          {/* =========================================================================
-              NEXT PAGE INTERACTIVE ANIMATED BUTTON (Bottom Center)
-              Full animation with bouncing arrow, pulsing ripple, and smooth scroll
-              ========================================================================= */}
-          <div className="hero-next-page-anchor">
-            <button
-              type="button"
-              className="hero-next-page-btn"
-              onClick={handleScrollToNextPage}
-              aria-label="Next Page"
-              title="Next Page — Click to scroll down"
-            >
-              <span className="next-page-ripple-ring ring-1" />
-              <span className="next-page-ripple-ring ring-2" />
-              <span className="next-page-glow-aura" />
-
-              <div className="next-page-btn-inner">
-                {/* Animated Mouse Scroll Wheel */}
-                <div className="next-page-mouse-icon">
-                  <div className="mouse-wheel-dot" />
-                </div>
-
-                <div className="next-page-text-content">
-                  <span className="next-page-bold-title">NEXT PAGE</span>
-                  <span className="next-page-hint-text">Click to scroll</span>
-                </div>
-
-                {/* Big Bouncing Down Arrow */}
-                <div className="next-page-arrow-pill">
-                  <span className="bouncing-down-arrow">↓</span>
-                </div>
-              </div>
-            </button>
           </div>
         </div>
       </section>

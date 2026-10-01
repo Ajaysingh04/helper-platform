@@ -224,31 +224,160 @@ body.dark .helper-hero-slider {
   pointer-events: none;
 }
 
-/* Luminous soft gradient scrim - lets the natural bright background shine while keeping text 100% crisp */
-.hero-panoramic-overlay {
+/* Bottom Clean Scrim for Hero Search Bar */
+.hero-bottom-clean-scrim {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    90deg, 
-    rgba(15, 23, 42, 0.92) 0%, 
-    rgba(15, 23, 42, 0.82) 36%, 
-    rgba(15, 23, 42, 0.40) 60%, 
-    rgba(15, 23, 42, 0.06) 82%,
-    transparent 100%
+    180deg, 
+    rgba(0, 0, 0, 0.02) 0%, 
+    transparent 45%, 
+    rgba(15, 23, 42, 0.40) 80%, 
+    rgba(15, 23, 42, 0.70) 100%
   );
-  z-index: 2;
+  z-index: 4;
   pointer-events: none;
 }
 
-body.dark .hero-panoramic-overlay {
+body.dark .hero-bottom-clean-scrim {
   background: linear-gradient(
-    90deg, 
-    rgba(10, 15, 28, 0.94) 0%, 
-    rgba(10, 15, 28, 0.85) 36%, 
-    rgba(10, 15, 28, 0.45) 60%, 
-    rgba(10, 15, 28, 0.10) 82%,
-    transparent 100%
+    180deg, 
+    rgba(0, 0, 0, 0.05) 0%, 
+    transparent 40%, 
+    rgba(10, 15, 28, 0.50) 80%, 
+    rgba(10, 15, 28, 0.85) 100%
   );
+}
+
+.hero-centered-search-container {
+  position: absolute;
+  bottom: clamp(24px, 4.5vh, 48px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.hero-search-centered {
+  max-width: 720px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  border-radius: 999px;
+  padding: 6px 8px 6px 18px;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  transition: all 0.25s ease;
+  margin-bottom: 0;
+}
+
+body.dark .hero-search-centered {
+  background: rgba(17, 24, 39, 0.95);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.65);
+}
+
+.hero-search-centered:focus-within {
+  border-color: #FF4D2D;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.25), 0 25px 60px -10px rgba(255, 77, 45, 0.35);
+  transform: translateY(-2px);
+}
+
+.hero-search-location-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main, #0F172A);
+  padding-right: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+body.dark .hero-search-location-chip {
+  color: #FFFFFF;
+}
+
+.hero-search-divider {
+  width: 1.5px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.12);
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+body.dark .hero-search-divider {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.hero-tags-centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-tags-centered .quick-tags-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #FFFFFF;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.5px;
+}
+
+.hero-tags-centered .quick-service-chip {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+body.dark .hero-tags-centered .quick-service-chip {
+  background: rgba(15, 23, 42, 0.88);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #F8FAFC;
+}
+
+.hero-tags-centered .quick-service-chip:hover {
+  background: #FF4D2D;
+  color: #FFFFFF;
+  border-color: #FF4D2D;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 77, 45, 0.45);
+}
+
+@media (max-width: 640px) {
+  .hero-search-location-chip {
+    display: none;
+  }
+  .hero-search-divider {
+    display: none;
+  }
+  .hero-tags-centered .quick-service-chip {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
 }
 
 .hero-panoramic-grid {
