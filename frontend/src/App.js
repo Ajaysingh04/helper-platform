@@ -31,6 +31,7 @@ import VendorDashboard from "./components/Vendor/VendorDashboard";
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isVendorDashboard = location.pathname.startsWith("/vendor/dashboard");
 
   return (
     <>
@@ -38,6 +39,10 @@ function AppContent() {
       {isAdminRoute ? (
         <Routes>
           <Route path="/admin/*" element={<AdminLayout />} />
+        </Routes>
+      ) : isVendorDashboard ? (
+        <Routes>
+          <Route path="/vendor/dashboard" element={<VendorDashboard />} />
         </Routes>
       ) : (
         <div style={{ width: "100%", display: "flex", flexDirection: "column", minHeight: "100vh" }}>

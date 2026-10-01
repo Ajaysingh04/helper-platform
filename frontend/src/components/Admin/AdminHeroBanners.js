@@ -31,12 +31,14 @@ function AdminHeroBanners() {
   const [subtitle, setSubtitle] = useState("");
   const [badge, setBadge] = useState("#1 ON-DEMAND HOME SERVICE PLATFORM");
   const [city, setCity] = useState("📍 INDORE & REGION");
-  const [image, setImage] = useState("/images/homepage_1.jpg");
+  const [image, setImage] = useState("/images/homepage_5_wide.jpg");
   const [ctaText, setCtaText] = useState("Book Service Now ➔");
   const [ctaLink, setCtaLink] = useState("/services");
   const [tagsText, setTagsText] = useState("Electrician, AC Repair, Cleaning, Plumber, Salon at Home");
   const [active, setActive] = useState(true);
   const [fileError, setFileError] = useState("");
+  const [imgSourceTab, setImgSourceTab] = useState("presets");
+  const [uploadedFileName, setUploadedFileName] = useState("");
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -50,12 +52,14 @@ function AdminHeroBanners() {
     setSubtitle("Book certified electricians, plumbers, AC technicians, salon pros & cleaning experts. Guaranteed upfront rates with live GPS tracking.");
     setBadge("#1 ON-DEMAND HOME SERVICE PLATFORM");
     setCity("📍 INDORE & REGION");
-    setImage("/images/homepage_1.jpg");
+    setImage("/images/homepage_5_wide.jpg");
     setCtaText("Book Service Now ➔");
     setCtaLink("/services");
     setTagsText("Electrician, AC Repair, Cleaning, Plumber, Salon at Home");
     setActive(true);
     setFileError("");
+    setImgSourceTab("presets");
+    setUploadedFileName("");
     setShowModal(true);
   };
 
@@ -66,12 +70,25 @@ function AdminHeroBanners() {
     setSubtitle(banner.subtitle || "");
     setBadge(banner.badge || "#1 ON-DEMAND HOME SERVICE PLATFORM");
     setCity(banner.city || "📍 INDORE & REGION");
-    setImage(banner.image || "/images/homepage_1.jpg");
+    const imgUrl = banner.image || "/images/homepage_5_wide.jpg";
+    setImage(imgUrl);
     setCtaText(banner.ctaText || "Book Service Now ➔");
     setCtaLink(banner.ctaLink || "/services");
     setTagsText(Array.isArray(banner.tags) ? banner.tags.join(", ") : "");
     setActive(banner.active !== false);
     setFileError("");
+
+    if (imgUrl.startsWith("data:")) {
+      setImgSourceTab("upload");
+      setUploadedFileName("Uploaded Custom Image");
+    } else if (HERO_IMAGE_PRESETS.some(p => p.url === imgUrl)) {
+      setImgSourceTab("presets");
+      setUploadedFileName("");
+    } else {
+      setImgSourceTab("url");
+      setUploadedFileName("");
+    }
+
     setShowModal(true);
   };
 
@@ -90,11 +107,13 @@ function AdminHeroBanners() {
     }
 
     setFileError("");
+    setUploadedFileName(file.name);
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
         setImage(event.target.result);
-        showToast("Uploaded image selected successfully!");
+        setImgSourceTab("upload");
+        showToast(`Uploaded "${file.name}" selected!`);
       }
     };
     reader.readAsDataURL(file);
@@ -730,297 +749,422 @@ function AdminHeroBanners() {
         </div>
       )}
 
-      {/* Add / Edit Modal */}
+      {/* Add / Edit Modal - Modern Split SaaS Design */}
       {showModal && (
-        <div className="admin-modal-overlay">
+        <div className="hero-editor-overlay" onClick={() => setShowModal(false)}>
           <div
-            className="admin-modal-card animate-scale-up"
-            style={{ maxWidth: "780px", maxHeight: "90vh", overflowY: "auto" }}
+            className="hero-editor-card"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-header">
-              <h2>{editingBanner ? "✏️ Edit Hero Banner" : "➕ Add New Hero Banner"}</h2>
-              <button className="modal-close-btn" onClick={() => setShowModal(false)}>✕</button>
+            {/* Modal Header */}
+            <div className="hero-editor-header">
+              <div className="hero-editor-header-title">
+                <div className="hero-editor-header-icon">
+                  {editingBanner ? "✏️" : "✨"}
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 800, color: "var(--text-main)" }}>
+                    {editingBanner ? "Edit Hero Banner" : "Create Hero Banner"}
+                  </h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "var(--text-muted)" }}>
+                    Configure typography, badges, CTA routing and panoramic background photography.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="hero-editor-close-btn"
+                onClick={() => setShowModal(false)}
+                title="Close editor (Esc)"
+              >
+                ✕
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="admin-modal-form">
-              {/* Live Preview Box inside Modal */}
-              <div style={{ marginBottom: "20px" }}>
-                <label className="form-field-label">Live Preview (Desktop Home Screen Preview):</label>
-                <div
-                  style={{
-                    position: "relative",
-                    borderRadius: "14px",
-                    overflow: "hidden",
-                    height: "180px",
-                    background: "#0F172A",
-                    boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-                    border: "1px solid var(--border-color)"
-                  }}
-                >
-                  <img
-                    src={image || "/images/homepage_1.jpg"}
-                    alt="Preview"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    onError={(e) => { e.target.src = "/images/homepage_1.jpg"; }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: "linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.7) 45%, transparent 100%)"
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "16px",
-                      left: "20px",
-                      maxWidth: "340px",
-                      zIndex: 2
-                    }}
-                  >
-                    <div style={{ fontSize: "10px", fontWeight: 800, color: "#EA580C", marginBottom: "4px" }}>
-                      {badge} • <span style={{ color: "#475569" }}>{city}</span>
-                    </div>
-                    <div style={{ fontSize: "16px", fontWeight: 800, color: "#0F172A", lineHeight: 1.15, marginBottom: "4px" }}>
-                      {title} <span style={{ color: "#FF4D2D" }}>{highlight}</span>
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#334155", lineHeight: 1.3 }}>
-                      {subtitle.slice(0, 90)}...
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Image Selection Section */}
-              <div style={{ marginBottom: "18px" }}>
-                <label className="form-field-label">Hero Background Image *</label>
-                
-                {/* Method 1: File Upload */}
-                <div
-                  style={{
-                    padding: "12px",
-                    background: "var(--surface-input)",
-                    borderRadius: "10px",
-                    border: "1.5px dashed var(--border-color)",
-                    marginBottom: "10px"
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontSize: "20px" }}>📁</span>
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ fontSize: "13px", display: "block", color: "var(--text-main)" }}>
-                        Upload Image from Your Computer
-                      </strong>
-                      <span style={{ fontSize: "11.5px", color: "var(--text-muted)" }}>
-                        Choose high-res landscape (1920×1080 or 1400×700) JPG, PNG or WebP
+            {/* Modal Body: Split 2-Column Grid */}
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+              <div className="hero-editor-body">
+                {/* Left Column: Live Preview & Image Selector */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                      <label style={{ fontSize: "12.5px", fontWeight: 800, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>👁️</span> Real-time Simulation
+                      </label>
+                      <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", background: "var(--surface-input)", padding: "2px 8px", borderRadius: "6px" }}>
+                        Desktop 16:9
                       </span>
                     </div>
-                    <label
-                      className="btn-primary-glow"
-                      style={{ padding: "6px 14px", fontSize: "12px", cursor: "pointer", margin: 0 }}
-                    >
-                      Browse File
-                      <input
-                        type="file"
-                        accept="image/*"
-                        style={{ display: "none" }}
-                        onChange={handleFileUpload}
-                      />
-                    </label>
-                  </div>
-                  {fileError && (
-                    <div style={{ color: "#EF4444", fontSize: "12px", marginTop: "6px" }}>⚠️ {fileError}</div>
-                  )}
-                </div>
 
-                {/* Method 2: Image URL */}
-                <div style={{ marginBottom: "10px" }}>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Or enter Image URL (e.g. /images/homepage_1.jpg or https://...)"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                  />
-                </div>
-
-                {/* Method 3: Presets Gallery */}
-                <div>
-                  <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase" }}>
-                    Or Pick from High-Resolution Presets:
-                  </span>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-                      gap: "8px",
-                      marginTop: "6px"
-                    }}
-                  >
-                    {HERO_IMAGE_PRESETS.map((preset, idx) => (
-                      <button
-                        type="button"
-                        key={idx}
-                        onClick={() => setImage(preset.url)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          padding: "6px 10px",
-                          borderRadius: "8px",
-                          background: image === preset.url ? "rgba(255, 77, 45, 0.15)" : "var(--surface-input)",
-                          border: image === preset.url ? "1.5px solid #FF4D2D" : "1px solid var(--border-color)",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          transition: "all 0.2s ease"
+                    {/* Preview Stage */}
+                    <div className="hero-preview-stage">
+                      <img
+                        src={image || "/images/homepage_5_wide.jpg"}
+                        alt="Preview"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/images/homepage_5_wide.jpg";
                         }}
-                      >
-                        <img
-                          src={preset.url}
-                          alt={preset.name}
-                          style={{ width: "32px", height: "32px", borderRadius: "6px", objectFit: "cover" }}
-                        />
-                        <div style={{ overflow: "hidden" }}>
-                          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-main)", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
-                            {preset.name}
+                      />
+                      <div className="hero-preview-scrim" />
+                      <div className="hero-preview-content">
+                        <div className="hero-preview-badge-row">
+                          <span className="hero-preview-badge-pill">
+                            {badge || "⚡ #1 ON-DEMAND SERVICE"}
+                          </span>
+                          <span className="hero-preview-city-tag">
+                            {city || "📍 INDORE & REGION"}
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="hero-preview-title">
+                            {title || "Everything Your Home Needs."}{" "}
+                            <span style={{ color: "#FF4D2D" }}>{highlight || "Delivered In 15 Mins."}</span>
                           </div>
-                          <div style={{ fontSize: "9.5px", color: "var(--text-dim)" }}>
-                            {preset.badge}
+                          <div className="hero-preview-subtitle">
+                            {subtitle || "Book verified professionals with guaranteed upfront rates and 30-day warranty."}
+                          </div>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}>
+                            <div className="hero-preview-cta-btn">
+                              <span>{ctaText || "Book Service Now ➔"}</span>
+                            </div>
+                            {tagsText && (
+                              <span style={{ fontSize: "9.5px", color: "#94A3B8", background: "rgba(255,255,255,0.1)", padding: "3px 8px", borderRadius: "999px" }}>
+                                {tagsText.split(",")[0]?.trim()}
+                              </span>
+                            )}
                           </div>
                         </div>
-                      </button>
-                    ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Text Fields */}
-              <div className="form-grid-2">
-                <div className="form-group">
-                  <label className="form-field-label">Headline Title *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Everything Your Home Needs."
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-field-label">Highlight Phrase (Orange / Blue)</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Delivered In 15 Mins."
-                    value={highlight}
-                    onChange={(e) => setHighlight(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-field-label">Subtitle Description</label>
-                <textarea
-                  className="form-input"
-                  rows="2"
-                  placeholder="e.g. Book certified electricians, plumbers, AC technicians & cleaning experts..."
-                  value={subtitle}
-                  onChange={(e) => setSubtitle(e.target.value)}
-                />
-              </div>
-
-              <div className="form-grid-2">
-                <div className="form-group">
-                  <label className="form-field-label">Live Status Pill Badge</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. #1 ON-DEMAND HOME SERVICE PLATFORM"
-                    value={badge}
-                    onChange={(e) => setBadge(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-field-label">City / Region Tag</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. 📍 INDORE & REGION"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="form-grid-2">
-                <div className="form-group">
-                  <label className="form-field-label">CTA Button Text</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Book Service Now ➔"
-                    value={ctaText}
-                    onChange={(e) => setCtaText(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-field-label">CTA Button Link</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. /services or /category/cleaning"
-                    value={ctaLink}
-                    onChange={(e) => setCtaLink(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-field-label">Quick Search Chips (comma separated)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. Electrician, AC Repair, Cleaning, Plumber, Salon at Home"
-                  value={tagsText}
-                  onChange={(e) => setTagsText(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group checkbox-group" style={{ marginTop: "10px" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={active}
-                    onChange={(e) => setActive(e.target.checked)}
-                    style={{ width: "18px", height: "18px", accentColor: "#FF4D2D" }}
-                  />
+                  {/* Image Source Selector */}
                   <div>
-                    <strong style={{ fontSize: "14px", color: "var(--text-main)" }}>
-                      Make this Hero Banner Active
-                    </strong>
-                    <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)" }}>
-                      Active banners will be available and displayed on the website homepage.
-                    </p>
+                    <label style={{ fontSize: "12.5px", fontWeight: 800, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span>🖼️</span> Hero Background Photo
+                    </label>
+
+                    <div className="hero-img-tabs">
+                      <button
+                        type="button"
+                        className={`hero-img-tab-btn ${imgSourceTab === "presets" ? "active" : ""}`}
+                        onClick={() => setImgSourceTab("presets")}
+                      >
+                        <span>🌟</span> Presets ({HERO_IMAGE_PRESETS.length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`hero-img-tab-btn ${imgSourceTab === "upload" ? "active" : ""}`}
+                        onClick={() => setImgSourceTab("upload")}
+                      >
+                        <span>📁</span> Upload File
+                      </button>
+                      <button
+                        type="button"
+                        className={`hero-img-tab-btn ${imgSourceTab === "url" ? "active" : ""}`}
+                        onClick={() => setImgSourceTab("url")}
+                      >
+                        <span>🔗</span> Direct URL
+                      </button>
+                    </div>
+
+                    {/* Tab 1: Presets */}
+                    {imgSourceTab === "presets" && (
+                      <div className="hero-preset-grid">
+                        {HERO_IMAGE_PRESETS.map((preset, idx) => {
+                          const isSelected = image === preset.url;
+                          return (
+                            <div
+                              key={idx}
+                              className={`hero-preset-card ${isSelected ? "selected" : ""}`}
+                              onClick={() => {
+                                setImage(preset.url);
+                                setUploadedFileName("");
+                              }}
+                            >
+                              <img
+                                src={preset.url}
+                                alt={preset.name}
+                                className="hero-preset-thumb"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "/images/homepage_5_wide.jpg";
+                                }}
+                              />
+                              <div style={{ overflow: "hidden", minWidth: 0, flex: 1 }}>
+                                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-main)", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
+                                  {preset.name}
+                                </div>
+                                <div style={{ fontSize: "9.5px", color: "var(--text-dim)", marginTop: "2px" }}>
+                                  {preset.badge}
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <div className="hero-preset-check">✓</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Tab 2: Upload */}
+                    {imgSourceTab === "upload" && (
+                      <div>
+                        <label className="hero-upload-dropzone" style={{ cursor: "pointer" }}>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={handleFileUpload}
+                          />
+                          <span style={{ fontSize: "30px" }}>📁</span>
+                          <div>
+                            <strong style={{ fontSize: "13px", color: "var(--text-main)", display: "block" }}>
+                              {uploadedFileName ? `Selected: ${uploadedFileName}` : "Click to Browse or Drag Image Here"}
+                            </strong>
+                            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                              Recommended: 1920×1080 landscape, JPG, PNG or WebP (Max 8MB)
+                            </span>
+                          </div>
+                          <span className="btn-primary-glow" style={{ padding: "6px 16px", fontSize: "12px", marginTop: "4px" }}>
+                            {uploadedFileName ? "Replace Image" : "Select File From Computer"}
+                          </span>
+                        </label>
+                        {fileError && (
+                          <div style={{ color: "#EF4444", fontSize: "12px", marginTop: "6px" }}>⚠️ {fileError}</div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Tab 3: URL */}
+                    {imgSourceTab === "url" && (
+                      <div style={{ marginTop: "12px" }}>
+                        <div className="admin-form-group" style={{ margin: 0 }}>
+                          <label style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "4px" }}>
+                            Paste Public Image URL or Local Path:
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. /images/homepage_5_wide.jpg or https://images.unsplash.com/..."
+                            value={image.startsWith("data:") ? "" : image}
+                            onChange={(e) => {
+                              setImage(e.target.value);
+                              setUploadedFileName("");
+                            }}
+                          />
+                        </div>
+                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "6px" }}>
+                          💡 Tip: High-resolution landscape images (16:9 ratio) look crispest on widescreen desktop monitors.
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </label>
+                </div>
+
+                {/* Right Column: Copy, Badges, Routing & State */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  {/* Panel 1: Copywriting */}
+                  <div className="hero-form-panel">
+                    <div className="hero-form-panel-title">
+                      <span>✍️</span> Headline & Marketing Copy
+                    </div>
+
+                    <div className="admin-form-row-2">
+                      <div className="admin-form-group">
+                        <label>Headline Title *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Everything Your Home Needs."
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="admin-form-group">
+                        <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span>Highlight Accent Word</span>
+                          <span style={{ fontSize: "10px", color: "#FF4D2D", fontWeight: 700 }}>Orange Accent</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Delivered In 15 Mins."
+                          value={highlight}
+                          onChange={(e) => setHighlight(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="admin-form-group" style={{ margin: 0 }}>
+                      <label>Subtitle Description</label>
+                      <textarea
+                        rows="2"
+                        placeholder="e.g. Book certified electricians, plumbers, AC technicians & cleaning experts with live GPS tracking..."
+                        value={subtitle}
+                        onChange={(e) => setSubtitle(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Panel 2: Badges & Localization */}
+                  <div className="hero-form-panel">
+                    <div className="hero-form-panel-title">
+                      <span>🏷️</span> Pill Badge & Location Dispatch
+                    </div>
+
+                    <div className="admin-form-row-2">
+                      <div className="admin-form-group">
+                        <label>Top Pill Badge Text</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. ⚡ #1 ON-DEMAND HOME SERVICE"
+                          value={badge}
+                          onChange={(e) => setBadge(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="admin-form-group">
+                        <label>City / Regional Coverage Tag</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 📍 INDORE & SURROUNDING REGIONS"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Panel 3: Action & Search Chips */}
+                  <div className="hero-form-panel">
+                    <div className="hero-form-panel-title">
+                      <span>🚀</span> Call to Action & Fast Search
+                    </div>
+
+                    <div className="admin-form-row-2">
+                      <div className="admin-form-group">
+                        <label>CTA Button Label</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Book Service Now ➔"
+                          value={ctaText}
+                          onChange={(e) => setCtaText(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="admin-form-group">
+                        <label>CTA Route / Destination</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. /services or /category/cleaning"
+                          value={ctaLink}
+                          onChange={(e) => setCtaLink(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="admin-form-group" style={{ margin: 0 }}>
+                      <label>Quick Search Chips (comma separated)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Electrician, AC Repair, Cleaning, Plumber, Salon at Home"
+                        value={tagsText}
+                        onChange={(e) => setTagsText(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Panel 4: Active Switch */}
+                  <div
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "14px",
+                      background: active ? "rgba(22, 163, 74, 0.06)" : "var(--surface-card, #F8FAFC)",
+                      border: active ? "1.5px solid rgba(22, 163, 74, 0.35)" : "1px solid var(--border-color)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "12px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease"
+                    }}
+                    onClick={() => setActive(!active)}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "18px" }}>{active ? "🟢" : "⚪"}</span>
+                      <div>
+                        <strong style={{ fontSize: "13px", color: "var(--text-main)", display: "block" }}>
+                          {active ? "Active in Homepage Hero Carousel" : "Inactive / Draft (Hidden from Customers)"}
+                        </strong>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                          {active
+                            ? "This banner will actively rotate in the customer hero slider."
+                            : "This banner is saved in the directory but won't be shown to visitors."}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        width: "44px",
+                        height: "24px",
+                        borderRadius: "999px",
+                        background: active ? "#16A34A" : "var(--border-color, #CBD5E1)",
+                        position: "relative",
+                        transition: "background 0.2s ease",
+                        flexShrink: 0
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "50%",
+                          background: "#FFFFFF",
+                          position: "absolute",
+                          top: "3px",
+                          left: active ? "23px" : "3px",
+                          transition: "left 0.2s ease",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="modal-actions" style={{ marginTop: "24px" }}>
-                <button
-                  type="button"
-                  className="action-pill-btn secondary"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary-glow">
-                  {editingBanner ? "💾 Save Changes" : "➕ Create Hero Banner"}
-                </button>
+              {/* Modal Fixed Footer */}
+              <div className="hero-editor-footer">
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16A34A", display: "inline-block" }} />
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                    Instant Live Sync with Customer Homepage
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className="btn-modal-cancel"
+                    onClick={() => setShowModal(false)}
+                    style={{ padding: "9px 18px" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary-glow"
+                    style={{ padding: "9px 24px", fontSize: "13px", fontWeight: 800 }}
+                  >
+                    {editingBanner ? "💾 Save & Apply Banner" : "➕ Create & Publish Banner"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
