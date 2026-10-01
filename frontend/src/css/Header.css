@@ -27,57 +27,57 @@
   pointer-events: auto;
 }
 
-/* Non-home pages have standard clean background */
+/* Non-home pages have standard clean transparent background */
 .header-floating-wrapper:not(.home-header) {
-  background: rgba(248, 249, 251, 0.85);
+  background: rgba(248, 249, 251, 0.4);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(226, 228, 233, 0.6);
+  border-bottom: 1px solid rgba(226, 228, 233, 0.4);
 }
 
 body.dark .header-floating-wrapper:not(.home-header) {
-  background: rgba(11, 15, 25, 0.85);
-  border-bottom-color: rgba(31, 41, 55, 0.6);
+  background: rgba(11, 15, 25, 0.4);
+  border-bottom-color: rgba(31, 41, 55, 0.4);
 }
 
 .header-floating-wrapper.scrolled {
   padding: 6px 20px;
 }
 
-/* The Main Floating Pill Container */
+/* The Main Floating Pill Container - Translucent Glass Design */
 .header-pill-bar {
   max-width: 1240px;
   margin: 0 auto;
   height: 60px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid #E2E4E9;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px 0 20px;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
   transition: all 0.25s ease;
   position: relative;
 }
 
 body.dark .header-pill-bar {
-  background: rgba(17, 24, 39, 0.95);
-  border-color: #1F2937;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  background: rgba(15, 23, 42, 0.35);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .header-floating-wrapper.scrolled .header-pill-bar {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: #CBD5E1;
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.09);
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
 }
 
 body.dark .header-floating-wrapper.scrolled .header-pill-bar {
-  background: rgba(15, 20, 31, 0.98);
-  border-color: #374151;
+  background: rgba(15, 20, 31, 0.55);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* ==========================================================================
@@ -155,7 +155,7 @@ body.dark .nexora-sub-tag {
   font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #525866;
+  color: #1E293B;
   text-decoration: none;
   white-space: nowrap;
   display: inline-flex;
@@ -164,22 +164,27 @@ body.dark .nexora-sub-tag {
 }
 
 .header-nav-desktop .nav-link:hover {
-  color: #0B0F19;
-  background: #F1F5F9;
+  color: #0F172A;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+body.dark .header-nav-desktop .nav-link {
+  color: #E2E8F0;
 }
 
 body.dark .header-nav-desktop .nav-link:hover {
   color: #FFFFFF;
-  background: #1E293B;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .header-nav-desktop .nav-link.active {
-  color: #0B0F19;
-  background: #E2E8F0;
+  color: #0F172A;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 body.dark .header-nav-desktop .nav-link.active {
-  background: #374151;
+  background: rgba(255, 255, 255, 0.18);
   color: #FFFFFF;
 }
 
@@ -199,13 +204,15 @@ body.dark .header-nav-desktop .nav-link.active {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   padding: 6px 12px;
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 600;
-  color: #334155;
+  color: #1E293B;
   cursor: pointer;
   max-width: 170px;
   white-space: nowrap;
@@ -215,14 +222,14 @@ body.dark .header-nav-desktop .nav-link.active {
 }
 
 body.dark .header-location-pill {
-  background: #1E293B;
-  border-color: #334155;
-  color: #CBD5E1;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #E2E8F0;
 }
 
 .header-location-pill:hover {
-  background: #FFF1EE;
-  border-color: rgba(255, 77, 45, 0.3);
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 77, 45, 0.4);
   color: #FF4D2D;
 }
 
@@ -242,11 +249,13 @@ body.dark .header-location-pill {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   padding: 6px 14px;
   border-radius: 9999px;
-  color: #64748B;
+  color: #334155;
   cursor: pointer;
   outline: none;
   transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -255,13 +264,13 @@ body.dark .header-location-pill {
 }
 
 body.dark .header-quick-search-btn {
-  background: #1E293B;
-  border-color: #334155;
-  color: #94A3B8;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #CBD5E1;
 }
 
 .header-quick-search-btn:hover {
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, 0.5);
   border-color: #6366F1;
   color: #4F46E5;
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.15);
@@ -269,7 +278,7 @@ body.dark .header-quick-search-btn {
 }
 
 body.dark .header-quick-search-btn:hover {
-  background: #0F172A;
+  background: rgba(255, 255, 255, 0.16);
   border-color: #818CF8;
   color: #A5B4FC;
 }
@@ -288,9 +297,9 @@ body.dark .header-quick-search-btn:hover {
 .search-btn-kbd {
   font-size: 10px;
   font-weight: 800;
-  background: #E2E8F0;
+  background: rgba(255, 255, 255, 0.5);
   color: #475569;
-  border: 1px solid #CBD5E1;
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 5px;
   padding: 1px 5px;
   font-family: inherit;
@@ -298,8 +307,8 @@ body.dark .header-quick-search-btn:hover {
 }
 
 body.dark .search-btn-kbd {
-  background: #334155;
-  border-color: #475569;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
   color: #E2E8F0;
 }
 
@@ -326,8 +335,10 @@ body.dark .search-btn-kbd {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   color: #334155;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -335,13 +346,13 @@ body.dark .search-btn-kbd {
 }
 
 body.dark .header-cart-btn {
-  background: #1E293B;
-  border-color: #334155;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
   color: #CBD5E1;
 }
 
 .header-cart-btn:hover {
-  background: #EFF6FF;
+  background: rgba(255, 255, 255, 0.5);
   border-color: #3B82F6;
   color: #2563EB;
   transform: translateY(-1px);
@@ -369,8 +380,10 @@ body.dark .header-cart-btn {
   display: flex;
   align-items: center;
   gap: 7px;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 9999px;
@@ -378,24 +391,67 @@ body.dark .header-cart-btn {
 }
 
 .nexora-account-btn:hover {
-  background: rgba(15, 23, 42, 0.05);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+body.dark .nexora-account-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 body.dark .nexora-account-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .nexora-account-btn.logged-in {
   padding: 4px 10px 4px 6px;
-  background: rgba(255, 77, 45, 0.06);
-  border: 1px solid rgba(255, 77, 45, 0.2);
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+body.dark .nexora-account-btn.logged-in {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .nexora-account-btn.logged-in:hover,
 .nexora-account-btn.logged-in.active {
-  background: rgba(255, 77, 45, 0.12);
-  border-color: rgba(255, 77, 45, 0.35);
-  box-shadow: 0 2px 8px rgba(255, 77, 45, 0.15);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+body.dark .nexora-account-btn.logged-in:hover,
+body.dark .nexora-account-btn.logged-in.active {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+body.dark .theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #F8FAFC;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.06);
 }
 
 body.dark .nexora-account-btn.logged-in {
