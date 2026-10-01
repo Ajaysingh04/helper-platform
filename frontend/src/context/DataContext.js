@@ -580,17 +580,21 @@ export const DataProvider = ({ children }) => {
       const saved = localStorage.getItem("helper_hero_banners_v9");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 3) {
-          // Migrate out any stale deleted image references from prior sessions
-          const hasBrokenOldPaths = parsed.some(b => 
-            !b.image ||
-            b.image.includes("homepage_") || 
-            b.image.includes("pinterest_clean") || 
-            b.image.includes("helper_full_banner")
-          );
-          if (!hasBrokenOldPaths) {
-            return parsed.map(b => ({ ...b, active: true }));
-          }
+        if (Array.isArray(parsed) && parsed.length >= 1) {
+          // Keep user modifications, only replace broken legacy paths with DEFAULT_HERO_IMAGE
+          const sanitized = parsed.map(b => {
+            const isBroken = !b.image ||
+              b.image.includes("homepage_") ||
+              b.image.includes("pinterest_clean") ||
+              b.image.includes("helper_full_banner");
+            return {
+              ...b,
+              image: isBroken ? DEFAULT_HERO_IMAGE : b.image,
+              mobileImage: isBroken ? DEFAULT_HERO_IMAGE : (b.mobileImage || b.image),
+              active: b.active !== false
+            };
+          });
+          return sanitized;
         }
       }
     } catch (e) {}
@@ -721,6 +725,24 @@ export const DataProvider = ({ children }) => {
           setSettings(stgRes.value.data);
           if (stgRes.value.data.heroSettings) {
             setHeroSettings(prev => ({ ...prev, ...stgRes.value.data.heroSettings }));
+          }
+          if (Array.isArray(stgRes.value.data.heroBanners) && stgRes.value.data.heroBanners.length > 0) {
+            const cleanBanners = stgRes.value.data.heroBanners.map(b => {
+              const isBroken = !b.image ||
+                b.image.includes("homepage_") ||
+                b.image.includes("pinterest_clean") ||
+                b.image.includes("helper_full_banner");
+              return {
+                ...b,
+                image: isBroken ? DEFAULT_HERO_IMAGE : b.image,
+                mobileImage: isBroken ? DEFAULT_HERO_IMAGE : (b.mobileImage || b.image),
+                active: b.active !== false
+              };
+            });
+            setHeroBanners(cleanBanners);
+            try {
+              localStorage.setItem("helper_hero_banners_v9", JSON.stringify(cleanBanners));
+            } catch (e) {}
           }
         }
       } else {
@@ -1141,6 +1163,18 @@ export const DataProvider = ({ children }) => {
   const toggleOfferActive = toggleSlideActive;
   const deleteOffer = deleteSlide;
 
+  const syncHeroBannersToBackend = async (banners) => {
+    try {
+      await fetch(`${API_BASE}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ heroBanners: banners })
+      });
+    } catch (err) {
+      console.warn("Could not sync heroBanners to backend API:", err);
+    }
+  };
+
   // Hero Banners Management (Admin Panel & Dynamic Home Hero)
   const addHeroBanner = (bannerData) => {
     const newBanner = {
@@ -1148,30 +1182,51 @@ export const DataProvider = ({ children }) => {
       title: bannerData.title || "Everything Your Home Needs.",
       highlight: bannerData.highlight || "Delivered In 15 Mins.",
       subtitle: bannerData.subtitle || "Book certified electricians, plumbers & cleaning experts.",
-      badge: bannerData.badge || "#1 ON-DEMAND HOME SERVICE PLATFORM",
+      badge: bannerData.badge || "⚡ #1 ON-DEMAND HOME SERVICE PLATFORM",
       city: bannerData.city || "📍 INDORE & REGION",
       image: bannerData.image || DEFAULT_HERO_IMAGE,
       mobileImage: bannerData.mobileImage || bannerData.image || DEFAULT_HERO_IMAGE,
       active: bannerData.active !== undefined ? bannerData.active : true,
       ctaText: bannerData.ctaText || "Book Service Now ➔",
       ctaLink: bannerData.ctaLink || "/services",
-      tags: Array.isArray(bannerData.tags) ? bannerData.tags : ["Electrician", "AC Repair", "Cleaning", "Plumber"],
+      tags: Array.isArray(bannerData.tags) && bannerData.tags.length > 0 ? bannerData.tags : ["Electrician", "AC Repair", "Cleaning", "Plumber"],
       createdAt: new Date().toISOString()
     };
-    setHeroBanners(prev => [newBanner, ...prev]);
+    setHeroBanners(prev => {
+      const updated = [newBanner, ...prev];
+      try {
+        localStorage.setItem("helper_hero_banners_v9", JSON.stringify(updated));
+      } catch (e) {}
+      syncHeroBannersToBackend(updated);
+      return updated;
+    });
   };
 
   const updateHeroBanner = (id, updatedFields) => {
-    setHeroBanners(prev => prev.map(b => (b.id === id || b._id === id) ? { ...b, ...updatedFields } : b));
+    setHeroBanners(prev => {
+      const updated = prev.map(b => (b.id === id || b._id === id) ? { ...b, ...updatedFields } : b);
+      try {
+        localStorage.setItem("helper_hero_banners_v9", JSON.stringify(updated));
+      } catch (e) {}
+      syncHeroBannersToBackend(updated);
+      return updated;
+    });
   };
 
   const toggleHeroBannerActive = (id) => {
-    setHeroBanners(prev => prev.map(b => {
-      if (b.id === id || b._id === id) {
-        return { ...b, active: !b.active };
-      }
-      return b;
-    }));
+    setHeroBanners(prev => {
+      const updated = prev.map(b => {
+        if (b.id === id || b._id === id) {
+          return { ...b, active: !b.active };
+        }
+        return b;
+      });
+      try {
+        localStorage.setItem("helper_hero_banners_v9", JSON.stringify(updated));
+      } catch (e) {}
+      syncHeroBannersToBackend(updated);
+      return updated;
+    });
   };
 
   const setActiveHeroBanner = (id) => {
@@ -1179,7 +1234,12 @@ export const DataProvider = ({ children }) => {
       const target = prev.find(b => b.id === id || b._id === id);
       if (!target) return prev;
       const others = prev.filter(b => b.id !== target.id && b._id !== target._id);
-      return [{ ...target, active: true }, ...others.map(b => ({ ...b, active: true }))];
+      const updated = [{ ...target, active: true }, ...others.map(b => ({ ...b, active: true }))];
+      try {
+        localStorage.setItem("helper_hero_banners_v9", JSON.stringify(updated));
+      } catch (e) {}
+      syncHeroBannersToBackend(updated);
+      return updated;
     });
   };
 
@@ -1194,6 +1254,10 @@ export const DataProvider = ({ children }) => {
       if (!filtered.some(b => b.active) && filtered.length > 0) {
         filtered[0].active = true;
       }
+      try {
+        localStorage.setItem("helper_hero_banners_v9", JSON.stringify(filtered));
+      } catch (e) {}
+      syncHeroBannersToBackend(filtered);
       return filtered;
     });
   };

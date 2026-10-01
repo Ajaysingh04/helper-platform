@@ -107,8 +107,8 @@ function AdminHeroBanners() {
       return;
     }
 
-    if (file.size > 8 * 1024 * 1024) {
-      setFileError("Image size should be less than 8MB.");
+    if (file.size > 15 * 1024 * 1024) {
+      setFileError("Image size should be less than 15MB.");
       return;
     }
 
@@ -116,11 +116,41 @@ function AdminHeroBanners() {
     setUploadedFileName(file.name);
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (event.target?.result) {
-        setImage(event.target.result);
+      const rawResult = event.target?.result;
+      if (!rawResult) return;
+
+      const img = new Image();
+      img.onload = () => {
+        // High-definition compression to keep within localStorage limits and load fast on Vercel
+        const maxWidth = 1920;
+        const maxHeight = 1080;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const optimizedUrl = canvas.toDataURL("image/jpeg", 0.85);
+        setImage(optimizedUrl);
         setImgSourceTab("upload");
-        showToast(`Uploaded "${file.name}" selected!`);
-      }
+        setImgLoadStatus("loaded");
+        showToast(`Uploaded & optimized "${file.name}"!`);
+      };
+      img.onerror = () => {
+        setImage(rawResult);
+        setImgSourceTab("upload");
+        setImgLoadStatus("loaded");
+      };
+      img.src = rawResult;
     };
     reader.readAsDataURL(file);
   };

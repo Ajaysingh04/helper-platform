@@ -18,6 +18,10 @@ const SettingSchema = new mongoose.Schema(
         showIndicators: false,
         imagePosition: "center top"
       }
+    },
+    heroBanners: {
+      type: mongoose.Schema.Types.Mixed,
+      default: []
     }
   },
   { timestamps: true, strict: false }
