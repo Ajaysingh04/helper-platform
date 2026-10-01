@@ -1009,10 +1009,14 @@ function Home() {
                 <div className="experts-3d-card-frame">
                   <div className="experts-image-wrapper">
                     <img 
-                      src="/images/homepage_5.jpg" 
+                      src="/images/verified_expert_pro.jpg" 
                       alt="Helper Verified Service Professionals" 
                       className="experts-hero-photo"
                       loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/images/homepage_5.jpg";
+                      }}
                     />
 
                     {/* Floating Trust Badges */}
