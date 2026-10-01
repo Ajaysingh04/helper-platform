@@ -817,7 +817,7 @@ function Home() {
           </div>
 
           {/* Search & Category Filter Pills */}
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px", marginTop: "20px", marginBottom: "18px" }}>
+          <div className="pop-cat-filters-bar">
             <div className="pop-cat-tabs-row" style={{ margin: 0, paddingBottom: 0 }}>
               {[
                 { label: "🌟 All Services", val: "All" },

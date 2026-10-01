@@ -971,11 +971,57 @@ body.dark .hero-search-input {
 
 @media (max-width: 768px) {
   .helper-hero-slider-wrap {
-    height: calc(100vh - 65px);
-    min-height: 520px;
+    height: clamp(380px, 62vh, 520px);
+    min-height: 380px;
+    max-height: 540px;
   }
   .helper-hero-slider {
     min-height: 100%;
+  }
+  .hero-slide-img {
+    object-position: center 20% !important;
+  }
+  .hero-centered-search-container {
+    bottom: 16px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .hero-search-centered {
+    padding: 5px 6px 5px 14px;
+    border-radius: 999px;
+  }
+  .hero-search-input {
+    font-size: 12.5px;
+  }
+  .hero-search-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+  .hero-tags-centered {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .quick-tags-label {
+    display: none;
+  }
+  .quick-tags-list {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    gap: 6px;
+    padding: 2px 2px 6px;
+    scrollbar-width: none;
+  }
+  .quick-tags-list::-webkit-scrollbar {
+    display: none;
+  }
+  .hero-tags-centered .quick-service-chip {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 11px;
+    padding: 4px 10px;
   }
   .hero-panoramic-grid {
     padding: 24px 18px 80px;
@@ -1010,6 +1056,47 @@ body.dark .hero-search-input {
     min-width: 20px;
     height: 20px;
     font-size: 9.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .helper-hero-slider-wrap {
+    height: clamp(320px, 55vh, 420px);
+    min-height: 320px;
+    max-height: 440px;
+  }
+  .hero-centered-search-container {
+    bottom: 12px;
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .hero-search-centered {
+    padding: 4px 4px 4px 10px;
+  }
+  .hero-search-location-chip {
+    font-size: 11px;
+    padding-right: 6px;
+  }
+  .hero-search-input {
+    font-size: 11px;
+  }
+  .hero-search-btn {
+    padding: 7px 12px;
+    font-size: 11px;
+  }
+  .pop-cat-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .nexora-content-section {
+    padding: 24px 12px;
+  }
+  .nexora-section-title {
+    font-size: 20px;
+  }
+  .sheet-edge-label {
+    font-size: 12px;
+    text-align: center;
   }
 }
 
@@ -4553,7 +4640,25 @@ body.dark .pop-cat-search-box input {
   font-size: 14px;
 }
 
-/* Filter Tab Pills */
+/* Filter Bar & Tab Pills */
+.pop-cat-filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 768px) {
+  .pop-cat-filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+}
+
 .pop-cat-tabs-row {
   display: flex;
   align-items: center;
