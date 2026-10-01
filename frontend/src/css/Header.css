@@ -44,40 +44,40 @@ body.dark .header-floating-wrapper:not(.home-header) {
   padding: 6px 20px;
 }
 
-/* The Main Floating Pill Container - Translucent Glass Design */
+/* The Main Header Container - Open & Sleek (No Capsule Pill "Patti") */
 .header-pill-bar {
-  max-width: 1240px;
+  max-width: 1280px;
   margin: 0 auto;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1.5px solid rgba(255, 255, 255, 0.35);
-  border-radius: 9999px;
+  height: 64px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px 0 20px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  padding: 0 16px;
   transition: all 0.25s ease;
   position: relative;
 }
 
 body.dark .header-pill-bar {
-  background: rgba(15, 23, 42, 0.35);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .header-floating-wrapper.scrolled .header-pill-bar {
-  background: rgba(255, 255, 255, 0.28);
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 body.dark .header-floating-wrapper.scrolled .header-pill-bar {
-  background: rgba(15, 20, 31, 0.55);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: transparent !important;
+  border: none !important;
 }
 
 /* ==========================================================================
@@ -139,53 +139,79 @@ body.dark .nexora-sub-tag {
 }
 
 /* ==========================================================================
-   2. DESKTOP CENTER NAVIGATION
+   2. DESKTOP CENTER NAVIGATION - PURE TEXT (NO CAPSULE PILL "PATTI")
    ========================================================================== */
 
 .header-nav-desktop {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 28px;
   flex-shrink: 0;
 }
 
 .header-nav-desktop .nav-link {
-  padding: 7px 14px;
-  border-radius: 9999px;
-  font-size: 12.5px;
+  position: relative;
+  padding: 8px 0;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   color: #1E293B;
   text-decoration: none;
+  text-transform: uppercase;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  transition: all 0.2s ease;
+  transition: color 0.22s ease;
+}
+
+/* Subtle, sleek active/hover bottom indicator line */
+.header-nav-desktop .nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  border-radius: 2px;
+  background: #FF4D2D;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .header-nav-desktop .nav-link:hover {
-  color: #0F172A;
-  background: rgba(255, 255, 255, 0.35);
+  color: #FF4D2D;
+  background: transparent !important;
+}
+
+.header-nav-desktop .nav-link:hover::after {
+  width: 100%;
+}
+
+.header-nav-desktop .nav-link.active {
+  color: #FF4D2D;
+  background: transparent !important;
+  font-weight: 800;
+}
+
+.header-nav-desktop .nav-link.active::after {
+  width: 100%;
 }
 
 body.dark .header-nav-desktop .nav-link {
   color: #E2E8F0;
 }
 
-body.dark .header-nav-desktop .nav-link:hover {
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.header-nav-desktop .nav-link.active {
-  color: #0F172A;
-  background: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
+body.dark .header-nav-desktop .nav-link:hover,
 body.dark .header-nav-desktop .nav-link.active {
-  background: rgba(255, 255, 255, 0.18);
-  color: #FFFFFF;
+  color: #FF785E;
+}
+
+body.dark .header-nav-desktop .nav-link::after {
+  background: #FF785E;
 }
 
 /* ==========================================================================
@@ -199,17 +225,17 @@ body.dark .header-nav-desktop .nav-link.active {
   flex-shrink: 0;
 }
 
-/* Location Selector Pill (Desktop) */
+/* Location Selector (Desktop) */
 .header-location-pill {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   padding: 6px 12px;
-  border-radius: 9999px;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
   color: #1E293B;
@@ -222,13 +248,13 @@ body.dark .header-nav-desktop .nav-link.active {
 }
 
 body.dark .header-location-pill {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
   color: #E2E8F0;
 }
 
 .header-location-pill:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.7);
   border-color: rgba(255, 77, 45, 0.4);
   color: #FF4D2D;
 }
@@ -249,23 +275,23 @@ body.dark .header-location-pill {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  padding: 6px 14px;
-  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 6px 12px;
+  border-radius: 8px;
   color: #334155;
   cursor: pointer;
   outline: none;
-  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.22s ease;
   user-select: none;
   white-space: nowrap;
 }
 
 body.dark .header-quick-search-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
   color: #CBD5E1;
 }
 

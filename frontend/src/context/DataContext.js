@@ -11,42 +11,42 @@ const initialCategories = popularCategories;
 
 const initialServices = [
   // Repairs
-  { id: 1, name: "Electrician", icon: "💡", desc: "Short circuits, wiring, switchboards, inverter & fan repairs.", price: "₹249", tag: "Repairs", popular: true, bookings: "1.2k", rating: 4.9 },
-  { id: 2, name: "Plumber", icon: "🚰", desc: "Leak repair, tap replacement, drainage clogs & water heaters.", price: "₹199", tag: "Repairs", popular: true, bookings: "980+", rating: 4.8 },
-  { id: 8, name: "Carpenter", icon: "🪚", desc: "Furniture crafting, repair, lock assembly & custom woodwork.", price: "₹299", tag: "Repairs", popular: true, bookings: "1.1k", rating: 4.8 },
-  { id: 12, name: "Door Locks & Hardware", icon: "🔐", desc: "Smart locks installation, broken cylinder replacement & safety latch fix.", price: "₹249", tag: "Repairs", popular: false, bookings: "410+", rating: 4.7 },
+  { id: 1, name: "Electrician", icon: "💡", desc: "Short circuits, wiring, switchboards, inverter & fan repairs.", price: "₹249", tag: "Repairs", popular: true, bookings: "1.2k", rating: 4.9, image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=700&q=80" },
+  { id: 2, name: "Plumber", icon: "🚰", desc: "Leak repair, tap replacement, drainage clogs & water heaters.", price: "₹199", tag: "Repairs", popular: true, bookings: "980+", rating: 4.8, image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=700&q=80" },
+  { id: 8, name: "Carpenter", icon: "🪚", desc: "Furniture crafting, repair, lock assembly & custom woodwork.", price: "₹299", tag: "Repairs", popular: true, bookings: "1.1k", rating: 4.8, image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=700&q=80" },
+  { id: 12, name: "Door Locks & Hardware", icon: "🔐", desc: "Smart locks installation, broken cylinder replacement & safety latch fix.", price: "₹249", tag: "Repairs", popular: false, bookings: "410+", rating: 4.7, image: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=700&q=80" },
 
   // Cleaning
-  { id: 3, name: "Home Cleaner", icon: "🧹", desc: "Full house deep cleaning, balcony pressure wash & sanitization.", price: "₹499", tag: "Cleaning", popular: true, bookings: "2.5k", rating: 4.9 },
-  { id: 13, name: "Sofa & Carpet Sanitization", icon: "🛋️", desc: "Anti-allergen high extraction steam wash, removes deep stains & bad odors.", price: "₹599", tag: "Cleaning", popular: true, bookings: "890+", rating: 4.8 },
-  { id: 14, name: "Pest & Termite Control", icon: "🐜", desc: "100% herbal eco-friendly cockroach, ant & bed bug eradication.", price: "₹799", tag: "Cleaning", popular: false, bookings: "640+", rating: 4.9 },
-  { id: 15, name: "Bathroom & Tiles Descaling", icon: "🚿", desc: "Hard water scale removal, acid-free grout scrubbing & mirror polishing.", price: "₹399", tag: "Cleaning", popular: false, bookings: "520+", rating: 4.8 },
+  { id: 3, name: "Home Cleaner", icon: "🧹", desc: "Full house deep cleaning, balcony pressure wash & sanitization.", price: "₹499", tag: "Cleaning", popular: true, bookings: "2.5k", rating: 4.9, image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=700&q=80" },
+  { id: 13, name: "Sofa & Carpet Sanitization", icon: "🛋️", desc: "Anti-allergen high extraction steam wash, removes deep stains & bad odors.", price: "₹599", tag: "Cleaning", popular: true, bookings: "890+", rating: 4.8, image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=700&q=80" },
+  { id: 14, name: "Pest & Termite Control", icon: "🐜", desc: "100% herbal eco-friendly cockroach, ant & bed bug eradication.", price: "₹799", tag: "Cleaning", popular: false, bookings: "640+", rating: 4.9, image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=700&q=80" },
+  { id: 15, name: "Bathroom & Tiles Descaling", icon: "🚿", desc: "Hard water scale removal, acid-free grout scrubbing & mirror polishing.", price: "₹399", tag: "Cleaning", popular: false, bookings: "520+", rating: 4.8, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=700&q=80" },
 
   // Daily Help
-  { id: 5, name: "Home Keeper", icon: "🏠", desc: "Daily dusting, utensil assistance, organizing & housekeeping.", price: "₹349", tag: "Daily Help", popular: false, bookings: "620+", rating: 4.7 },
-  { id: 6, name: "Nanny / Babysitter", icon: "👶", desc: "Trained, attentive and background-screened infant & toddler care.", price: "₹450", tag: "Daily Help", popular: false, bookings: "430+", rating: 4.9 },
-  { id: 16, name: "Elderly Care Assistant", icon: "👵", desc: "Compassionate bedside assistance, vital monitoring & medicine support.", price: "₹499", tag: "Daily Help", popular: false, bookings: "380+", rating: 4.9 },
-  { id: 17, name: "Driver / Chauffeur", icon: "🚗", desc: "Professional city & highway private car driving on per-hour basis.", price: "₹399", tag: "Daily Help", popular: true, bookings: "950+", rating: 4.8 },
+  { id: 5, name: "Home Keeper", icon: "🏠", desc: "Daily dusting, utensil assistance, organizing & housekeeping.", price: "₹349", tag: "Daily Help", popular: false, bookings: "620+", rating: 4.7, image: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=700&q=80" },
+  { id: 6, name: "Nanny / Babysitter", icon: "👶", desc: "Trained, attentive and background-screened infant & toddler care.", price: "₹450", tag: "Daily Help", popular: false, bookings: "430+", rating: 4.9, image: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=700&q=80" },
+  { id: 16, name: "Elderly Care Assistant", icon: "👵", desc: "Compassionate bedside assistance, vital monitoring & medicine support.", price: "₹499", tag: "Daily Help", popular: false, bookings: "380+", rating: 4.9, image: "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=700&q=80" },
+  { id: 17, name: "Driver / Chauffeur", icon: "🚗", desc: "Professional city & highway private car driving on per-hour basis.", price: "₹399", tag: "Daily Help", popular: true, bookings: "950+", rating: 4.8, image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=700&q=80" },
 
   // Appliances
-  { id: 10, name: "Appliance Repair", icon: "🛠️", desc: "Washing machine, fridge, microwave & TV fixing.", price: "₹299", tag: "Appliances", popular: false, bookings: "1.5k", rating: 4.8 },
-  { id: 18, name: "AC Jet Service & Gas Refill", icon: "❄️", desc: "Foam jet filter wash, cooling coil flush & refrigerant top-up.", price: "₹499", tag: "Appliances", popular: true, bookings: "2.3k", rating: 4.9 },
-  { id: 19, name: "RO Water Purifier Service", icon: "💧", desc: "Filter membrane replacement, TDS adjustment & sterilizing flush.", price: "₹299", tag: "Appliances", popular: false, bookings: "720+", rating: 4.8 },
-  { id: 20, name: "Geyser & Heater Repair", icon: "♨️", desc: "Thermostat check, heating coil replacement & sediment descaling.", price: "₹349", tag: "Appliances", popular: false, bookings: "510+", rating: 4.7 },
+  { id: 10, name: "Appliance Repair", icon: "🛠️", desc: "Washing machine, fridge, microwave & TV fixing.", price: "₹299", tag: "Appliances", popular: false, bookings: "1.5k", rating: 4.8, image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=700&q=80" },
+  { id: 18, name: "AC Jet Service & Gas Refill", icon: "❄️", desc: "Foam jet filter wash, cooling coil flush & refrigerant top-up.", price: "₹499", tag: "Appliances", popular: true, bookings: "2.3k", rating: 4.9, image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=700&q=80" },
+  { id: 19, name: "RO Water Purifier Service", icon: "💧", desc: "Filter membrane replacement, TDS adjustment & sterilizing flush.", price: "₹299", tag: "Appliances", popular: false, bookings: "720+", rating: 4.8, image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=700&q=80" },
+  { id: 20, name: "Geyser & Heater Repair", icon: "♨️", desc: "Thermostat check, heating coil replacement & sediment descaling.", price: "₹349", tag: "Appliances", popular: false, bookings: "510+", rating: 4.7, image: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=700&q=80" },
 
   // Home Decor
-  { id: 7, name: "Wall Painter", icon: "🎨", desc: "Interior, exterior, texture designs & waterproof painting.", price: "₹599", tag: "Home Decor", popular: false, bookings: "890+", rating: 4.8 },
-  { id: 21, name: "False Ceiling & POP Works", icon: "🏛️", desc: "Modern gypsum board false ceiling, cove LED lighting & artistic plaster.", price: "₹899", tag: "Home Decor", popular: false, bookings: "340+", rating: 4.8 },
-  { id: 22, name: "Curtains & Wallpaper Fitting", icon: "🖼️", desc: "Motorized curtain channel installation & 3D designer wallpaper pasting.", price: "₹399", tag: "Home Decor", popular: false, bookings: "460+", rating: 4.7 },
+  { id: 7, name: "Wall Painter", icon: "🎨", desc: "Interior, exterior, texture designs & waterproof painting.", price: "₹599", tag: "Home Decor", popular: false, bookings: "890+", rating: 4.8, image: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=700&q=80" },
+  { id: 21, name: "False Ceiling & POP Works", icon: "🏛️", desc: "Modern gypsum board false ceiling, cove LED lighting & artistic plaster.", price: "₹899", tag: "Home Decor", popular: false, bookings: "340+", rating: 4.8, image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80" },
+  { id: 22, name: "Curtains & Wallpaper Fitting", icon: "🖼️", desc: "Motorized curtain channel installation & 3D designer wallpaper pasting.", price: "₹399", tag: "Home Decor", popular: false, bookings: "460+", rating: 4.7, image: "https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=700&q=80" },
 
   // Kitchen
-  { id: 4, name: "Home Chef", icon: "👨‍🍳", desc: "Daily nutritious meals, custom diet menus & party cuisine cooking.", price: "₹399", tag: "Kitchen", popular: false, bookings: "750+", rating: 4.8 },
-  { id: 23, name: "Kitchen Chimney & Hob Cleaning", icon: "🍳", desc: "Degreasing motor suction, baffle filter steam wash & gas stove tuning.", price: "₹449", tag: "Kitchen", popular: true, bookings: "820+", rating: 4.9 },
-  { id: 24, name: "Modular Kitchen Alignment", icon: "🍽️", desc: "Soft-close hydraulic hinge repair & tandem box drawer tracks.", price: "₹399", tag: "Kitchen", popular: false, bookings: "290+", rating: 4.8 },
-  { id: 25, name: "Party Catering & Bartender Host", icon: "🍹", desc: "Mocktail crafting, live barbecue plating & culinary party assistance.", price: "₹999", tag: "Kitchen", popular: false, bookings: "370+", rating: 4.9 },
+  { id: 4, name: "Home Chef", icon: "👨‍🍳", desc: "Daily nutritious meals, custom diet menus & party cuisine cooking.", price: "₹399", tag: "Kitchen", popular: false, bookings: "750+", rating: 4.8, image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=700&q=80" },
+  { id: 23, name: "Kitchen Chimney & Hob Cleaning", icon: "🍳", desc: "Degreasing motor suction, baffle filter steam wash & gas stove tuning.", price: "₹449", tag: "Kitchen", popular: true, bookings: "820+", rating: 4.9, image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=700&q=80" },
+  { id: 24, name: "Modular Kitchen Alignment", icon: "🍽️", desc: "Soft-close hydraulic hinge repair & tandem box drawer tracks.", price: "₹399", tag: "Kitchen", popular: false, bookings: "290+", rating: 4.8, image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80" },
+  { id: 25, name: "Party Catering & Bartender Host", icon: "🍹", desc: "Mocktail crafting, live barbecue plating & culinary party assistance.", price: "₹999", tag: "Kitchen", popular: false, bookings: "370+", rating: 4.9, image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=700&q=80" },
 
   // Wellness
-  { id: 11, name: "Body Massage & Spa", icon: "💆‍♂️", desc: "Authentic Ayurvedic body massage, Swedish relaxation & aroma spa therapy by certified specialists.", price: "₹302", tag: "Spa & Wellness", popular: true, bookings: "2.1k", rating: 4.9, category: "body-massage-centres" }
+  { id: 11, name: "Body Massage & Spa", icon: "💆‍♂️", desc: "Authentic Ayurvedic body massage, Swedish relaxation & aroma spa therapy by certified specialists.", price: "₹302", tag: "Spa & Wellness", popular: true, bookings: "2.1k", rating: 4.9, category: "body-massage-centres", image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=700&q=80" }
 ];
 
 const initialProviders = [

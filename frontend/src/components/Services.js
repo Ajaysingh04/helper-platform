@@ -4,44 +4,440 @@ import { DataContext } from "../context/DataContext";
 import "../css/Services.css";
 
 // Comprehensive fallback catalog matching all 27 on-demand capabilities
+// Comprehensive fallback catalog matching all 27 on-demand capabilities with dedicated photos
+export const getServiceImage = (item) => {
+  if (item?.image && typeof item.image === "string" && item.image.trim() !== "") {
+    return item.image;
+  }
+  const name = (item?.name || "").toLowerCase();
+  const tag = (item?.tag || "").toLowerCase();
+  const cat = (item?.category || "").toLowerCase();
+
+  if (name.includes("electr") || tag.includes("electr")) {
+    return "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("plumb") || tag.includes("plumb")) {
+    return "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("carpent") || name.includes("wood")) {
+    return "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("lock") || name.includes("door")) {
+    return "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("deep") || (name.includes("clean") && !name.includes("sofa") && !name.includes("chimney") && !name.includes("tile"))) {
+    return "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("sofa") || name.includes("carpet")) {
+    return "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("pest") || name.includes("termite")) {
+    return "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("tile") || name.includes("descal") || name.includes("bath")) {
+    return "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("ac") || name.includes("cool") || name.includes("jet")) {
+    return "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("ro ") || name.includes("water") || name.includes("purif")) {
+    return "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("geyser") || name.includes("heater")) {
+    return "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("appliance") || name.includes("tv") || name.includes("fridge") || name.includes("wash")) {
+    return "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("maid") || name.includes("keeper") || name.includes("house keeper")) {
+    return "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("nanny") || name.includes("baby")) {
+    return "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("elder") || name.includes("senior")) {
+    return "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("driver") || name.includes("chauffeur") || name.includes("car")) {
+    return "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("chef") || name.includes("cook")) {
+    return "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("chimney") || name.includes("hob")) {
+    return "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("modular") || name.includes("kitchen align")) {
+    return "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("cater") || name.includes("bartend") || name.includes("party")) {
+    return "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("paint") || name.includes("waterproof")) {
+    return "https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("ceiling") || name.includes("pop")) {
+    return "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("curtain") || name.includes("wallpaper")) {
+    return "https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=700&q=80";
+  }
+  if (name.includes("spa") || name.includes("massage") || cat.includes("massage")) {
+    return "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=700&q=80";
+  }
+  return "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=700&q=80";
+};
+
 const defaultServices = [
   // Repairs
-  { id: 1, name: "Electrician", icon: "electrical", desc: "Short circuits, wiring, switchboards, inverter & fan repairs.", price: "₹249", tag: "Repairs", popular: true, speed: "20 min dispatch", bookings: "1.2k+", rating: 4.9, category: "electricians" },
-  { id: 2, name: "Plumber", icon: "plumbing", desc: "Leak repair, tap replacement, drainage clogs & water heaters.", price: "₹199", tag: "Repairs", popular: true, speed: "25 min dispatch", bookings: "980+", rating: 4.8, category: "plumbers" },
-  { id: 8, name: "Carpenter & Woodcraft", icon: "carpentry", desc: "Furniture crafting, repair, lock assembly & custom woodwork.", price: "₹299", tag: "Repairs", popular: true, speed: "30 min dispatch", bookings: "1.1k+", rating: 4.8, category: "carpenters" },
-  { id: 12, name: "Door Locks & Hardware", icon: "lock", desc: "Smart locks installation, broken cylinder replacement & safety latch fix.", price: "₹249", tag: "Repairs", popular: false, speed: "30 min dispatch", bookings: "410+", rating: 4.7, category: "carpenters" },
+  { 
+    id: 1, 
+    name: "Electrician", 
+    icon: "electrical", 
+    desc: "Short circuits, wiring, switchboards, inverter & fan repairs.", 
+    price: "₹249", 
+    tag: "Repairs", 
+    popular: true, 
+    speed: "20 min dispatch", 
+    bookings: "1.2k+", 
+    rating: 4.9, 
+    category: "electricians",
+    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 2, 
+    name: "Plumber", 
+    icon: "plumbing", 
+    desc: "Leak repair, tap replacement, drainage clogs & water heaters.", 
+    price: "₹199", 
+    tag: "Repairs", 
+    popular: true, 
+    speed: "25 min dispatch", 
+    bookings: "980+", 
+    rating: 4.8, 
+    category: "plumbers",
+    image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 8, 
+    name: "Carpenter & Woodcraft", 
+    icon: "carpentry", 
+    desc: "Furniture crafting, repair, lock assembly & custom woodwork.", 
+    price: "₹299", 
+    tag: "Repairs", 
+    popular: true, 
+    speed: "30 min dispatch", 
+    bookings: "1.1k+", 
+    rating: 4.8, 
+    category: "carpenters",
+    image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 12, 
+    name: "Door Locks & Hardware", 
+    icon: "lock", 
+    desc: "Smart locks installation, broken cylinder replacement & safety latch fix.", 
+    price: "₹249", 
+    tag: "Repairs", 
+    popular: false, 
+    speed: "30 min dispatch", 
+    bookings: "410+", 
+    rating: 4.7, 
+    category: "carpenters",
+    image: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=700&q=80"
+  },
 
   // Cleaning
-  { id: 3, name: "Deep Home Cleaning", icon: "cleaning", desc: "Full house deep cleaning, balcony pressure wash & sanitization.", price: "₹899", tag: "Cleaning", popular: true, speed: "Same day dispatch", bookings: "2.5k+", rating: 4.9, category: "cleaning" },
-  { id: 13, name: "Sofa & Carpet Sanitization", icon: "sofa", desc: "Anti-allergen high extraction steam wash, removes deep stains & odors.", price: "₹599", tag: "Cleaning", popular: true, speed: "40 min dispatch", bookings: "890+", rating: 4.8, category: "cleaning" },
-  { id: 14, name: "Pest & Termite Control", icon: "shield", desc: "100% herbal eco-friendly cockroach, ant & termite eradication.", price: "₹799", tag: "Cleaning", popular: false, speed: "Next hour dispatch", bookings: "640+", rating: 4.9, category: "cleaning" },
-  { id: 15, name: "Bathroom & Tiles Descaling", icon: "sparkles", desc: "Hard water scale removal, acid-free grout scrubbing & mirror polishing.", price: "₹399", tag: "Cleaning", popular: false, speed: "30 min dispatch", bookings: "520+", rating: 4.8, category: "cleaning" },
+  { 
+    id: 3, 
+    name: "Deep Home Cleaning", 
+    icon: "cleaning", 
+    desc: "Full house deep cleaning, balcony pressure wash & sanitization.", 
+    price: "₹899", 
+    tag: "Cleaning", 
+    popular: true, 
+    speed: "Same day dispatch", 
+    bookings: "2.5k+", 
+    rating: 4.9, 
+    category: "cleaning",
+    image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 13, 
+    name: "Sofa & Carpet Sanitization", 
+    icon: "sofa", 
+    desc: "Anti-allergen high extraction steam wash, removes deep stains & odors.", 
+    price: "₹599", 
+    tag: "Cleaning", 
+    popular: true, 
+    speed: "40 min dispatch", 
+    bookings: "890+", 
+    rating: 4.8, 
+    category: "cleaning",
+    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 14, 
+    name: "Pest & Termite Control", 
+    icon: "shield", 
+    desc: "100% herbal eco-friendly cockroach, ant & termite eradication.", 
+    price: "₹799", 
+    tag: "Cleaning", 
+    popular: false, 
+    speed: "Next hour dispatch", 
+    bookings: "640+", 
+    rating: 4.9, 
+    category: "cleaning",
+    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 15, 
+    name: "Bathroom & Tiles Descaling", 
+    icon: "sparkles", 
+    desc: "Hard water scale removal, acid-free grout scrubbing & mirror polishing.", 
+    price: "₹399", 
+    tag: "Cleaning", 
+    popular: false, 
+    speed: "30 min dispatch", 
+    bookings: "520+", 
+    rating: 4.8, 
+    category: "cleaning",
+    image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=700&q=80"
+  },
 
   // Appliances
-  { id: 10, name: "Appliance Repair", icon: "tools", desc: "Washing machine, fridge, microwave & TV diagnostics and genuine parts.", price: "₹299", tag: "Appliances", popular: false, speed: "35 min dispatch", bookings: "1.5k+", rating: 4.8, category: "appliances" },
-  { id: 18, name: "AC Jet Service & Gas Refill", icon: "cooling", desc: "High-pressure foam jet filter wash, cooling coil flush & refrigerant refill.", price: "₹499", tag: "Appliances", popular: true, speed: "30 min dispatch", bookings: "2.3k+", rating: 4.9, category: "ac-repair-services" },
-  { id: 19, name: "RO Water Purifier Service", icon: "droplet", desc: "Filter membrane replacement, TDS adjustment & sterilizing tank flush.", price: "₹299", tag: "Appliances", popular: false, speed: "45 min dispatch", bookings: "720+", rating: 4.8, category: "appliances" },
-  { id: 20, name: "Geyser & Heater Repair", icon: "heater", desc: "Thermostat check, heating coil replacement & sediment descaling.", price: "₹349", tag: "Appliances", popular: false, speed: "30 min dispatch", bookings: "510+", rating: 4.7, category: "appliances" },
+  { 
+    id: 10, 
+    name: "Appliance Repair", 
+    icon: "tools", 
+    desc: "Washing machine, fridge, microwave & TV diagnostics and genuine parts.", 
+    price: "₹299", 
+    tag: "Appliances", 
+    popular: false, 
+    speed: "35 min dispatch", 
+    bookings: "1.5k+", 
+    rating: 4.8, 
+    category: "appliances",
+    image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 18, 
+    name: "AC Jet Service & Gas Refill", 
+    icon: "cooling", 
+    desc: "High-pressure foam jet filter wash, cooling coil flush & refrigerant refill.", 
+    price: "₹499", 
+    tag: "Appliances", 
+    popular: true, 
+    speed: "30 min dispatch", 
+    bookings: "2.3k+", 
+    rating: 4.9, 
+    category: "ac-repair-services",
+    image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 19, 
+    name: "RO Water Purifier Service", 
+    icon: "droplet", 
+    desc: "Filter membrane replacement, TDS adjustment & sterilizing tank flush.", 
+    price: "₹299", 
+    tag: "Appliances", 
+    popular: false, 
+    speed: "45 min dispatch", 
+    bookings: "720+", 
+    rating: 4.8, 
+    category: "appliances",
+    image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 20, 
+    name: "Geyser & Heater Repair", 
+    icon: "heater", 
+    desc: "Thermostat check, heating coil replacement & sediment descaling.", 
+    price: "₹349", 
+    tag: "Appliances", 
+    popular: false, 
+    speed: "30 min dispatch", 
+    bookings: "510+", 
+    rating: 4.7, 
+    category: "appliances",
+    image: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=700&q=80"
+  },
 
   // Daily Help
-  { id: 5, name: "House Keeper & Maid", icon: "home", desc: "Daily dusting, utensil assistance, organizing & housekeeping.", price: "₹349", tag: "Daily Help", popular: false, speed: "Immediate dispatch", bookings: "620+", rating: 4.7, category: "daily-help" },
-  { id: 6, name: "Nanny / Babysitter", icon: "heart", desc: "Trained, attentive and background-screened infant & toddler care.", price: "₹450", tag: "Daily Help", popular: false, speed: "Instant matching", bookings: "430+", rating: 4.9, category: "daily-help" },
-  { id: 16, name: "Elderly Care Assistant", icon: "heart", desc: "Compassionate bedside assistance, vital monitoring & medicine support.", price: "₹499", tag: "Daily Help", popular: false, speed: "Verified pro match", bookings: "380+", rating: 4.9, category: "daily-help" },
-  { id: 17, name: "Driver / Chauffeur", icon: "car", desc: "Professional city & highway private car driving on per-hour basis.", price: "₹399", tag: "Daily Help", popular: true, speed: "30 min dispatch", bookings: "950+", rating: 4.8, category: "daily-help" },
+  { 
+    id: 5, 
+    name: "House Keeper & Maid", 
+    icon: "home", 
+    desc: "Daily dusting, utensil assistance, organizing & housekeeping.", 
+    price: "₹349", 
+    tag: "Daily Help", 
+    popular: false, 
+    speed: "Immediate dispatch", 
+    bookings: "620+", 
+    rating: 4.7, 
+    category: "daily-help",
+    image: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 6, 
+    name: "Nanny / Babysitter", 
+    icon: "heart", 
+    desc: "Trained, attentive and background-screened infant & toddler care.", 
+    price: "₹450", 
+    tag: "Daily Help", 
+    popular: false, 
+    speed: "Instant matching", 
+    bookings: "430+", 
+    rating: 4.9, 
+    category: "daily-help",
+    image: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 16, 
+    name: "Elderly Care Assistant", 
+    icon: "heart", 
+    desc: "Compassionate bedside assistance, vital monitoring & medicine support.", 
+    price: "₹499", 
+    tag: "Daily Help", 
+    popular: false, 
+    speed: "Verified pro match", 
+    bookings: "380+", 
+    rating: 4.9, 
+    category: "daily-help",
+    image: "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 17, 
+    name: "Driver / Chauffeur", 
+    icon: "car", 
+    desc: "Professional city & highway private car driving on per-hour basis.", 
+    price: "₹399", 
+    tag: "Daily Help", 
+    popular: true, 
+    speed: "30 min dispatch", 
+    bookings: "950+", 
+    rating: 4.8, 
+    category: "daily-help",
+    image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=700&q=80"
+  },
 
   // Kitchen
-  { id: 4, name: "Home Chef & Cook", icon: "chef", desc: "Daily nutritious meals, custom diet menus & party cuisine cooking.", price: "₹399", tag: "Kitchen", popular: false, speed: "Immediate match", bookings: "750+", rating: 4.8, category: "daily-help" },
-  { id: 23, name: "Kitchen Chimney & Hob Cleaning", icon: "sparkles", desc: "Degreasing motor suction, baffle filter steam wash & gas stove tuning.", price: "₹449", tag: "Kitchen", popular: true, speed: "40 min dispatch", bookings: "820+", rating: 4.9, category: "cleaning" },
-  { id: 24, name: "Modular Kitchen Alignment", icon: "tools", desc: "Soft-close hydraulic hinge repair & tandem box drawer tracks.", price: "₹399", tag: "Kitchen", popular: false, speed: "Next hour dispatch", bookings: "290+", rating: 4.8, category: "carpenters" },
-  { id: 25, name: "Party Catering & Bartender Host", icon: "glass", desc: "Mocktail crafting, live barbecue plating & culinary party assistance.", price: "₹999", tag: "Kitchen", popular: false, speed: "Pre-book on demand", bookings: "370+", rating: 4.9, category: "daily-help" },
+  { 
+    id: 4, 
+    name: "Home Chef & Cook", 
+    icon: "chef", 
+    desc: "Daily nutritious meals, custom diet menus & party cuisine cooking.", 
+    price: "₹399", 
+    tag: "Kitchen", 
+    popular: false, 
+    speed: "Immediate match", 
+    bookings: "750+", 
+    rating: 4.8, 
+    category: "daily-help",
+    image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 23, 
+    name: "Kitchen Chimney & Hob Cleaning", 
+    icon: "sparkles", 
+    desc: "Degreasing motor suction, baffle filter steam wash & gas stove tuning.", 
+    price: "₹449", 
+    tag: "Kitchen", 
+    popular: true, 
+    speed: "40 min dispatch", 
+    bookings: "820+", 
+    rating: 4.9, 
+    category: "cleaning",
+    image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 24, 
+    name: "Modular Kitchen Alignment", 
+    icon: "tools", 
+    desc: "Soft-close hydraulic hinge repair & tandem box drawer tracks.", 
+    price: "₹399", 
+    tag: "Kitchen", 
+    popular: false, 
+    speed: "Next hour dispatch", 
+    bookings: "290+", 
+    rating: 4.8, 
+    category: "carpenters",
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 25, 
+    name: "Party Catering & Bartender Host", 
+    icon: "glass", 
+    desc: "Mocktail crafting, live barbecue plating & culinary party assistance.", 
+    price: "₹999", 
+    tag: "Kitchen", 
+    popular: false, 
+    speed: "Pre-book on demand", 
+    bookings: "370+", 
+    rating: 4.9, 
+    category: "daily-help",
+    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=700&q=80"
+  },
 
   // Home Decor
-  { id: 7, name: "Wall Painter & Waterproofing", icon: "paint", desc: "Interior, exterior, texture designs & waterproof wall putty painting.", price: "₹599", tag: "Home Decor", popular: false, speed: "Same day survey", bookings: "890+", rating: 4.8, category: "painters" },
-  { id: 21, name: "False Ceiling & POP Works", icon: "ceiling", desc: "Modern gypsum board false ceiling, cove LED lighting & artistic plaster.", price: "₹899", tag: "Home Decor", popular: false, speed: "Free site quote", bookings: "340+", rating: 4.8, category: "painters" },
-  { id: 22, name: "Curtains & Wallpaper Fitting", icon: "wallpaper", desc: "Motorized curtain channel installation & 3D designer wallpaper pasting.", price: "₹399", tag: "Home Decor", popular: false, speed: "Same day dispatch", bookings: "460+", rating: 4.7, category: "carpenters" },
+  { 
+    id: 7, 
+    name: "Wall Painter & Waterproofing", 
+    icon: "paint", 
+    desc: "Interior, exterior, texture designs & waterproof wall putty painting.", 
+    price: "₹599", 
+    tag: "Home Decor", 
+    popular: false, 
+    speed: "Same day survey", 
+    bookings: "890+", 
+    rating: 4.8, 
+    category: "painters",
+    image: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 21, 
+    name: "False Ceiling & POP Works", 
+    icon: "ceiling", 
+    desc: "Modern gypsum board false ceiling, cove LED lighting & artistic plaster.", 
+    price: "₹899", 
+    tag: "Home Decor", 
+    popular: false, 
+    speed: "Free site quote", 
+    bookings: "340+", 
+    rating: 4.8, 
+    category: "painters",
+    image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80"
+  },
+  { 
+    id: 22, 
+    name: "Curtains & Wallpaper Fitting", 
+    icon: "wallpaper", 
+    desc: "Motorized curtain channel installation & 3D designer wallpaper pasting.", 
+    price: "₹399", 
+    tag: "Home Decor", 
+    popular: false, 
+    speed: "Same day dispatch", 
+    bookings: "460+", 
+    rating: 4.7, 
+    category: "carpenters",
+    image: "https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=700&q=80"
+  },
 
   // Spa & Wellness
-  { id: "srv-spa-amritam", name: "Body Massage & Spa", icon: "spa", desc: "Authentic Ayurvedic body massage, Swedish relaxation & aroma spa therapy by certified specialists.", price: "₹302", tag: "Spa & Wellness", popular: true, speed: "Verified Center • Amritam", bookings: "2.1k+", rating: 4.9, category: "body-massage-centres" }
+  { 
+    id: "srv-spa-amritam", 
+    name: "Body Massage & Spa", 
+    icon: "spa", 
+    desc: "Authentic Ayurvedic body massage, Swedish relaxation & aroma spa therapy by certified specialists.", 
+    price: "₹302", 
+    tag: "Spa & Wellness", 
+    popular: true, 
+    speed: "Verified Center • Amritam", 
+    bookings: "2.1k+", 
+    rating: 4.9, 
+    category: "body-massage-centres",
+    image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=700&q=80"
+  }
 ];
 
 // High-precision SVGs to elevate from plain emojis to executive design
@@ -175,6 +571,7 @@ function Services() {
 
       return {
         ...item,
+        image: item.image || getServiceImage(item),
         iconType: item.iconType || iconType,
         rating: item.rating || 4.8,
         bookings: item.bookings || `${(index * 70 + 350)}+`,
@@ -429,19 +826,35 @@ function Services() {
               {paginatedServices.map((item) => (
                 <div className="service-bento-card" key={item.id}>
                   
-                  {/* Card Top: Icon & Tags */}
-                  <div className="card-header-row">
-                    <div className="service-icon-box">
-                      <ServiceIcon type={item.iconType} />
-                    </div>
+                  {/* Card Top: Distinct Trade Image Box */}
+                  <div className="service-card-image-box">
+                    <img 
+                      src={item.image || getServiceImage(item)} 
+                      alt={item.name} 
+                      className="service-card-img" 
+                      loading="lazy" 
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = getServiceImage(item);
+                      }}
+                    />
+                    <div className="service-card-img-gradient" />
+
                     <div className="card-badge-cluster">
                       {item.popular && (
                         <span className="badge-flame">
-                          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                          </svg>
                           POPULAR
                         </span>
                       )}
                       <span className="badge-status-pill">{item.speed || "VERIFIED"}</span>
+                    </div>
+
+                    <div className="service-icon-floating" title={item.tag || item.name}>
+                      <ServiceIcon type={item.iconType} />
                     </div>
                   </div>
 

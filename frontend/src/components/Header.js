@@ -557,17 +557,17 @@ function Header() {
             </Link>
             <Link to="/services" className={`mobile-nav-item ${isActive("/services")}`} onClick={() => setMobileNavOpen(false)}>
               <span className="item-icon">⚡</span>
-              <span className="item-text">SERVICES & CAPABILITIES</span>
+              <span className="item-text">SERVICES</span>
               <span className="item-arrow">→</span>
             </Link>
             <Link to="/categories" className={`mobile-nav-item ${isActive("/categories")}`} onClick={() => setMobileNavOpen(false)}>
               <span className="item-icon">📂</span>
-              <span className="item-text">ALL CATEGORIES (85+)</span>
+              <span className="item-text">CATEGORIES</span>
               <span className="item-arrow">→</span>
             </Link>
             <Link to="/contact" className={`mobile-nav-item ${isActive("/contact")}`} onClick={() => setMobileNavOpen(false)}>
               <span className="item-icon">📞</span>
-              <span className="item-text">CONTACT DISPATCH</span>
+              <span className="item-text">CONTACT</span>
               <span className="item-arrow">→</span>
             </Link>
           </nav>
