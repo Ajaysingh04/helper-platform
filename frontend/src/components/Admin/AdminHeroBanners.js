@@ -241,8 +241,25 @@ function AdminHeroBanners() {
           >
             <span>🌐 View Live Homepage ↗</span>
           </Link>
-          <button className="btn-primary-glow" onClick={openAdd}>
-            <span>➕ Add Hero Banner</span>
+          <button
+            type="button"
+            className="action-pill-btn primary"
+            onClick={() => {
+              const el = document.getElementById("admin-hero-banners-list");
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            title="Scroll down to Banners directory and editor"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              fontWeight: 700,
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(255, 77, 45, 0.25)"
+            }}
+          >
+            <span>⬇️ Scroll to Banners</span>
           </button>
         </div>
       </div>
@@ -491,7 +508,26 @@ function AdminHeroBanners() {
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="action-pill-btn primary"
+              onClick={() => {
+                const el = document.getElementById("admin-hero-banners-list");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              style={{
+                padding: "8px 16px",
+                fontSize: "12px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontWeight: 700,
+                cursor: "pointer"
+              }}
+            >
+              <span>⬇️ Scroll to All Banners</span>
+            </button>
             <Link
               to="/"
               target="_blank"
@@ -504,6 +540,9 @@ function AdminHeroBanners() {
           </div>
         </div>
       </div>
+
+      {/* Target Anchor for Scroll */}
+      <div id="admin-hero-banners-list" style={{ scrollMarginTop: "24px" }} />
       <div className="table-controls-bar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
         <div className="search-box-wrap" style={{ flex: "1 1 260px" }}>
           <span className="search-icon">🔍</span>
