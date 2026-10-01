@@ -180,16 +180,7 @@ function Header() {
       <header className={`header-floating-wrapper ${isHome ? "home-header" : ""} ${scrolled ? "scrolled" : ""}`}>
         <div className="header-pill-bar nexora-header-bar">
           
-          {/* Brand Logo: HELPER GO */}
-          <div className="header-left">
-            <Link to="/" className="nexora-logo-link" aria-label="Helper Home">
-              <div className="nexora-brand-mark">
-                <span className="nexora-brand-text">HELPER</span>
-                <span className="nexora-go-badge">GO ➔</span>
-              </div>
-              <span className="nexora-sub-tag">EVERYTHING YOU NEED, ONE PLACE</span>
-            </Link>
-          </div>
+          {/* Desktop Navigation Links */}
 
           {/* Desktop Center Navigation Links */}
           <nav className="header-nav header-nav-desktop" aria-label="Main Navigation">

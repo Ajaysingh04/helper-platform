@@ -223,6 +223,7 @@ body.dark .header-nav-desktop .nav-link::after {
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Location Selector (Desktop) */
