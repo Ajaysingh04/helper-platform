@@ -99,8 +99,8 @@ export const initialHeroBanners = [
     subtitle: "Trained and verified technicians ready at your doorstep across Indore & nearby regions.",
     badge: "✨ 5-STAR QUALITY PROMISE",
     city: "📍 INDORE & REGION",
-    image: "/images/banner_gemini.png",
-    mobileImage: "/images/banner_gemini.png",
+    image: "/images/banner_gemini_clean.png",
+    mobileImage: "/images/banner_gemini_clean.png",
     active: true,
     ctaText: "Explore Services ➔",
     ctaLink: "/services",
@@ -145,7 +145,7 @@ export const HERO_IMAGE_PRESETS = [
   },
   {
     name: "Home Pro Services Multi-Banner (Official)",
-    url: "/images/banner_gemini.png",
+    url: "/images/banner_gemini_clean.png",
     badge: "Official Banner",
     desc: "Modern home services hero banner with branded equipment"
   },
