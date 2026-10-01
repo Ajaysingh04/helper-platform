@@ -61,8 +61,8 @@ function Home() {
   const defaultHeroSlides = [
     {
       id: "slide-experts",
-      image: "/images/banner_all_experts.png",
-      mobileImage: "/images/banner_all_experts.png",
+      image: "/images/banner_all_experts_clean.png",
+      mobileImage: "/images/banner_all_experts_clean.png",
       title: "All Verified Experts.",
       highlight: "One Trusted Platform.",
       subtitle: "Over 100+ on-demand home, technical, medical & emergency services delivered in 15 mins by police-verified professionals.",
@@ -478,7 +478,7 @@ function Home() {
                   <source media="(max-width: 768px)" srcSet={slide.mobileImage} />
                 )}
                 <img 
-                  src={slide.image || "/images/banner_all_experts.png"} 
+                  src={slide.image || "/images/banner_all_experts_clean.png"} 
                   alt={slide.title || `Home Banner ${idx + 1}`}
                   className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
                   style={{
@@ -489,7 +489,7 @@ function Home() {
                   crossOrigin="anonymous"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/images/banner_all_experts.png";
+                    e.currentTarget.src = "/images/banner_all_experts_clean.png";
                   }}
                 />
               </picture>

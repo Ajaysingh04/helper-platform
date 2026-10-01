@@ -1,5 +1,5 @@
 // Initial Hero Banners for Helper Platform - Curated Attractive 1920x1080 Photography
-export const DEFAULT_HERO_IMAGE = "/images/banner_all_experts.png";
+export const DEFAULT_HERO_IMAGE = "/images/banner_all_experts_clean.png";
 
 export const initialHeroBanners = [
   {
@@ -9,8 +9,8 @@ export const initialHeroBanners = [
     subtitle: "Over 100+ on-demand home, technical, medical & emergency services delivered in 15 mins by police-verified professionals.",
     badge: "🛡️ 50,000+ POLICE-VERIFIED SPECIALISTS",
     city: "📍 INDORE & SURROUNDING REGIONS",
-    image: "/images/banner_all_experts.png",
-    mobileImage: "/images/banner_all_experts.png",
+    image: "/images/banner_all_experts_clean.png",
+    mobileImage: "/images/banner_all_experts_clean.png",
     active: true,
     ctaText: "Find Your Expert ➔",
     ctaLink: "/services",
@@ -115,7 +115,7 @@ export const initialHeroBanners = [
 export const HERO_IMAGE_PRESETS = [
   {
     name: "All Verified Experts Collage (Official)",
-    url: "/images/banner_all_experts.png",
+    url: "/images/banner_all_experts_clean.png",
     badge: "Official Banner",
     desc: "14+ multi-industry professionals with city skyline & aircraft backdrop"
   },
