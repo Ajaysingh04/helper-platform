@@ -1222,6 +1222,35 @@ function VendorDashboard() {
         )}
 
         {/* =========================================================================
+            TOP PRO DASHBOARD BAR (Navigation & System Telemetry)
+            ========================================================================= */}
+        <div className="vendor-top-dashboard-nav animate-fade-in">
+          <div className="vendor-nav-brand">
+            <button 
+              type="button" 
+              className="btn-back-home" 
+              onClick={() => navigate("/")}
+              title="Return to Public Website"
+            >
+              ← Back to Site
+            </button>
+            <div className="vendor-brand-badge">
+              <span className="brand-dot-online" />
+              <strong>HELPER PARTNER HUB</strong>
+              <span className="brand-badge-ver">v2.4 PRO</span>
+            </div>
+          </div>
+          <div className="vendor-nav-telemetry">
+            <span className="vendor-telemetry-tag">
+              <span className="telemetry-radar-dot" /> Live Dispatch Engine
+            </span>
+            <span className="vendor-telemetry-time">
+              🕒 {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+            </span>
+          </div>
+        </div>
+
+        {/* =========================================================================
             TOP HEADER HERO CARD
             ========================================================================= */}
         <div className="vendor-dash-header animate-fade-in">

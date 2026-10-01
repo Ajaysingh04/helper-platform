@@ -1,37 +1,38 @@
 /* ==========================================================================
    ULTRA-PREMIUM VENDOR / SERVICE MAN PANEL STYLES
-   Modern Glassmorphism & SaaS Aesthetics (Helper Pro Platform)
+   High-Tech Dark SaaS Dashboard Aesthetics (Helper Pro Platform)
    ========================================================================== */
 
 :root {
   --vendor-primary: #FF4D2D;
   --vendor-primary-hover: #E03E1F;
-  --vendor-primary-glow: rgba(255, 77, 45, 0.28);
+  --vendor-primary-glow: rgba(255, 77, 45, 0.35);
   --vendor-success: #10B981;
-  --vendor-success-glow: rgba(16, 185, 129, 0.25);
+  --vendor-success-glow: rgba(16, 185, 129, 0.3);
   --vendor-warning: #F59E0B;
   --vendor-info: #0284C7;
-  --vendor-dark-bg: #0F172A;
-  --vendor-card-bg: #FFFFFF;
-  --vendor-surface-subtle: #F8FAFC;
-  --vendor-border-color: #E2E8F0;
-  --vendor-border-subtle: rgba(226, 232, 240, 0.85);
-  --vendor-text-main: #0F172A;
-  --vendor-text-muted: #64748B;
-  --vendor-text-light: #94A3B8;
+  --vendor-dark-bg: #090D18;
+  --vendor-card-bg: #111A2E;
+  --vendor-surface-subtle: #0B1120;
+  --vendor-border-color: rgba(255, 255, 255, 0.12);
+  --vendor-border-subtle: rgba(255, 255, 255, 0.08);
+  --vendor-text-main: #F8FAFC;
+  --vendor-text-muted: #94A3B8;
+  --vendor-text-light: #64748B;
   --vendor-font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --vendor-font-mono: "Space Grotesk", "SF Mono", monospace;
 }
 
 .vendor-dash-wrapper {
   min-height: 100vh;
-  padding: 32px 20px 90px;
+  padding: 24px 20px 80px;
   background: 
-    radial-gradient(circle at 10% 15%, rgba(255, 77, 45, 0.04) 0%, transparent 45%),
-    radial-gradient(circle at 90% 85%, rgba(14, 165, 233, 0.04) 0%, transparent 45%),
-    #F8FAFC;
+    radial-gradient(circle at 12% 10%, rgba(255, 77, 45, 0.09) 0%, transparent 45%),
+    radial-gradient(circle at 88% 18%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+    #090D18;
   font-family: var(--vendor-font-sans);
-  color: var(--vendor-text-main);
+  color: #F8FAFC;
   box-sizing: border-box;
 }
 
@@ -41,11 +42,120 @@
 }
 
 /* ==========================================================================
-   1. TOP HERO HEADER CARD
+   0. TOP PRO DASHBOARD BAR (Navigation & Live Engine Telemetry)
+   ========================================================================== */
+.vendor-top-dashboard-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: rgba(17, 26, 46, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.vendor-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-back-home {
+  background: rgba(255, 255, 255, 0.06);
+  color: #CBD5E1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-back-home:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  border-color: rgba(255, 77, 45, 0.5);
+  transform: translateX(-2px);
+}
+
+.vendor-brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.brand-dot-online {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+  animation: statusPulse 2s infinite;
+}
+
+.brand-badge-ver {
+  background: linear-gradient(135deg, #FF4D2D 0%, #F97316 100%);
+  color: #FFFFFF;
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.4px;
+}
+
+.vendor-nav-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.vendor-telemetry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  padding: 5px 12px;
+  border-radius: 8px;
+}
+
+.telemetry-radar-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34D399;
+}
+
+.vendor-telemetry-time {
+  font-size: 12px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   1. TOP HERO HEADER CARD (DARK THEME)
    ========================================================================== */
 .vendor-dash-header {
-  background: #FFFFFF;
-  border: 1px solid var(--vendor-border-subtle);
+  background: linear-gradient(135deg, #111A2E 0%, #17233B 50%, #0F172A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   padding: 24px 28px;
   display: flex;
@@ -54,16 +164,17 @@
   flex-wrap: wrap;
   gap: 20px;
   box-shadow: 
-    0 10px 30px -4px rgba(15, 23, 42, 0.05),
-    0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    0 16px 40px -8px rgba(0, 0, 0, 0.55),
+    0 0 25px rgba(255, 77, 45, 0.05);
   margin-bottom: 24px;
   transition: all 0.3s ease;
 }
 
 .vendor-dash-header:hover {
   box-shadow: 
-    0 16px 36px -4px rgba(15, 23, 42, 0.08),
-    0 4px 10px -2px rgba(15, 23, 42, 0.03);
+    0 20px 50px -6px rgba(0, 0, 0, 0.65),
+    0 0 35px rgba(255, 77, 45, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 .vendor-header-left {
@@ -97,7 +208,7 @@
   height: 22px;
   background: #10B981;
   color: #FFFFFF;
-  border: 2.5px solid #FFFFFF;
+  border: 2.5px solid #0F172A;
   border-radius: 50%;
   font-size: 11px;
   font-weight: 900;
@@ -115,7 +226,7 @@
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0F172A;
+  color: #FFFFFF;
   margin: 0 0 10px 0;
   display: flex;
   align-items: center;
@@ -126,9 +237,9 @@
 .vendor-verified-pill {
   font-size: 11px;
   font-weight: 800;
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
   padding: 4px 10px;
   border-radius: 100px;
   text-transform: uppercase;
@@ -146,9 +257,9 @@
 }
 
 .vendor-cat-badge {
-  background: rgba(255, 77, 45, 0.08);
-  color: #FF4D2D;
-  border: 1px solid rgba(255, 77, 45, 0.22);
+  background: rgba(255, 77, 45, 0.12);
+  color: #FF785E;
+  border: 1px solid rgba(255, 77, 45, 0.28);
   padding: 5px 12px;
   border-radius: 100px;
   font-size: 12.5px;
@@ -159,14 +270,14 @@
 }
 
 .vendor-location-tag {
-  color: #475569;
+  color: #CBD5E1;
   font-size: 12.5px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 5px 12px;
   border-radius: 100px;
 }
@@ -174,18 +285,18 @@
 .vendor-owner-tag {
   font-size: 12.5px;
   font-weight: 600;
-  color: #475569;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  color: #CBD5E1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 5px 12px;
   border-radius: 100px;
 }
 
 .vendor-capacity-badge {
   font-size: 12px;
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.12);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.28);
   padding: 5px 12px;
   border-radius: 100px;
   font-weight: 700;
@@ -193,9 +304,9 @@
 
 .vendor-franchise-badge {
   font-size: 12px;
-  background: linear-gradient(135deg, rgba(254, 243, 199, 0.9) 0%, rgba(253, 230, 138, 0.7) 100%);
-  color: #B45309;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.25) 100%);
+  color: #FCD34D;
+  border: 1px solid rgba(245, 158, 11, 0.45);
   padding: 5px 13px;
   border-radius: 100px;
   font-weight: 800;
@@ -212,8 +323,8 @@
 }
 
 .btn-franchise-manage {
-  background: #FFFBEB;
-  color: #B45309;
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
   border: 1px solid rgba(245, 158, 11, 0.45);
   border-radius: 100px;
   padding: 9px 18px;
@@ -227,9 +338,10 @@
 }
 
 .btn-franchise-manage:hover {
-  background: #FEF3C7;
+  background: rgba(245, 158, 11, 0.25);
+  color: #FDE68A;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
 }
 
 .vendor-status-toggle {
@@ -246,20 +358,25 @@
 }
 
 .vendor-status-toggle.online {
-  background: #ECFDF5;
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .vendor-status-toggle.online:hover {
-  background: #D1FAE5;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
 }
 
 .vendor-status-toggle.offline {
-  background: #FEF2F2;
-  color: #DC2626;
-  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.vendor-status-toggle.offline:hover {
+  background: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
 }
 
 .status-dot-pulse {
@@ -279,9 +396,9 @@
 }
 
 .btn-vendor-logout {
-  background: #F8FAFC;
-  color: #64748B;
-  border: 1px solid #E2E8F0;
+  background: rgba(255, 255, 255, 0.05);
+  color: #CBD5E1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 100px;
   padding: 9px 16px;
   font-weight: 700;
@@ -291,13 +408,13 @@
 }
 
 .btn-vendor-logout:hover {
-  background: #FEE2E2;
-  color: #DC2626;
-  border-color: #FECACA;
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border-color: rgba(239, 68, 68, 0.35);
 }
 
 /* ==========================================================================
-   2. STATS 4-COLUMN CARDS GRID (BENTO AESTHETICS)
+   2. STATS 4-COLUMN CARDS GRID (DARK BENTO AESTHETICS)
    ========================================================================== */
 .vendor-stats-grid {
   display: grid;
@@ -307,16 +424,14 @@
 }
 
 .vendor-stat-card {
-  background: #FFFFFF;
-  border: 1px solid var(--vendor-border-subtle);
+  background: linear-gradient(135deg, #131E35 0%, #0D1527 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 20px;
   padding: 20px 22px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 
-    0 4px 16px -2px rgba(15, 23, 42, 0.03),
-    0 1px 3px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 8px 24px -3px rgba(0, 0, 0, 0.45);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
@@ -324,10 +439,8 @@
 
 .vendor-stat-card:hover {
   transform: translateY(-3px);
-  box-shadow: 
-    0 12px 28px -4px rgba(15, 23, 42, 0.08),
-    0 2px 6px rgba(15, 23, 42, 0.03);
-  border-color: #CBD5E1;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .vendor-stat-icon {
@@ -342,27 +455,31 @@
 }
 
 .stat-icon-rate {
-  background: #EEF2FF;
-  color: #4F46E5;
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.12);
+  background: rgba(79, 70, 229, 0.15);
+  color: #818CF8;
+  border: 1px solid rgba(79, 70, 229, 0.3);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.15);
 }
 
 .stat-icon-pending {
-  background: #FEF3C7;
-  color: #D97706;
+  background: rgba(217, 119, 6, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(217, 119, 6, 0.3);
   box-shadow: 0 6px 16px rgba(217, 119, 6, 0.15);
 }
 
 .stat-icon-jobs {
-  background: #ECFDF5;
-  color: #059669;
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.14);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.15);
 }
 
 .stat-icon-revenue {
-  background: #FFF1EE;
-  color: #FF4D2D;
-  box-shadow: 0 6px 16px rgba(255, 77, 45, 0.15);
+  background: rgba(255, 77, 45, 0.15);
+  color: #FF785E;
+  border: 1px solid rgba(255, 77, 45, 0.3);
+  box-shadow: 0 6px 16px rgba(255, 77, 45, 0.2);
 }
 
 .vendor-stat-info {
@@ -370,11 +487,11 @@
 }
 
 .vendor-stat-info h4 {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: #64748B;
+  color: #94A3B8;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   margin: 0 0 4px 0;
 }
 
@@ -383,24 +500,24 @@
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0F172A;
+  color: #FFFFFF;
   margin-bottom: 2px;
   line-height: 1.2;
 }
 
 .vendor-stat-sub {
   font-size: 11.5px;
-  color: #94A3B8;
+  color: #64748B;
   font-weight: 500;
 }
 
 /* ==========================================================================
-   3. SEGMENTED NAVIGATION TABS BAR
+   3. SEGMENTED NAVIGATION TABS BAR (DARK MODERN)
    ========================================================================== */
 .vendor-dash-tabs {
   display: flex;
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
+  background: #0E1628;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
   padding: 6px;
   gap: 6px;
@@ -425,7 +542,7 @@
   border-radius: 14px;
   border: none;
   background: transparent;
-  color: #64748B;
+  color: #94A3B8;
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
@@ -434,28 +551,27 @@
 }
 
 .vendor-dash-tab-btn:hover {
-  color: #0F172A;
-  background: rgba(255, 255, 255, 0.7);
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .vendor-dash-tab-btn.active {
   background: linear-gradient(135deg, #FF4D2D 0%, #F97316 100%);
   color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.32);
+  box-shadow: 0 4px 18px rgba(255, 77, 45, 0.4);
 }
 
 /* ==========================================================================
-   4. MAIN CONTENT CARD
+   4. MAIN CONTENT CARD (DARK GLASSMORPHIC)
    ========================================================================== */
 .vendor-tab-content-card {
-  background: #FFFFFF;
-  border: 1px solid var(--vendor-border-subtle);
+  background: linear-gradient(145deg, #121B30 0%, #0D1424 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   padding: 30px;
-  box-shadow: 
-    0 10px 30px -4px rgba(15, 23, 42, 0.04),
-    0 2px 6px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
   margin-bottom: 40px;
+  color: #F8FAFC;
 }
 
 .vendor-card-head {
@@ -3571,4 +3687,457 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   UNIFIED HIGH-TECH DARK SAAS DASHBOARD THEME OVERRIDES (Helper Pro)
+   ========================================================================== */
+
+/* Main Content Card */
+.vendor-tab-content-card {
+  background: linear-gradient(145deg, #111A2E 0%, #0D1424 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 24px !important;
+  padding: 32px 30px !important;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.65), 0 0 30px rgba(255, 77, 45, 0.04) !important;
+  color: #F8FAFC !important;
+}
+
+.vendor-card-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding-bottom: 18px !important;
+  margin-bottom: 24px !important;
+}
+
+.vendor-card-head h3 {
+  color: #FFFFFF !important;
+  font-size: 21px !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.vendor-card-head span,
+.vendor-card-head p {
+  color: #94A3B8 !important;
+}
+
+.btn-demo-quick {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #E2E8F0 !important;
+}
+
+.btn-demo-quick:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 77, 45, 0.4) !important;
+  color: #FFFFFF !important;
+}
+
+/* Forms & Inputs */
+.vendor-input-group label {
+  color: #E2E8F0 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+.vendor-input-group input,
+.vendor-input-group select,
+.vendor-input-group textarea {
+  background: #080D1A !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+  color: #FFFFFF !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+}
+
+.vendor-input-group input:focus,
+.vendor-input-group select:focus,
+.vendor-input-group textarea:focus {
+  border-color: #FF4D2D !important;
+  box-shadow: 0 0 0 3px rgba(255, 77, 45, 0.25) !important;
+  background: #0A1122 !important;
+  outline: none !important;
+}
+
+.vendor-input-group select option {
+  background: #0F172A !important;
+  color: #FFFFFF !important;
+}
+
+.vendor-rate-prefix span {
+  color: #94A3B8 !important;
+  font-weight: 800 !important;
+}
+
+.vendor-rate-prefix input {
+  background: #080D1A !important;
+  color: #FFFFFF !important;
+  padding-left: 32px !important;
+}
+
+/* Custom Work Offerings */
+.work-item-row {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  color: #FFFFFF !important;
+}
+
+.work-item-row:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.work-item-name {
+  color: #FFFFFF !important;
+  font-weight: 750 !important;
+}
+
+.work-item-rate {
+  color: #34D399 !important;
+  font-weight: 900 !important;
+}
+
+/* Customer Booking Cards */
+.vendor-booking-card {
+  background: #111A2E !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-left: 5px solid #FF4D2D !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 26px -2px rgba(0, 0, 0, 0.5) !important;
+  color: #F8FAFC !important;
+}
+
+.vendor-booking-card:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.65) !important;
+}
+
+.booking-service-title-row h4 {
+  color: #FFFFFF !important;
+  font-weight: 850 !important;
+}
+
+.booking-schedule-bar {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #E2E8F0 !important;
+}
+
+.booking-customer-meta > span {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #CBD5E1 !important;
+}
+
+.booking-customer-meta strong {
+  color: #FFFFFF !important;
+}
+
+.quick-call-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.quick-call-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: #38BDF8 !important;
+}
+
+.vendor-stage-stepper {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.step-num {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #94A3B8 !important;
+}
+
+.stepper-line {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.booking-operations-box {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.stage-slot-confirmation {
+  background: rgba(245, 158, 11, 0.09) !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+}
+
+.slot-instructions h5 {
+  color: #FCD34D !important;
+}
+
+.slot-instructions p {
+  color: #FDE68A !important;
+}
+
+.input-slot-otp {
+  background: #080D1A !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #F59E0B !important;
+}
+
+.stage-qr-verify-box {
+  background: rgba(99, 102, 241, 0.1) !important;
+  border: 1px solid rgba(99, 102, 241, 0.28) !important;
+}
+
+.input-qr-token {
+  background: #080D1A !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.4) !important;
+}
+
+.stage-work-completed-receipt {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1.5px dashed rgba(255, 255, 255, 0.15) !important;
+}
+
+.receipt-item {
+  color: #CBD5E1 !important;
+}
+
+.receipt-total {
+  color: #FFFFFF !important;
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.receipt-split-box {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1.5px dashed rgba(255, 255, 255, 0.12) !important;
+}
+
+.booking-worker-assign-box {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+}
+
+.select-worker-assign {
+  background: #080D1A !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+/* KYC Documents */
+.kyc-doc-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1.5px dashed rgba(255, 255, 255, 0.14) !important;
+  color: #FFFFFF !important;
+}
+
+.kyc-doc-card:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: #FF4D2D !important;
+}
+
+.kyc-doc-card.completed {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: #10B981 !important;
+}
+
+.doc-preview-box {
+  background: #080D1A !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.doc-upload-label {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+}
+
+.doc-upload-label:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: #FF4D2D !important;
+}
+
+/* Wallet Table */
+.admin-table-container {
+  background: rgba(11, 17, 32, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+}
+
+.admin-table th {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #94A3B8 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.admin-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #E2E8F0 !important;
+}
+
+/* Modals */
+.cat-preview-modal-box {
+  background: #0F172A !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* ==========================================================================
+   COMPREHENSIVE RESPONSIVENESS (MOBILE, TABLET & DESKTOP)
+   ========================================================================== */
+
+/* Tablets (< 1040px) */
+@media (max-width: 1040px) {
+  .vendor-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+}
+
+/* Small Tablets & Large Phones (< 768px) */
+@media (max-width: 768px) {
+  .vendor-dash-wrapper {
+    padding: 16px 12px 70px !important;
+  }
+
+  .vendor-top-dashboard-nav {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+  }
+
+  .vendor-nav-brand {
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  .vendor-nav-telemetry {
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding-top: 6px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .vendor-dash-header {
+    padding: 20px 16px !important;
+    border-radius: 20px !important;
+    gap: 16px !important;
+  }
+
+  .vendor-header-left {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+
+  .vendor-header-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .vendor-header-actions .btn-franchise-manage {
+    grid-column: 1 / -1 !important;
+    justify-content: center !important;
+  }
+
+  .vendor-header-actions .vendor-status-toggle,
+  .vendor-header-actions .btn-vendor-logout {
+    justify-content: center !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .vendor-settings-form {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .vendor-tab-content-card {
+    padding: 20px 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .booking-service-title-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .booking-status-chip {
+    margin-left: 0 !important;
+  }
+
+  .booking-schedule-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .booking-customer-meta {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .booking-customer-meta > span {
+    width: 100% !important;
+  }
+
+  .vendor-stage-stepper {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
+
+/* Extra Small Phones (< 480px) */
+@media (max-width: 480px) {
+  .vendor-dash-wrapper {
+    padding: 12px 8px 60px !important;
+  }
+
+  .vendor-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .vendor-stat-card {
+    padding: 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .vendor-header-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .vendor-avatar-circle {
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 16px !important;
+    font-size: 26px !important;
+  }
+
+  .vendor-header-title h2 {
+    font-size: 19px !important;
+  }
+
+  .vendor-dash-tabs {
+    padding: 4px !important;
+    border-radius: 14px !important;
+  }
+
+  .vendor-dash-tab-btn {
+    padding: 9px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .vendor-tab-content-card {
+    padding: 16px 12px !important;
+    border-radius: 16px !important;
+  }
+}
+
 
