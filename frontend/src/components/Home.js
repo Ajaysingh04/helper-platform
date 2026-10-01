@@ -61,8 +61,8 @@ function Home() {
   const defaultHeroSlides = [
     {
       id: "slide-experts",
-      image: "/images/homepage_5_wide.jpg",
-      mobileImage: "/images/homepage_5.jpg",
+      image: "/images/banner_all_experts.png",
+      mobileImage: "/images/banner_all_experts.png",
       title: "All Verified Experts.",
       highlight: "One Trusted Platform.",
       subtitle: "Over 100+ on-demand home, technical, medical & emergency services delivered in 15 mins by police-verified professionals.",
@@ -74,38 +74,13 @@ function Home() {
       perk3: "* 15-min arrival with live GPS tracking"
     },
     {
-      id: "slide-cleaning",
-      image: "/images/pinterest_clean_widescreen.jpg",
-      title: "Clean Space",
-      highlight: "Starts Here.",
-      subtitle: "Professional cleaning services for offices, homes, and commercial spaces — done right, every time.",
-      badge: "⭐ TRUSTED BY 10,000+ HOMES & BUSINESSES",
-      ctaText: "Book Cleaning Pro",
-      ctaLink: "/category/cleaning",
-      perk1: "* 100% Police-verified & certified master cleaners",
-      perk2: "* Upfront pricing with 30-day quality warranty",
-      perk3: "* 15-min arrival with live GPS tracking"
-    },
-    {
-      id: "slide-1",
-      image: "/images/homepage_1.jpg",
-      title: "Everything Your Home Needs.",
-      highlight: "Delivered In 15 Mins.",
-      subtitle: "Book verified electricians, plumbers, cleaning experts & painters with guaranteed upfront rates and 30-day warranty.",
-      badge: "⚡ #1 ON-DEMAND HOME SERVICE PLATFORM",
-      ctaText: "Book Service Now",
-      ctaLink: "/services",
-      perk1: "* 15-min arrival with live GPS tracking",
-      perk2: "* 100% verified police-checked experts",
-      perk3: "* Upfront rates with 30-day warranty"
-    },
-    {
-      id: "slide-2",
-      image: "/images/homepage_2.jpg",
+      id: "slide-electrician",
+      image: "/images/banner_electrician.png",
+      mobileImage: "/images/banner_electrician.png",
       title: "Certified Electricians & Diagnostics.",
       highlight: "Instant 15-Min Response.",
       subtitle: "Short circuit repair, wiring, switchboards, inverter & fan repairs by background-screened pros.",
-      badge: "🛡️ 100% VERIFIED BACKGROUND CHECK",
+      badge: "⚡ 100% VERIFIED BACKGROUND CHECK",
       ctaText: "Book Electrician",
       ctaLink: "/category/electricians",
       perk1: "* Upfront rates with zero fraud start OTP",
@@ -113,8 +88,9 @@ function Home() {
       perk3: "* Certified high-voltage specialists"
     },
     {
-      id: "slide-3",
-      image: "/images/homepage_plumbing_wide.jpg",
+      id: "slide-plumber",
+      image: "/images/banner_plumber.png",
+      mobileImage: "/images/banner_plumber.png",
       title: "Expert Plumbing & Sparkle Deep Clean.",
       highlight: "Spotless Clean Guaranteed.",
       subtitle: "Leak repairs, tap fittings, pipe drainage & hospital-grade deep sanitization. Trusted by 25,000+ homes.",
@@ -126,8 +102,9 @@ function Home() {
       perk3: "* Free inspection on booking"
     },
     {
-      id: "slide-4",
-      image: "/images/homepage_4.jpg",
+      id: "slide-painter",
+      image: "/images/banner_painter.png",
+      mobileImage: "/images/banner_painter.png",
       title: "Luxury Home Painting & Renovation.",
       highlight: "Flawless Finish On Time.",
       subtitle: "Premium dust-free painting, waterproof coatings & carpentry by top-rated certified specialists.",
@@ -137,6 +114,20 @@ function Home() {
       perk1: "* Free color consultation & 3D preview",
       perk2: "* 5-year anti-peel warranty",
       perk3: "* Laser accurate cost estimation"
+    },
+    {
+      id: "slide-team",
+      image: "/images/banner_team.png",
+      mobileImage: "/images/banner_team.png",
+      title: "Everything Your Home Needs.",
+      highlight: "Delivered In 15 Mins.",
+      subtitle: "Book verified electricians, plumbers, cleaning experts & painters with guaranteed upfront rates.",
+      badge: "⭐ #1 ON-DEMAND HOME SERVICE PLATFORM",
+      ctaText: "Book Service Now",
+      ctaLink: "/services",
+      perk1: "* 15-min arrival with live GPS tracking",
+      perk2: "* 100% verified police-checked experts",
+      perk3: "* Upfront rates with 30-day warranty"
     }
   ];
 
@@ -487,16 +478,18 @@ function Home() {
                   <source media="(max-width: 768px)" srcSet={slide.mobileImage} />
                 )}
                 <img 
-                  src={slide.image || `/images/homepage_${(idx % 5) + 1}.jpg`} 
+                  src={slide.image || "/images/banner_all_experts.png"} 
                   alt={slide.title || `Home Banner ${idx + 1}`}
                   className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
                   style={{
                     objectPosition: heroSettings.imagePosition || "center top"
                   }}
                   loading={idx === 0 ? "eager" : "lazy"}
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = `/images/homepage_5_wide.jpg`;
+                    e.currentTarget.src = "/images/banner_all_experts.png";
                   }}
                 />
               </picture>

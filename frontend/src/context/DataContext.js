@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import { popularCategories } from "../data/popularCategoriesData";
 import { initialOffers } from "../data/offersData";
-import { initialHeroBanners } from "../data/heroBannersData";
+import { initialHeroBanners, DEFAULT_HERO_IMAGE } from "../data/heroBannersData";
 import { API_BASE } from "../apiConfig";
 
 export const DataContext = createContext();
@@ -581,10 +581,21 @@ export const DataProvider = ({ children }) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length >= 3) {
-          // Guarantee all banners are active for continuous multi-banner rotation
-          return parsed.map(b => ({ ...b, active: true }));
+          // Migrate out any stale deleted image references from prior sessions
+          const hasBrokenOldPaths = parsed.some(b => 
+            !b.image ||
+            b.image.includes("homepage_") || 
+            b.image.includes("pinterest_clean") || 
+            b.image.includes("helper_full_banner")
+          );
+          if (!hasBrokenOldPaths) {
+            return parsed.map(b => ({ ...b, active: true }));
+          }
         }
       }
+    } catch (e) {}
+    try {
+      localStorage.setItem("helper_hero_banners_v9", JSON.stringify(initialHeroBanners));
     } catch (e) {}
     return initialHeroBanners.map(b => ({ ...b, active: true }));
   });
@@ -1139,7 +1150,8 @@ export const DataProvider = ({ children }) => {
       subtitle: bannerData.subtitle || "Book certified electricians, plumbers & cleaning experts.",
       badge: bannerData.badge || "#1 ON-DEMAND HOME SERVICE PLATFORM",
       city: bannerData.city || "📍 INDORE & REGION",
-      image: bannerData.image || "/images/homepage_1.jpg",
+      image: bannerData.image || DEFAULT_HERO_IMAGE,
+      mobileImage: bannerData.mobileImage || bannerData.image || DEFAULT_HERO_IMAGE,
       active: bannerData.active !== undefined ? bannerData.active : true,
       ctaText: bannerData.ctaText || "Book Service Now ➔",
       ctaLink: bannerData.ctaLink || "/services",

@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataContext } from "../../context/DataContext";
-import { HERO_IMAGE_PRESETS } from "../../data/heroBannersData";
+import { HERO_IMAGE_PRESETS, DEFAULT_HERO_IMAGE } from "../../data/heroBannersData";
 
 function AdminHeroBanners() {
   const dataContext = useContext(DataContext);
@@ -29,9 +29,9 @@ function AdminHeroBanners() {
   const [title, setTitle] = useState("");
   const [highlight, setHighlight] = useState("");
   const [subtitle, setSubtitle] = useState("");
-  const [badge, setBadge] = useState("#1 ON-DEMAND HOME SERVICE PLATFORM");
+  const [badge, setBadge] = useState("⚡ #1 ON-DEMAND HOME SERVICE PLATFORM");
   const [city, setCity] = useState("📍 INDORE & REGION");
-  const [image, setImage] = useState("/images/homepage_5_wide.jpg");
+  const [image, setImage] = useState(DEFAULT_HERO_IMAGE);
   const [ctaText, setCtaText] = useState("Book Service Now ➔");
   const [ctaLink, setCtaLink] = useState("/services");
   const [tagsText, setTagsText] = useState("Electrician, AC Repair, Cleaning, Plumber, Salon at Home");
@@ -39,6 +39,8 @@ function AdminHeroBanners() {
   const [fileError, setFileError] = useState("");
   const [imgSourceTab, setImgSourceTab] = useState("presets");
   const [uploadedFileName, setUploadedFileName] = useState("");
+  const [previewDevice, setPreviewDevice] = useState("desktop");
+  const [imgLoadStatus, setImgLoadStatus] = useState("idle");
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -50,9 +52,9 @@ function AdminHeroBanners() {
     setTitle("Everything Your Home Needs.");
     setHighlight("Delivered In 15 Mins.");
     setSubtitle("Book certified electricians, plumbers, AC technicians, salon pros & cleaning experts. Guaranteed upfront rates with live GPS tracking.");
-    setBadge("#1 ON-DEMAND HOME SERVICE PLATFORM");
+    setBadge("⚡ #1 ON-DEMAND HOME SERVICE PLATFORM");
     setCity("📍 INDORE & REGION");
-    setImage("/images/homepage_5_wide.jpg");
+    setImage(DEFAULT_HERO_IMAGE);
     setCtaText("Book Service Now ➔");
     setCtaLink("/services");
     setTagsText("Electrician, AC Repair, Cleaning, Plumber, Salon at Home");
@@ -60,6 +62,8 @@ function AdminHeroBanners() {
     setFileError("");
     setImgSourceTab("presets");
     setUploadedFileName("");
+    setPreviewDevice("desktop");
+    setImgLoadStatus("idle");
     setShowModal(true);
   };
 
@@ -68,15 +72,17 @@ function AdminHeroBanners() {
     setTitle(banner.title || "");
     setHighlight(banner.highlight || "");
     setSubtitle(banner.subtitle || "");
-    setBadge(banner.badge || "#1 ON-DEMAND HOME SERVICE PLATFORM");
+    setBadge(banner.badge || "⚡ #1 ON-DEMAND HOME SERVICE PLATFORM");
     setCity(banner.city || "📍 INDORE & REGION");
-    const imgUrl = banner.image || "/images/homepage_5_wide.jpg";
+    const imgUrl = banner.image || DEFAULT_HERO_IMAGE;
     setImage(imgUrl);
     setCtaText(banner.ctaText || "Book Service Now ➔");
     setCtaLink(banner.ctaLink || "/services");
     setTagsText(Array.isArray(banner.tags) ? banner.tags.join(", ") : "");
     setActive(banner.active !== false);
     setFileError("");
+    setPreviewDevice("desktop");
+    setImgLoadStatus("idle");
 
     if (imgUrl.startsWith("data:")) {
       setImgSourceTab("upload");
@@ -269,10 +275,15 @@ function AdminHeroBanners() {
             }}
           >
             <img
-              src={primaryActiveBanner.image}
+              src={primaryActiveBanner.image || DEFAULT_HERO_IMAGE}
               alt="Active Hero Preview"
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              onError={(e) => { e.target.src = "/images/homepage_1.jpg"; }}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = DEFAULT_HERO_IMAGE;
+              }}
             />
             <div
               style={{
@@ -454,10 +465,16 @@ function AdminHeroBanners() {
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <div className="preview-thumbnail-stage" title="Interactive preview of current framing">
               <img
-                src={heroBanners[0]?.image || "/images/homepage_1.jpg"}
+                src={heroBanners[0]?.image || DEFAULT_HERO_IMAGE}
                 alt="Framing Preview"
                 className="preview-thumbnail-img"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
                 style={{ objectPosition: heroSettings.imagePosition || "center top" }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = DEFAULT_HERO_IMAGE;
+                }}
               />
             </div>
             <div>
@@ -487,8 +504,8 @@ function AdminHeroBanners() {
           </div>
         </div>
       </div>
-      <div className="table-controls-bar">
-        <div className="search-box-wrap">
+      <div className="table-controls-bar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+        <div className="search-box-wrap" style={{ flex: "1 1 260px" }}>
           <span className="search-icon">🔍</span>
           <input
             type="text"
@@ -508,7 +525,7 @@ function AdminHeroBanners() {
           )}
         </div>
 
-        <div className="filters-group">
+        <div className="filters-group" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
           <div className="segmented-control">
             <button
               type="button"
@@ -536,6 +553,23 @@ function AdminHeroBanners() {
               <span className="seg-count-badge">{heroBanners.length - activeCount}</span>
             </button>
           </div>
+
+          <button
+            type="button"
+            className="btn-primary-glow"
+            onClick={openAdd}
+            style={{
+              padding: "7px 16px",
+              fontSize: "12.5px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              borderRadius: "10px",
+              whiteSpace: "nowrap"
+            }}
+          >
+            <span>➕ Add Hero Banner</span>
+          </button>
         </div>
       </div>
 
@@ -543,11 +577,61 @@ function AdminHeroBanners() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))",
           gap: "20px",
           marginTop: "16px"
         }}
       >
+        {/* Quick Add Hero Banner Action Card */}
+        <div
+          className="admin-card-base add-banner-quick-card"
+          onClick={openAdd}
+          title="Click to create and configure a new homepage hero banner"
+          style={{
+            border: "2px dashed rgba(255, 77, 45, 0.4)",
+            borderRadius: "16px",
+            minHeight: "360px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: "28px 20px",
+            cursor: "pointer",
+            background: "rgba(255, 77, 45, 0.03)"
+          }}
+        >
+          <div
+            style={{
+              width: "60px",
+              height: "60px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, rgba(255, 77, 45, 0.2) 0%, rgba(249, 115, 22, 0.15) 100%)",
+              border: "1.5px solid rgba(255, 77, 45, 0.35)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "26px",
+              marginBottom: "16px",
+              color: "#FF4D2D"
+            }}
+          >
+            ➕
+          </div>
+          <h3 style={{ fontSize: "17px", fontWeight: 800, margin: "0 0 6px 0", color: "var(--text-main)" }}>
+            Add New Hero Banner
+          </h3>
+          <p style={{ fontSize: "12.5px", color: "var(--text-muted)", margin: "0 0 18px 0", maxWidth: "260px", lineHeight: 1.4 }}>
+            Upload custom image, select preset photography, or enter a live direct URL for your homepage.
+          </p>
+          <span
+            className="btn-primary-glow"
+            style={{ padding: "8px 20px", fontSize: "12.5px" }}
+          >
+            Create Banner ➔
+          </span>
+        </div>
+
         {filteredBanners.map((banner) => {
           const bannerId = banner.id || banner._id;
           const isLivePrimary = primaryActiveBanner && (primaryActiveBanner.id === bannerId || primaryActiveBanner._id === bannerId);
@@ -568,15 +652,20 @@ function AdminHeroBanners() {
               {/* Image banner area */}
               <div style={{ position: "relative", height: "180px", background: "#0F172A", overflow: "hidden" }}>
                 <img
-                  src={banner.image}
+                  src={banner.image || DEFAULT_HERO_IMAGE}
                   alt={banner.title}
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
                   style={{
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
                     filter: banner.active !== false ? "none" : "grayscale(80%) opacity(0.7)"
                   }}
-                  onError={(e) => { e.target.src = "/images/homepage_1.jpg"; }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = DEFAULT_HERO_IMAGE;
+                  }}
                 />
 
                 {/* Top Badge overlay */}
@@ -788,24 +877,43 @@ function AdminHeroBanners() {
                 {/* Left Column: Live Preview & Image Selector */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
                       <label style={{ fontSize: "12.5px", fontWeight: 800, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "6px" }}>
                         <span>👁️</span> Real-time Simulation
                       </label>
-                      <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", background: "var(--surface-input)", padding: "2px 8px", borderRadius: "6px" }}>
-                        Desktop 16:9
-                      </span>
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        <button
+                          type="button"
+                          className={`action-pill-btn ${previewDevice === "desktop" ? "primary" : "secondary"}`}
+                          style={{ padding: "3px 8px", fontSize: "10.5px" }}
+                          onClick={() => setPreviewDevice("desktop")}
+                        >
+                          💻 Desktop
+                        </button>
+                        <button
+                          type="button"
+                          className={`action-pill-btn ${previewDevice === "mobile" ? "primary" : "secondary"}`}
+                          style={{ padding: "3px 8px", fontSize: "10.5px" }}
+                          onClick={() => setPreviewDevice("mobile")}
+                        >
+                          📱 Mobile
+                        </button>
+                      </div>
                     </div>
 
                     {/* Preview Stage */}
-                    <div className="hero-preview-stage">
+                    <div className={`hero-preview-stage ${previewDevice === "mobile" ? "mobile-device" : ""}`}>
                       <img
-                        src={image || "/images/homepage_5_wide.jpg"}
+                        src={image || DEFAULT_HERO_IMAGE}
                         alt="Preview"
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onLoad={() => setImgLoadStatus("loaded")}
                         onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/images/homepage_5_wide.jpg";
+                          setImgLoadStatus("error");
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = DEFAULT_HERO_IMAGE;
                         }}
                       />
                       <div className="hero-preview-scrim" />
@@ -828,7 +936,7 @@ function AdminHeroBanners() {
                             {subtitle || "Book verified professionals with guaranteed upfront rates and 30-day warranty."}
                           </div>
 
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
                             <div className="hero-preview-cta-btn">
                               <span>{ctaText || "Book Service Now ➔"}</span>
                             </div>
@@ -885,15 +993,18 @@ function AdminHeroBanners() {
                               onClick={() => {
                                 setImage(preset.url);
                                 setUploadedFileName("");
+                                setImgLoadStatus("idle");
                               }}
                             >
                               <img
                                 src={preset.url}
                                 alt={preset.name}
+                                referrerPolicy="no-referrer"
+                                crossOrigin="anonymous"
                                 className="hero-preset-thumb"
                                 onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = "/images/homepage_5_wide.jpg";
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = DEFAULT_HERO_IMAGE;
                                 }}
                               />
                               <div style={{ overflow: "hidden", minWidth: 0, flex: 1 }}>
@@ -944,23 +1055,62 @@ function AdminHeroBanners() {
 
                     {/* Tab 3: URL */}
                     {imgSourceTab === "url" && (
-                      <div style={{ marginTop: "12px" }}>
+                      <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
                         <div className="admin-form-group" style={{ margin: 0 }}>
-                          <label style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "4px" }}>
-                            Paste Public Image URL or Local Path:
+                          <label style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "4px", display: "flex", justifyContent: "space-between" }}>
+                            <span>Paste Public Image URL or CDN Link:</span>
+                            <span style={{
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              color: imgLoadStatus === "error" ? "#EF4444" : (imgLoadStatus === "loaded" ? "#16A34A" : "var(--text-muted)")
+                            }}>
+                              {imgLoadStatus === "error" ? "⚠️ Link Error / Blocked" : (imgLoadStatus === "loaded" ? "🟢 Live Image Loaded" : "Checking...")}
+                            </span>
                           </label>
                           <input
                             type="text"
-                            placeholder="e.g. /images/homepage_5_wide.jpg or https://images.unsplash.com/..."
+                            placeholder="https://images.unsplash.com/... or direct image link"
                             value={image.startsWith("data:") ? "" : image}
                             onChange={(e) => {
-                              setImage(e.target.value);
+                              setImage(e.target.value.trim());
                               setUploadedFileName("");
+                              setImgLoadStatus("idle");
                             }}
                           />
                         </div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "6px" }}>
-                          💡 Tip: High-resolution landscape images (16:9 ratio) look crispest on widescreen desktop monitors.
+
+                        {imgLoadStatus === "error" && (
+                          <div style={{ padding: "8px 12px", borderRadius: "8px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.25)", fontSize: "11.5px", color: "#EF4444" }}>
+                            ⚠️ Could not load this image URL directly. Some websites block external embeds. Try a direct image URL (ending in .jpg, .png, .webp) or click one of the verified 4K links below:
+                          </div>
+                        )}
+
+                        <div>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>
+                            ✨ Quick Curated Live 4K Photography Links:
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                            {[
+                              { label: "🛋️ Clean Living Room", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920" },
+                              { label: "⚡ Electrician Pro", url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1920" },
+                              { label: "🚰 Master Plumber", url: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=1920" },
+                              { label: "🧹 Deep Cleaning", url: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=1920" }
+                            ].map((sample, sIdx) => (
+                              <button
+                                key={sIdx}
+                                type="button"
+                                className="action-pill-btn secondary"
+                                style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "8px" }}
+                                onClick={() => {
+                                  setImage(sample.url);
+                                  setImgLoadStatus("idle");
+                                  setUploadedFileName("");
+                                }}
+                              >
+                                {sample.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )}

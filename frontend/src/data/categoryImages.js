@@ -158,9 +158,9 @@ export const CATEGORY_IMAGE_REGISTRY = {
 
   // Default Verified Expert fallback (Indian Service Pro in uniform, NOT spa stones!)
   default: [
-    "/images/homepage_1.jpg", // Painter pro in uniform
-    "/images/homepage_2.jpg", // Plumber pro with pipe setup
-    "/images/homepage_3.jpg"  // Electrician pro in hardhat
+    "/images/banner_painter.png", // Painter pro in uniform
+    "/images/banner_plumber.png", // Plumber pro with pipe setup
+    "/images/banner_electrician.png"  // Electrician pro in hardhat
   ]
 };
 
