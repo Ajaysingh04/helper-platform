@@ -145,6 +145,9 @@ router.post("/login", async (req, res) => {
         experienceYears: worker.experienceYears,
         status: worker.status,
         verificationStatus: worker.verificationStatus,
+        onboardingFeePaid: worker.onboardingFeePaid,
+        feeAmount: worker.feeAmount,
+        feeTxnId: worker.feeTxnId,
         availability: worker.availability,
         performance: worker.performance,
         earnings: worker.earnings
@@ -289,6 +292,10 @@ router.post("/register", async (req, res) => {
       address: address ? address.trim() : (city ? `${city} Central` : "Local Area"),
       status: "inactive", // Inactive until vendor approves
       verificationStatus: "pending", // Pending approval from nearest vendor
+      onboardingFeePaid: req.body.onboardingFeePaid !== false,
+      feeAmount: Number(req.body.feeAmount) || 399,
+      feeTxnId: req.body.feeTxnId || `TX-ONBOARD-399-${Date.now().toString().slice(-6)}`,
+      onboardingPaidAt: new Date(),
       avatar: `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?auto=format&fit=crop&w=300`,
       documents: {
         aadhaarNumber: aadhaarNumber || "",

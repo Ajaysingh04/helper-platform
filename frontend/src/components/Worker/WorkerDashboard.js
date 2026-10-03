@@ -644,6 +644,39 @@ function WorkerDashboard() {
     }
   };
 
+  const handleCheckApprovalStatus = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/workers/${worker?.workerId || worker?.id}`);
+      const data = await res.json();
+      if (data && data.success && data.worker) {
+        if (data.worker.verificationStatus === "verified" || data.worker.status === "active") {
+          const updated = {
+            ...worker,
+            ...data.worker,
+            verificationStatus: "verified",
+            status: "active",
+            availability: { ...(worker?.availability || {}), isOnline: true }
+          };
+          setWorker(updated);
+          localStorage.setItem("helper_worker", JSON.stringify(updated));
+          showToast("🎉 Congratulations! Your nearest vendor approved your application! Unlocking Dashboard...");
+        } else {
+          showToast("⏳ Status: Still under vendor review. Please check back shortly.");
+        }
+      } else {
+        showToast("⏳ Status: Under review by nearest vendor.");
+      }
+    } catch (e) {
+      showToast("⏳ Status: Under review by nearest vendor.");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("helper_worker");
+    localStorage.removeItem("helper_worker_token");
+    navigate("/login?role=worker");
+  };
+
   const activeJobsList = jobs.filter((b) => b.workerStatus !== "completed" || b.paymentStatus === "payment_due");
   const completedJobsList = jobs.filter((b) => b.workerStatus === "completed" && b.paymentStatus !== "payment_due");
 
@@ -651,6 +684,190 @@ function WorkerDashboard() {
   const pendingPayout = worker?.earnings?.pendingPayout || 1800;
   const ratingScore = worker?.performance?.rating || 4.9;
   const completedCount = worker?.performance?.completedJobsCount || completedJobsList.length || 142;
+
+  // Render "Approval is Pending" screen if worker is self-registered and awaiting vendor approval
+  const isPendingApproval = worker && (
+    worker.verificationStatus === "pending" ||
+    worker.status === "inactive" ||
+    worker.status === "pending_approval"
+  );
+
+  if (isPendingApproval) {
+    return (
+      <div className="worker-pending-approval-page animate-fade-in">
+        {toastMsg && (
+          <div 
+            style={{
+              position: "fixed",
+              top: "20px",
+              right: "20px",
+              zIndex: 9999,
+              background: "#1E293B",
+              color: "#FFFFFF",
+              padding: "12px 20px",
+              borderRadius: "12px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+              fontSize: "13.5px",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              border: "1px solid rgba(245, 158, 11, 0.4)",
+              animation: "adminSlideIn 0.3s ease"
+            }}
+          >
+            <span>📢</span>
+            <span>{toastMsg}</span>
+          </div>
+        )}
+
+        <header className="worker-pending-header">
+          <div className="worker-pending-logo">
+            <span className="logo-emoji">👷</span>
+            <div>
+              <h3>HELPER FIELD PRO</h3>
+              <span className="logo-sub">Partner Network • Verification Hub</span>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button 
+              type="button" 
+              onClick={toggleTheme} 
+              className="worker-icon-btn" 
+              title="Toggle Theme"
+            >
+              {isDark ? "☀️" : "🌙"}
+            </button>
+            <button 
+              type="button" 
+              onClick={handleLogout} 
+              className="worker-logout-chip"
+            >
+              <span>🚪 Sign Out</span>
+            </button>
+          </div>
+        </header>
+
+        <main className="worker-pending-main-container">
+          <div className="worker-pending-card">
+            <div className="worker-pending-badge">
+              <span className="pulse-dot"></span>
+              <span>APPLICATION SUBMITTED • UNDER VENDOR REVIEW</span>
+            </div>
+
+            <div className="worker-pending-icon-circle">
+              <span className="big-icon-hourglass">⏳</span>
+            </div>
+
+            <h1 className="worker-pending-title">APPROVAL IS PENDING</h1>
+            <p className="worker-pending-desc">
+              Aapki <strong>₹399 vendor onboarding fee</strong> successfully pay ho chuki hai. Aapke nearest vendor <strong>({worker.vendorName || "Amritam Services Hub"})</strong> ko verification aur review ke liye aapki application send kar di gayi hai.
+            </p>
+
+            <div className="worker-pending-info-grid">
+              <div className="info-stat-box">
+                <span className="stat-label">Onboarding Charge</span>
+                <div className="stat-val text-emerald">
+                  <span>₹{worker.feeAmount || 399} PAID</span>
+                  <span className="check-mark">✓</span>
+                </div>
+                <span className="stat-hint">Txn: {worker.feeTxnId || "TX-ONBOARD-399"}</span>
+              </div>
+
+              <div className="info-stat-box">
+                <span className="stat-label">Assigned Nearest Vendor</span>
+                <div className="stat-val">
+                  {worker.vendorName || "Amritam Services Hub"}
+                </div>
+                <span className="stat-hint">📍 Indore / Palasia Central</span>
+              </div>
+
+              <div className="info-stat-box">
+                <span className="stat-label">Technician Trade</span>
+                <div className="stat-val">
+                  {worker.category || "Home Specialist"}
+                </div>
+                <span className="stat-hint">{worker.experienceYears || 3} Years Experience</span>
+              </div>
+
+              <div className="info-stat-box">
+                <span className="stat-label">Aadhaar / ID Status</span>
+                <div className="stat-val">
+                  {worker.documents?.aadhaarNumber ? `Aadhaar •••• ${worker.documents.aadhaarNumber.slice(-4)}` : "Submitted ✓"}
+                </div>
+                <span className="stat-hint">Documents under review</span>
+              </div>
+            </div>
+
+            <div className="worker-verification-stepper">
+              <div className="v-step done">
+                <div className="v-num">✓</div>
+                <div className="v-text">
+                  <strong>1. Registration</strong>
+                  <span>Profile Created</span>
+                </div>
+              </div>
+              <div className="v-line filled"></div>
+              <div className="v-step done">
+                <div className="v-num">✓</div>
+                <div className="v-text">
+                  <strong>2. ₹399 Fee Paid</strong>
+                  <span>Vendor Onboarding</span>
+                </div>
+              </div>
+              <div className="v-line filled"></div>
+              <div className="v-step active">
+                <div className="v-num">3</div>
+                <div className="v-text">
+                  <strong>3. Vendor Review</strong>
+                  <span className="pulse-text">Approval Pending...</span>
+                </div>
+              </div>
+              <div className="v-line"></div>
+              <div className="v-step locked">
+                <div className="v-num">🔒</div>
+                <div className="v-text">
+                  <strong>4. Dashboard</strong>
+                  <span>Live Dispatch</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="worker-pending-actions">
+              <button 
+                type="button"
+                onClick={handleCheckApprovalStatus}
+                className="btn-check-status"
+              >
+                <span>🔄</span>
+                <span>Check Live Approval Status</span>
+              </button>
+
+              <button 
+                type="button"
+                onClick={handleInstantApproveSim}
+                className="btn-simulate-approve"
+                title="Instant Demo / Testing Shortcut"
+              >
+                <span>⚡</span>
+                <span>Simulate Vendor Approval (Instant Test)</span>
+              </button>
+            </div>
+
+            <div className="worker-vendor-contact-bar">
+              <span>Need urgent approval? Call your nearest vendor directly:</span>
+              <a href={`tel:${worker.vendorPhone || "+919876500001"}`} className="vendor-call-chip">
+                <span>📞</span>
+                <span>{worker.vendorPhone || "+91 98765 00001"}</span>
+              </a>
+            </div>
+
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-layout-wrapper worker-portal-layout">

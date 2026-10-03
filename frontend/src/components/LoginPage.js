@@ -131,6 +131,13 @@ function LoginPage() {
     confirmPassword: ""
   });
 
+  // ₹399 Vendor Onboarding Fee Payment Modal State
+  const [showWorkerFeeModal, setShowWorkerFeeModal] = useState(false);
+  const [workerFeeProcessing, setWorkerFeeProcessing] = useState(false);
+  const [workerFeeMethod, setWorkerFeeMethod] = useState("upi"); // "upi" | "card" | "netbanking"
+  const [workerUpiId, setWorkerUpiId] = useState("");
+  const [pendingWorkerPayload, setPendingWorkerPayload] = useState(null);
+
   // ==========================================
   // 3. USER (CUSTOMER) STATE
   // ==========================================
@@ -398,9 +405,9 @@ function LoginPage() {
   };
 
   // ----------------------------------------------------
-  // WORKER (FIELD TECHNICIAN) REGISTRATION HANDLER
+  // WORKER (FIELD TECHNICIAN) REGISTRATION & ₹399 VENDOR FEE
   // ----------------------------------------------------
-  const handleWorkerRegister = async (e) => {
+  const handleInitiateWorkerRegister = (e) => {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
@@ -426,65 +433,103 @@ function LoginPage() {
       return;
     }
 
-    setLoading(true);
-    try {
-      const payload = {
-        name: workerRegData.name.trim(),
-        phone: cleanPhone.slice(-10),
-        password: workerRegData.password || "worker123",
-        category: workerRegData.category,
-        skills: [workerRegData.category, `${workerRegData.category} Specialist`],
-        experienceYears: Number(workerRegData.experienceYears) || 3,
-        city: workerRegData.city || "Indore",
-        address: `${workerRegData.area || "Palasia"}, ${workerRegData.city || "Indore"}`,
-        aadhaarNumber: workerRegData.aadhaarNumber,
-        preferredVendorId: "auto"
-      };
+    // Prepare payload and open ₹399 onboarding fee modal
+    const payload = {
+      name: workerRegData.name.trim(),
+      phone: cleanPhone.slice(-10),
+      password: workerRegData.password || "worker123",
+      category: workerRegData.category,
+      skills: [workerRegData.category, `${workerRegData.category} Specialist`],
+      experienceYears: Number(workerRegData.experienceYears) || 3,
+      city: workerRegData.city || "Indore",
+      address: `${workerRegData.area || "Palasia"}, ${workerRegData.city || "Indore"}`,
+      aadhaarNumber: workerRegData.aadhaarNumber,
+      preferredVendorId: "auto"
+    };
 
+    setPendingWorkerPayload(payload);
+    setWorkerUpiId(`${payload.phone}@upi`);
+    setShowWorkerFeeModal(true);
+  };
+
+  const handleCompleteWorkerFeeAndRegister = async () => {
+    if (!pendingWorkerPayload) return;
+    setWorkerFeeProcessing(true);
+    setErrorMessage("");
+
+    const txnId = `TXN-399-${Date.now().toString().slice(-6)}`;
+    const fullPayload = {
+      ...pendingWorkerPayload,
+      onboardingFeePaid: true,
+      feeAmount: 399,
+      feeTxnId: txnId,
+      status: "inactive",
+      verificationStatus: "pending"
+    };
+
+    try {
       const res = await fetch(`${API_BASE}/api/workers/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(fullPayload)
       });
       const data = await res.json();
 
       if (res.ok && data.success && data.worker) {
-        localStorage.setItem("helper_worker", JSON.stringify(data.worker));
+        const workerWithFee = {
+          ...data.worker,
+          onboardingFeePaid: true,
+          feeAmount: 399,
+          feeTxnId: txnId,
+          status: "inactive",
+          verificationStatus: "pending",
+          vendorName: data.assignedVendor?.name || data.worker.vendorName || "Amritam Services Hub"
+        };
+        localStorage.setItem("helper_worker", JSON.stringify(workerWithFee));
         if (data.token) localStorage.setItem("helper_worker_token", data.token);
-        login({ name: data.worker.name, role: "Worker", email: data.worker.phone || "" });
-        setSuccessMessage(`Registration successful! Assigned to nearest vendor: ${data.assignedVendor?.name || data.worker.vendorName || "Amritam Services Hub"}. Redirecting...`);
+        login({ name: workerWithFee.name, role: "Worker", email: workerWithFee.phone || "" });
+        setShowWorkerFeeModal(false);
+        setSuccessMessage(`₹399 Payment Successful! Application submitted to nearest vendor (${workerWithFee.vendorName}). Approval pending...`);
         setTimeout(() => {
           navigate("/worker/dashboard");
-        }, 1000);
+        }, 800);
       } else {
         throw new Error(data.message || "Worker registration failed.");
       }
     } catch (err) {
-      // Offline fallback registration
-      const newWorker = {
+      // Offline fallback
+      const fallbackWorker = {
         workerId: "WRK-" + Math.floor(10000 + Math.random() * 90000),
         id: "WRK-" + Math.floor(10000 + Math.random() * 90000),
-        name: workerRegData.name.trim(),
-        phone: cleanPhone.slice(-10),
-        category: workerRegData.category,
+        name: pendingWorkerPayload.name,
+        phone: pendingWorkerPayload.phone,
+        category: pendingWorkerPayload.category,
         vendorName: "Amritam Services Hub (Nearest Vendor)",
-        city: workerRegData.city || "Indore",
-        address: `${workerRegData.area || "Palasia"}, ${workerRegData.city || "Indore"}`,
-        status: "active",
-        verificationStatus: "verified",
-        experienceYears: workerRegData.experienceYears || 3,
+        vendorPhone: "+91 98765 00001",
+        city: pendingWorkerPayload.city || "Indore",
+        address: pendingWorkerPayload.address || "Palasia, Indore",
+        status: "inactive",
+        verificationStatus: "pending",
+        onboardingFeePaid: true,
+        feeAmount: 399,
+        feeTxnId: txnId,
+        experienceYears: pendingWorkerPayload.experienceYears || 3,
         rating: 5.0,
-        availability: { isOnline: true, isEmergencyAvailable: true }
+        availability: { isOnline: false, isEmergencyAvailable: false },
+        documents: {
+          aadhaarNumber: pendingWorkerPayload.aadhaarNumber || ""
+        }
       };
-      localStorage.setItem("helper_worker", JSON.stringify(newWorker));
+      localStorage.setItem("helper_worker", JSON.stringify(fallbackWorker));
       localStorage.setItem("helper_worker_token", "wrk_token_local");
-      login({ name: newWorker.name, role: "Worker", email: newWorker.phone });
-      setSuccessMessage(`Registration successful! Assigned to nearest vendor: Amritam Services Hub. Opening Worker Dashboard...`);
+      login({ name: fallbackWorker.name, role: "Worker", email: fallbackWorker.phone });
+      setShowWorkerFeeModal(false);
+      setSuccessMessage(`₹399 Payment Successful! Application submitted to nearest vendor (Amritam Services Hub). Opening status screen...`);
       setTimeout(() => {
         navigate("/worker/dashboard");
-      }, 1000);
+      }, 800);
     } finally {
-      setLoading(false);
+      setWorkerFeeProcessing(false);
     }
   };
 
@@ -1343,7 +1388,7 @@ function LoginPage() {
 
               {isRegister ? (
                 /* Worker REGISTRATION FORM */
-                <form onSubmit={handleWorkerRegister} className="pin-form-body">
+                <form onSubmit={handleInitiateWorkerRegister} className="pin-form-body">
                   <div className="pin-input-group">
                     <label className="pin-input-label">Worker Full Name *</label>
                     <div className="pin-input-field-wrap">
@@ -1504,7 +1549,7 @@ function LoginPage() {
                     style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", boxShadow: "0 8px 20px rgba(16, 185, 129, 0.28)" }}
                     disabled={loading}
                   >
-                    {loading ? "Registering Worker..." : "Register Worker & Connect to Nearest Vendor 🚀"}
+                    Proceed to ₹399 Vendor Onboarding ➔
                   </button>
                 </form>
               ) : (
@@ -1895,6 +1940,135 @@ function LoginPage() {
         </div>
 
       </div>
+
+      {/* =========================================================================
+          ₹399 VENDOR ONBOARDING FEE MODAL
+          ========================================================================= */}
+      {showWorkerFeeModal && pendingWorkerPayload && (
+        <div className="worker-fee-modal-overlay animate-fade-in">
+          <div className="worker-fee-modal-card animate-scale-up">
+            <div className="fee-modal-header">
+              <div className="fee-modal-badge">
+                <span>🏪</span>
+                <span>VENDOR ONBOARDING & VERIFICATION CHARGE</span>
+              </div>
+              <button 
+                type="button" 
+                className="fee-modal-close" 
+                onClick={() => setShowWorkerFeeModal(false)}
+                title="Cancel & Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="fee-modal-body">
+              <div className="fee-amount-highlight">
+                <span className="fee-currency">₹</span>
+                <span className="fee-number">399</span>
+                <span className="fee-tag">One-Time Registration Charge</span>
+              </div>
+
+              <p className="fee-desc-text">
+                Helper Partner Network me naye worker registration ke liye nearest vendor <strong>(Amritam Services Hub)</strong> ka verification charge pay karna hoga. Vendor approval ke baad aapka panel unlock hoga.
+              </p>
+
+              <div className="fee-breakdown-box">
+                <div className="fee-item">
+                  <span>🛡️ Identity & Police / Aadhaar Verification</span>
+                  <strong>₹199</strong>
+                </div>
+                <div className="fee-item">
+                  <span>👷 Partner ID Badge & Verified Field Pro Kit</span>
+                  <strong>₹100</strong>
+                </div>
+                <div className="fee-item">
+                  <span>🏪 Nearest Vendor Franchise Connect Fee</span>
+                  <strong>₹100</strong>
+                </div>
+                <div className="fee-item fee-total">
+                  <span>Total Payable Amount</span>
+                  <span className="fee-total-amount">₹399</span>
+                </div>
+              </div>
+
+              <div className="fee-worker-summary">
+                <div>👤 <strong>{pendingWorkerPayload.name}</strong> • +91 {pendingWorkerPayload.phone}</div>
+                <div>🔧 Trade: <strong>{pendingWorkerPayload.category}</strong></div>
+                <div>📍 Territory: <strong>{pendingWorkerPayload.address || "Palasia, Indore"}</strong></div>
+                <div>🏪 Nearest Vendor: <strong>Amritam Services Hub (Indore)</strong></div>
+              </div>
+
+              <div className="fee-payment-methods">
+                <label className="method-label">Select Payment Method:</label>
+                <div className="payment-options-grid">
+                  <button 
+                    type="button" 
+                    className={`pay-opt-btn ${workerFeeMethod === "upi" ? "active" : ""}`}
+                    onClick={() => setWorkerFeeMethod("upi")}
+                  >
+                    <span>📱</span>
+                    <span>UPI (GPay / PhonePe / Paytm)</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`pay-opt-btn ${workerFeeMethod === "card" ? "active" : ""}`}
+                    onClick={() => setWorkerFeeMethod("card")}
+                  >
+                    <span>💳</span>
+                    <span>Debit / Credit Card</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`pay-opt-btn ${workerFeeMethod === "netbanking" ? "active" : ""}`}
+                    onClick={() => setWorkerFeeMethod("netbanking")}
+                  >
+                    <span>🏛️</span>
+                    <span>Net Banking</span>
+                  </button>
+                </div>
+              </div>
+
+              {workerFeeMethod === "upi" && (
+                <div className="upi-input-wrap">
+                  <input 
+                    type="text" 
+                    placeholder="e.g. 9876500101@upi or gpay@okhdfc" 
+                    value={workerUpiId}
+                    onChange={(e) => setWorkerUpiId(e.target.value)}
+                    className="pin-input-field"
+                  />
+                  <div className="upi-quick-pills">
+                    <button type="button" onClick={() => setWorkerUpiId(`${pendingWorkerPayload.phone}@upi`)}>
+                      ⚡ {pendingWorkerPayload.phone}@upi
+                    </button>
+                    <button type="button" onClick={() => setWorkerUpiId("worker.pro@okaxis")}>
+                      ⚡ worker.pro@okaxis
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <button 
+                type="button" 
+                className="btn-pay-worker-fee"
+                onClick={handleCompleteWorkerFeeAndRegister}
+                disabled={workerFeeProcessing}
+              >
+                {workerFeeProcessing ? (
+                  <span>⏳ Processing ₹399 Payment & Submitting...</span>
+                ) : (
+                  <span>Pay ₹399 & Submit for Vendor Approval ➔</span>
+                )}
+              </button>
+
+              <p className="fee-security-note">
+                🔒 256-Bit SSL Encrypted Payment • Instant Receipt Generated
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -171,7 +171,10 @@ function WorkerAuth() {
         address: regForm.address || `${regForm.city} Territory`,
         aadhaarNumber: regForm.aadhaarNumber,
         panNumber: regForm.panNumber,
-        preferredVendorId: regForm.preferredVendorId !== "auto" ? regForm.preferredVendorId : undefined
+        preferredVendorId: regForm.preferredVendorId !== "auto" ? regForm.preferredVendorId : undefined,
+        onboardingFeePaid: true,
+        feeAmount: 399,
+        feeTxnId: `TX-ONBOARD-399-${Date.now().toString().slice(-6)}`
       };
 
       const res = await fetch(`${API_BASE}/api/workers/register`, {
@@ -204,6 +207,9 @@ function WorkerAuth() {
         vendorName: mockVendor.name || "Amritam Services Hub",
         status: "inactive",
         verificationStatus: "pending",
+        onboardingFeePaid: true,
+        feeAmount: 399,
+        feeTxnId: `TX-ONBOARD-399-${Date.now().toString().slice(-6)}`,
         earnings: { currentBalance: 0, pendingPayout: 0, totalEarnings: 0 },
         availability: { isOnline: false }
       };

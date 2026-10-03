@@ -731,6 +731,17 @@ function VendorDashboard() {
       const data = await res.json();
       showToast(`🎉 Technician ${workerName || ""} approved and added to your shop fleet!`);
       setPendingWorkersList(prev => prev.filter(w => (w.workerId || w.id) !== workerId));
+      
+      // Sync local worker in localStorage if currently active
+      try {
+        const storedWrk = JSON.parse(localStorage.getItem("helper_worker") || "{}");
+        if ((storedWrk.workerId || storedWrk.id) === workerId) {
+          storedWrk.verificationStatus = "verified";
+          storedWrk.status = "active";
+          localStorage.setItem("helper_worker", JSON.stringify(storedWrk));
+        }
+      } catch (e) {}
+
       if (data && data.worker) {
         const newTeamMem = {
           id: data.worker.workerId || data.worker.id,
@@ -746,6 +757,14 @@ function VendorDashboard() {
     } catch (e) {
       showToast(`🎉 Technician ${workerName || ""} approved!`);
       setPendingWorkersList(prev => prev.filter(w => (w.workerId || w.id) !== workerId));
+      try {
+        const storedWrk = JSON.parse(localStorage.getItem("helper_worker") || "{}");
+        if ((storedWrk.workerId || storedWrk.id) === workerId) {
+          storedWrk.verificationStatus = "verified";
+          storedWrk.status = "active";
+          localStorage.setItem("helper_worker", JSON.stringify(storedWrk));
+        }
+      } catch (err) {}
     }
   };
 
@@ -2792,7 +2811,8 @@ function VendorDashboard() {
                         <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>📞 {pw.phone}</span>
                       </div>
 
-                      <div style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", gap: "12px", background: "var(--surface-input)", padding: "8px 12px", borderRadius: "8px" }}>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", gap: "10px", flexWrap: "wrap", background: "var(--surface-input)", padding: "8px 12px", borderRadius: "8px" }}>
+                        <span style={{ color: "#10B981", fontWeight: 700 }}>💳 ₹{pw.feeAmount || 399} Onboarding Fee Paid ✓</span>
                         <span>🆔 Aadhaar: <strong>{pw.documents?.aadhaarNumber || "Submitted"}</strong></span>
                         <span>📍 Area: <strong>{pw.address || "Local Hub"}</strong></span>
                       </div>
