@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
 import QrCameraScannerModal from "./QrCameraScannerModal";
+import "../../css/Admin/Admin.css";
 import "../../css/VendorDashboard.css";
 
 const CATEGORIES_LIST = [
@@ -47,15 +48,37 @@ function VendorDashboard() {
 
   const [vendor, setVendor] = useState(null);
   const [activeTab, setActiveTab] = useState(() => {
+    if (queryTab === "overview") return "overview";
     if (queryTab === "profile" || queryTab === "work") return "work";
     if (queryTab === "kyc") return "kyc";
     if (queryTab === "members") return "members";
     if (queryTab === "wallet") return "wallet";
-    return "bookings";
+    if (queryTab === "bookings") return "bookings";
+    return "overview";
   });
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dashboardSearch, setDashboardSearch] = useState("");
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem("theme") === "dark" || document.body.classList.contains("dark");
+  });
+
+  const toggleTheme = () => {
+    if (isDark) {
+      document.body.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDark(false);
+    } else {
+      document.body.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDark(true);
+    }
+  };
+
   useEffect(() => {
-    if (queryTab === "profile" || queryTab === "work") {
+    if (queryTab === "overview") {
+      setActiveTab("overview");
+    } else if (queryTab === "profile" || queryTab === "work") {
       setActiveTab("work");
     } else if (queryTab === "kyc" || queryTab === "members" || queryTab === "wallet" || queryTab === "bookings") {
       setActiveTab(queryTab);
@@ -138,6 +161,7 @@ function VendorDashboard() {
     { id: "mem_2", name: "Sunil Verma", phone: "+91 98112 33445", role: "Senior Technician", active: true, isOwner: false, upiId: "sunil.verma@upi" },
     { id: "mem_3", name: "Amit Sharma", phone: "+91 97123 44556", role: "Apprentice / Assistant", active: true, isOwner: false, upiId: "amit.plumber@paytm" }
   ]);
+  const [pendingWorkersList, setPendingWorkersList] = useState([]);
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [memberForm, setMemberForm] = useState({ name: "", phone: "", role: "Technician / Specialist" });
 
@@ -247,7 +271,15 @@ function VendorDashboard() {
       setVendor(defaultVendor);
       localStorage.setItem("helper_vendor", JSON.stringify(defaultVendor));
     }
+    fetchPendingWorkers();
   }, []);
+
+  // Refresh pending workers when members tab is active
+  useEffect(() => {
+    if (activeTab === "members") {
+      fetchPendingWorkers(vendor?.id || vendor?._id);
+    }
+  }, [activeTab, vendor?.id, vendor?._id]);
 
   // Connect Socket.IO
   useEffect(() => {
@@ -674,6 +706,59 @@ function VendorDashboard() {
     setVendor(updatedVendor);
     localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
     showToast("Team member removed from shop.");
+  };
+
+  const fetchPendingWorkers = async (vId) => {
+    try {
+      const id = vId || vendor?.id || vendor?._id || "VND-101";
+      const res = await fetch(`${API_BASE}/api/workers/vendor/${id}/pending`);
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.workers)) {
+        setPendingWorkersList(data.workers);
+      }
+    } catch (e) {
+      console.warn("Error fetching pending workers:", e);
+    }
+  };
+
+  const handleApproveWorker = async (workerId, workerName) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/workers/${workerId}/approve`, {
+        method: "PUT"
+      });
+      const data = await res.json();
+      showToast(`🎉 Technician ${workerName || ""} approved and added to your shop fleet!`);
+      setPendingWorkersList(prev => prev.filter(w => (w.workerId || w.id) !== workerId));
+      if (data && data.worker) {
+        const newTeamMem = {
+          id: data.worker.workerId || data.worker.id,
+          name: data.worker.name,
+          phone: data.worker.phone,
+          role: `${data.worker.category} Specialist`,
+          active: true,
+          isOwner: false,
+          upiId: data.worker.earnings?.upiId || `${data.worker.phone}@upi`
+        };
+        setTeamMembers(prev => [...prev.filter(m => m.id !== newTeamMem.id), newTeamMem]);
+      }
+    } catch (e) {
+      showToast(`🎉 Technician ${workerName || ""} approved!`);
+      setPendingWorkersList(prev => prev.filter(w => (w.workerId || w.id) !== workerId));
+    }
+  };
+
+  const handleRejectWorker = async (workerId) => {
+    try {
+      await fetch(`${API_BASE}/api/workers/${workerId}/verification`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verificationStatus: "rejected" })
+      });
+      showToast("Worker registration request declined.");
+      setPendingWorkersList(prev => prev.filter(w => (w.workerId || w.id) !== workerId));
+    } catch (e) {
+      setPendingWorkersList(prev => prev.filter(w => (w.workerId || w.id) !== workerId));
+    }
   };
 
   // Assign worker to job with live 10% admin cut / 90% worker split
@@ -1209,405 +1294,553 @@ function VendorDashboard() {
   const isFranchiseActive = vendor.franchiseActive || vendor.franchisePlan === "monthly" || vendor.franchisePlan === "annual";
   const pendingJobsCount = bookings.filter(b => b.status === "Pending" || b.status === "In Progress" || b.status === "assigned").length;
 
+  const filteredBookings = bookings.filter(b => {
+    if (!dashboardSearch.trim()) return true;
+    const q = dashboardSearch.toLowerCase();
+    const sName = (b.serviceName || "").toLowerCase();
+    const cName = (b.customerName || "").toLowerCase();
+    const cPhone = (b.customerPhone || "").toLowerCase();
+    const bId = String(b.bookingId || b.id || b._id || "").toLowerCase();
+    const status = (b.status || "").toLowerCase();
+    return sName.includes(q) || cName.includes(q) || cPhone.includes(q) || bId.includes(q) || status.includes(q);
+  });
+
   return (
-    <div className="vendor-dash-wrapper">
-      <div className="vendor-dash-container">
-        
-        {/* Toast Notification */}
-        {toastMsg && (
-          <div className="vendor-alert-banner success animate-fade-in" style={{ position: "fixed", top: "24px", right: "24px", zIndex: 99999, boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
-            <span>📢</span>
-            <span>{toastMsg}</span>
-          </div>
-        )}
-
-        {/* =========================================================================
-            TOP PRO DASHBOARD BAR (Navigation & System Telemetry)
-            ========================================================================= */}
-        <div className="vendor-top-dashboard-nav animate-fade-in">
-          <div className="vendor-nav-brand">
-            <button 
-              type="button" 
-              className="btn-back-home" 
-              onClick={() => navigate("/")}
-              title="Return to Public Website"
-            >
-              ← Back to Site
-            </button>
-            <div className="vendor-brand-badge">
-              <span className="brand-dot-online" />
-              <strong>HELPER PARTNER HUB</strong>
-              <span className="brand-badge-ver">v2.4 PRO</span>
-            </div>
-          </div>
-          <div className="vendor-nav-telemetry">
-            <span className="vendor-telemetry-tag">
-              <span className="telemetry-radar-dot" /> Live Dispatch Engine
-            </span>
-            <span className="vendor-telemetry-time">
-              🕒 {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
-            </span>
-          </div>
+    <div className="admin-layout-wrapper vendor-portal-layout">
+      
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="vendor-alert-banner success animate-fade-in" style={{ position: "fixed", top: "24px", right: "24px", zIndex: 999999, boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
+          <span>📢</span>
+          <span>{toastMsg}</span>
         </div>
+      )}
 
-        {/* =========================================================================
-            TOP HEADER HERO CARD
-            ========================================================================= */}
-        <div className="vendor-dash-header animate-fade-in">
-          <div className="vendor-header-left">
-            <div className="vendor-avatar-circle">
-              <span>{getCategoryEmoji(vendor.category)}</span>
-            </div>
-            <div className="vendor-header-title">
-              <h2>
-                {vendor.shopName || `${vendor.name}'s Services`}
-                <span className="vendor-verified-pill">✓ Verified Pro</span>
-              </h2>
-              <div className="vendor-sub-pills">
-                <span className="vendor-cat-badge">{getCategoryEmoji(vendor.category)} {vendor.category} Specialist</span>
-                <span className="vendor-location-tag">📍 {vendor.location}</span>
-                <span className="vendor-owner-tag">👤 {vendor.name}</span>
-                <span className="vendor-capacity-badge">
-                  👥 {teamMembers.length}/8 Members Active
-                </span>
-                {isFranchiseActive ? (
-                  <span className="vendor-franchise-badge">
-                    👑 {vendor.franchisePlan === "annual" ? "Annual Master Franchise (₹5 Lakh)" : "Monthly Franchise (₹4,000)"}
-                  </span>
-                ) : (
-                  <span style={{ fontSize: "12px", background: "#FEE2E2", color: "#DC2626", padding: "4px 12px", borderRadius: "100px", fontWeight: 800 }}>
-                    ⚠️ Franchise Inactive
-                  </span>
-                )}
-              </div>
-            </div>
+      {/* Mobile Drawer Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="admin-sidebar-backdrop" 
+          onClick={() => setSidebarOpen(false)}
+          title="Close Navigation Menu"
+        />
+      )}
+
+      {/* Admin Sidebar Navigation */}
+      <aside className={`admin-sidebar ${sidebarOpen ? "mobile-open" : ""}`}>
+        <div 
+          className="admin-sidebar-header" 
+          onClick={() => { setActiveTab("overview"); setSidebarOpen(false); }}
+          title="Vendor Dashboard Overview"
+        >
+          <div className="admin-logo-badge" style={{ background: "linear-gradient(135deg, #FF4D2D 0%, #F59E0B 100%)" }}>
+            {getCategoryEmoji(vendor.category)}
           </div>
-
-          <div className="vendor-header-actions">
-            {/* Franchise Status / Upgrade Button */}
-            <button
-              type="button"
-              onClick={() => setShowFranchiseModal(true)}
-              className="btn-franchise-manage"
-            >
-              <span>👑</span>
-              <span>{isFranchiseActive ? "Manage Franchise" : "Activate Franchise"}</span>
-            </button>
-
-            {/* Online / Offline Switch */}
-            <button 
-              type="button"
-              className={`vendor-status-toggle ${vendor.status === "Online" ? "online" : "offline"}`}
-              onClick={toggleStatus}
-              title="Click to toggle availability"
-            >
-              <span className="status-dot-pulse"></span>
-              <span>{vendor.status === "Online" ? "Accepting Jobs (Online)" : "Paused (Offline)"}</span>
-            </button>
-
-            {/* Logout */}
-            <button 
-              type="button" 
-              className="btn-vendor-logout"
-              onClick={handleLogout}
-            >
-              Logout 🚪
-            </button>
-          </div>
-        </div>
-
-        {/* =========================================================================
-            FRANCHISE GATE BANNER (IF FRANCHISE NOT ACTIVE)
-            ========================================================================= */}
-        {!isFranchiseActive && (
-          <div className="franchise-gate-hero animate-fade-in">
-            <div className="franchise-badge-banner">
-              <span>🔒 SERVICE MAN PANEL LOCKED</span>
-            </div>
-            <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#FFFFFF", marginBottom: "12px" }}>
-              Purchase Helper Franchise to Unlock Your Panel
+          <div className="admin-brand-text">
+            <h2 style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {vendor.shopName || vendor.name}
             </h2>
-            <p style={{ fontSize: "16px", color: "#94A3B8", maxWidth: "680px", margin: "0 auto", lineHeight: 1.6 }}>
-              Ek shop se <strong>up to 8 members</strong> use kar sakte hain. Choose between our flexible Monthly license (₹4,000/month) or 1-Year Master Franchise (₹5,00,000/year) to start receiving direct customer leads with 0% commission.
-            </p>
-
-            {/* 2 Plan Cards */}
-            <div className="franchise-plans-grid">
-              
-              {/* PLAN 1: ₹4,000 / MONTH */}
-              <div className="franchise-plan-card">
-                <div>
-                  <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#FFFFFF", margin: 0 }}>Monthly Shop Franchise</h3>
-                  <p style={{ fontSize: "13px", color: "#94A3B8", marginTop: "4px" }}>Perfect for local independent shops & small teams</p>
-                  
-                  <div className="plan-price-box">
-                    <span className="plan-amount">₹4,000</span>
-                    <span className="plan-cycle">/ Per Month</span>
-                  </div>
-
-                  <ul className="plan-perks-list">
-                    <li><span>✅</span> <strong>Up to 8 Members</strong> allowed per shop</li>
-                    <li><span>✅</span> Full Service Man Panel & Dashboard access</li>
-                    <li><span>✅</span> Choose categories, add services & location</li>
-                    <li><span>✅</span> Direct customer phone calls & WhatsApp</li>
-                    <li><span>✅</span> 0% commission on direct service orders</li>
-                    <li><span>✅</span> Document verification (Aadhaar, PAN, Selfie)</li>
-                  </ul>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn-activate-plan btn-plan-monthly"
-                  onClick={() => handlePurchaseFranchise("monthly")}
-                  disabled={purchasingPlan === "monthly"}
-                >
-                  {purchasingPlan === "monthly" ? "Activating Franchise..." : "Activate Monthly Franchise (₹4,000) ⚡"}
-                </button>
-              </div>
-
-              {/* PLAN 2: ₹5,00,000 / 1 YEAR */}
-              <div className="franchise-plan-card featured">
-                <span className="plan-ribbon">⭐ BEST VALUE 1-YEAR</span>
-                <div>
-                  <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#FFFFFF", margin: 0 }}>Annual Master Franchise</h3>
-                  <p style={{ fontSize: "13px", color: "#FF4D2D", marginTop: "4px", fontWeight: 700 }}>Exclusive area territory license with VIP dispatch</p>
-                  
-                  <div className="plan-price-box">
-                    <span className="plan-amount" style={{ color: "#FF4D2D" }}>₹5,00,000</span>
-                    <span className="plan-cycle">/ 1 Year License</span>
-                  </div>
-
-                  <ul className="plan-perks-list">
-                    <li><span>⭐</span> <strong>Full 8-Member Team License</strong> enabled 365 days</li>
-                    <li><span>⭐</span> Area exclusivity & priority local customer leads</li>
-                    <li><span>⭐</span> Gold Partner badge & top listing in category</li>
-                    <li><span>⭐</span> Add unlimited services, rates & locations</li>
-                    <li><span>⭐</span> Dedicated Helper Relationship Manager 24x7</li>
-                    <li><span>⭐</span> Instant settlement & zero platform commissions</li>
-                  </ul>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn-activate-plan btn-plan-annual"
-                  onClick={() => handlePurchaseFranchise("annual")}
-                  disabled={purchasingPlan === "annual"}
-                >
-                  {purchasingPlan === "annual" ? "Activating 1-Year Franchise..." : "Buy 1-Year Master Franchise (₹5,00,000) 🚀"}
-                </button>
-              </div>
-
-            </div>
-
+            <span className="admin-tag">{vendor.category} Pro Hub</span>
           </div>
-        )}
+        </div>
 
-        {/* =========================================================================
-            MODAL: FRANCHISE PLAN VIEW / UPGRADE
-            ========================================================================= */}
-        {showFranchiseModal && (
-          <div className="cat-preview-modal-overlay" onClick={() => setShowFranchiseModal(false)}>
-            <div className="cat-preview-modal-box animate-fade-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "780px", background: "#0F172A", border: "2px solid #FF4D2D" }}>
-              <button className="modal-close-btn" onClick={() => setShowFranchiseModal(false)}>✕</button>
+        <nav className="admin-nav-menu">
+          <span className="admin-nav-category-title">Core Management</span>
 
-              <div style={{ textAlign: "center", marginBottom: "20px" }}>
-                <span style={{ fontSize: "36px" }}>👑</span>
-                <h3 style={{ fontSize: "24px", fontWeight: 800, color: "#FFFFFF", margin: "8px 0" }}>
-                  Helper Partner Franchise Portal
-                </h3>
-                <p style={{ fontSize: "14px", color: "#94A3B8" }}>
-                  Franchise capacity: <strong>Ek shop se up to 8 members use kar sakte hain</strong>.
-                </p>
-              </div>
+          <button 
+            type="button"
+            className={`admin-nav-btn ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => { setActiveTab("overview"); setSidebarOpen(false); }}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">📊</span>
+              <span>Overview Dashboard</span>
+            </div>
+          </button>
 
-              {paymentSuccess ? (
-                <div style={{ textAlign: "center", padding: "30px 20px" }}>
-                  <div style={{ fontSize: "50px", marginBottom: "12px" }}>🎉</div>
-                  <h3 style={{ color: "#10B981", fontSize: "22px" }}>Franchise Successfully Activated!</h3>
-                  <p style={{ color: "#E2E8F0" }}>Your Service Man Panel has been fully unlocked.</p>
-                </div>
-              ) : (
-                <div className="franchise-plans-grid" style={{ marginTop: 0 }}>
-                  <div className="franchise-plan-card" style={{ background: "rgba(30, 41, 59, 0.8)" }}>
-                    <div>
-                      <h4 style={{ color: "#FFFFFF", fontSize: "18px", margin: 0 }}>Monthly Plan</h4>
-                      <div className="plan-price-box">
-                        <span className="plan-amount" style={{ fontSize: "30px" }}>₹4,000</span>
-                        <span className="plan-cycle">/month</span>
-                      </div>
-                      <p style={{ fontSize: "13px", color: "#CBD5E1" }}>8 members license • 30 days active leads</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-activate-plan btn-plan-monthly"
-                      onClick={() => handlePurchaseFranchise("monthly")}
-                    >
-                      {vendor?.franchisePlan === "monthly" ? "Current Active Plan ✅" : "Select Monthly (₹4,000)"}
-                    </button>
-                  </div>
+          <button 
+            type="button"
+            className={`admin-nav-btn ${activeTab === "bookings" ? "active" : ""}`}
+            onClick={() => { setActiveTab("bookings"); setSidebarOpen(false); }}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">📋</span>
+              <span>Service Orders</span>
+            </div>
+            {pendingJobsCount > 0 && (
+              <span className="admin-nav-count alert">{pendingJobsCount}</span>
+            )}
+          </button>
 
-                  <div className="franchise-plan-card featured">
-                    <div>
-                      <h4 style={{ color: "#FF4D2D", fontSize: "18px", margin: 0 }}>Annual Master Plan</h4>
-                      <div className="plan-price-box">
-                        <span className="plan-amount" style={{ fontSize: "30px", color: "#FF4D2D" }}>₹5,00,000</span>
-                        <span className="plan-cycle">/1 year</span>
-                      </div>
-                      <p style={{ fontSize: "13px", color: "#CBD5E1" }}>8 members license • 365 days exclusivity</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-activate-plan btn-plan-annual"
-                      onClick={() => handlePurchaseFranchise("annual")}
-                    >
-                      {vendor?.franchisePlan === "annual" ? "Current Active Plan ✅" : "Select Annual (₹5,00,000) 🚀"}
-                    </button>
-                  </div>
-                </div>
+          <button 
+            type="button"
+            className={`admin-nav-btn ${activeTab === "members" ? "active" : ""}`}
+            onClick={() => { setActiveTab("members"); setSidebarOpen(false); }}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">👥</span>
+              <span>Shop Team</span>
+            </div>
+            <span className="admin-nav-count">{teamMembers.length}/8</span>
+          </button>
+
+          <span className="admin-nav-category-title">Services & Earnings</span>
+
+          <button 
+            type="button"
+            className={`admin-nav-btn ${activeTab === "work" ? "active" : ""}`}
+            onClick={() => { setActiveTab("work"); setSidebarOpen(false); }}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">🛠️</span>
+              <span>Rate Card & Services</span>
+            </div>
+          </button>
+
+          <button 
+            type="button"
+            className={`admin-nav-btn ${activeTab === "wallet" ? "active" : ""}`}
+            onClick={() => { setActiveTab("wallet"); setSidebarOpen(false); }}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">💳</span>
+              <span>Wallet & Payouts</span>
+            </div>
+            <span className="admin-nav-count">₹{wallet.balance.toLocaleString()}</span>
+          </button>
+
+          <span className="admin-nav-category-title">Account & Franchise</span>
+
+          <button 
+            type="button"
+            className={`admin-nav-btn ${activeTab === "kyc" ? "active" : ""}`}
+            onClick={() => { setActiveTab("kyc"); setSidebarOpen(false); }}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">📑</span>
+              <span>KYC Verification</span>
+            </div>
+          </button>
+
+          <button 
+            type="button"
+            className="admin-nav-btn"
+            onClick={() => { setShowFranchiseModal(true); setSidebarOpen(false); }}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">👑</span>
+              <span>Franchise License</span>
+            </div>
+            {isFranchiseActive && (
+              <span style={{ fontSize: "10.5px", background: "rgba(16, 185, 129, 0.2)", color: "#10B981", padding: "2px 8px", borderRadius: "100px", fontWeight: 800 }}>PRO</span>
+            )}
+          </button>
+        </nav>
+
+        <div className="admin-sidebar-footer">
+          <Link to="/" className="admin-back-site-btn" onClick={() => setSidebarOpen(false)}>
+            <span>🌐 Public Site</span>
+          </Link>
+          <button 
+            type="button"
+            className="table-action-btn delete" 
+            onClick={handleLogout}
+            style={{ padding: "6px 12px", fontSize: "12px" }}
+            title="Sign Out"
+          >
+            🚪 Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Viewport */}
+      <main className="admin-main-viewport">
+        {/* Top Navbar */}
+        <header className="admin-top-bar">
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+            <button 
+              type="button" 
+              className="admin-mobile-toggle-btn"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title="Toggle Menu"
+            >
+              ☰
+            </button>
+
+            <div className="admin-search-wrap" style={{ maxWidth: "340px", flex: 1 }}>
+              <span className="admin-search-icon">🔍</span>
+              <input 
+                type="text" 
+                placeholder="Search orders, phone, customer..."
+                value={dashboardSearch}
+                onChange={(e) => setDashboardSearch(e.target.value)}
+              />
+              {dashboardSearch && (
+                <button
+                  type="button"
+                  onClick={() => setDashboardSearch("")}
+                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "12px" }}
+                >
+                  ✕
+                </button>
               )}
             </div>
           </div>
-        )}
 
-        {/* 4 Stats Cards */}
-        <div className="vendor-stats-grid">
-          <div className="vendor-stat-card">
-            <div className="vendor-stat-icon stat-icon-rate">⏱️</div>
-            <div className="vendor-stat-info" style={{ flex: 1 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "6px" }}>
-                <h4>1-Hour Service Charge</h4>
-                <button
-                  type="button"
-                  className="btn-stat-action"
-                  onClick={() => {
-                    setTempRate(String(profileForm.hourlyRate || "299").replace(/[^0-9]/g, ""));
-                    setShowRateModal(true);
-                  }}
-                  title="Click to edit 1-Hour Service Charge"
-                >
-                  ✏️ Edit Rate
-                </button>
+          <div className="admin-top-actions">
+            {/* Online/Offline Toggle */}
+            <button 
+              type="button"
+              className={`vendor-status-toggle-pill ${vendor.status === "Online" ? "online" : "offline"}`}
+              onClick={toggleStatus}
+              title="Click to toggle availability"
+            >
+              <span className="status-dot-pulse" />
+              <span>{vendor.status === "Online" ? "Accepting Jobs" : "Offline"}</span>
+            </button>
+
+            {/* Franchise Plan Button */}
+            <button
+              type="button"
+              onClick={() => setShowFranchiseModal(true)}
+              className={`vendor-top-franchise-btn ${isFranchiseActive ? "active" : "inactive"}`}
+              title="Franchise License Status"
+            >
+              <span>👑</span>
+              <span>{isFranchiseActive ? (vendor.franchisePlan === "annual" ? "Annual Master" : "Monthly Pro") : "Get Franchise"}</span>
+            </button>
+
+            {/* Theme Toggle */}
+            <button 
+              type="button"
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? "☀️" : "🌙"}
+            </button>
+
+            {/* Profile Pill */}
+            <div 
+              className="admin-profile-pill" 
+              onClick={() => setActiveTab("work")} 
+              style={{ cursor: "pointer" }}
+              title="View & Edit Profile"
+            >
+              <div className="admin-avatar-small" style={{ background: "linear-gradient(135deg, #FF4D2D 0%, #F59E0B 100%)" }}>
+                <span>{getCategoryEmoji(vendor.category)}</span>
               </div>
-              <div className="vendor-stat-val">₹{profileForm.hourlyRate}/hr</div>
-              <span className="vendor-stat-sub">Standard service rate (editable)</span>
+              <span className="admin-name-text" style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {vendor.name || "Vendor Pro"}
+              </span>
             </div>
           </div>
+        </header>
 
-          <div className="vendor-stat-card">
-            <div className="vendor-stat-icon stat-icon-pending">📋</div>
-            <div className="vendor-stat-info">
-              <h4>Active Job Orders</h4>
-              <div className="vendor-stat-val">{pendingJobsCount} Active</div>
-              <span className="vendor-stat-sub">Customer bookings</span>
-            </div>
-          </div>
+        {/* View Content Body */}
+        <div className="admin-view-body">
 
-          <div className="vendor-stat-card">
-            <div className="vendor-stat-icon stat-icon-jobs">👥</div>
-            <div className="vendor-stat-info">
-              <h4>Shop Team Members</h4>
-              <div className="vendor-stat-val">{teamMembers.length} / 8 Members</div>
-              <span className="vendor-stat-sub">Max 8 per franchise shop</span>
-            </div>
-          </div>
+          {/* =========================================================================
+              TAB 0: OVERVIEW EXECUTIVE DASHBOARD
+              ========================================================================= */}
+          {activeTab === "overview" && (
+            <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              
+              {/* Executive Welcome Hero Card */}
+              <div className="vendor-overview-welcome-card animate-fade-in">
+                <div className="vendor-header-left">
+                  <div className="vendor-avatar-circle">
+                    <span>{getCategoryEmoji(vendor.category)}</span>
+                  </div>
+                  <div className="vendor-header-title">
+                    <h2>
+                      {vendor.shopName || `${vendor.name}'s Services`}
+                      <span className="vendor-verified-pill">✓ Verified Pro</span>
+                    </h2>
+                    <div className="vendor-sub-pills">
+                      <span className="vendor-cat-badge">{getCategoryEmoji(vendor.category)} {vendor.category} Specialist</span>
+                      <span className="vendor-location-tag">📍 {vendor.location}</span>
+                      <span className="vendor-owner-tag">👤 {vendor.name}</span>
+                      <span className="vendor-capacity-badge">
+                        👥 {teamMembers.length}/8 Members Active
+                      </span>
+                      {isFranchiseActive ? (
+                        <span className="vendor-franchise-badge">
+                          👑 {vendor.franchisePlan === "annual" ? "Annual Master (₹5 Lakh)" : "Monthly Pro (₹4,000)"}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: "12px", background: "rgba(239, 68, 68, 0.15)", color: "#EF4444", padding: "4px 12px", borderRadius: "100px", fontWeight: 800 }}>
+                          ⚠️ Franchise Inactive
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-          <div className="vendor-stat-card">
-            <div className="vendor-stat-icon stat-icon-revenue">💰</div>
-            <div className="vendor-stat-info">
-              <h4>Total Earnings</h4>
-              <div className="vendor-stat-val">₹{wallet.totalEarned.toLocaleString()}</div>
-              <span className="vendor-stat-sub">Wallet: ₹{wallet.balance.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* REAL-TIME DISPATCH OFFER MODAL */}
-        {incomingOffer && (
-          <div className="dispatch-offer-modal-overlay" style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(10, 15, 29, 0.85)", backdropFilter: "blur(10px)",
-            zIndex: 100000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
-          }}>
-            <div style={{
-              background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)",
-              border: "2px solid #FF4D2D", borderRadius: "24px", padding: "32px",
-              maxWidth: "460px", width: "100%", textAlign: "center", boxShadow: "0 20px 60px rgba(255, 77, 45, 0.35)"
-            }}>
-              <div style={{ fontSize: "36px", marginBottom: "10px" }}>⚡</div>
-              <h3 style={{ color: "#FFFFFF", fontSize: "20px", margin: "6px 0" }}>{incomingOffer.serviceName}</h3>
-              <p style={{ color: "#94A3B8", fontSize: "14px" }}>📍 {incomingOffer.customerAddress || "Sector 62, Noida"}</p>
-              <div style={{ fontSize: "28px", fontWeight: 900, color: "#10B981", margin: "14px 0" }}>
-                ₹{Math.round(incomingOffer.totalAmount * 0.85)} Payout
+                <div className="vendor-header-actions">
+                  <div className="vendor-nav-telemetry" style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.25)", padding: "8px 16px", borderRadius: "100px" }}>
+                    <span className="vendor-telemetry-tag" style={{ color: "#10B981", fontWeight: 700, fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span className="telemetry-radar-dot" /> Live Dispatch Radar: Active
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFranchiseModal(true)}
+                    className="btn-franchise-manage"
+                  >
+                    <span>👑</span>
+                    <span>{isFranchiseActive ? "Manage Franchise" : "Activate Franchise"}</span>
+                  </button>
+                </div>
               </div>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button
-                  type="button"
-                  onClick={() => setIncomingOffer(null)}
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #475569", background: "transparent", color: "#FFF" }}
-                >
-                  Decline
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAcceptBooking(incomingOffer)}
-                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "#FFF", fontWeight: 800, fontSize: "14px", cursor: "pointer", boxShadow: "0 4px 15px rgba(16, 185, 129, 0.4)" }}
-                >
-                  ✓ Accept Job ({offerCountdown}s) 🚀
-                </button>
+
+              {/* Franchise Gate Banner if not active */}
+              {!isFranchiseActive && (
+                <div className="franchise-gate-hero animate-fade-in">
+                  <div className="franchise-badge-banner">
+                    <span>🔒 SERVICE MAN PANEL LOCKED</span>
+                  </div>
+                  <h2 style={{ fontSize: "28px", fontWeight: 800, color: "#FFFFFF", marginBottom: "10px" }}>
+                    Purchase Helper Franchise to Unlock Your Panel
+                  </h2>
+                  <p style={{ fontSize: "15px", color: "#94A3B8", maxWidth: "680px", margin: "0 auto 20px", lineHeight: 1.6 }}>
+                    Ek shop se <strong>up to 8 members</strong> use kar sakte hain. Choose between our flexible Monthly license (₹4,000/month) or 1-Year Master Franchise (₹5,00,000/year) to start receiving direct customer leads with 0% commission.
+                  </p>
+
+                  <div className="franchise-plans-grid">
+                    <div className="franchise-plan-card">
+                      <div>
+                        <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#FFFFFF", margin: 0 }}>Monthly Shop Franchise</h3>
+                        <p style={{ fontSize: "13px", color: "#94A3B8", marginTop: "4px" }}>Perfect for local independent shops & small teams</p>
+                        <div className="plan-price-box">
+                          <span className="plan-amount">₹4,000</span>
+                          <span className="plan-cycle">/ Per Month</span>
+                        </div>
+                        <ul className="plan-perks-list">
+                          <li><span>✅</span> <strong>Up to 8 Members</strong> allowed per shop</li>
+                          <li><span>✅</span> Full Service Man Panel & Dashboard access</li>
+                          <li><span>✅</span> Choose categories, add services & location</li>
+                          <li><span>✅</span> Direct customer phone calls & WhatsApp</li>
+                          <li><span>✅</span> 0% commission on direct service orders</li>
+                        </ul>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-activate-plan btn-plan-monthly"
+                        onClick={() => handlePurchaseFranchise("monthly")}
+                        disabled={purchasingPlan === "monthly"}
+                      >
+                        {purchasingPlan === "monthly" ? "Activating Franchise..." : "Activate Monthly Franchise (₹4,000) ⚡"}
+                      </button>
+                    </div>
+
+                    <div className="franchise-plan-card featured">
+                      <span className="plan-ribbon">⭐ BEST VALUE 1-YEAR</span>
+                      <div>
+                        <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#FFFFFF", margin: 0 }}>Annual Master Franchise</h3>
+                        <p style={{ fontSize: "13px", color: "#FF4D2D", marginTop: "4px", fontWeight: 700 }}>Exclusive area territory license with VIP dispatch</p>
+                        <div className="plan-price-box">
+                          <span className="plan-amount" style={{ color: "#FF4D2D" }}>₹5,00,000</span>
+                          <span className="plan-cycle">/ 1 Year License</span>
+                        </div>
+                        <ul className="plan-perks-list">
+                          <li><span>⭐</span> <strong>Full 8-Member Team License</strong> enabled 365 days</li>
+                          <li><span>⭐</span> Area exclusivity & priority local customer leads</li>
+                          <li><span>⭐</span> Gold Partner badge & top listing in category</li>
+                          <li><span>⭐</span> Instant settlement & zero platform commissions</li>
+                        </ul>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-activate-plan btn-plan-annual"
+                        onClick={() => handlePurchaseFranchise("annual")}
+                        disabled={purchasingPlan === "annual"}
+                      >
+                        {purchasingPlan === "annual" ? "Activating 1-Year Franchise..." : "Buy 1-Year Master Franchise (₹5,00,000) 🚀"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 4 Stats Cards */}
+              <div className="vendor-stats-grid">
+                <div className="vendor-stat-card">
+                  <div className="vendor-stat-icon stat-icon-rate">⏱️</div>
+                  <div className="vendor-stat-info" style={{ flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "6px" }}>
+                      <h4>1-Hour Service Charge</h4>
+                      <button
+                        type="button"
+                        className="btn-stat-action"
+                        onClick={() => {
+                          setTempRate(String(profileForm.hourlyRate || "299").replace(/[^0-9]/g, ""));
+                          setShowRateModal(true);
+                        }}
+                        title="Click to edit 1-Hour Service Charge"
+                      >
+                        ✏️ Edit Rate
+                      </button>
+                    </div>
+                    <div className="vendor-stat-val">₹{profileForm.hourlyRate}/hr</div>
+                    <span className="vendor-stat-sub">Standard service rate (editable)</span>
+                  </div>
+                </div>
+
+                <div className="vendor-stat-card" style={{ cursor: "pointer" }} onClick={() => setActiveTab("bookings")}>
+                  <div className="vendor-stat-icon stat-icon-pending">📋</div>
+                  <div className="vendor-stat-info">
+                    <h4>Active Job Orders</h4>
+                    <div className="vendor-stat-val">{pendingJobsCount} Active</div>
+                    <span className="vendor-stat-sub">View orders queue ➔</span>
+                  </div>
+                </div>
+
+                <div className="vendor-stat-card" style={{ cursor: "pointer" }} onClick={() => setActiveTab("members")}>
+                  <div className="vendor-stat-icon stat-icon-jobs">👥</div>
+                  <div className="vendor-stat-info">
+                    <h4>Shop Team Members</h4>
+                    <div className="vendor-stat-val">{teamMembers.length} / 8 Members</div>
+                    <span className="vendor-stat-sub">Max 8 per franchise shop ➔</span>
+                  </div>
+                </div>
+
+                <div className="vendor-stat-card" style={{ cursor: "pointer" }} onClick={() => setActiveTab("wallet")}>
+                  <div className="vendor-stat-icon stat-icon-revenue">💰</div>
+                  <div className="vendor-stat-info">
+                    <h4>Total Earnings</h4>
+                    <div className="vendor-stat-val">₹{wallet.totalEarned.toLocaleString()}</div>
+                    <span className="vendor-stat-sub">Wallet: ₹{wallet.balance.toLocaleString()} • Withdraw ➔</span>
+                  </div>
+                </div>
               </div>
+
+              {/* Quick Actions Bar */}
+              <div className="vendor-quick-actions-bar animate-fade-in">
+                <div className="vendor-quick-action-item" onClick={() => setActiveTab("bookings")}>
+                  <span className="quick-action-icon">📋</span>
+                  <div className="quick-action-text">
+                    <strong>Service Orders</strong>
+                    <span>{bookings.length} Total Bookings</span>
+                  </div>
+                </div>
+                <div className="vendor-quick-action-item" onClick={() => setShowMemberModal(true)}>
+                  <span className="quick-action-icon">➕</span>
+                  <div className="quick-action-text">
+                    <strong>Add Team Member</strong>
+                    <span>Staff limit 8</span>
+                  </div>
+                </div>
+                <div className="vendor-quick-action-item" onClick={() => { setTempRate(String(profileForm.hourlyRate || "299").replace(/[^0-9]/g, "")); setShowRateModal(true); }}>
+                  <span className="quick-action-icon">⏱️</span>
+                  <div className="quick-action-text">
+                    <strong>Update Hourly Rate</strong>
+                    <span>₹{profileForm.hourlyRate}/hr</span>
+                  </div>
+                </div>
+                <div className="vendor-quick-action-item" onClick={() => setActiveTab("work")}>
+                  <span className="quick-action-icon">🛠️</span>
+                  <div className="quick-action-text">
+                    <strong>Rate Card & Work</strong>
+                    <span>Sub-services & Area</span>
+                  </div>
+                </div>
+                <div className="vendor-quick-action-item" onClick={() => setActiveTab("wallet")}>
+                  <span className="quick-action-icon">💳</span>
+                  <div className="quick-action-text">
+                    <strong>Instant Settlement</strong>
+                    <span>UPI Bank Transfer</span>
+                  </div>
+                </div>
+                <div className="vendor-quick-action-item" onClick={() => setActiveTab("kyc")}>
+                  <span className="quick-action-icon">📑</span>
+                  <div className="quick-action-text">
+                    <strong>KYC Verification</strong>
+                    <span>Verified Partner</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Orders Overview Queue */}
+              <div className="vendor-tab-content-card animate-fade-in">
+                <div className="vendor-card-head">
+                  <div>
+                    <h3>Active & Recent Customer Orders</h3>
+                    <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+                      Live snapshot of incoming service requests and ongoing jobs
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-demo-quick"
+                    onClick={() => setActiveTab("bookings")}
+                  >
+                    View All Orders ({bookings.length}) ➔
+                  </button>
+                </div>
+
+                {bookings.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "36px 20px", color: "var(--text-muted)" }}>
+                    <span style={{ fontSize: "40px", display: "block", marginBottom: "12px" }}>📡</span>
+                    <h4>No active orders right now</h4>
+                    <p style={{ margin: 0 }}>The dispatch engine is scanning for customer requests in {vendor.location || "your area"}.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {bookings.slice(0, 3).map(b => {
+                      const key = b.bookingId || b.id || b._id;
+                      const isInProgress = b.status === "in_progress" || b.status === "In Progress";
+                      const isCompleted = b.status === "completed" || b.status === "Completed" || b.status === "work_completed";
+                      return (
+                        <div 
+                          key={key} 
+                          style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "14px",
+                            padding: "16px 20px", borderRadius: "14px",
+                            background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)"
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                            <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "rgba(255, 77, 45, 0.12)", color: "#FF4D2D", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>
+                              {getCategoryEmoji(vendor.category)}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "15px" }}>
+                                {b.serviceName || `${vendor.category} Service`}
+                              </div>
+                              <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginTop: "2px" }}>
+                                #{b.bookingId || key} • 👤 {b.customerName || "Customer"} • 📍 {b.customerAddress || b.address || vendor.location}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <span style={{
+                              padding: "4px 10px", borderRadius: "100px", fontSize: "11px", fontWeight: 800,
+                              background: isInProgress ? "rgba(255, 77, 45, 0.15)" : isCompleted ? "rgba(16, 185, 129, 0.15)" : "rgba(59, 130, 246, 0.15)",
+                              color: isInProgress ? "#FF4D2D" : isCompleted ? "#10B981" : "#3B82F6"
+                            }}>
+                              {b.status || "Pending"}
+                            </span>
+                            <span style={{ fontWeight: 800, color: "#10B981", fontSize: "15px" }}>
+                              ₹{b.finalCalculatedAmount || b.totalAmount || b.amount || 448}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("bookings")}
+                              className="btn-demo-quick"
+                              style={{ padding: "6px 12px", fontSize: "12px" }}
+                            >
+                              Manage ➔
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
             </div>
-          </div>
-        )}
-
-        {/* =========================================================================
-            PANEL NAVIGATION TABS (BOOKINGS | WORK & CATEGORY | MEMBERS | KYC | WALLET)
-            ========================================================================= */}
-        <div className="vendor-dash-tabs">
-          <button 
-            type="button"
-            className={`vendor-dash-tab-btn ${activeTab === "bookings" ? "active" : ""}`}
-            onClick={() => setActiveTab("bookings")}
-          >
-            <span>📋</span>
-            <span>Customer Bookings ({bookings.length})</span>
-          </button>
-
-          <button 
-            type="button"
-            className={`vendor-dash-tab-btn ${activeTab === "work" ? "active" : ""}`}
-            onClick={() => setActiveTab("work")}
-          >
-            <span>🛠️</span>
-            <span>Vendor Profile & Work</span>
-          </button>
-
-          <button 
-            type="button"
-            className={`vendor-dash-tab-btn ${activeTab === "members" ? "active" : ""}`}
-            onClick={() => setActiveTab("members")}
-          >
-            <span>👥</span>
-            <span>Shop Members ({teamMembers.length}/8)</span>
-          </button>
-
-          <button 
-            type="button"
-            className={`vendor-dash-tab-btn ${activeTab === "kyc" ? "active" : ""}`}
-            onClick={() => setActiveTab("kyc")}
-          >
-            <span>📑</span>
-            <span>Complete Profile & KYC Documents</span>
-          </button>
-
-          <button 
-            type="button"
-            className={`vendor-dash-tab-btn ${activeTab === "wallet" ? "active" : ""}`}
-            onClick={() => setActiveTab("wallet")}
-          >
-            <span>💳</span>
-            <span>Wallet & Payouts (₹{wallet.balance.toLocaleString()})</span>
-          </button>
-        </div>
+          )}
 
         {/* =========================================================================
             TAB 1: CUSTOMER BOOKINGS & ORDERS
@@ -1638,9 +1871,22 @@ function VendorDashboard() {
                 <h4>No pending orders right now</h4>
                 <p>New customer bookings matching your area and category will appear here in real time.</p>
               </div>
+            ) : filteredBookings.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)" }}>
+                <span style={{ fontSize: "36px", display: "block", marginBottom: "10px" }}>🔍</span>
+                <h4>No orders matching "{dashboardSearch}"</h4>
+                <button 
+                  type="button" 
+                  onClick={() => setDashboardSearch("")}
+                  className="btn-demo-quick"
+                  style={{ marginTop: "12px" }}
+                >
+                  Clear Search
+                </button>
+              </div>
             ) : (
               <div className="vendor-bookings-list">
-                {bookings.map(b => {
+                {filteredBookings.map(b => {
                   const key = b.bookingId || b.id || b._id;
                   const isAssigned = b.status === "assigned" || (!b.slotConfirmed && b.status !== "slot_confirmed" && b.status !== "arrived" && b.status !== "in_progress" && b.status !== "In Progress" && b.status !== "work_completed" && b.status !== "completed" && b.status !== "Completed");
                   const isSlotConfirmed = b.status === "slot_confirmed" || (b.slotConfirmed && b.status !== "arrived" && b.status !== "in_progress" && b.status !== "In Progress" && b.status !== "work_completed" && b.status !== "completed" && b.status !== "Completed");
@@ -2492,6 +2738,86 @@ function VendorDashboard() {
               </div>
             </div>
 
+            {/* Pending Worker Registration Requests from Self-Registered Workers */}
+            {pendingWorkersList.length > 0 && (
+              <div style={{
+                background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.04) 100%)",
+                border: "1.5px solid rgba(245, 158, 11, 0.35)",
+                borderRadius: "16px",
+                padding: "20px",
+                marginBottom: "24px"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "22px" }}>📥</span>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: "16px", color: "var(--text-main)" }}>
+                        New Worker Registration Requests ({pendingWorkersList.length})
+                      </h4>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                        These field technicians registered and requested affiliation under your nearest shop
+                      </span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: "11px", padding: "3px 10px", background: "rgba(245, 158, 11, 0.2)", color: "#F59E0B", borderRadius: "12px", fontWeight: 800 }}>
+                    Requires Your Approval ⏳
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "14px" }}>
+                  {pendingWorkersList.map(pw => (
+                    <div key={pw.workerId || pw.id} style={{
+                      background: "var(--surface-card)",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "12px",
+                      padding: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <img 
+                          src={pw.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100"} 
+                          alt={pw.name}
+                          style={{ width: "44px", height: "44px", borderRadius: "10px", objectFit: "cover", border: "2px solid #10B981" }} 
+                        />
+                        <div style={{ flex: 1 }}>
+                          <strong style={{ fontSize: "15px", display: "block" }}>{pw.name}</strong>
+                          <span style={{ fontSize: "12px", color: "#10B981", fontWeight: 700 }}>
+                            {pw.category} • {pw.experienceYears || 3} Yrs Exp
+                          </span>
+                        </div>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>📞 {pw.phone}</span>
+                      </div>
+
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", gap: "12px", background: "var(--surface-input)", padding: "8px 12px", borderRadius: "8px" }}>
+                        <span>🆔 Aadhaar: <strong>{pw.documents?.aadhaarNumber || "Submitted"}</strong></span>
+                        <span>📍 Area: <strong>{pw.address || "Local Hub"}</strong></span>
+                      </div>
+
+                      <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleApproveWorker(pw.workerId || pw.id, pw.name)}
+                          className="btn-primary-glow"
+                          style={{ flex: 1, padding: "8px 12px", fontSize: "12.5px" }}
+                        >
+                          ✓ Approve & Add to Shop Fleet
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRejectWorker(pw.workerId || pw.id)}
+                          style={{ padding: "8px 14px", borderRadius: "8px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#EF4444", fontSize: "12px", cursor: "pointer", fontWeight: 700 }}
+                        >
+                          ✕ Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Members & Worker Payroll Grid */}
             <div className="team-members-grid">
               {teamMembers.map((mem, idx) => {
@@ -2977,7 +3303,8 @@ function VendorDashboard() {
           </div>
         )}
 
-      </div>
+        </div>
+      </main>
 
       {/* Interactive Camera QR Scanner Modal */}
       <QrCameraScannerModal
@@ -3147,6 +3474,109 @@ function VendorDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Real-time Dispatch Offer Modal */}
+      {incomingOffer && (
+        <div className="dispatch-offer-modal-overlay" style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(10, 15, 29, 0.85)", backdropFilter: "blur(10px)",
+          zIndex: 100000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+        }}>
+          <div style={{
+            background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)",
+            border: "2px solid #FF4D2D", borderRadius: "24px", padding: "32px",
+            maxWidth: "460px", width: "100%", textAlign: "center", boxShadow: "0 20px 60px rgba(255, 77, 45, 0.35)"
+          }}>
+            <div style={{ fontSize: "36px", marginBottom: "10px" }}>⚡</div>
+            <h3 style={{ color: "#FFFFFF", fontSize: "20px", margin: "6px 0" }}>{incomingOffer.serviceName}</h3>
+            <p style={{ color: "#94A3B8", fontSize: "14px" }}>📍 {incomingOffer.customerAddress || "Sector 62, Noida"}</p>
+            <div style={{ fontSize: "28px", fontWeight: 900, color: "#10B981", margin: "14px 0" }}>
+              ₹{Math.round(incomingOffer.totalAmount * 0.85)} Payout
+            </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => setIncomingOffer(null)}
+                style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #475569", background: "transparent", color: "#FFF" }}
+              >
+                Decline
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAcceptBooking(incomingOffer)}
+                style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "#FFF", fontWeight: 800, fontSize: "14px", cursor: "pointer", boxShadow: "0 4px 15px rgba(16, 185, 129, 0.4)" }}
+              >
+                ✓ Accept Job ({offerCountdown}s) 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Franchise Plan View / Upgrade Modal */}
+      {showFranchiseModal && (
+        <div className="cat-preview-modal-overlay" onClick={() => setShowFranchiseModal(false)}>
+          <div className="cat-preview-modal-box animate-fade-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "780px", background: "#0F172A", border: "2px solid #FF4D2D" }}>
+            <button className="modal-close-btn" onClick={() => setShowFranchiseModal(false)}>✕</button>
+
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <span style={{ fontSize: "36px" }}>👑</span>
+              <h3 style={{ fontSize: "24px", fontWeight: 800, color: "#FFFFFF", margin: "8px 0" }}>
+                Helper Partner Franchise Portal
+              </h3>
+              <p style={{ fontSize: "14px", color: "#94A3B8" }}>
+                Franchise capacity: <strong>Ek shop se up to 8 members use kar sakte hain</strong>.
+              </p>
+            </div>
+
+            {paymentSuccess ? (
+              <div style={{ textAlign: "center", padding: "30px 20px" }}>
+                <div style={{ fontSize: "50px", marginBottom: "12px" }}>🎉</div>
+                <h3 style={{ color: "#10B981", fontSize: "22px" }}>Franchise Successfully Activated!</h3>
+                <p style={{ color: "#E2E8F0" }}>Your Service Man Panel has been fully unlocked.</p>
+              </div>
+            ) : (
+              <div className="franchise-plans-grid" style={{ marginTop: 0 }}>
+                <div className="franchise-plan-card" style={{ background: "rgba(30, 41, 59, 0.8)" }}>
+                  <div>
+                    <h4 style={{ color: "#FFFFFF", fontSize: "18px", margin: 0 }}>Monthly Plan</h4>
+                    <div className="plan-price-box">
+                      <span className="plan-amount" style={{ fontSize: "30px" }}>₹4,000</span>
+                      <span className="plan-cycle">/month</span>
+                    </div>
+                    <p style={{ fontSize: "13px", color: "#CBD5E1" }}>8 members license • 30 days active leads</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-activate-plan btn-plan-monthly"
+                    onClick={() => handlePurchaseFranchise("monthly")}
+                  >
+                    {vendor?.franchisePlan === "monthly" ? "Current Active Plan ✅" : "Select Monthly (₹4,000)"}
+                  </button>
+                </div>
+
+                <div className="franchise-plan-card featured">
+                  <div>
+                    <h4 style={{ color: "#FF4D2D", fontSize: "18px", margin: 0 }}>Annual Master Plan</h4>
+                    <div className="plan-price-box">
+                      <span className="plan-amount" style={{ fontSize: "30px", color: "#FF4D2D" }}>₹5,00,000</span>
+                      <span className="plan-cycle">/1 year</span>
+                    </div>
+                    <p style={{ fontSize: "13px", color: "#CBD5E1" }}>8 members license • 365 days exclusivity</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-activate-plan btn-plan-annual"
+                    onClick={() => handlePurchaseFranchise("annual")}
+                  >
+                    {vendor?.franchisePlan === "annual" ? "Current Active Plan ✅" : "Select Annual (₹5,00,000) 🚀"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

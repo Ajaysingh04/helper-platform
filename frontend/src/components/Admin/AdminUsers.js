@@ -89,7 +89,7 @@ function AdminUsers() {
           </div>
         </div>
 
-        <div className="admin-table-container">
+        <div className="admin-table-container admin-desktop-table-view">
           <table className="admin-table">
             <thead>
               <tr>
@@ -106,54 +106,176 @@ function AdminUsers() {
               {filteredUsers.map((u) => (
                 <tr key={u.id}>
                   <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <div className="admin-avatar-small">
-                        {u.name.charAt(0)}
+                        {u.name ? u.name.charAt(0) : "U"}
                       </div>
                       <div>
-                        <strong>{u.name}</strong>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Joined {u.joined}</div>
+                        <strong style={{ fontSize: "14px", color: "var(--text-main)", display: "block" }}>
+                          {u.name}
+                        </strong>
+                        <div style={{ fontSize: "11.5px", color: "var(--text-muted)", fontWeight: 600, marginTop: "1px" }}>
+                          Joined {u.joined || "Recently"}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td>{u.email}</td>
-                  <td>{u.phone}</td>
-                  <td><strong>{u.bookingsCount} Bookings</strong></td>
                   <td>
-                    <span className="badge-pill">{u.role}</span>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-main)" }}>
+                      {u.email || "—"}
+                    </span>
+                  </td>
+                  <td>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-muted)" }}>
+                      {u.phone || "—"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="user-orders-badge">
+                      <strong>{u.bookingsCount || 0}</strong> Bookings
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge-pill role-${(u.role || "customer").toLowerCase().replace(" ", "-")}`}>
+                      {u.role || "Customer"}
+                    </span>
                   </td>
                   <td>
                     <span className={`status-pill ${u.status === "Active" ? "status-active" : "status-suspended"}`}>
+                      <span style={{
+                        width: "7px",
+                        height: "7px",
+                        borderRadius: "50%",
+                        background: u.status === "Active" ? "#10B981" : "#EF4444",
+                        display: "inline-block"
+                      }} />
                       {u.status}
                     </span>
                   </td>
                   <td>
-                    <button 
-                      className="table-action-btn"
-                      onClick={() => updateUserStatus(u.id, u.status === "Active" ? "Suspended" : "Active")}
-                      style={{ color: u.status === "Active" ? "var(--danger)" : "var(--success)" }}
-                    >
-                      {u.status === "Active" ? "🚫 Suspend" : "✓ Activate"}
-                    </button>
-                    {u.role !== "Super Admin" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button 
-                        className="table-action-btn delete"
-                        onClick={() => {
-                          if (window.confirm(`Delete user ${u.name}?`)) {
-                            deleteUser(u.id);
-                          }
-                        }}
-                        title="Delete User"
+                        className={`table-action-btn status-toggle ${u.status === "Active" ? "suspend" : "activate"}`}
+                        onClick={() => updateUserStatus(u.id, u.status === "Active" ? "Suspended" : "Active")}
+                        title={u.status === "Active" ? "Suspend Account" : "Activate Account"}
                       >
-                        🗑️
+                        {u.status === "Active" ? "🚫 Suspend" : "✓ Activate"}
                       </button>
-                    )}
+                      {u.role !== "Super Admin" && (
+                        <button 
+                          className="table-action-btn delete"
+                          onClick={() => {
+                            if (window.confirm(`Delete user ${u.name}?`)) {
+                              deleteUser(u.id);
+                            }
+                          }}
+                          title="Delete User"
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {/* Mobile & Tablet Card View (<= 992px) */}
+        <div className="admin-mobile-cards-view">
+          {filteredUsers.map((u) => (
+            <div key={`card-${u.id}`} className="admin-user-card admin-order-card">
+              <div className="order-card-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div className="admin-avatar-small">
+                    {u.name ? u.name.charAt(0) : "U"}
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: "14.5px", color: "var(--text-main)", display: "block" }}>
+                      {u.name}
+                    </strong>
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>
+                      Joined {u.joined || "Recently"}
+                    </span>
+                  </div>
+                </div>
+
+                <span className={`status-pill ${u.status === "Active" ? "status-active" : "status-suspended"}`}>
+                  <span style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: u.status === "Active" ? "#10B981" : "#EF4444",
+                    display: "inline-block"
+                  }} />
+                  {u.status}
+                </span>
+              </div>
+
+              <div className="user-card-details-grid">
+                <div className="user-detail-row">
+                  <span className="user-detail-label">✉️ Email</span>
+                  <span className="user-detail-val" title={u.email}>{u.email || "—"}</span>
+                </div>
+                <div className="user-detail-row">
+                  <span className="user-detail-label">📞 Mobile</span>
+                  <span className="user-detail-val">{u.phone || "—"}</span>
+                </div>
+                <div className="user-detail-row">
+                  <span className="user-detail-label">📦 Total Orders</span>
+                  <span className="user-orders-badge">
+                    <strong>{u.bookingsCount || 0}</strong> Bookings
+                  </span>
+                </div>
+                <div className="user-detail-row">
+                  <span className="user-detail-label">🏷️ Account Role</span>
+                  <span className={`badge-pill role-${(u.role || "customer").toLowerCase().replace(" ", "-")}`}>
+                    {u.role || "Customer"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="user-card-actions-footer">
+                <button 
+                  type="button"
+                  className={`btn-user-mobile-action ${u.status === "Active" ? "suspend" : "activate"}`}
+                  onClick={() => updateUserStatus(u.id, u.status === "Active" ? "Suspended" : "Active")}
+                >
+                  {u.status === "Active" ? "🚫 Suspend Account" : "✓ Activate Account"}
+                </button>
+
+                {u.role !== "Super Admin" && (
+                  <button 
+                    type="button"
+                    className="btn-user-mobile-delete"
+                    onClick={() => {
+                      if (window.confirm(`Delete user ${u.name}?`)) {
+                        deleteUser(u.id);
+                      }
+                    }}
+                    title="Delete User"
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {filteredUsers.length === 0 && (
+          <div className="empty-state-card" style={{ padding: "48px 24px", textAlign: "center" }}>
+            <div style={{ fontSize: "42px", marginBottom: "12px" }}>👥</div>
+            <h4 style={{ fontSize: "17px", fontWeight: 800, margin: "0 0 6px 0", color: "var(--text-main)" }}>
+              No Users Found
+            </h4>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>
+              No user accounts matched "{searchQuery}". Try a different keyword or reset filters.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

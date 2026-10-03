@@ -202,6 +202,10 @@ function Home() {
       ? selectedService.price 
       : parseInt(String(selectedService?.price || "299").replace(/[^\d]/g, "") || "299", 10);
 
+    const selectedCity = localStorage.getItem("helper_user_city") || "Indore";
+    const selectedArea = localStorage.getItem("helper_user_area") || "Palasia";
+    const selectedFullAddress = localStorage.getItem("helper_user_full_address") || `${selectedArea} Square, ${selectedCity}, Madhya Pradesh`;
+
     try {
       // Call Production Express Booking & Dispatch API
       const res = await fetch(`${API_BASE}/bookings`, {
@@ -211,17 +215,19 @@ function Home() {
           customerName: "Valued Customer",
           customerPhone: enquiryPhone,
           serviceName: selectedService.name,
-          category: selectedService.tag || selectedService.category || "Repairs",
+          category: selectedService.tag || selectedService.category || "Plumber",
           assignedProviderName: selectedProvider ? selectedProvider.name : undefined,
+          customerAddress: selectedFullAddress,
+          fullAddress: selectedFullAddress,
           customerLocation: {
             type: "Point",
-            coordinates: [77.391029, 28.535516] // Sector 62 Noida default
+            coordinates: [75.8858, 22.7196] // Central Indore / Palasia coordinates
           },
           address: {
-            street: "Tower B, Sector 62",
-            city: "Noida",
-            state: "Uttar Pradesh",
-            pincode: "201301"
+            street: selectedFullAddress,
+            city: selectedCity,
+            state: "Madhya Pradesh",
+            pincode: "452001"
           },
           servicePrice: numericPrice,
           paymentMethod: "cash_after_service",

@@ -27,11 +27,14 @@ import AdminLayout from "./components/Admin/AdminLayout";
 import ScrollToTop from "./components/ScrollToTop";
 import VendorAuth from "./components/Vendor/VendorAuth";
 import VendorDashboard from "./components/Vendor/VendorDashboard";
+import WorkerAuth from "./components/Worker/WorkerAuth";
+import WorkerDashboard from "./components/Worker/WorkerDashboard";
 
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isVendorDashboard = location.pathname.startsWith("/vendor/dashboard");
+  const isWorkerRoute = location.pathname.startsWith("/worker");
 
   return (
     <>
@@ -43,6 +46,12 @@ function AppContent() {
       ) : isVendorDashboard ? (
         <Routes>
           <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+        </Routes>
+      ) : isWorkerRoute ? (
+        <Routes>
+          <Route path="/worker" element={<WorkerDashboard />} />
+          <Route path="/worker/login" element={<WorkerAuth />} />
+          <Route path="/worker/dashboard" element={<WorkerDashboard />} />
         </Routes>
       ) : (
         <div style={{ width: "100%", display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -58,6 +67,9 @@ function AppContent() {
         <Route path="/vendor/login" element={<VendorAuth defaultTab="login" />} />
         <Route path="/vendor/register" element={<VendorAuth defaultTab="register" />} />
         <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+        <Route path="/worker" element={<WorkerDashboard />} />
+        <Route path="/worker/login" element={<WorkerAuth />} />
+        <Route path="/worker/dashboard" element={<WorkerDashboard />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />
         <Route path="/contact" element={<ContactUs />} />

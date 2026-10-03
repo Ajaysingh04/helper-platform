@@ -14,7 +14,8 @@ class DBStore {
       slides: seedData.initialSlides,
       users: seedData.initialUsers,
       tickets: seedData.initialTickets,
-      settings: seedData.initialSettings
+      settings: seedData.initialSettings,
+      workers: seedData.initialWorkers || []
     };
     this.load();
   }
@@ -40,6 +41,11 @@ class DBStore {
           if (updatedAny) {
             this.save();
           }
+        }
+
+        if (!Array.isArray(this.data.workers) || this.data.workers.length === 0) {
+          this.data.workers = seedData.initialWorkers || [];
+          this.save();
         }
       } else {
         this.save();
@@ -120,7 +126,8 @@ class DBStore {
       slides: seedData.initialSlides,
       users: seedData.initialUsers,
       tickets: seedData.initialTickets,
-      settings: seedData.initialSettings
+      settings: seedData.initialSettings,
+      workers: seedData.initialWorkers || []
     };
     this.save();
     return this.data;

@@ -267,7 +267,8 @@ function AdminDashboard({ onNavigateTab }) {
           </div>
         ) : (
           <>
-            <div className="admin-table-container">
+            {/* Desktop Table View (Visible > 992px) */}
+            <div className="admin-table-container admin-desktop-table-view">
               <table className="admin-table">
                 <thead>
                   <tr>
@@ -377,6 +378,75 @@ function AdminDashboard({ onNavigateTab }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile & Tablet Card View (Visible <= 992px) */}
+            <div className="admin-mobile-cards-view">
+              {paginatedBookings.map((booking) => (
+                <div key={`mob-inq-${booking.id}`} className="admin-order-card">
+                  <div className="order-card-header">
+                    <span className="booking-id-tag">{booking.id}</span>
+                    <span className={`status-pill status-${booking.status.toLowerCase().replace(/\s+/g, '')}`}>
+                      {booking.status}
+                    </span>
+                  </div>
+                  <div className="order-card-cust">
+                    <strong className="booking-cust-name" style={{ fontSize: "15px" }}>{booking.customerName}</strong>
+                    <a href={`tel:${booking.phone}`} className="booking-cust-phone">
+                      📞 {booking.phone || "—"}
+                    </a>
+                  </div>
+                  <div className="order-card-service-row">
+                    <span className="booking-service-badge">🛠️ {booking.service}</span>
+                    <strong className="booking-price-tag">{booking.price}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", color: "var(--text-muted)" }}>
+                    <span>📅 {booking.date}</span>
+                  </div>
+                  <div className="order-card-actions" style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
+                    {booking.status === "Pending" && (
+                      <button 
+                        className="btn-card-action accept"
+                        onClick={() => updateBookingStatus(booking.id, "In Progress")}
+                        style={{ flex: 1, padding: "8px 12px", background: "rgba(16, 185, 129, 0.12)", color: "#059669", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        ✓ Accept & Dispatch
+                      </button>
+                    )}
+                    {booking.status === "In Progress" && (
+                      <button 
+                        className="btn-card-action complete"
+                        onClick={() => updateBookingStatus(booking.id, "Completed")}
+                        style={{ flex: 1, padding: "8px 12px", background: "rgba(255, 77, 45, 0.12)", color: "#FF4D2D", border: "1px solid rgba(255, 77, 45, 0.3)", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        ✓ Mark Completed
+                      </button>
+                    )}
+                    {booking.status !== "Cancelled" && (
+                      <button 
+                        className="btn-card-action delete"
+                        onClick={() => {
+                          if (window.confirm(`Cancel inquiry #${booking.id}?`)) {
+                            updateBookingStatus(booking.id, "Cancelled");
+                          }
+                        }}
+                        style={{ padding: "8px 12px", background: "rgba(239, 68, 68, 0.1)", color: "#DC2626", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        ✕ Cancel
+                      </button>
+                    )}
+                    {booking.status === "Cancelled" && (
+                      <button 
+                        className="btn-card-action reopen"
+                        onClick={() => updateBookingStatus(booking.id, "Pending")}
+                        style={{ flex: 1, padding: "8px 12px", background: "rgba(99, 102, 241, 0.1)", color: "#4F46E5", border: "1px solid rgba(99, 102, 241, 0.3)", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        ↩ Reopen Inquiry
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pagination Controls */}

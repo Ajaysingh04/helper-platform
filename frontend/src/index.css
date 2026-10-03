@@ -57,6 +57,8 @@
   --surface-card-hover: #ffffff;
   --surface-glass: rgba(255, 255, 255, 0.75);
   --surface-input: rgba(241, 245, 249, 0.8);
+  --bg-card: #ffffff;
+  --bg-canvas: #f8fafc;
   
   /* Text Colors */
   --text-main: #0f172a;
@@ -100,6 +102,8 @@ body.dark {
   --surface-card-hover: rgba(28, 36, 54, 0.95);
   --surface-glass: rgba(15, 23, 42, 0.75);
   --surface-input: rgba(30, 41, 59, 0.7);
+  --bg-card: #121826;
+  --bg-canvas: #0b0f19;
 
   --text-main: #f8fafc;
   --text-muted: #94a3b8;

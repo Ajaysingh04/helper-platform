@@ -240,6 +240,66 @@ function initSocket(io) {
       }
     });
 
+    /**
+     * Worker registers for real-time dispatch alerts
+     */
+    socket.on("worker:register", ({ workerId }) => {
+      if (workerId) {
+        socket.join(`worker_${workerId}`);
+        console.log(`👷 Worker ${workerId} registered to socket room worker_${workerId}`);
+        socket.emit("worker:registered", { success: true, workerId });
+      }
+    });
+
+    /**
+     * Worker live GPS tracking beacon
+     */
+    socket.on("worker:update_location", async ({ workerId, bookingId, vendorId, coordinates, speed, heading }) => {
+      try {
+        if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) return;
+
+        // Broadcast to customer live tracking room
+        if (bookingId) {
+          io.to(`booking_${bookingId}`).emit("worker:location_stream", {
+            workerId,
+            coordinates,
+            speed: speed || 25,
+            heading: heading || 0,
+            updatedAt: new Date().toISOString()
+          });
+        }
+
+        // Broadcast to vendor fleet radar room
+        if (vendorId) {
+          io.to(`provider_${vendorId}`).emit("vendor:worker_location_update", {
+            workerId,
+            coordinates,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.error("Worker location stream error:", e.message);
+      }
+    });
+
+    /**
+     * Real-time In-App Chat between Customer, Worker & Vendor
+     */
+    socket.on("chat:send_message", ({ bookingId, senderId, senderName, senderRole, text, timestamp }) => {
+      if (bookingId && text) {
+        const msgPayload = {
+          bookingId,
+          senderId,
+          senderName: senderName || "User",
+          senderRole: senderRole || "customer",
+          text,
+          timestamp: timestamp || new Date().toISOString()
+        };
+        // Broadcast to the booking room
+        io.to(`booking_${bookingId}`).emit("chat:receive_message", msgPayload);
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log(`🔌 [SOCKET DISCONNECTED] Client ID: ${socket.id}`);
     });

@@ -27,8 +27,38 @@ const BookingSchema = new mongoose.Schema(
     phone: { type: String },
     address: { type: String },
     customerAddress: { type: String },
-    price: { type: String },
     doorOtp: { type: String, default: "1234" },
+    
+    // Worker Assignment Fields
+    assignedWorker: {
+      workerId: { type: String, index: true },
+      name: { type: String },
+      phone: { type: String },
+      avatar: { type: String },
+      skills: [{ type: String }],
+      rating: { type: Number, default: 4.9 },
+      assignedAt: { type: Date }
+    },
+    assignedWorkers: [
+      {
+        workerId: { type: String },
+        name: { type: String },
+        phone: { type: String },
+        avatar: { type: String },
+        role: { type: String, default: "Technician" }
+      }
+    ],
+    workerStatus: {
+      type: String,
+      enum: ["unassigned", "assigned", "accepted", "traveling", "arrived", "in_progress", "work_completed", "completed"],
+      default: "unassigned",
+      index: true
+    },
+    completionPhotos: [{ type: String }],
+    workerRating: { type: Number },
+    workerReview: { type: String },
+    workerEarningsAmount: { type: Number, default: 0 },
+    vendorEarningsAmount: { type: Number, default: 0 },
     
     serviceName: { type: String, required: true, trim: true },
     service: { type: String },
@@ -114,12 +144,12 @@ const BookingSchema = new mongoose.Schema(
 
     paymentMode: {
       type: String,
-      enum: ["razorpay_online", "upi", "cash_after_service", "wallet"],
+      enum: ["razorpay_online", "upi", "upi_qr", "cash", "cash_after_service", "wallet"],
       default: "cash_after_service"
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "authorized", "captured", "refunded", "failed"],
+      enum: ["pending", "authorized", "captured", "refunded", "failed", "payment_due", "paid"],
       default: "pending",
       index: true
     },

@@ -318,7 +318,7 @@ function AdminHeroBanners() {
               position: "relative",
               flexShrink: 0,
               boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-              border: "2px solid #FFFFFF"
+              border: "2px solid rgba(255, 255, 255, 0.2)"
             }}
           >
             <img
@@ -388,13 +388,14 @@ function AdminHeroBanners() {
 
       {/* Hero Display Preferences & Automation Controls (Admin Master Access) */}
       <div
+        className="admin-pref-card hero-pref-card"
         style={{
           marginBottom: "24px",
           padding: "22px 26px",
           borderRadius: "18px",
-          background: "var(--bg-card, #FFFFFF)",
-          border: "1.5px solid var(--border-color, #E2E8F0)",
-          boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
+          background: "var(--surface-card)",
+          border: "1px solid var(--border-color)",
+          boxShadow: "var(--shadow-md)",
           transition: "all 0.3s ease"
         }}
       >
@@ -712,8 +713,10 @@ function AdminHeroBanners() {
               style={{
                 padding: "0",
                 overflow: "hidden",
+                background: "var(--surface-card)",
+                borderRadius: "16px",
                 border: isLivePrimary ? "2px solid #FF4D2D" : "1px solid var(--border-color)",
-                boxShadow: isLivePrimary ? "0 8px 24px rgba(255, 77, 45, 0.2)" : undefined,
+                boxShadow: isLivePrimary ? "0 8px 24px rgba(255, 77, 45, 0.25)" : "var(--shadow-sm)",
                 display: "flex",
                 flexDirection: "column"
               }}

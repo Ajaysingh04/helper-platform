@@ -1506,21 +1506,21 @@
 /* ==========================================================================
    12. WALLET & ADMIN TABLES
    ========================================================================== */
-.admin-table-container {
+.vendor-dash-wrapper .admin-table-container {
   overflow-x: auto;
   border-radius: 14px;
   border: 1px solid #E2E8F0;
   margin-top: 14px;
 }
 
-.admin-table {
+.vendor-dash-wrapper .admin-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
 }
 
-.admin-table th {
+.vendor-dash-wrapper .admin-table th {
   background: #F8FAFC;
   color: #475569;
   font-weight: 700;
@@ -1528,13 +1528,13 @@
   border-bottom: 1px solid #E2E8F0;
 }
 
-.admin-table td {
+.vendor-dash-wrapper .admin-table td {
   padding: 12px 16px;
   border-bottom: 1px solid #F1F5F9;
   color: #1E293B;
 }
 
-.admin-table tr:last-child td {
+.vendor-dash-wrapper .admin-table tr:last-child td {
   border-bottom: none;
 }
 
@@ -3958,18 +3958,18 @@
 }
 
 /* Wallet Table */
-.admin-table-container {
+.vendor-dash-wrapper .admin-table-container {
   background: rgba(11, 17, 32, 0.6) !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
 }
 
-.admin-table th {
+.vendor-dash-wrapper .admin-table th {
   background: rgba(255, 255, 255, 0.04) !important;
   color: #94A3B8 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.admin-table td {
+.vendor-dash-wrapper .admin-table td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   color: #E2E8F0 !important;
 }
@@ -4139,5 +4139,256 @@
     border-radius: 16px !important;
   }
 }
+
+/* ==========================================================================
+   VENDOR ADMIN DASHBOARD SYSTEM STYLES (.vendor-portal-layout)
+   ========================================================================== */
+
+.vendor-portal-layout {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Status Pill in Top Navbar */
+.vendor-status-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: var(--border-radius-full, 100px);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.vendor-status-toggle-pill.online {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #10B981;
+}
+
+.vendor-status-toggle-pill.online:hover {
+  background: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+}
+
+.vendor-status-toggle-pill.offline {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #F59E0B;
+}
+
+.vendor-status-toggle-pill.offline:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+/* Franchise Button in Top Navbar */
+.vendor-top-franchise-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--border-radius-full, 100px);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.vendor-top-franchise-btn.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(255, 77, 45, 0.16) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #F59E0B;
+}
+
+.vendor-top-franchise-btn.active:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(255, 77, 45, 0.25) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+.vendor-top-franchise-btn.inactive {
+  background: linear-gradient(135deg, #FF4D2D 0%, #EA580C 100%);
+  border: 1px solid #FF4D2D;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(255, 77, 45, 0.35);
+}
+
+.vendor-top-franchise-btn.inactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 77, 45, 0.5);
+}
+
+/* Executive Welcome Card on Overview */
+.vendor-overview-welcome-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+body:not(.dark) .vendor-overview-welcome-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+body:not(.dark) .vendor-overview-welcome-card .vendor-header-title h2 {
+  color: #0F172A !important;
+}
+
+body:not(.dark) .vendor-tab-content-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04) !important;
+}
+
+body:not(.dark) .vendor-tab-content-card h3 {
+  color: #0F172A !important;
+}
+
+body:not(.dark) .vendor-stat-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+body:not(.dark) .vendor-stat-info h4 {
+  color: #64748B !important;
+}
+
+body:not(.dark) .vendor-stat-val {
+  color: #0F172A !important;
+}
+
+/* Quick Actions Bar */
+.vendor-quick-actions-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.vendor-quick-action-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body:not(.dark) .vendor-quick-action-item {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.vendor-quick-action-item:hover {
+  transform: translateY(-2px);
+  border-color: #FF4D2D;
+  background: rgba(255, 77, 45, 0.06);
+  box-shadow: 0 8px 20px rgba(255, 77, 45, 0.15);
+}
+
+.quick-action-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.quick-action-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-action-text strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main, #F8FAFC);
+}
+
+body:not(.dark) .quick-action-text strong {
+  color: #0F172A;
+}
+
+.quick-action-text span {
+  font-size: 12px;
+  color: var(--text-muted, #94A3B8);
+  margin-top: 2px;
+}
+
+/* Responsive Overrides for Vendor Portal Layout */
+@media (max-width: 1024px) {
+  .vendor-portal-layout .admin-top-bar {
+    padding: 12px 16px;
+  }
+
+  .vendor-portal-layout .admin-view-body {
+    padding: 20px 16px;
+  }
+
+  .vendor-overview-welcome-card {
+    padding: 18px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .vendor-overview-welcome-card .vendor-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 640px) {
+  .vendor-portal-layout .admin-top-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .vendor-portal-layout .admin-top-actions {
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .vendor-quick-actions-bar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .vendor-quick-action-item {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .quick-action-icon {
+    font-size: 20px;
+  }
+
+  .quick-action-text strong {
+    font-size: 12px;
+  }
+
+  .quick-action-text span {
+    font-size: 11px;
+  }
+}
+
 
 

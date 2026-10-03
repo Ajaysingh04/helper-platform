@@ -507,5 +507,6 @@ module.exports = {
   initialSlides,
   initialUsers,
   initialTickets,
-  initialSettings
+  initialSettings,
+  initialWorkers: require("./seedWorkersData")
 };

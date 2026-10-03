@@ -69,6 +69,7 @@ app.use("/api/contact", require("./routes/contactRoutes"));
 app.use("/api/settings", require("./routes/settingsRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/payments", require("./routes/paymentsRoutes"));
+app.use("/api/workers", require("./routes/workersRoutes"));
 
 // 404 Route handler
 app.use("/api/*", (req, res) => {

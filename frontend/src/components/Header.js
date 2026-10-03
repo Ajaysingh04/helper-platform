@@ -40,26 +40,56 @@ function Header() {
     }
   });
 
+  // Worker Session Detection and live synchronization
+  const [workerData, setWorkerData] = useState(() => {
+    try {
+      const raw = localStorage.getItem("helper_worker");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   // Admin Session Detection and live synchronization
   const [adminAuth, setAdminAuth] = useState(() => {
     return localStorage.getItem("helper_admin_auth") === "true";
   });
 
+  // Location state (e.g. Indore -> Palasia)
+  const [selectedCity, setSelectedCity] = useState(() => localStorage.getItem("helper_user_city") || "Indore");
+  const [selectedArea, setSelectedArea] = useState(() => localStorage.getItem("helper_user_area") || "Palasia");
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+
+  const handleSelectArea = (city, area) => {
+    setSelectedCity(city);
+    setSelectedArea(area);
+    localStorage.setItem("helper_user_city", city);
+    localStorage.setItem("helper_user_area", area);
+    const full = `${area} Square, ${city}, Madhya Pradesh`;
+    localStorage.setItem("helper_user_full_address", full);
+    window.dispatchEvent(new CustomEvent("location_changed", { detail: { city, area, fullAddress: full } }));
+    setLocationModalOpen(false);
+  };
+
   useEffect(() => {
-    const syncVendorAndAdmin = () => {
+    const syncSessions = () => {
       try {
         const raw = localStorage.getItem("helper_vendor");
         setVendorData(raw ? JSON.parse(raw) : null);
       } catch (e) {}
+      try {
+        const rawW = localStorage.getItem("helper_worker");
+        setWorkerData(rawW ? JSON.parse(rawW) : null);
+      } catch (e) {}
       setAdminAuth(localStorage.getItem("helper_admin_auth") === "true");
     };
-    window.addEventListener("vendor_updated", syncVendorAndAdmin);
-    window.addEventListener("storage", syncVendorAndAdmin);
-    window.addEventListener("auth_state_changed", syncVendorAndAdmin);
+    window.addEventListener("vendor_updated", syncSessions);
+    window.addEventListener("storage", syncSessions);
+    window.addEventListener("auth_state_changed", syncSessions);
     return () => {
-      window.removeEventListener("vendor_updated", syncVendorAndAdmin);
-      window.removeEventListener("storage", syncVendorAndAdmin);
-      window.removeEventListener("auth_state_changed", syncVendorAndAdmin);
+      window.removeEventListener("vendor_updated", syncSessions);
+      window.removeEventListener("storage", syncSessions);
+      window.removeEventListener("auth_state_changed", syncSessions);
     };
   }, []);
 
@@ -76,6 +106,12 @@ function Header() {
     (currentUser?.role && ["partner", "vendor", "serviceman", "provider"].includes(currentUser.role.toLowerCase()))
   );
 
+  const isWorker = !isAdmin && !isVendor && Boolean(
+    workerData ||
+    localStorage.getItem("helper_worker") ||
+    (currentUser?.role && ["worker", "technician"].includes(currentUser.role.toLowerCase()))
+  );
+
   let displayName = "Verified User";
   let displayFirstName = "Account";
   let displayBadge = "Active Account";
@@ -88,6 +124,10 @@ function Header() {
     displayName = vendorData?.shopName || vendorData?.name || currentUser?.name || "Service Partner";
     displayFirstName = displayName.trim().split(" ")[0] || "Vendor";
     displayBadge = `${vendorData?.category || "Service"} Partner Pro`;
+  } else if (isWorker) {
+    displayName = workerData?.name || currentUser?.name || "Technician";
+    displayFirstName = displayName.trim().split(" ")[0] || "Worker";
+    displayBadge = `${workerData?.category || "Field"} Technician ⚡`;
   } else {
     displayName = currentUser?.name || "Verified User";
     displayFirstName = displayName.trim().split(" ")[0] || "Account";
@@ -196,6 +236,12 @@ function Header() {
             <Link to="/categories" className={`nav-link ${isActive("/categories")}`}>
               <span>CATEGORIES</span>
             </Link>
+            <Link to="/worker/dashboard" className={`nav-link ${isActive("/worker") || isActive("/worker/login") || isActive("/worker/dashboard")}`} title="Technician & Field Worker Dashboard">
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                <span>WORKER DASHBOARD</span>
+                <span style={{ fontSize: "10px", padding: "1px 6px", background: "rgba(16, 185, 129, 0.2)", color: "#10B981", borderRadius: "10px", fontWeight: 800 }}>PRO</span>
+              </span>
+            </Link>
             <Link to="/contact" className={`nav-link ${isActive("/contact")}`}>
               <span>CONTACT</span>
             </Link>
@@ -203,10 +249,16 @@ function Header() {
 
           {/* Right Section: Location Pill + Cart + Account + Theme */}
           <div className="header-right">
-            {/* Location Selector Pill (Desktop only) */}
-            <div className="header-location-pill" title="Current Service Location: Musakhedi, Indore">
+            {/* Location Selector Pill (Clickable City & Area Picker) */}
+            <div 
+              className="header-location-pill" 
+              onClick={() => setLocationModalOpen(true)}
+              style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+              title="Click to select City & Area (e.g. Indore, Palasia)"
+            >
               <span className="loc-pin-icon">📍</span>
-              <span className="loc-text">Musakhedi, Indore</span>
+              <span className="loc-text">{selectedArea}, {selectedCity}</span>
+              <span style={{ fontSize: "9px", opacity: 0.7 }}>▼</span>
             </div>
 
             {/* Quick Smart Search Icon & Button */}
@@ -319,23 +371,27 @@ function Header() {
                               navigate("/admin");
                             } else if (isVendor) {
                               navigate("/vendor/dashboard?tab=profile");
+                            } else if (isWorker) {
+                              navigate("/worker/dashboard?tab=profile");
                             } else {
                               setDrawerOpen(true);
                             }
                           }}
                         >
                           <div className="item-icon-box profile-icon">
-                            <span>{isAdmin ? "🛡️" : isVendor ? "🛠️" : "👤"}</span>
+                            <span>{isAdmin ? "🛡️" : isVendor ? "🛠️" : isWorker ? "👷" : "👤"}</span>
                           </div>
                           <div className="item-text-box">
                             <span className="item-title">
-                              {isAdmin ? "Admin Control Panel" : isVendor ? "Vendor Profile & Shop" : "Profile"}
+                              {isAdmin ? "Admin Control Panel" : isVendor ? "Vendor Profile & Shop" : isWorker ? "Worker Profile & Trade" : "Profile"}
                             </span>
                             <span className="item-sub">
                               {isAdmin
                                 ? "Platform stats, bookings, providers & master controls"
                                 : isVendor
                                 ? "Edit shop details, rate, work & categories"
+                                : isWorker
+                                ? "Skills, documents, shift hours & attendance"
                                 : "View bookings, address & edit profile"}
                             </span>
                           </div>
@@ -384,6 +440,48 @@ function Header() {
                           </button>
                         )}
 
+                        {/* If Worker: Direct link to Active Jobs Console */}
+                        {isWorker && (
+                          <button
+                            type="button"
+                            className="dropdown-menu-item"
+                            onClick={() => {
+                              setAccountMenuOpen(false);
+                              navigate("/worker/dashboard?tab=active_jobs");
+                            }}
+                          >
+                            <div className="item-icon-box" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#10B981" }}>
+                              <span>⚡</span>
+                            </div>
+                            <div className="item-text-box">
+                              <span className="item-title">Worker Jobs & Radar</span>
+                              <span className="item-sub">Accept orders, GPS travel, OTP & 90% payout</span>
+                            </div>
+                            <span className="item-arrow">›</span>
+                          </button>
+                        )}
+
+                        {/* Become Worker / Technician option */}
+                        {!isWorker && !isVendor && !isAdmin && (
+                          <button
+                            type="button"
+                            className="dropdown-menu-item"
+                            onClick={() => {
+                              setAccountMenuOpen(false);
+                              navigate("/worker/login");
+                            }}
+                          >
+                            <div className="item-icon-box" style={{ background: "rgba(99, 102, 241, 0.12)", color: "#6366F1" }}>
+                              <span>👷</span>
+                            </div>
+                            <div className="item-text-box">
+                              <span className="item-title">Worker & Technician Login</span>
+                              <span className="item-sub">Work with top vendors & earn 90% per booking</span>
+                            </div>
+                            <span className="item-arrow">›</span>
+                          </button>
+                        )}
+
                         {/* Option 2: Help */}
                         <button
                           type="button"
@@ -411,11 +509,15 @@ function Header() {
                           className="dropdown-menu-item logout-item"
                           onClick={() => {
                             setAccountMenuOpen(false);
+                            localStorage.removeItem("helper_worker");
+                            localStorage.removeItem("helper_worker_token");
                             logout();
                             if (isAdmin) {
                               navigate("/login?role=admin");
                             } else if (isVendor) {
                               navigate("/login?role=serviceman");
+                            } else if (isWorker) {
+                              navigate("/worker/login");
                             } else {
                               navigate("/login");
                             }
@@ -431,6 +533,8 @@ function Header() {
                                 ? "Sign out from admin control panel"
                                 : isVendor
                                 ? "Sign out from vendor panel"
+                                : isWorker
+                                ? "Sign out from technician workplace"
                                 : "Sign out from your account"}
                             </span>
                           </div>
@@ -556,6 +660,11 @@ function Header() {
               <span className="item-text">CATEGORIES</span>
               <span className="item-arrow">→</span>
             </Link>
+            <Link to="/worker/dashboard" className={`mobile-nav-item ${isActive("/worker") || isActive("/worker/login") || isActive("/worker/dashboard")}`} onClick={() => setMobileNavOpen(false)}>
+              <span className="item-icon">👷</span>
+              <span className="item-text" style={{ color: "#10B981", fontWeight: 700 }}>WORKER DASHBOARD (90% PAY)</span>
+              <span className="item-arrow">→</span>
+            </Link>
             <Link to="/contact" className={`mobile-nav-item ${isActive("/contact")}`} onClick={() => setMobileNavOpen(false)}>
               <span className="item-icon">📞</span>
               <span className="item-text">CONTACT</span>
@@ -620,16 +729,34 @@ function Header() {
                         navigate("/admin");
                       } else if (isVendor) {
                         navigate("/vendor/dashboard?tab=profile");
+                      } else if (isWorker) {
+                        navigate("/worker/dashboard?tab=profile");
                       } else {
                         setDrawerOpen(true);
                       }
                     }}
                   >
                     <span>
-                      {isAdmin ? "🛡️ Admin Control Panel" : isVendor ? "🛠️ Vendor Profile & Shop" : "👤 Profile & Bookings"}
+                      {isAdmin ? "🛡️ Admin Control Panel" : isVendor ? "🛠️ Vendor Profile & Shop" : isWorker ? "👷 Worker Profile & Trade" : "👤 Profile & Bookings"}
                     </span>
                     <span>›</span>
                   </button>
+
+                  {/* Worker Active Jobs */}
+                  {isWorker && (
+                    <button 
+                      type="button" 
+                      className="mobile-acc-btn"
+                      style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.2)" }}
+                      onClick={() => {
+                        setMobileNavOpen(false);
+                        navigate("/worker/dashboard?tab=active_jobs");
+                      }}
+                    >
+                      <span>⚡ Assigned Field Jobs & Radar</span>
+                      <span>›</span>
+                    </button>
+                  )}
 
                   {/* Admin Bookings / Operations */}
                   {isAdmin && (
@@ -682,11 +809,15 @@ function Header() {
                     className="mobile-acc-btn logout"
                     onClick={() => {
                       setMobileNavOpen(false);
+                      localStorage.removeItem("helper_worker");
+                      localStorage.removeItem("helper_worker_token");
                       logout();
                       if (isAdmin) {
                         navigate("/login?role=admin");
                       } else if (isVendor) {
                         navigate("/login?role=serviceman");
+                      } else if (isWorker) {
+                        navigate("/worker/login");
                       } else {
                         navigate("/login");
                       }
@@ -721,6 +852,161 @@ function Header() {
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
       />
+
+      {/* Interactive City & Area Selection Modal (e.g. Indore -> Palasia) */}
+      {locationModalOpen && (
+        <div 
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(10, 15, 29, 0.75)",
+            backdropFilter: "blur(8px)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+          onClick={() => setLocationModalOpen(false)}
+        >
+          <div 
+            style={{
+              background: "var(--surface-card, #FFFFFF)",
+              color: "var(--text-main, #0F172A)",
+              borderRadius: "20px",
+              padding: "26px",
+              maxWidth: "520px",
+              width: "100%",
+              boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5)",
+              border: "1px solid var(--border-color, #E2E8F0)",
+              animation: "adminScaleUp 0.25s ease"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "24px" }}>📍</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 800 }}>Choose Your Service Location</h3>
+                  <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: "var(--text-muted, #64748B)" }}>
+                    Select your city and neighborhood to connect with nearest verified vendors.
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setLocationModalOpen(false)}
+                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-muted, #64748B)" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* City Selector */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-muted, #64748B)", display: "block", marginBottom: "6px" }}>
+                Select City:
+              </label>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {[
+                  { id: "Indore", label: "Indore (MP)", popular: true },
+                  { id: "Bhopal", label: "Bhopal (MP)" },
+                  { id: "Delhi NCR", label: "Delhi NCR" },
+                  { id: "Mumbai", label: "Mumbai" },
+                  { id: "Bengaluru", label: "Bengaluru" }
+                ].map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCity(c.id)}
+                    style={{
+                      padding: "7px 14px",
+                      borderRadius: "10px",
+                      border: selectedCity === c.id ? "1.5px solid #FF4D2D" : "1px solid var(--border-color, #E2E8F0)",
+                      background: selectedCity === c.id ? "rgba(255, 77, 45, 0.12)" : "var(--surface-input, #F8FAFC)",
+                      color: selectedCity === c.id ? "#FF4D2D" : "var(--text-main, #0F172A)",
+                      fontWeight: selectedCity === c.id ? 800 : 600,
+                      fontSize: "13px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {c.label} {c.popular && "⭐"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Neighborhood / Area Selector (Indore Focused) */}
+            <div>
+              <label style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-muted, #64748B)", display: "block", marginBottom: "6px" }}>
+                Select Area in {selectedCity}:
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", maxHeight: "240px", overflowY: "auto" }}>
+                {(selectedCity === "Indore" ? [
+                  { name: "Palasia", detail: "Palasia Square, Old Palasia, Greater Palasia", recommended: true },
+                  { name: "Vijay Nagar", detail: "Scheme 54, Scheme 78, Apollo DB City" },
+                  { name: "Bhawarkua", detail: "Holkar Science, IT Park, Vishnu Puri" },
+                  { name: "Rajwada", detail: "Sarafa, MG Road, Khajuri Market" },
+                  { name: "Musakhedi", detail: "Ring Road, Azad Nagar, Navlakha" },
+                  { name: "Annapurna", detail: "Sudama Nagar, Usha Nagar, Ranjeet Hanuman" },
+                  { name: "Geeta Bhawan", detail: "Manorama Ganj, Kanchan Bagh" },
+                  { name: "Rau / Silicon City", detail: "AB Road, Cat Road, Silicon City" }
+                ] : [
+                  { name: "Central Market", detail: "Sector 18 Hub" },
+                  { name: "North Zone", detail: "Civil Lines Area" },
+                  { name: "Tech Zone", detail: "Cyber City Sector" },
+                  { name: "Metro Hub", detail: "Station Road Circle" }
+                ]).map(area => (
+                  <button
+                    key={area.name}
+                    type="button"
+                    onClick={() => handleSelectArea(selectedCity, area.name)}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "12px",
+                      border: selectedArea === area.name ? "1.5px solid #10B981" : "1px solid var(--border-color, #E2E8F0)",
+                      background: selectedArea === area.name ? "rgba(16, 185, 129, 0.12)" : "var(--surface-input, #F8FAFC)",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "2px"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <strong style={{ fontSize: "13.5px", color: selectedArea === area.name ? "#10B981" : "var(--text-main, #0F172A)" }}>
+                        📍 {area.name}
+                      </strong>
+                      {area.recommended && (
+                        <span style={{ fontSize: "9.5px", padding: "1px 5px", background: "#FF4D2D", color: "#FFFFFF", borderRadius: "6px", fontWeight: 700 }}>
+                          NEAR YOU
+                        </span>
+                      )}
+                    </div>
+                    <span style={{ fontSize: "11px", color: "var(--text-muted, #64748B)", lineHeight: 1.2 }}>
+                      {area.detail}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: "18px", paddingTop: "14px", borderTop: "1px solid var(--border-color, #E2E8F0)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "12px", color: "var(--text-muted, #64748B)" }}>
+                Current: <strong>{selectedArea}, {selectedCity}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => setLocationModalOpen(false)}
+                className="btn-primary-glow"
+                style={{ padding: "8px 18px", fontSize: "12.5px" }}
+              >
+                Confirm Location ✓
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
