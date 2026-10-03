@@ -74,6 +74,21 @@ const WorkerSchema = new mongoose.Schema(
       default: "verified",
       index: true
     },
+    onboardingFeePaid: {
+      type: Boolean,
+      default: false
+    },
+    feeAmount: {
+      type: Number,
+      default: 399
+    },
+    feeTxnId: {
+      type: String,
+      default: ""
+    },
+    onboardingPaidAt: {
+      type: Date
+    },
     documents: {
       aadhaarNumber: { type: String, default: "" },
       aadhaarDoc: { type: String, default: "" },
