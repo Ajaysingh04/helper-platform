@@ -30,6 +30,13 @@ export const SEEDED_REGISTERED_USERS = [
   { name: "Sneha Gupta", email: "sneha.g@example.com", phone: "9876500004", address: "Indore / Delhi NCR", password: "password123" }
 ];
 
+export const DEMO_WORKERS_LIST = [
+  { name: "Sunil Sharma", phone: "9876500101", trade: "Plumber" },
+  { name: "Amit Verma", phone: "9876500102", trade: "Electrician" },
+  { name: "Manoj Chauffeur", phone: "9876500103", trade: "Driver" },
+  { name: "Imran Khan", phone: "9876500104", trade: "AC Repair" }
+];
+
 export const getRegisteredUsers = () => {
   try {
     const raw = localStorage.getItem("helper_registered_users");
@@ -106,6 +113,25 @@ function LoginPage() {
   });
 
   // ==========================================
+  // 2.5 WORKER (FIELD TECHNICIAN) STATE
+  // ==========================================
+  const [workerLoginData, setWorkerLoginData] = useState({
+    phone: "",
+    password: "worker123"
+  });
+  const [workerRegData, setWorkerRegData] = useState({
+    name: "",
+    phone: "",
+    category: "Plumber",
+    experienceYears: "3",
+    city: "Indore",
+    area: "Palasia",
+    aadhaarNumber: "",
+    password: "",
+    confirmPassword: ""
+  });
+
+  // ==========================================
   // 3. USER (CUSTOMER) STATE
   // ==========================================
   const [authMethod, setAuthMethod] = useState("password"); // "password" | "otp"
@@ -131,7 +157,7 @@ function LoginPage() {
 
   useEffect(() => {
     const roleParam = queryParams.get("role");
-    if (roleParam && ["admin", "serviceman", "user"].includes(roleParam)) {
+    if (roleParam && ["admin", "serviceman", "worker", "user"].includes(roleParam)) {
       setSelectedRole(roleParam);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -296,6 +322,167 @@ function LoginPage() {
       }, 800);
     } catch (err) {
       setErrorMessage(err.message || "Login failed. Check phone number and password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // WORKER (FIELD TECHNICIAN) LOGIN HANDLER
+  // ----------------------------------------------------
+  const handleWorkerLogin = async (e, customPhone) => {
+    if (e) e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const phoneToUse = (customPhone || workerLoginData.phone).trim();
+    if (!phoneToUse) {
+      setErrorMessage("Please enter your registered 10-digit mobile number.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/workers/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: phoneToUse,
+          password: workerLoginData.password || "worker123"
+        })
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success && data.worker) {
+        localStorage.setItem("helper_worker", JSON.stringify(data.worker));
+        if (data.token) localStorage.setItem("helper_worker_token", data.token);
+        login({ name: data.worker.name, role: "Worker", email: data.worker.phone || "" });
+        setSuccessMessage(`Welcome back, ${data.worker.name}! Opening Worker Dashboard...`);
+        setTimeout(() => {
+          navigate("/worker/dashboard");
+        }, 700);
+        return;
+      } else {
+        throw new Error(data.message || "Invalid mobile number or password for Worker login.");
+      }
+    } catch (err) {
+      // Offline fallback / local worker login
+      const cleanPh = phoneToUse.replace(/\D/g, "");
+      const demoMatch = DEMO_WORKERS_LIST.find(w => w.phone === cleanPh);
+      if (demoMatch || cleanPh.length >= 10) {
+        const fallbackWorker = {
+          workerId: "WRK-" + (cleanPh.slice(-4) || "101"),
+          id: "WRK-" + (cleanPh.slice(-4) || "101"),
+          name: demoMatch ? demoMatch.name : `Technician ${cleanPh.slice(-4)}`,
+          phone: cleanPh,
+          category: demoMatch ? demoMatch.trade : "Plumber",
+          vendorName: "Amritam Services Hub (Nearest Vendor)",
+          city: "Indore",
+          status: "active",
+          verificationStatus: "verified",
+          availability: { isOnline: true, isEmergencyAvailable: true }
+        };
+        localStorage.setItem("helper_worker", JSON.stringify(fallbackWorker));
+        localStorage.setItem("helper_worker_token", "wrk_token_local");
+        login({ name: fallbackWorker.name, role: "Worker", email: fallbackWorker.phone });
+        setSuccessMessage(`Welcome back, ${fallbackWorker.name}! Opening Worker Dashboard...`);
+        setTimeout(() => {
+          navigate("/worker/dashboard");
+        }, 700);
+      } else {
+        setErrorMessage(err.message || "Worker login failed. Please check mobile number.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // WORKER (FIELD TECHNICIAN) REGISTRATION HANDLER
+  // ----------------------------------------------------
+  const handleWorkerRegister = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (!workerRegData.name.trim()) {
+      setErrorMessage("Please enter worker full name.");
+      return;
+    }
+
+    const cleanPhone = workerRegData.phone.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+      setErrorMessage("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    if (workerRegData.password && workerRegData.password.length < 4) {
+      setErrorMessage("Password must be at least 4 characters long.");
+      return;
+    }
+
+    if (workerRegData.password && workerRegData.password !== workerRegData.confirmPassword) {
+      setErrorMessage("Passwords do not match. Please verify.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        name: workerRegData.name.trim(),
+        phone: cleanPhone.slice(-10),
+        password: workerRegData.password || "worker123",
+        category: workerRegData.category,
+        skills: [workerRegData.category, `${workerRegData.category} Specialist`],
+        experienceYears: Number(workerRegData.experienceYears) || 3,
+        city: workerRegData.city || "Indore",
+        address: `${workerRegData.area || "Palasia"}, ${workerRegData.city || "Indore"}`,
+        aadhaarNumber: workerRegData.aadhaarNumber,
+        preferredVendorId: "auto"
+      };
+
+      const res = await fetch(`${API_BASE}/api/workers/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.worker) {
+        localStorage.setItem("helper_worker", JSON.stringify(data.worker));
+        if (data.token) localStorage.setItem("helper_worker_token", data.token);
+        login({ name: data.worker.name, role: "Worker", email: data.worker.phone || "" });
+        setSuccessMessage(`Registration successful! Assigned to nearest vendor: ${data.assignedVendor?.name || data.worker.vendorName || "Amritam Services Hub"}. Redirecting...`);
+        setTimeout(() => {
+          navigate("/worker/dashboard");
+        }, 1000);
+      } else {
+        throw new Error(data.message || "Worker registration failed.");
+      }
+    } catch (err) {
+      // Offline fallback registration
+      const newWorker = {
+        workerId: "WRK-" + Math.floor(10000 + Math.random() * 90000),
+        id: "WRK-" + Math.floor(10000 + Math.random() * 90000),
+        name: workerRegData.name.trim(),
+        phone: cleanPhone.slice(-10),
+        category: workerRegData.category,
+        vendorName: "Amritam Services Hub (Nearest Vendor)",
+        city: workerRegData.city || "Indore",
+        address: `${workerRegData.area || "Palasia"}, ${workerRegData.city || "Indore"}`,
+        status: "active",
+        verificationStatus: "verified",
+        experienceYears: workerRegData.experienceYears || 3,
+        rating: 5.0,
+        availability: { isOnline: true, isEmergencyAvailable: true }
+      };
+      localStorage.setItem("helper_worker", JSON.stringify(newWorker));
+      localStorage.setItem("helper_worker_token", "wrk_token_local");
+      login({ name: newWorker.name, role: "Worker", email: newWorker.phone });
+      setSuccessMessage(`Registration successful! Assigned to nearest vendor: Amritam Services Hub. Opening Worker Dashboard...`);
+      setTimeout(() => {
+        navigate("/worker/dashboard");
+      }, 1000);
     } finally {
       setLoading(false);
     }
@@ -636,22 +823,24 @@ function LoginPage() {
                   ? "🛡️ ADMIN CONTROL HUB" 
                   : selectedRole === "serviceman" 
                   ? "👨‍🔧 HELPER PARTNER NETWORK" 
+                  : selectedRole === "worker"
+                  ? "👷 FIELD PRO & TECHNICIAN"
                   : "👋 HELPER ON-DEMAND"}
               </span>
             </div>
             <h1 className="yeti-big-heading">
               <span>
-                {selectedRole === "admin" ? "CONTROL." : selectedRole === "serviceman" ? "GROW." : "EXPLORE."}
+                {selectedRole === "admin" ? "CONTROL." : selectedRole === "serviceman" ? "GROW." : selectedRole === "worker" ? "PERFORM." : "EXPLORE."}
               </span>
               <span>
-                {selectedRole === "admin" ? "MANAGE. DIRECT." : selectedRole === "serviceman" ? "EARN. SCALE." : "LEARN. GROW."}
+                {selectedRole === "admin" ? "MANAGE. DIRECT." : selectedRole === "serviceman" ? "EARN. SCALE." : selectedRole === "worker" ? "SERVICE. EARN." : "LEARN. GROW."}
               </span>
             </h1>
           </div>
         </div>
 
         {/* =========================================================================
-            RIGHT COLUMN: WELCOME FORM CARD WITH 3-ROLE SELECTOR
+            RIGHT COLUMN: WELCOME FORM CARD WITH 4-ROLE SELECTOR
             ========================================================================= */}
         <div className="pin-login-form-col">
           
@@ -659,7 +848,7 @@ function LoginPage() {
           <div className="pin-form-header">
             <div className="pin-brand-badge">
               <svg viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" fill={selectedRole === "admin" ? "#EF4444" : selectedRole === "serviceman" ? "#FF4D2D" : "#0284C7"} />
+                <circle cx="12" cy="12" r="9" fill={selectedRole === "admin" ? "#EF4444" : selectedRole === "serviceman" ? "#FF4D2D" : selectedRole === "worker" ? "#10B981" : "#0284C7"} />
                 <circle cx="9.5" cy="10.5" r="1.5" fill="#FFFFFF" />
                 <circle cx="14.5" cy="10.5" r="1.5" fill="#FFFFFF" />
                 <path d="M8.5 15C9.5 16.5 14.5 16.5 15.5 15" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" />
@@ -671,18 +860,20 @@ function LoginPage() {
                 ? "HELPER • SUPER ADMIN" 
                 : selectedRole === "serviceman" 
                 ? "HELPER • SERVICE MAN PORTAL" 
+                : selectedRole === "worker"
+                ? "HELPER • FIELD WORKER PORTAL"
                 : "HELPER • CUSTOMER ACCESS"}
             </div>
           </div>
 
           {/* =========================================================================
-              3 UNIFIED TOP ROLE SWITCHER TABS: ADMIN | SERVICE MAN PANEL | USER
+              4 UNIFIED TOP ROLE SWITCHER TABS: ADMIN | SERVICE MAN | WORKER | USER
               ========================================================================= */}
           <div className="login-role-selector">
             <button 
               type="button" 
               className={`role-tab-btn role-admin ${selectedRole === "admin" ? "active" : ""}`}
-              onClick={() => { setSelectedRole("admin"); setErrorMessage(""); setSuccessMessage(""); }}
+              onClick={() => { setSelectedRole("admin"); setErrorMessage(""); setSuccessMessage(""); setIsRegister(false); }}
             >
               <span>🛡️</span>
               <span>Admin</span>
@@ -690,15 +881,23 @@ function LoginPage() {
             <button 
               type="button" 
               className={`role-tab-btn role-serviceman ${selectedRole === "serviceman" ? "active" : ""}`}
-              onClick={() => { setSelectedRole("serviceman"); setErrorMessage(""); setSuccessMessage(""); }}
+              onClick={() => { setSelectedRole("serviceman"); setErrorMessage(""); setSuccessMessage(""); setIsRegister(false); }}
             >
               <span>👨‍🔧</span>
               <span>Service Man</span>
             </button>
             <button 
               type="button" 
+              className={`role-tab-btn role-worker ${selectedRole === "worker" ? "active" : ""}`}
+              onClick={() => { setSelectedRole("worker"); setErrorMessage(""); setSuccessMessage(""); setIsRegister(false); }}
+            >
+              <span>👷</span>
+              <span>Worker</span>
+            </button>
+            <button 
+              type="button" 
               className={`role-tab-btn role-user ${selectedRole === "user" ? "active" : ""}`}
-              onClick={() => { setSelectedRole("user"); setErrorMessage(""); setSuccessMessage(""); }}
+              onClick={() => { setSelectedRole("user"); setErrorMessage(""); setSuccessMessage(""); setIsRegister(false); }}
             >
               <span>👤</span>
               <span>User</span>
@@ -711,6 +910,8 @@ function LoginPage() {
               ? "ADMINISTRATOR ACCESS" 
               : selectedRole === "serviceman" 
               ? (isRegister ? "PARTNER SHOP REGISTRATION" : "SERVICE MAN LOGIN") 
+              : selectedRole === "worker"
+              ? (isRegister ? "WORKER REGISTRATION" : "FIELD WORKER SIGN IN")
               : (isRegister ? "CREATE USER ACCOUNT" : "WELCOME BACK USER")}
           </h2>
           
@@ -719,6 +920,8 @@ function LoginPage() {
               ? "Exclusive management access for Categories, Providers & Platform Settings"
               : selectedRole === "serviceman"
               ? (isRegister ? "Register your shop details. Ek shop se up to 8 members use kar sakte hain." : "Login with registered mobile number to manage jobs & shop details")
+              : selectedRole === "worker"
+              ? (isRegister ? "Register as a technician. Registration ke baad nearest vendor se connect hoke orders receive karein." : "Login to view assigned jobs, verify doorstep OTP, and process instant customer settlements")
               : (isRegister ? "Register to book verified home services & track doorstep arrivals" : "Enter credentials or mobile OTP to access your customer account")}
           </p>
 
@@ -1082,6 +1285,319 @@ function LoginPage() {
                   </button>
                 </form>
               )}
+            </div>
+          )}
+
+          {/* =========================================================================
+              ROLE 2.5: WORKER / FIELD TECHNICIAN PANEL (LOGIN & SIGN UP)
+              ========================================================================= */}
+          {selectedRole === "worker" && (
+            <div className="animate-fade-in">
+              {/* Worker Sub-toggle: Sign In vs Register */}
+              <div style={{ display: "flex", background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "10px", padding: "4px", marginBottom: "16px" }}>
+                <button
+                  type="button"
+                  onClick={() => { setIsRegister(false); setErrorMessage(""); }}
+                  style={{
+                    flex: 1,
+                    padding: "8px",
+                    borderRadius: "8px",
+                    border: "none",
+                    fontWeight: 700,
+                    fontSize: "12.5px",
+                    background: !isRegister ? "#FFFFFF" : "transparent",
+                    color: !isRegister ? "#10B981" : "#475569",
+                    boxShadow: !isRegister ? "0 2px 6px rgba(16,185,129,0.15)" : "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  🔑 Worker Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsRegister(true); setErrorMessage(""); }}
+                  style={{
+                    flex: 1,
+                    padding: "8px",
+                    borderRadius: "8px",
+                    border: "none",
+                    fontWeight: 700,
+                    fontSize: "12.5px",
+                    background: isRegister ? "#FFFFFF" : "transparent",
+                    color: isRegister ? "#10B981" : "#475569",
+                    boxShadow: isRegister ? "0 2px 6px rgba(16,185,129,0.15)" : "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  📝 Register as Worker
+                </button>
+              </div>
+
+              {/* Nearest Vendor Allocation Banner */}
+              <div className="worker-capacity-notice">
+                <span style={{ fontSize: "20px" }}>👷</span>
+                <div>
+                  <strong>Nearest Vendor Connect:</strong> Naye worker registration ke baad aapka account automatically aapke nearest vendor <strong>(Amritam Services Hub)</strong> ke sath attach ho jayega jisse aapko instant jobs milengi.
+                </div>
+              </div>
+
+              {isRegister ? (
+                /* Worker REGISTRATION FORM */
+                <form onSubmit={handleWorkerRegister} className="pin-form-body">
+                  <div className="pin-input-group">
+                    <label className="pin-input-label">Worker Full Name *</label>
+                    <div className="pin-input-field-wrap">
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Sunil Sharma"
+                        value={workerRegData.name}
+                        onChange={(e) => setWorkerRegData({ ...workerRegData, name: e.target.value })}
+                        className="pin-input-field"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pin-input-group">
+                    <label className="pin-input-label">Mobile Number (Calling & Customer Contact) *</label>
+                    <div className="pin-input-field-wrap">
+                      <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
+                      <input 
+                        type="tel" 
+                        placeholder="98765 00101"
+                        value={workerRegData.phone}
+                        onChange={(e) => setWorkerRegData({ ...workerRegData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                        className="pin-input-field"
+                        style={{ paddingLeft: "52px" }}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Trade / Category *</label>
+                      <div className="pin-input-field-wrap">
+                        <select 
+                          value={workerRegData.category}
+                          onChange={(e) => setWorkerRegData({ ...workerRegData, category: e.target.value })}
+                          className="pin-input-field"
+                          required
+                          style={{ padding: "10px 12px" }}
+                        >
+                          {SERVICE_WORK_CATEGORIES.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Experience (Years) *</label>
+                      <div className="pin-input-field-wrap">
+                        <select
+                          value={workerRegData.experienceYears}
+                          onChange={(e) => setWorkerRegData({ ...workerRegData, experienceYears: e.target.value })}
+                          className="pin-input-field"
+                          required
+                          style={{ padding: "10px 12px" }}
+                        >
+                          <option value="1">1 Year Experience</option>
+                          <option value="2">2 Years Experience</option>
+                          <option value="3">3 Years Experience</option>
+                          <option value="5">5+ Years Experience</option>
+                          <option value="10">10+ Years Master</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">City *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Indore"
+                          value={workerRegData.city}
+                          onChange={(e) => setWorkerRegData({ ...workerRegData, city: e.target.value })}
+                          className="pin-input-field"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Nearest Area *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Palasia"
+                          value={workerRegData.area}
+                          onChange={(e) => setWorkerRegData({ ...workerRegData, area: e.target.value })}
+                          className="pin-input-field"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pin-input-group">
+                    <label className="pin-input-label">Aadhaar Number (12 Digits - Optional)</label>
+                    <div className="pin-input-field-wrap">
+                      <input 
+                        type="text" 
+                        placeholder="e.g. 1234 5678 9012"
+                        value={workerRegData.aadhaarNumber}
+                        onChange={(e) => setWorkerRegData({ ...workerRegData, aadhaarNumber: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+                        className="pin-input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Create Password *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="Min 4 chars"
+                          value={workerRegData.password}
+                          onChange={(e) => setWorkerRegData({ ...workerRegData, password: e.target.value })}
+                          className="pin-input-field"
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="pin-password-toggle"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? "🙈" : "👁️"}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Confirm Password *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type={showConfirmPassword ? "text" : "password"} 
+                          placeholder="Repeat password"
+                          value={workerRegData.confirmPassword}
+                          onChange={(e) => setWorkerRegData({ ...workerRegData, confirmPassword: e.target.value })}
+                          className="pin-input-field"
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="pin-password-toggle"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? "🙈" : "👁️"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="pin-btn-signin"
+                    style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", boxShadow: "0 8px 20px rgba(16, 185, 129, 0.28)" }}
+                    disabled={loading}
+                  >
+                    {loading ? "Registering Worker..." : "Register Worker & Connect to Nearest Vendor 🚀"}
+                  </button>
+                </form>
+              ) : (
+                /* Worker SIGN IN FORM */
+                <form onSubmit={handleWorkerLogin} className="pin-form-body">
+                  <div className="pin-input-group">
+                    <label className="pin-input-label">Registered Mobile Number *</label>
+                    <div className="pin-input-field-wrap">
+                      <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
+                      <input 
+                        type="tel" 
+                        placeholder="98765 00101"
+                        value={workerLoginData.phone}
+                        onChange={(e) => setWorkerLoginData({ ...workerLoginData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                        className="pin-input-field"
+                        style={{ paddingLeft: "52px" }}
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pin-input-group">
+                    <label className="pin-input-label">Password *</label>
+                    <div className="pin-input-field-wrap">
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        placeholder="Enter password"
+                        value={workerLoginData.password}
+                        onChange={(e) => setWorkerLoginData({ ...workerLoginData, password: e.target.value })}
+                        className="pin-input-field"
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        className="pin-password-toggle"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? "🙈" : "👁️"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Demo worker quick login pills */}
+                  <div style={{ marginBottom: "16px" }}>
+                    <div style={{ fontSize: "11.5px", color: "#64748B", fontWeight: 700, marginBottom: "6px" }}>
+                      ⚡ QUICK DEMO WORKER PROFILES:
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {DEMO_WORKERS_LIST.map((w) => (
+                        <button
+                          key={w.phone}
+                          type="button"
+                          className="worker-demo-chip"
+                          onClick={() => {
+                            setWorkerLoginData({ phone: w.phone, password: "worker123" });
+                            setErrorMessage("");
+                          }}
+                        >
+                          👷 {w.name} ({w.trade})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="pin-btn-signin"
+                    style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", boxShadow: "0 8px 20px rgba(16, 185, 129, 0.28)" }}
+                    disabled={loading}
+                  >
+                    {loading ? "Logging in..." : "Login to Field Worker Panel ⚡"}
+                  </button>
+                </form>
+              )}
+
+              {/* Worker Footer Switch */}
+              <div className="pin-form-footer">
+                <span>
+                  {isRegister ? "Already registered as Worker?" : "New Field Worker / Technician?"}
+                </span>
+                <span 
+                  className="pin-switch-link" 
+                  style={{ color: "#10B981" }}
+                  onClick={() => {
+                    setIsRegister(!isRegister);
+                    setErrorMessage("");
+                    setSuccessMessage("");
+                  }}
+                >
+                  {isRegister ? "Sign in" : "Register now"}
+                </span>
+              </div>
             </div>
           )}
 

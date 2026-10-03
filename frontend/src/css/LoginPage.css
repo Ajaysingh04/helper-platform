@@ -676,11 +676,11 @@
 }
 
 /* ==========================================================================
-   UNIFIED 3-ROLE SELECTOR (ADMIN, SERVICE MAN PANEL, USER)
+   UNIFIED 4-ROLE SELECTOR (ADMIN, SERVICE MAN, WORKER, USER)
    ========================================================================== */
 .login-role-selector {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   background: #F1F5F9;
   padding: 5px;
   border-radius: 16px;
@@ -731,6 +731,11 @@
   border-bottom: 2px solid #FF4D2D;
 }
 
+.role-tab-btn.active.role-worker {
+  color: #10B981;
+  border-bottom: 2px solid #10B981;
+}
+
 .role-tab-btn.active.role-user {
   color: #0284C7;
   border-bottom: 2px solid #0284C7;
@@ -765,6 +770,44 @@
   color: #C23315;
 }
 
+/* Worker Notice banner */
+.worker-capacity-notice {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 12px 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #065F46;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.worker-capacity-notice strong {
+  color: #047857;
+}
+
+/* Worker Demo Profiles Quick Pill */
+.worker-demo-chip {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #065F46;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.worker-demo-chip:hover {
+  background: #DCFCE7;
+  border-color: #86EFAC;
+  transform: translateY(-1px);
+}
+
 /* Admin PIN box */
 .admin-login-box {
   background: #FFF5F5;
@@ -776,13 +819,13 @@
 
 @media (max-width: 580px) {
   .login-role-selector {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-    padding: 4px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 6px;
   }
   .role-tab-btn {
-    padding: 8px 4px;
-    font-size: 11.5px;
-    gap: 4px;
+    padding: 10px 6px;
+    font-size: 12.5px;
+    gap: 6px;
   }
 }
