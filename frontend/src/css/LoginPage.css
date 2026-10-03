@@ -831,7 +831,7 @@
 }
 
 /* ==========================================================================
-   ₹399 WORKER ONBOARDING FEE MODAL
+   ₹399 WORKER ONBOARDING FEE MODAL - PREMIUM FINTECH SUITE
    ========================================================================== */
 .worker-fee-modal-overlay {
   position: fixed;
@@ -839,9 +839,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: 99999;
   display: flex;
   align-items: center;
@@ -852,273 +852,1027 @@
 
 .worker-fee-modal-card {
   width: 100%;
-  max-width: 480px;
+  max-width: 540px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
   background: #FFFFFF;
   border-radius: 24px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(16, 185, 129, 0.25);
   overflow: hidden;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
 }
 
 @keyframes modalScaleUp {
-  0% { transform: scale(0.95); opacity: 0; }
+  0% { transform: scale(0.94); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-.fee-modal-header {
+/* Header V2 */
+.fee-modal-header-v2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: #F0FDF4;
-  border-bottom: 1px solid #DCFCE7;
+  background: linear-gradient(135deg, #064E3B 0%, #065F46 60%, #047857 100%);
+  color: #FFFFFF;
+  position: relative;
+  flex-shrink: 0;
 }
 
-.fee-modal-badge {
+.fee-modal-brand-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
+  gap: 12px;
+}
+
+.fee-modal-brand-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #34D399;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.fee-modal-title {
+  font-size: 14.5px;
   font-weight: 800;
-  color: #065F46;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  letter-spacing: -0.2px;
+  color: #FFFFFF;
+  line-height: 1.25;
 }
 
-.fee-modal-close {
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  color: #64748B;
+.fee-modal-subtitle {
+  font-size: 11px;
+  color: #A7F3D0;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.fee-modal-close-v2 {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 8px;
-  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.fee-modal-close:hover {
-  background: #E2E8F0;
-  color: #0F172A;
+.fee-modal-close-v2:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: rotate(90deg);
 }
 
-.fee-modal-body {
-  padding: 22px 24px 24px;
-  text-align: center;
+/* Step & Guarantee Banner */
+.fee-modal-step-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: #ECFDF5;
+  border-bottom: 1px solid #D1FAE5;
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
-.fee-amount-highlight {
+.step-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #065F46;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.live-dot-green {
+  width: 7px;
+  height: 7px;
+  background: #10B981;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px #10B981;
+  animation: pulseGreen 1.8s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.step-status-chip {
+  color: #047857;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Scrollable Body */
+.fee-modal-body-v2 {
+  padding: 18px 22px 22px;
+  overflow-y: auto;
+  flex: 1;
+  box-sizing: border-box;
+}
+
+.fee-modal-body-v2::-webkit-scrollbar {
+  width: 6px;
+}
+
+.fee-modal-body-v2::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+.fee-modal-body-v2::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+/* Hero Price Card */
+.fee-hero-card {
+  background: linear-gradient(145deg, #0F172A 0%, #1E293B 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 18px;
+  padding: 16px 18px;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+  margin-bottom: 14px;
+}
+
+.fee-hero-left {
+  flex: 1;
+}
+
+.fee-hero-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #34D399;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.fee-hero-price-row {
   display: flex;
   align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  margin-bottom: 8px;
-  position: relative;
-  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 6px;
 }
 
-.fee-currency {
-  font-size: 24px;
+.fee-hero-curr {
+  font-size: 26px;
   font-weight: 800;
-  color: #10B981;
+  color: #34D399;
 }
 
-.fee-number {
-  font-size: 48px;
+.fee-hero-num {
+  font-size: 42px;
   font-weight: 900;
-  color: #0F172A;
+  color: #FFFFFF;
   line-height: 1;
+  letter-spacing: -1px;
 }
 
-.fee-tag {
-  display: block;
-  width: 100%;
-  font-size: 12px;
-  color: #059669;
+.fee-hero-gst {
+  font-size: 14px;
   font-weight: 700;
-  margin-top: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #94A3B8;
+  margin-left: 2px;
 }
 
-.fee-desc-text {
-  font-size: 13px;
-  color: #475569;
-  line-height: 1.5;
-  margin: 10px 0 16px;
-  text-align: left;
+.fee-tax-badge {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  color: #6EE7B7;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  margin-left: 8px;
 }
 
-.fee-breakdown-box {
+.fee-hero-desc {
+  font-size: 11.5px;
+  color: #CBD5E1;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.fee-hero-shield-badge {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(52, 211, 153, 0.4);
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.shield-check-icon {
+  width: 28px;
+  height: 28px;
+  background: #10B981;
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  margin: 0 auto 4px;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+.shield-text {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #A7F3D0;
+  line-height: 1.25;
+  letter-spacing: 0.3px;
+}
+
+/* Technician & Vendor Profile Card */
+.fee-partner-profile-card {
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
   border-radius: 14px;
   padding: 12px 14px;
-  margin-bottom: 14px;
-  text-align: left;
-}
-
-.fee-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 12.5px;
-  color: #334155;
-  padding: 5px 0;
-}
-
-.fee-item.fee-total {
-  border-top: 1px dashed #CBD5E1;
-  margin-top: 6px;
-  padding-top: 8px;
-  font-weight: 800;
-  font-size: 13.5px;
-  color: #0F172A;
-}
-
-.fee-total-amount {
-  font-size: 18px;
-  color: #10B981;
-  font-weight: 900;
-}
-
-.fee-worker-summary {
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  text-align: left;
-  font-size: 12px;
-  color: #065F46;
-  line-height: 1.5;
-}
-
-.fee-payment-methods {
-  text-align: left;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 14px;
 }
 
-.method-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #0F172A;
-  margin-bottom: 6px;
-  display: block;
+.profile-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.payment-options-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.profile-avatar {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  color: #FFFFFF;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+
+.profile-meta {
+  text-align: left;
+}
+
+.profile-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
   gap: 6px;
 }
 
-.pay-opt-btn {
+.profile-badge-pro {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.profile-sub {
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 600;
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.profile-loc {
+  font-size: 11px;
+  color: #475569;
+  margin-top: 1px;
+}
+
+.profile-vendor-tag {
+  text-align: right;
+  border-left: 1px solid #E2E8F0;
+  padding-left: 12px;
+  flex-shrink: 0;
+}
+
+.vendor-tag-lbl {
+  display: block;
+  font-size: 9.5px;
+  color: #64748B;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.vendor-tag-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #065F46;
+}
+
+.vendor-tag-sub {
+  display: block;
+  font-size: 10px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+/* Itemized Digital Invoice */
+.fee-invoice-card {
+  background: #FFFFFF;
+  border: 1px dashed #CBD5E1;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.invoice-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #F1F5F9;
+  margin-bottom: 8px;
+}
+
+.inv-code {
+  color: #059669;
+  font-family: monospace;
+}
+
+.invoice-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.inv-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #1E293B;
+}
+
+.inv-title strong {
+  display: block;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.inv-subtitle {
+  font-size: 10.5px;
+  color: #64748B;
+  margin-top: 1px;
+}
+
+.inv-price {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #0F172A;
+  flex-shrink: 0;
+}
+
+.invoice-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1.5px dashed #CBD5E1;
+  text-align: left;
+}
+
+.total-title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.total-sub {
+  display: block;
+  font-size: 10px;
+  color: #059669;
+  font-weight: 600;
+}
+
+.inv-final-price {
+  font-size: 22px;
+  font-weight: 900;
+  color: #059669;
+}
+
+/* Payment Methods Section V2 */
+.fee-payment-methods-v2 {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.method-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.method-label-v2 {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.method-tag-secure {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #059669;
+  background: #ECFDF5;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+
+.payment-options-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pay-opt-btn-v2 {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 4px;
-  border-radius: 10px;
+  padding: 10px 8px;
+  background: #F8FAFC;
   border: 1.5px solid #E2E8F0;
-  background: #FFFFFF;
-  color: #64748B;
-  font-size: 11px;
-  font-weight: 700;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
   text-align: center;
 }
 
-.pay-opt-btn:hover {
+.pay-opt-btn-v2:hover {
   border-color: #10B981;
-  color: #0F172A;
+  background: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
 }
 
-.pay-opt-btn.active {
+.pay-opt-btn-v2.active {
+  background: #ECFDF5;
+  border-color: #10B981;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+}
+
+.opt-icon-circle {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.opt-texts strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.25;
+}
+
+.opt-texts span {
+  display: block;
+  font-size: 9.5px;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+.opt-radio-dot {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  color: #10B981;
+  font-size: 12px;
+}
+
+/* UPI Interactive View */
+.upi-container-v2 {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.upi-subtabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  background: #E2E8F0;
+  padding: 3px;
+  border-radius: 10px;
+}
+
+.upi-subtab-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #475569;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.upi-subtab-btn.active {
+  background: #FFFFFF;
+  color: #065F46;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.upi-qr-box {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+}
+
+.upi-qr-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  width: 100%;
+}
+
+.qr-wrapper {
+  background: #FFFFFF;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1.5px solid #0F172A;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.upi-qr-svg {
+  display: block;
+}
+
+.qr-info-side {
+  text-align: left;
+  flex: 1;
+}
+
+.qr-scan-badge {
+  display: inline-block;
+  background: #ECFDF5;
+  color: #065F46;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid #A7F3D0;
+  margin-bottom: 6px;
+}
+
+.qr-scan-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 8px;
+}
+
+.upi-app-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.app-chip {
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  font-size: 10px;
+  font-weight: 700;
+  color: #334155;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.qr-timer-text {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.qr-timer-text strong {
+  color: #DC2626;
+}
+
+/* UPI ID Mode */
+.upi-input-box-v2 {
+  text-align: left;
+}
+
+.input-sub-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.upi-field-row {
+  display: flex;
+  gap: 8px;
+}
+
+.upi-text-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.upi-text-input:focus {
+  border-color: #10B981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.btn-verify-vpa {
+  padding: 10px 16px;
+  background: #0F172A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-verify-vpa:hover {
+  background: #1E293B;
+}
+
+.upi-quick-pills-v2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.pill-hint {
+  font-size: 10.5px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+.upi-quick-pills-v2 button {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upi-quick-pills-v2 button:hover {
   background: #ECFDF5;
   border-color: #10B981;
   color: #065F46;
 }
 
-.upi-input-wrap {
-  margin-bottom: 16px;
+/* Card Mode */
+.card-container-v2 {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 12px 14px;
   text-align: left;
 }
 
-.upi-quick-pills {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-  flex-wrap: wrap;
+.card-field-group {
+  margin-bottom: 10px;
+  flex: 1;
 }
 
-.upi-quick-pills button {
-  background: #F1F5F9;
-  border: 1px solid #CBD5E1;
-  color: #0F172A;
-  padding: 3px 8px;
-  border-radius: 6px;
+.card-field-group label {
+  display: block;
   font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
 }
 
-.upi-quick-pills button:hover {
-  background: #E2E8F0;
-}
-
-.btn-pay-worker-fee {
+.card-input {
   width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  padding: 9px 12px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  box-sizing: border-box;
+}
+
+.card-input:focus {
+  border-color: #10B981;
+  outline: none;
+}
+
+.card-field-row-split {
+  display: flex;
+  gap: 10px;
+}
+
+.card-supported-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: #64748B;
+}
+
+.c-tag {
+  background: #E2E8F0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: 10px;
+  color: #334155;
+}
+
+/* NetBanking Mode */
+.netbank-container-v2 {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.bank-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.bank-chip-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.bank-chip-btn:hover {
+  border-color: #10B981;
+  background: #ECFDF5;
+}
+
+.bank-chip-btn.active {
+  border-color: #10B981;
+  background: #ECFDF5;
+  color: #065F46;
+  font-weight: 800;
+}
+
+/* Pay CTA Button */
+.btn-pay-worker-fee-v2 {
+  width: 100%;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #10B981 0%, #059669 50%, #047857 100%);
   color: #FFFFFF;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.4);
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-pay-worker-fee:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.45);
+.btn-pay-worker-fee-v2:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.5);
 }
 
-.btn-pay-worker-fee:disabled {
-  opacity: 0.7;
+.btn-pay-worker-fee-v2:active {
+  transform: translateY(0);
+}
+
+.btn-pay-worker-fee-v2:disabled {
+  opacity: 0.75;
   cursor: not-allowed;
+  transform: none;
 }
 
-.fee-security-note {
+.btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-arrow {
+  font-size: 17px;
+  transition: transform 0.2s ease;
+}
+
+.btn-pay-worker-fee-v2:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+.btn-processing-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.spinner-border-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Security Trust Footer */
+.fee-security-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #F1F5F9;
+  flex-wrap: wrap;
+}
+
+.security-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11px;
   color: #64748B;
-  margin-top: 12px;
-  margin-bottom: 0;
+  font-weight: 600;
 }
 
-@media (max-width: 480px) {
+/* Responsive adjustments */
+@media (max-width: 540px) {
   .worker-fee-modal-card {
     border-radius: 20px;
+    max-height: 94vh;
   }
-  .fee-modal-body {
-    padding: 16px 14px 18px;
+  .fee-modal-header-v2 {
+    padding: 14px 16px;
   }
-  .fee-number {
-    font-size: 40px;
+  .fee-modal-title {
+    font-size: 13.5px;
   }
-  .payment-options-grid {
+  .fee-modal-body-v2 {
+    padding: 14px 16px 18px;
+  }
+  .fee-hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .fee-hero-shield-badge {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    padding: 6px 10px;
+  }
+  .shield-check-icon {
+    margin: 0;
+  }
+  .fee-partner-profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .profile-vendor-tag {
+    border-left: none;
+    border-top: 1px solid #E2E8F0;
+    padding-left: 0;
+    padding-top: 8px;
+    width: 100%;
+    text-align: left;
+  }
+  .payment-options-grid-v2 {
     grid-template-columns: 1fr;
+    gap: 6px;
   }
-  .pay-opt-btn {
+  .pay-opt-btn-v2 {
     flex-direction: row;
     justify-content: flex-start;
-    padding: 10px 12px;
-    gap: 8px;
+    padding: 8px 12px;
+    gap: 10px;
+    text-align: left;
+  }
+  .opt-icon-circle {
+    margin-bottom: 0;
+  }
+  .upi-qr-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .qr-info-side {
+    text-align: center;
+  }
+  .upi-app-chips {
+    justify-content: center;
+  }
+  .bank-chips-grid {
+    grid-template-columns: 1fr;
+  }
+  .fee-security-footer {
+    flex-direction: column;
+    gap: 6px;
   }
 }
+
 

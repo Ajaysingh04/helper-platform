@@ -135,7 +135,10 @@ function LoginPage() {
   const [showWorkerFeeModal, setShowWorkerFeeModal] = useState(false);
   const [workerFeeProcessing, setWorkerFeeProcessing] = useState(false);
   const [workerFeeMethod, setWorkerFeeMethod] = useState("upi"); // "upi" | "card" | "netbanking"
+  const [workerUpiSubTab, setWorkerUpiSubTab] = useState("qr"); // "qr" | "id"
   const [workerUpiId, setWorkerUpiId] = useState("");
+  const [workerCardData, setWorkerCardData] = useState({ number: "4532 •••• •••• 8821", expiry: "08/29", cvv: "•••", name: "" });
+  const [workerSelectedBank, setWorkerSelectedBank] = useState("HDFC Bank");
   const [pendingWorkerPayload, setPendingWorkerPayload] = useState(null);
 
   // ==========================================
@@ -1942,19 +1945,29 @@ function LoginPage() {
       </div>
 
       {/* =========================================================================
-          ₹399 VENDOR ONBOARDING FEE MODAL
+          ₹399 VENDOR ONBOARDING FEE MODAL - PREMIUM FINTECH REDESIGN
           ========================================================================= */}
       {showWorkerFeeModal && pendingWorkerPayload && (
         <div className="worker-fee-modal-overlay animate-fade-in">
           <div className="worker-fee-modal-card animate-scale-up">
-            <div className="fee-modal-header">
-              <div className="fee-modal-badge">
-                <span>🏪</span>
-                <span>VENDOR ONBOARDING & VERIFICATION CHARGE</span>
+            
+            {/* Modal Header */}
+            <div className="fee-modal-header-v2">
+              <div className="fee-modal-brand-wrap">
+                <div className="fee-modal-brand-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <path d="m9 12 2 2 4-4"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div className="fee-modal-title">Vendor Onboarding & Verification Charge</div>
+                  <div className="fee-modal-subtitle">Official Partner Accreditation • Amritam Services Hub</div>
+                </div>
               </div>
               <button 
                 type="button" 
-                className="fee-modal-close" 
+                className="fee-modal-close-v2" 
                 onClick={() => setShowWorkerFeeModal(false)}
                 title="Cancel & Close"
               >
@@ -1962,109 +1975,388 @@ function LoginPage() {
               </button>
             </div>
 
-            <div className="fee-modal-body">
-              <div className="fee-amount-highlight">
-                <span className="fee-currency">₹</span>
-                <span className="fee-number">399</span>
-                <span className="fee-tag">One-Time Registration Charge</span>
+            {/* Progress / Guarantee Banner */}
+            <div className="fee-modal-step-banner">
+              <div className="step-pill">
+                <span className="live-dot-green"></span> STEP 2 OF 2: COMPLIANCE & ACTIVATION
               </div>
-
-              <p className="fee-desc-text">
-                Helper Partner Network me naye worker registration ke liye nearest vendor <strong>(Amritam Services Hub)</strong> ka verification charge pay karna hoga. Vendor approval ke baad aapka panel unlock hoga.
-              </p>
-
-              <div className="fee-breakdown-box">
-                <div className="fee-item">
-                  <span>🛡️ Identity & Police / Aadhaar Verification</span>
-                  <strong>₹199</strong>
-                </div>
-                <div className="fee-item">
-                  <span>👷 Partner ID Badge & Verified Field Pro Kit</span>
-                  <strong>₹100</strong>
-                </div>
-                <div className="fee-item">
-                  <span>🏪 Nearest Vendor Franchise Connect Fee</span>
-                  <strong>₹100</strong>
-                </div>
-                <div className="fee-item fee-total">
-                  <span>Total Payable Amount</span>
-                  <span className="fee-total-amount">₹399</span>
-                </div>
+              <div className="step-status-chip">
+                <span>🛡️</span> 100% Refundable Guarantee
               </div>
+            </div>
 
-              <div className="fee-worker-summary">
-                <div>👤 <strong>{pendingWorkerPayload.name}</strong> • +91 {pendingWorkerPayload.phone}</div>
-                <div>🔧 Trade: <strong>{pendingWorkerPayload.category}</strong></div>
-                <div>📍 Territory: <strong>{pendingWorkerPayload.address || "Palasia, Indore"}</strong></div>
-                <div>🏪 Nearest Vendor: <strong>Amritam Services Hub (Indore)</strong></div>
-              </div>
-
-              <div className="fee-payment-methods">
-                <label className="method-label">Select Payment Method:</label>
-                <div className="payment-options-grid">
-                  <button 
-                    type="button" 
-                    className={`pay-opt-btn ${workerFeeMethod === "upi" ? "active" : ""}`}
-                    onClick={() => setWorkerFeeMethod("upi")}
-                  >
-                    <span>📱</span>
-                    <span>UPI (GPay / PhonePe / Paytm)</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    className={`pay-opt-btn ${workerFeeMethod === "card" ? "active" : ""}`}
-                    onClick={() => setWorkerFeeMethod("card")}
-                  >
-                    <span>💳</span>
-                    <span>Debit / Credit Card</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    className={`pay-opt-btn ${workerFeeMethod === "netbanking" ? "active" : ""}`}
-                    onClick={() => setWorkerFeeMethod("netbanking")}
-                  >
-                    <span>🏛️</span>
-                    <span>Net Banking</span>
-                  </button>
+            {/* Scrollable Body */}
+            <div className="fee-modal-body-v2">
+              
+              {/* Hero Price Box */}
+              <div className="fee-hero-card">
+                <div className="fee-hero-left">
+                  <span className="fee-hero-label">ONE-TIME REGISTRATION & VERIFICATION CHARGE</span>
+                  <div className="fee-hero-price-row">
+                    <span className="fee-hero-curr">₹</span>
+                    <span className="fee-hero-num">399</span>
+                    <span className="fee-hero-gst">.00</span>
+                    <span className="fee-tax-badge">Incl. All Taxes</span>
+                  </div>
+                  <p className="fee-hero-desc">
+                    Helper Partner Network me register hone ke liye nearest vendor <strong>(Amritam Services Hub)</strong> ka verification charge pay karna hoga. Vendor approval ke baad aapka technician panel unlock hoga.
+                  </p>
+                </div>
+                <div className="fee-hero-shield-badge">
+                  <div className="shield-check-icon">✓</div>
+                  <div className="shield-text">UIDAI & POLICE<br />COMPLIANT</div>
                 </div>
               </div>
 
-              {workerFeeMethod === "upi" && (
-                <div className="upi-input-wrap">
-                  <input 
-                    type="text" 
-                    placeholder="e.g. 9876500101@upi or gpay@okhdfc" 
-                    value={workerUpiId}
-                    onChange={(e) => setWorkerUpiId(e.target.value)}
-                    className="pin-input-field"
-                  />
-                  <div className="upi-quick-pills">
-                    <button type="button" onClick={() => setWorkerUpiId(`${pendingWorkerPayload.phone}@upi`)}>
-                      ⚡ {pendingWorkerPayload.phone}@upi
-                    </button>
-                    <button type="button" onClick={() => setWorkerUpiId("worker.pro@okaxis")}>
-                      ⚡ worker.pro@okaxis
-                    </button>
+              {/* Technician & Assigned Vendor Card */}
+              <div className="fee-partner-profile-card">
+                <div className="profile-card-left">
+                  <div className="profile-avatar">
+                    {pendingWorkerPayload.name ? pendingWorkerPayload.name.charAt(0).toUpperCase() : "W"}
+                  </div>
+                  <div className="profile-meta">
+                    <div className="profile-name">
+                      {pendingWorkerPayload.name}
+                      <span className="profile-badge-pro">VERIFIED APPLICANT</span>
+                    </div>
+                    <div className="profile-sub">
+                      <span>📞 +91 {pendingWorkerPayload.phone}</span>
+                      <span>•</span>
+                      <span>🔧 {pendingWorkerPayload.category}</span>
+                    </div>
+                    <div className="profile-loc">
+                      📍 {pendingWorkerPayload.address || "Palasia, Indore"}
+                    </div>
                   </div>
                 </div>
-              )}
+                <div className="profile-vendor-tag">
+                  <span className="vendor-tag-lbl">Allocated Franchise Hub:</span>
+                  <strong className="vendor-tag-name">Amritam Services Hub</strong>
+                  <span className="vendor-tag-sub">Indore Central Territory</span>
+                </div>
+              </div>
 
+              {/* Itemized Digital Invoice */}
+              <div className="fee-invoice-card">
+                <div className="invoice-head">
+                  <span className="invoice-head-title">ITEMIZED CHARGE BREAKDOWN</span>
+                  <span className="inv-code">TXN CODE: ONB-399</span>
+                </div>
+                
+                <div className="invoice-rows">
+                  <div className="inv-row">
+                    <div className="inv-title">
+                      <span className="inv-bullet">🛡️</span>
+                      <div>
+                        <strong>Identity, Police & Aadhaar Background Check</strong>
+                        <div className="inv-subtitle">Automated UIDAI clearance & criminal record check</div>
+                      </div>
+                    </div>
+                    <span className="inv-price">₹199</span>
+                  </div>
+
+                  <div className="inv-row">
+                    <div className="inv-title">
+                      <span className="inv-bullet">👷</span>
+                      <div>
+                        <strong>Partner ID Badge & Verified Field Pro Kit</strong>
+                        <div className="inv-subtitle">Digital NFC/QR partner identity, uniform & field protocols</div>
+                      </div>
+                    </div>
+                    <span className="inv-price">₹100</span>
+                  </div>
+
+                  <div className="inv-row">
+                    <div className="inv-title">
+                      <span className="inv-bullet">🏪</span>
+                      <div>
+                        <strong>Nearest Vendor Franchise Fleet Connect Fee</strong>
+                        <div className="inv-subtitle">Priority job dispatching via Amritam Services Hub</div>
+                      </div>
+                    </div>
+                    <span className="inv-price">₹100</span>
+                  </div>
+                </div>
+
+                <div className="invoice-total-row">
+                  <div>
+                    <span className="total-title">Total Payable Amount</span>
+                    <span className="total-sub">Zero hidden charges • 100% money-back if rejected</span>
+                  </div>
+                  <div className="inv-final-price">₹399</div>
+                </div>
+              </div>
+
+              {/* Payment Methods Section */}
+              <div className="fee-payment-methods-v2">
+                <div className="method-label-row">
+                  <label className="method-label-v2">Select Payment Method</label>
+                  <span className="method-tag-secure">⚡ Instant Verification</span>
+                </div>
+
+                {/* 3 Main Method Tabs */}
+                <div className="payment-options-grid-v2">
+                  <button 
+                    type="button" 
+                    className={`pay-opt-btn-v2 ${workerFeeMethod === "upi" ? "active" : ""}`}
+                    onClick={() => setWorkerFeeMethod("upi")}
+                  >
+                    <div className="opt-icon-circle">📱</div>
+                    <div className="opt-texts">
+                      <strong>UPI (GPay / PhonePe / Paytm)</strong>
+                      <span>Scan QR or UPI ID</span>
+                    </div>
+                    {workerFeeMethod === "upi" && <span className="opt-radio-dot">●</span>}
+                  </button>
+
+                  <button 
+                    type="button" 
+                    className={`pay-opt-btn-v2 ${workerFeeMethod === "card" ? "active" : ""}`}
+                    onClick={() => setWorkerFeeMethod("card")}
+                  >
+                    <div className="opt-icon-circle">💳</div>
+                    <div className="opt-texts">
+                      <strong>Debit / Credit Card</strong>
+                      <span>Visa, Mastercard, RuPay</span>
+                    </div>
+                    {workerFeeMethod === "card" && <span className="opt-radio-dot">●</span>}
+                  </button>
+
+                  <button 
+                    type="button" 
+                    className={`pay-opt-btn-v2 ${workerFeeMethod === "netbanking" ? "active" : ""}`}
+                    onClick={() => setWorkerFeeMethod("netbanking")}
+                  >
+                    <div className="opt-icon-circle">🏛️</div>
+                    <div className="opt-texts">
+                      <strong>Net Banking</strong>
+                      <span>All Major Indian Banks</span>
+                    </div>
+                    {workerFeeMethod === "netbanking" && <span className="opt-radio-dot">●</span>}
+                  </button>
+                </div>
+
+                {/* METHOD 1: UPI CONTAINER */}
+                {workerFeeMethod === "upi" && (
+                  <div className="upi-container-v2 animate-fade-in">
+                    {/* UPI Sub Mode Tabs */}
+                    <div className="upi-subtabs">
+                      <button 
+                        type="button" 
+                        className={`upi-subtab-btn ${workerUpiSubTab === "qr" ? "active" : ""}`}
+                        onClick={() => setWorkerUpiSubTab("qr")}
+                      >
+                        <span>📲</span> Scan UPI QR Code
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`upi-subtab-btn ${workerUpiSubTab === "id" ? "active" : ""}`}
+                        onClick={() => setWorkerUpiSubTab("id")}
+                      >
+                        <span>⚡</span> Enter UPI ID / Number
+                      </button>
+                    </div>
+
+                    {workerUpiSubTab === "qr" ? (
+                      <div className="upi-qr-box">
+                        <div className="upi-qr-card">
+                          {/* Realistic Geometric QR Code SVG */}
+                          <div className="qr-wrapper">
+                            <svg className="upi-qr-svg" viewBox="0 0 160 160" width="160" height="160">
+                              {/* QR Code Background */}
+                              <rect width="160" height="160" fill="#ffffff" rx="8" />
+                              {/* Corner Top-Left */}
+                              <rect x="12" y="12" width="40" height="40" fill="#0f172a" rx="4" />
+                              <rect x="18" y="18" width="28" height="28" fill="#ffffff" rx="2" />
+                              <rect x="24" y="24" width="16" height="16" fill="#059669" rx="2" />
+                              {/* Corner Top-Right */}
+                              <rect x="108" y="12" width="40" height="40" fill="#0f172a" rx="4" />
+                              <rect x="114" y="18" width="28" height="28" fill="#ffffff" rx="2" />
+                              <rect x="120" y="24" width="16" height="16" fill="#059669" rx="2" />
+                              {/* Corner Bottom-Left */}
+                              <rect x="12" y="108" width="40" height="40" fill="#0f172a" rx="4" />
+                              <rect x="18" y="114" width="28" height="28" fill="#ffffff" rx="2" />
+                              <rect x="24" y="120" width="16" height="16" fill="#059669" rx="2" />
+                              {/* Central Amount Badge */}
+                              <rect x="58" y="58" width="44" height="44" fill="#047857" rx="8" />
+                              <text x="80" y="85" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">₹399</text>
+                              {/* Data Matrix Bits */}
+                              <rect x="60" y="16" width="10" height="10" fill="#0f172a" />
+                              <rect x="76" y="20" width="8" height="8" fill="#0f172a" />
+                              <rect x="88" y="14" width="10" height="10" fill="#0f172a" />
+                              <rect x="64" y="34" width="8" height="14" fill="#0f172a" />
+                              <rect x="82" y="38" width="12" height="8" fill="#0f172a" />
+                              <rect x="16" y="62" width="8" height="14" fill="#0f172a" />
+                              <rect x="30" y="66" width="14" height="8" fill="#0f172a" />
+                              <rect x="18" y="84" width="10" height="10" fill="#0f172a" />
+                              <rect x="34" y="80" width="8" height="16" fill="#0f172a" />
+                              <rect x="112" y="62" width="14" height="8" fill="#0f172a" />
+                              <rect x="132" y="66" width="8" height="14" fill="#0f172a" />
+                              <rect x="116" y="82" width="12" height="10" fill="#0f172a" />
+                              <rect x="134" y="84" width="8" height="8" fill="#0f172a" />
+                              <rect x="62" y="110" width="12" height="10" fill="#0f172a" />
+                              <rect x="80" y="116" width="14" height="8" fill="#0f172a" />
+                              <rect x="66" y="130" width="10" height="14" fill="#0f172a" />
+                              <rect x="84" y="132" width="12" height="10" fill="#0f172a" />
+                              <rect x="112" y="112" width="14" height="12" fill="#0f172a" />
+                              <rect x="132" y="110" width="10" height="14" fill="#0f172a" />
+                              <rect x="114" y="134" width="12" height="10" fill="#0f172a" />
+                              <rect x="134" y="132" width="10" height="12" fill="#0f172a" />
+                            </svg>
+                          </div>
+                          
+                          <div className="qr-info-side">
+                            <div className="qr-scan-badge">⚡ Instant Dynamic QR</div>
+                            <div className="qr-scan-title">Scan using any UPI App</div>
+                            <div className="upi-app-chips">
+                              <span className="app-chip">Google Pay</span>
+                              <span className="app-chip">PhonePe</span>
+                              <span className="app-chip">Paytm</span>
+                              <span className="app-chip">BHIM</span>
+                            </div>
+                            <div className="qr-timer-text">
+                              ⏱️ Session active for <strong>04:59 mins</strong>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="upi-input-box-v2">
+                        <label className="input-sub-label">Enter Virtual Payment Address (VPA):</label>
+                        <div className="upi-field-row">
+                          <input 
+                            type="text" 
+                            placeholder="e.g. mobileNumber@upi, name@okhdfc" 
+                            value={workerUpiId}
+                            onChange={(e) => setWorkerUpiId(e.target.value)}
+                            className="upi-text-input"
+                          />
+                          <button 
+                            type="button" 
+                            className="btn-verify-vpa"
+                            onClick={() => setSuccessMessage("UPI ID Verified! Proceed with payment below.")}
+                          >
+                            Verify
+                          </button>
+                        </div>
+                        <div className="upi-quick-pills-v2">
+                          <span className="pill-hint">Quick autofill:</span>
+                          <button type="button" onClick={() => setWorkerUpiId(`${pendingWorkerPayload.phone}@upi`)}>
+                            ⚡ {pendingWorkerPayload.phone}@upi
+                          </button>
+                          <button type="button" onClick={() => setWorkerUpiId(`${pendingWorkerPayload.phone}@paytm`)}>
+                            ⚡ {pendingWorkerPayload.phone}@paytm
+                          </button>
+                          <button type="button" onClick={() => setWorkerUpiId("worker.pro@okaxis")}>
+                            ⚡ worker.pro@okaxis
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* METHOD 2: CARDS CONTAINER */}
+                {workerFeeMethod === "card" && (
+                  <div className="card-container-v2 animate-fade-in">
+                    <div className="card-mock-row">
+                      <div className="card-field-group">
+                        <label>Card Number</label>
+                        <input 
+                          type="text" 
+                          value={workerCardData.number}
+                          onChange={(e) => setWorkerCardData({ ...workerCardData, number: e.target.value })}
+                          placeholder="4532 0000 0000 8821" 
+                          className="card-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="card-field-row-split">
+                      <div className="card-field-group">
+                        <label>Expiry (MM/YY)</label>
+                        <input 
+                          type="text" 
+                          value={workerCardData.expiry}
+                          onChange={(e) => setWorkerCardData({ ...workerCardData, expiry: e.target.value })}
+                          placeholder="12/28" 
+                          className="card-input"
+                        />
+                      </div>
+                      <div className="card-field-group">
+                        <label>CVV / CVC</label>
+                        <input 
+                          type="password" 
+                          maxLength="4"
+                          value={workerCardData.cvv}
+                          onChange={(e) => setWorkerCardData({ ...workerCardData, cvv: e.target.value })}
+                          placeholder="•••" 
+                          className="card-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="card-supported-tags">
+                      <span>Accepted:</span>
+                      <span className="c-tag">RuPay</span>
+                      <span className="c-tag">Visa</span>
+                      <span className="c-tag">Mastercard</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* METHOD 3: NET BANKING CONTAINER */}
+                {workerFeeMethod === "netbanking" && (
+                  <div className="netbank-container-v2 animate-fade-in">
+                    <label className="input-sub-label">Select Popular Indian Bank:</label>
+                    <div className="bank-chips-grid">
+                      {["HDFC Bank", "State Bank of India", "ICICI Bank", "Axis Bank", "Kotak Bank", "Punjab National Bank"].map((bank) => (
+                        <button 
+                          key={bank}
+                          type="button" 
+                          className={`bank-chip-btn ${workerSelectedBank === bank ? "active" : ""}`}
+                          onClick={() => setWorkerSelectedBank(bank)}
+                        >
+                          <span className="bank-icon">🏛️</span>
+                          <span className="bank-name">{bank}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Pay Now Button */}
               <button 
                 type="button" 
-                className="btn-pay-worker-fee"
+                className="btn-pay-worker-fee-v2"
                 onClick={handleCompleteWorkerFeeAndRegister}
                 disabled={workerFeeProcessing}
               >
                 {workerFeeProcessing ? (
-                  <span>⏳ Processing ₹399 Payment & Submitting...</span>
+                  <span className="btn-processing-content">
+                    <span className="spinner-border-sm"></span>
+                    <span>Processing ₹399 Payment & Routing to Amritam Hub...</span>
+                  </span>
                 ) : (
-                  <span>Pay ₹399 & Submit for Vendor Approval ➔</span>
+                  <span className="btn-content">
+                    <span>Pay ₹399 & Submit for Vendor Approval</span>
+                    <span className="btn-arrow">➔</span>
+                  </span>
                 )}
               </button>
 
-              <p className="fee-security-note">
-                🔒 256-Bit SSL Encrypted Payment • Instant Receipt Generated
-              </p>
+              {/* Trust Footer */}
+              <div className="fee-security-footer">
+                <div className="security-item">
+                  <span>🔒</span> 256-Bit SSL Encrypted
+                </div>
+                <div className="security-item">
+                  <span>🛡️</span> NPCI / BHIM Certified
+                </div>
+                <div className="security-item">
+                  <span>⚡</span> Instant Digital Receipt
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
