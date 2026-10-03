@@ -352,15 +352,19 @@ function LoginPage() {
     }
 
     setLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
     try {
-      const response = await fetch(`${API_BASE}/api/workers/login`, {
+      const response = await fetch(`${API_BASE}/workers/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           phone: phoneToUse,
           password: workerLoginData.password || "worker123"
         })
       });
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (response.ok && data.success && data.worker) {
@@ -470,12 +474,17 @@ function LoginPage() {
       verificationStatus: "pending"
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1800); // Fast 1.8s timeout
+
     try {
-      const res = await fetch(`${API_BASE}/api/workers/register`, {
+      const res = await fetch(`${API_BASE}/workers/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify(fullPayload)
       });
+      clearTimeout(timeoutId);
       const data = await res.json();
 
       if (res.ok && data.success && data.worker) {
@@ -495,12 +504,13 @@ function LoginPage() {
         setSuccessMessage(`₹399 Payment Successful! Application submitted to nearest vendor (${workerWithFee.vendorName}). Approval pending...`);
         setTimeout(() => {
           navigate("/worker/dashboard");
-        }, 800);
+        }, 400);
       } else {
         throw new Error(data.message || "Worker registration failed.");
       }
     } catch (err) {
-      // Offline fallback
+      clearTimeout(timeoutId);
+      // Offline / Instant Fallback
       const fallbackWorker = {
         workerId: "WRK-" + Math.floor(10000 + Math.random() * 90000),
         id: "WRK-" + Math.floor(10000 + Math.random() * 90000),
@@ -530,7 +540,7 @@ function LoginPage() {
       setSuccessMessage(`₹399 Payment Successful! Application submitted to nearest vendor (Amritam Services Hub). Opening status screen...`);
       setTimeout(() => {
         navigate("/worker/dashboard");
-      }, 800);
+      }, 400);
     } finally {
       setWorkerFeeProcessing(false);
     }
