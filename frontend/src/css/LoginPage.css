@@ -1,18 +1,20 @@
 /* ==========================================================================
-   PINTEREST-INSPIRED WELCOME SCREEN DESIGN (FULLY RESPONSIVE)
+   HELPER UNIFIED AUTH SCREEN - SINGLE-VIEWPORT & FULLY RESPONSIVE
    ========================================================================== */
 
 /* Full Viewport Sky Background with Soft Drifting Clouds */
 .pin-login-page-wrapper {
-  min-height: 100vh;
+  height: calc(100vh - 70px);
+  min-height: calc(100vh - 70px);
   width: 100%;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
+  padding: 12px 16px;
   background: linear-gradient(180deg, #87BBE7 0%, #B2D5F0 38%, #DCECF8 72%, #F1F7FC 100%);
   overflow-x: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -59,47 +61,49 @@
   100% { transform: translateY(0px) translateX(0px); }
 }
 
-/* Center Floating Card */
+/* Center Floating Card - Fits Within Single Screen */
 .pin-login-card-container {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 980px;
+  max-width: 960px;
+  max-height: calc(100vh - 94px);
   background: #FFFFFF;
-  border-radius: 36px;
-  padding: 16px;
+  border-radius: 28px;
+  padding: 12px;
   box-shadow: 
-    0 30px 80px rgba(35, 85, 135, 0.18),
-    0 12px 30px rgba(0, 0, 0, 0.05),
-    0 1px 3px rgba(0, 0, 0, 0.03);
+    0 25px 70px rgba(35, 85, 135, 0.16),
+    0 10px 25px rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: stretch;
   gap: 0;
   box-sizing: border-box;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
 }
 
 .pin-login-card-container:hover {
   box-shadow: 
-    0 35px 95px rgba(35, 85, 135, 0.22),
-    0 16px 36px rgba(0, 0, 0, 0.06);
+    0 30px 85px rgba(35, 85, 135, 0.2),
+    0 14px 30px rgba(0, 0, 0, 0.05);
 }
 
 /* --------------------------------------------------------------------------
    LEFT COLUMN: 3D YETI ARTWORK
    -------------------------------------------------------------------------- */
 .pin-login-artwork-col {
-  flex: 1 1 48%;
-  max-width: 48%;
+  flex: 1 1 45%;
+  max-width: 45%;
   position: relative;
-  border-radius: 28px;
+  border-radius: 20px;
   overflow: hidden;
   background: #89BFE9;
-  min-height: 560px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   box-sizing: border-box;
+  align-self: stretch;
+  min-height: unset;
 }
 
 .yeti-mascot-img {
@@ -109,12 +113,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 25%;
+  object-position: center 22%;
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pin-login-artwork-col:hover .yeti-mascot-img {
-  transform: scale(1.035);
+  transform: scale(1.03);
 }
 
 /* Bottom Shadow Vignette for Text */
@@ -133,11 +137,11 @@
   pointer-events: none;
 }
 
-/* Monumental Typography: EXPLORE. LEARN. GROW. */
+/* Monumental Typography: PERFORM. SERVICE. EARN. */
 .yeti-typography-box {
   position: relative;
   z-index: 2;
-  padding: 32px 28px;
+  padding: 22px 20px;
 }
 
 .yeti-tag-pill {
@@ -149,18 +153,18 @@
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.4);
   color: #FFFFFF;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .yeti-big-heading {
   font-family: "Space Grotesk", sans-serif;
-  font-size: 38px;
+  font-size: 28px;
   font-weight: 800;
   line-height: 1.05;
   color: #FFFFFF;
@@ -178,66 +182,79 @@
    RIGHT COLUMN: FORM & LOGIN CARD
    -------------------------------------------------------------------------- */
 .pin-login-form-col {
-  flex: 1 1 52%;
-  max-width: 52%;
-  padding: 36px 48px;
+  flex: 1 1 55%;
+  max-width: 55%;
+  padding: 16px 28px 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   background: #FFFFFF;
   box-sizing: border-box;
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.pin-login-form-col::-webkit-scrollbar {
+  width: 5px;
+}
+.pin-login-form-col::-webkit-scrollbar-track {
+  background: #F8FAFC;
+}
+.pin-login-form-col::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 
 /* Top Mini Mascot Logo */
 .pin-form-header {
   text-align: center;
-  margin-bottom: 22px;
+  margin-bottom: 8px;
 }
 
 .pin-brand-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
   border: 1px solid #7DD3FC;
-  margin-bottom: 8px;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+  margin-bottom: 4px;
+  box-shadow: 0 3px 10px rgba(56, 189, 248, 0.2);
 }
 
 .pin-brand-badge svg {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
 }
 
 .pin-brand-title {
   font-family: "Space Grotesk", sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
   color: #0F172A;
   text-transform: uppercase;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .pin-form-title {
   font-family: "Space Grotesk", sans-serif;
-  font-size: 28px;
+  font-size: 19px;
   font-weight: 800;
   color: #000000;
   text-transform: uppercase;
-  letter-spacing: -0.5px;
-  margin: 0 0 6px 0;
+  letter-spacing: -0.4px;
+  margin: 0 0 3px 0;
 }
 
 .pin-form-subtitle {
-  font-size: 13.5px;
+  font-size: 11.5px;
   color: #64748B;
-  margin: 0;
+  margin: 0 0 8px 0;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 /* Form Styles */
@@ -245,17 +262,25 @@
   width: 100%;
 }
 
+/* 2-Column Responsive Grid */
+.pin-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
 .pin-input-group {
-  margin-bottom: 15px;
+  margin-bottom: 8px;
   text-align: left;
 }
 
 .pin-input-label {
   display: block;
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 700;
   color: #0F172A;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .pin-input-field-wrap {
@@ -267,11 +292,11 @@
 
 .pin-input-field {
   width: 100%;
-  padding: 13px 44px 13px 16px;
+  padding: 8.5px 38px 8.5px 12px;
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 9px;
+  font-size: 13px;
   color: #0F172A;
   outline: none;
   transition: all 0.2s ease;
@@ -288,21 +313,21 @@
 .pin-input-field:focus {
   background: #FFFFFF;
   border-color: #000000;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
 .pin-password-toggle {
   position: absolute;
-  right: 14px;
+  right: 10px;
   background: none;
   border: none;
   cursor: pointer;
   color: #64748B;
-  font-size: 16px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 4px;
 }
 
 .pin-password-toggle:hover {
@@ -315,15 +340,15 @@
   align-items: center;
   justify-content: space-between;
   margin-top: -2px;
-  margin-bottom: 18px;
-  font-size: 12.5px;
+  margin-bottom: 10px;
+  font-size: 11.5px;
   gap: 8px;
 }
 
 .pin-remember-label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: #475569;
   cursor: pointer;
   user-select: none;
@@ -331,8 +356,8 @@
 }
 
 .pin-remember-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 4px;
   accent-color: #000000;
   cursor: pointer;
@@ -354,18 +379,18 @@
 /* Primary Sign In Button (Black Solid) */
 .pin-btn-signin {
   width: 100%;
-  min-height: 48px;
-  padding: 13.5px;
+  min-height: 40px;
+  padding: 9.5px 14px;
   background: #000000;
   color: #FFFFFF;
   border: none;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 10px;
+  font-size: 13.5px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -375,7 +400,7 @@
 .pin-btn-signin:hover {
   background: #1E293B;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
 .pin-btn-signin:active {
@@ -385,21 +410,21 @@
 /* Google Social Button */
 .pin-btn-google {
   width: 100%;
-  min-height: 46px;
-  margin-top: 12px;
-  padding: 12px;
+  min-height: 38px;
+  margin-top: 8px;
+  padding: 8px 12px;
   background: #FFFFFF;
   color: #1E293B;
   border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -410,14 +435,14 @@
 }
 
 .google-icon-svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
 /* Switch Auth Method Pill (Password vs Mobile OTP) */
 .pin-otp-toggle-wrap {
-  margin-top: 14px;
+  margin-top: 10px;
   text-align: center;
 }
 
@@ -425,10 +450,10 @@
   background: none;
   border: none;
   color: #64748B;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 8px;
   transition: all 0.2s;
 }
@@ -440,9 +465,9 @@
 
 /* Footer Switch to Sign Up */
 .pin-form-footer {
-  margin-top: 20px;
+  margin-top: 10px;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: #64748B;
 }
 
@@ -460,219 +485,34 @@
   text-decoration: underline;
 }
 
-/* ==========================================================================
-   BREAKPOINTS & RESPONSIVE DESIGN
-   ========================================================================== */
-
-/* Medium Laptops & Tablets Landscape (861px - 1024px) */
-@media (max-width: 1024px) {
-  .pin-login-card-container {
-    max-width: 890px;
-    padding: 14px;
-    border-radius: 30px;
-  }
-
-  .pin-login-artwork-col {
-    min-height: 520px;
-    border-radius: 24px;
-  }
-
-  .yeti-big-heading {
-    font-size: 32px;
-  }
-
-  .pin-login-form-col {
-    padding: 28px 32px;
-  }
-
-  .pin-form-title {
-    font-size: 26px;
-  }
+/* Compact Auth Legal & Security Footer */
+.login-compact-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #F1F5F9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 10.5px;
+  color: #94A3B8;
+  flex-wrap: wrap;
 }
 
-/* Tablets Portrait & Large Phones (641px - 860px) */
-@media (max-width: 860px) {
-  .pin-login-page-wrapper {
-    padding: 24px 14px;
-  }
-
-  .pin-login-card-container {
-    flex-direction: column;
-    max-width: 520px;
-    padding: 12px;
-    border-radius: 28px;
-    margin: 0 auto;
-  }
-
-  .pin-login-artwork-col {
-    flex: none;
-    max-width: 100%;
-    width: 100%;
-    min-height: 250px;
-    height: 250px;
-    border-radius: 22px;
-  }
-
-  .yeti-mascot-img {
-    object-position: center 20%;
-  }
-
-  .yeti-typography-box {
-    padding: 20px 22px;
-  }
-
-  .yeti-tag-pill {
-    font-size: 10px;
-    padding: 3px 10px;
-    margin-bottom: 8px;
-  }
-
-  .yeti-big-heading {
-    font-size: 26px;
-    line-height: 1.1;
-  }
-
-  .pin-login-form-col {
-    flex: none;
-    max-width: 100%;
-    width: 100%;
-    padding: 26px 20px 20px;
-  }
-
-  .pin-form-title {
-    font-size: 24px;
-  }
-
-  .pin-form-subtitle {
-    font-size: 13px;
-  }
+.login-compact-footer a {
+  color: #64748B;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
 }
 
-/* Standard Mobile Phones (381px - 640px) */
-@media (max-width: 640px) {
-  .pin-login-page-wrapper {
-    padding: 16px 10px;
-    align-items: flex-start;
-  }
-
-  .pin-login-card-container {
-    max-width: 100%;
-    border-radius: 24px;
-    padding: 10px;
-    box-shadow: 0 16px 45px rgba(35, 85, 135, 0.16);
-  }
-
-  .pin-login-artwork-col {
-    min-height: 210px;
-    height: 210px;
-    border-radius: 18px;
-  }
-
-  .yeti-mascot-img {
-    object-position: center 18%;
-  }
-
-  .yeti-typography-box {
-    padding: 16px 18px;
-  }
-
-  .yeti-big-heading {
-    font-size: 22px;
-  }
-
-  .pin-login-form-col {
-    padding: 22px 12px 16px;
-  }
-
-  .pin-form-header {
-    margin-bottom: 18px;
-  }
-
-  .pin-brand-badge {
-    width: 40px;
-    height: 40px;
-    margin-bottom: 6px;
-  }
-
-  .pin-form-title {
-    font-size: 22px;
-  }
-
-  .pin-form-subtitle {
-    font-size: 12.5px;
-  }
-
-  .pin-input-field {
-    font-size: 16px; /* Prevents auto-zoom in mobile Safari */
-    padding: 12px 14px;
-  }
-
-  .pin-input-label {
-    font-size: 12.5px;
-  }
-
-  .pin-form-meta-row {
-    font-size: 12px;
-  }
-
-  .pin-btn-signin {
-    min-height: 46px;
-    font-size: 14.5px;
-  }
-
-  .pin-btn-google {
-    min-height: 44px;
-    font-size: 13.5px;
-  }
+.login-compact-footer a:hover {
+  color: #0F172A;
+  text-decoration: underline;
 }
 
-/* Extra Small Phones (<= 380px, e.g. iPhone SE, Galaxy Fold 320px) */
-@media (max-width: 380px) {
-  .pin-login-page-wrapper {
-    padding: 10px 6px;
-  }
-
-  .pin-login-card-container {
-    border-radius: 20px;
-    padding: 8px;
-  }
-
-  .pin-login-artwork-col {
-    min-height: 180px;
-    height: 180px;
-    border-radius: 14px;
-  }
-
-  .yeti-typography-box {
-    padding: 12px 14px;
-  }
-
-  .yeti-tag-pill {
-    font-size: 9px;
-    padding: 2px 8px;
-  }
-
-  .yeti-big-heading {
-    font-size: 19px;
-  }
-
-  .pin-login-form-col {
-    padding: 16px 8px 12px;
-  }
-
-  .pin-form-title {
-    font-size: 20px;
-  }
-
-  .pin-form-meta-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .pin-forgot-link {
-    align-self: flex-end;
-  }
+.footer-dot {
+  color: #CBD5E1;
 }
 
 /* ==========================================================================
@@ -682,10 +522,10 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   background: #F1F5F9;
-  padding: 5px;
-  border-radius: 16px;
-  gap: 6px;
-  margin-bottom: 22px;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  margin-bottom: 10px;
   border: 1px solid #E2E8F0;
   width: 100%;
   box-sizing: border-box;
@@ -696,16 +536,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 8px;
-  border-radius: 12px;
+  gap: 5px;
+  padding: 7px 6px;
+  border-radius: 9px;
   border: none;
   background: transparent;
   color: #64748B;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
   white-space: nowrap;
   box-sizing: border-box;
 }
@@ -718,7 +558,7 @@
 .role-tab-btn.active {
   background: #FFFFFF;
   color: #0F172A;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
 .role-tab-btn.active.role-admin {
@@ -742,9 +582,9 @@
 }
 
 .role-badge-tag {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 6px;
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
   background: rgba(255, 77, 45, 0.12);
   color: #FF4D2D;
   font-weight: 800;
@@ -755,15 +595,15 @@
 .shop-capacity-notice {
   background: rgba(255, 77, 45, 0.08);
   border: 1px solid rgba(255, 77, 45, 0.25);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin: 12px 0 16px 0;
+  border-radius: 10px;
+  padding: 7px 10px;
+  margin: 6px 0 10px 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   color: #9A2C16;
-  font-size: 12.5px;
-  line-height: 1.4;
+  font-size: 11.5px;
+  line-height: 1.35;
 }
 
 .shop-capacity-notice strong {
@@ -774,15 +614,15 @@
 .worker-capacity-notice {
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.28);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin: 12px 0 16px 0;
+  border-radius: 10px;
+  padding: 7px 10px;
+  margin: 6px 0 10px 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   color: #065F46;
-  font-size: 12.5px;
-  line-height: 1.4;
+  font-size: 11.5px;
+  line-height: 1.35;
 }
 
 .worker-capacity-notice strong {
@@ -794,9 +634,9 @@
   background: #F0FDF4;
   border: 1px solid #BBF7D0;
   color: #065F46;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 11.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -812,23 +652,141 @@
 .admin-login-box {
   background: #FFF5F5;
   border: 1px solid #FECACA;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
 }
 
-@media (max-width: 580px) {
-  .login-role-selector {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    padding: 6px;
+/* ==========================================================================
+   BREAKPOINTS & RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* Medium Laptops & Tablets Landscape (861px - 1024px) */
+@media (max-width: 1024px) {
+  .pin-login-card-container {
+    max-width: 880px;
+    padding: 10px;
+    border-radius: 24px;
   }
-  .role-tab-btn {
-    padding: 10px 6px;
-    font-size: 12.5px;
-    gap: 6px;
+
+  .yeti-big-heading {
+    font-size: 24px;
+  }
+
+  .pin-login-form-col {
+    padding: 14px 20px 10px;
+  }
+
+  .pin-form-title {
+    font-size: 18px;
   }
 }
+
+/* Tablets Portrait & Small Laptops (< 860px) */
+@media (max-width: 860px) {
+  .pin-login-page-wrapper {
+    height: auto;
+    min-height: calc(100vh - 65px);
+    padding: 16px 12px;
+    align-items: flex-start;
+  }
+
+  .pin-login-card-container {
+    flex-direction: column;
+    max-height: none;
+    max-width: 540px;
+    padding: 10px;
+    border-radius: 22px;
+    margin: 0 auto;
+    overflow: visible;
+  }
+
+  .pin-login-artwork-col {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    height: 150px;
+    min-height: 150px;
+    border-radius: 16px;
+    margin-bottom: 8px;
+  }
+
+  .yeti-mascot-img {
+    object-position: center 20%;
+  }
+
+  .yeti-typography-box {
+    padding: 12px 16px;
+  }
+
+  .yeti-tag-pill {
+    font-size: 9px;
+    padding: 2px 8px;
+    margin-bottom: 4px;
+  }
+
+  .yeti-big-heading {
+    font-size: 20px;
+    display: flex;
+    gap: 6px;
+  }
+
+  .yeti-big-heading span {
+    display: inline;
+  }
+
+  .pin-login-form-col {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    padding: 12px 8px;
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+/* Mobile Phones (< 580px) */
+@media (max-width: 580px) {
+  .pin-login-page-wrapper {
+    padding: 12px 8px;
+  }
+
+  .pin-login-card-container {
+    border-radius: 18px;
+    padding: 8px;
+  }
+
+  .login-role-selector {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+    padding: 4px;
+  }
+
+  .role-tab-btn {
+    padding: 8px 6px;
+    font-size: 11.5px;
+  }
+
+  .pin-grid-2col {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .pin-input-field {
+    font-size: 14px;
+    padding: 9px 12px;
+  }
+
+  .pin-login-artwork-col {
+    height: 130px;
+    min-height: 130px;
+  }
+
+  .yeti-big-heading {
+    font-size: 17px;
+  }
+}
+
 
 /* ==========================================================================
    ₹399 WORKER ONBOARDING FEE MODAL - PREMIUM FINTECH SUITE

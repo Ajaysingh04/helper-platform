@@ -35,6 +35,7 @@ function AppContent() {
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isVendorDashboard = location.pathname.startsWith("/vendor/dashboard");
   const isWorkerRoute = location.pathname.startsWith("/worker");
+  const isLoginPage = location.pathname === "/login";
 
   return (
     <>
@@ -88,7 +89,7 @@ function AppContent() {
         <Route path="/admin/*" element={<AdminLayout />} />
       </Routes>
       
-      <Footer />
+      {!isLoginPage && <Footer />}
     </div>
       )}
     </>

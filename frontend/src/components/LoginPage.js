@@ -1128,37 +1128,39 @@ function LoginPage() {
               {isRegister ? (
                 /* Service Man REGISTRATION FORM */
                 <form onSubmit={handleVendorRegister} className="pin-form-body">
-                  <div className="pin-input-group">
-                    <label className="pin-input-label">Service Man Full Name (Owner) *</label>
-                    <div className="pin-input-field-wrap">
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Ramesh Kumar"
-                        value={vendorData.name}
-                        onChange={(e) => setVendorData({ ...vendorData, name: e.target.value })}
-                        className="pin-input-field"
-                        required
-                      />
+                  <div className="pin-grid-2col">
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Service Man Full Name (Owner) *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Ramesh Kumar"
+                          value={vendorData.name}
+                          onChange={(e) => setVendorData({ ...vendorData, name: e.target.value })}
+                          className="pin-input-field"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Mobile Number *</label>
+                      <div className="pin-input-field-wrap">
+                        <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
+                        <input 
+                          type="tel" 
+                          placeholder="98765 00001"
+                          value={vendorData.phone}
+                          onChange={(e) => setVendorData({ ...vendorData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                          className="pin-input-field"
+                          style={{ paddingLeft: "52px" }}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="pin-input-group">
-                    <label className="pin-input-label">Mobile Number (Calling & Customer Contact) *</label>
-                    <div className="pin-input-field-wrap">
-                      <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
-                      <input 
-                        type="tel" 
-                        placeholder="98765 00001"
-                        value={vendorData.phone}
-                        onChange={(e) => setVendorData({ ...vendorData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                        className="pin-input-field"
-                        style={{ paddingLeft: "52px" }}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="pin-grid-2col">
                     <div className="pin-input-group">
                       <label className="pin-input-label">Work / Profession *</label>
                       <div className="pin-input-field-wrap">
@@ -1193,34 +1195,36 @@ function LoginPage() {
                     </div>
                   </div>
 
-                  <div className="pin-input-group">
-                    <label className="pin-input-label">Shop / Business Name (Capacity: 8 Members)</label>
-                    <div className="pin-input-field-wrap">
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Ramesh Express Plumbing & Sanitary"
-                        value={vendorData.shopName}
-                        onChange={(e) => setVendorData({ ...vendorData, shopName: e.target.value })}
-                        className="pin-input-field"
-                      />
+                  <div className="pin-grid-2col">
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Shop / Business Name</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Ramesh Express Plumbing"
+                          value={vendorData.shopName}
+                          onChange={(e) => setVendorData({ ...vendorData, shopName: e.target.value })}
+                          className="pin-input-field"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Shop Location / Area *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Palasia, Indore"
+                          value={vendorData.location}
+                          onChange={(e) => setVendorData({ ...vendorData, location: e.target.value })}
+                          className="pin-input-field"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="pin-input-group">
-                    <label className="pin-input-label">Shop Location / Area *</label>
-                    <div className="pin-input-field-wrap">
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Sector 62, Noida / Palasia, Indore"
-                        value={vendorData.location}
-                        onChange={(e) => setVendorData({ ...vendorData, location: e.target.value })}
-                        className="pin-input-field"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="pin-grid-2col">
                     <div className="pin-input-group">
                       <label className="pin-input-label">Create Password *</label>
                       <div className="pin-input-field-wrap">
@@ -1392,37 +1396,39 @@ function LoginPage() {
               {isRegister ? (
                 /* Worker REGISTRATION FORM */
                 <form onSubmit={handleInitiateWorkerRegister} className="pin-form-body">
-                  <div className="pin-input-group">
-                    <label className="pin-input-label">Worker Full Name *</label>
-                    <div className="pin-input-field-wrap">
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Sunil Sharma"
-                        value={workerRegData.name}
-                        onChange={(e) => setWorkerRegData({ ...workerRegData, name: e.target.value })}
-                        className="pin-input-field"
-                        required
-                      />
+                  <div className="pin-grid-2col">
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Worker Full Name *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Sunil Sharma"
+                          value={workerRegData.name}
+                          onChange={(e) => setWorkerRegData({ ...workerRegData, name: e.target.value })}
+                          className="pin-input-field"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Mobile Number *</label>
+                      <div className="pin-input-field-wrap">
+                        <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
+                        <input 
+                          type="tel" 
+                          placeholder="98765 00101"
+                          value={workerRegData.phone}
+                          onChange={(e) => setWorkerRegData({ ...workerRegData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                          className="pin-input-field"
+                          style={{ paddingLeft: "52px" }}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="pin-input-group">
-                    <label className="pin-input-label">Mobile Number (Calling & Customer Contact) *</label>
-                    <div className="pin-input-field-wrap">
-                      <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
-                      <input 
-                        type="tel" 
-                        placeholder="98765 00101"
-                        value={workerRegData.phone}
-                        onChange={(e) => setWorkerRegData({ ...workerRegData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                        className="pin-input-field"
-                        style={{ paddingLeft: "52px" }}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="pin-grid-2col">
                     <div className="pin-input-group">
                       <label className="pin-input-label">Trade / Category *</label>
                       <div className="pin-input-field-wrap">
@@ -1460,7 +1466,7 @@ function LoginPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="pin-grid-2col">
                     <div className="pin-input-group">
                       <label className="pin-input-label">City *</label>
                       <div className="pin-input-field-wrap">
@@ -1503,7 +1509,7 @@ function LoginPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="pin-grid-2col">
                     <div className="pin-input-group">
                       <label className="pin-input-label">Create Password *</label>
                       <div className="pin-input-field-wrap">
@@ -1659,109 +1665,152 @@ function LoginPage() {
                   
                   {isRegister && (
                     <>
-                      <div className="pin-input-group">
-                        <label className="pin-input-label">Full Name *</label>
-                        <div className="pin-input-field-wrap">
-                          <input 
-                            type="text" 
-                            placeholder="e.g. Rahul Sharma"
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                            className="pin-input-field"
-                            required
-                          />
+                      <div className="pin-grid-2col">
+                        <div className="pin-input-group">
+                          <label className="pin-input-label">Full Name *</label>
+                          <div className="pin-input-field-wrap">
+                            <input 
+                              type="text" 
+                              placeholder="e.g. Rahul Sharma"
+                              value={userName}
+                              onChange={(e) => setUserName(e.target.value)}
+                              className="pin-input-field"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="pin-input-group">
+                          <label className="pin-input-label">Mobile Number *</label>
+                          <div className="pin-input-field-wrap">
+                            <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
+                            <input 
+                              type="tel" 
+                              placeholder="98765 00001"
+                              value={userPhone}
+                              onChange={(e) => setUserPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                              className="pin-input-field"
+                              style={{ paddingLeft: "52px" }}
+                              required
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="pin-input-group">
-                        <label className="pin-input-label">Mobile Number (For OTP & Service Updates) *</label>
-                        <div className="pin-input-field-wrap">
-                          <span style={{ position: "absolute", left: "14px", fontWeight: 700, color: "#64748B", fontSize: "14px" }}>+91</span>
-                          <input 
-                            type="tel" 
-                            placeholder="98765 00001"
-                            value={userPhone}
-                            onChange={(e) => setUserPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                            className="pin-input-field"
-                            style={{ paddingLeft: "52px" }}
-                            required
-                          />
+                      <div className="pin-grid-2col">
+                        <div className="pin-input-group">
+                          <label className="pin-input-label">Email Address *</label>
+                          <div className="pin-input-field-wrap">
+                            <input 
+                              type="email" 
+                              placeholder="user@example.com" 
+                              value={userEmail}
+                              onChange={(e) => setUserEmail(e.target.value)}
+                              className="pin-input-field"
+                              required
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="pin-input-group">
-                        <label className="pin-input-label">Home / Service Address</label>
-                        <div className="pin-input-field-wrap">
-                          <input 
-                            type="text" 
-                            placeholder="e.g. 14 Palm Avenue, Metro Zone"
-                            value={userAddress}
-                            onChange={(e) => setUserAddress(e.target.value)}
-                            className="pin-input-field"
-                          />
+                        <div className="pin-input-group">
+                          <label className="pin-input-label">Home / Service Address</label>
+                          <div className="pin-input-field-wrap">
+                            <input 
+                              type="text" 
+                              placeholder="e.g. 14 Palm Ave, Indore"
+                              value={userAddress}
+                              onChange={(e) => setUserAddress(e.target.value)}
+                              className="pin-input-field"
+                            />
+                          </div>
                         </div>
                       </div>
                     </>
                   )}
 
-                  {/* Email */}
-                  <div className="pin-input-group">
-                    <label className="pin-input-label">Email Address *</label>
-                    <div className="pin-input-field-wrap">
-                      <input 
-                        type="email" 
-                        placeholder="user@example.com" 
-                        value={userEmail}
-                        onChange={(e) => setUserEmail(e.target.value)}
-                        className="pin-input-field"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div className="pin-input-group">
-                    <label className="pin-input-label">{isRegister ? "Create Password *" : "Password *"}</label>
-                    <div className="pin-input-field-wrap">
-                      <input 
-                        type={showPassword ? "text" : "password"} 
-                        placeholder={isRegister ? "Create password" : "Enter password"} 
-                        value={userPassword}
-                        onChange={(e) => setUserPassword(e.target.value)}
-                        className="pin-input-field"
-                        required
-                      />
-                      <button 
-                        type="button" 
-                        className="pin-password-toggle"
-                        onClick={() => setShowPassword(!showPassword)}
-                        title={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? "🙈" : "👁️"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Confirm Password in Signup Mode */}
-                  {isRegister && (
+                  {!isRegister && (
+                    /* Email in login mode */
                     <div className="pin-input-group">
-                      <label className="pin-input-label">Confirm Password *</label>
+                      <label className="pin-input-label">Email Address *</label>
                       <div className="pin-input-field-wrap">
                         <input 
-                          type={showConfirmPassword ? "text" : "password"} 
-                          placeholder="Repeat password" 
-                          value={userConfirmPassword}
-                          onChange={(e) => setUserConfirmPassword(e.target.value)}
+                          type="email" 
+                          placeholder="user@example.com" 
+                          value={userEmail}
+                          onChange={(e) => setUserEmail(e.target.value)}
+                          className="pin-input-field"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {isRegister ? (
+                    <div className="pin-grid-2col">
+                      <div className="pin-input-group">
+                        <label className="pin-input-label">Create Password *</label>
+                        <div className="pin-input-field-wrap">
+                          <input 
+                            type={showPassword ? "text" : "password"} 
+                            placeholder="Create password" 
+                            value={userPassword}
+                            onChange={(e) => setUserPassword(e.target.value)}
+                            className="pin-input-field"
+                            required
+                          />
+                          <button 
+                            type="button" 
+                            className="pin-password-toggle"
+                            onClick={() => setShowPassword(!showPassword)}
+                            title={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? "🙈" : "👁️"}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pin-input-group">
+                        <label className="pin-input-label">Confirm Password *</label>
+                        <div className="pin-input-field-wrap">
+                          <input 
+                            type={showConfirmPassword ? "text" : "password"} 
+                            placeholder="Repeat password" 
+                            value={userConfirmPassword}
+                            onChange={(e) => setUserConfirmPassword(e.target.value)}
+                            className="pin-input-field"
+                            required
+                          />
+                          <button 
+                            type="button" 
+                            className="pin-password-toggle"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            title={showConfirmPassword ? "Hide password" : "Show password"}
+                          >
+                            {showConfirmPassword ? "🙈" : "👁️"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Password in login mode */
+                    <div className="pin-input-group">
+                      <label className="pin-input-label">Password *</label>
+                      <div className="pin-input-field-wrap">
+                        <input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="Enter password" 
+                          value={userPassword}
+                          onChange={(e) => setUserPassword(e.target.value)}
                           className="pin-input-field"
                           required
                         />
                         <button 
                           type="button" 
                           className="pin-password-toggle"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          title={showConfirmPassword ? "Hide password" : "Show password"}
+                          onClick={() => setShowPassword(!showPassword)}
+                          title={showPassword ? "Hide password" : "Show password"}
                         >
-                          {showConfirmPassword ? "🙈" : "👁️"}
+                          {showPassword ? "🙈" : "👁️"}
                         </button>
                       </div>
                     </div>
@@ -1939,6 +1988,15 @@ function LoginPage() {
               </div>
             </div>
           )}
+
+          {/* Compact Auth Security & Legal Footer */}
+          <div className="login-compact-footer">
+            <span>© 2026 Helper Technologies Inc.</span>
+            <span className="footer-dot">•</span>
+            <Link to="/contact">Support</Link>
+            <span className="footer-dot">•</span>
+            <Link to="/services">Services</Link>
+          </div>
 
         </div>
 
