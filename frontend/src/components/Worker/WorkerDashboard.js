@@ -29,7 +29,7 @@ function WorkerDashboard() {
   const [worker, setWorker] = useState(null);
   const [activeTab, setActiveTab] = useState("active_jobs"); // active_jobs | map_radar | history | earnings | attendance | profile
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dashboardSearch, setDashboardSearch] = useState("");
@@ -43,8 +43,8 @@ function WorkerDashboard() {
   const [materialInput, setMaterialInput] = useState("");
   const [completionNotes, setCompletionNotes] = useState("");
   const [completionPhotoUrl, setCompletionPhotoUrl] = useState("");
-  const [isScanningActive, setIsScanningActive] = useState(false);
-  const [scanningBookingId, setScanningBookingId] = useState(null);
+  const [, setIsScanningActive] = useState(false);
+  const [, setScanningBookingId] = useState(null);
 
   // In-App Chat Modal State
   const [activeChatBooking, setActiveChatBooking] = useState(null);
@@ -143,6 +143,7 @@ function WorkerDashboard() {
     setWithdrawUpi(activeWorker.earnings?.upiId || `${activeWorker.phone?.slice(-10)}@upi`);
     fetchWorkerProfile(activeWorker.workerId || activeWorker.id || "WRK-101");
     fetchWorkerJobs(activeWorker.workerId || activeWorker.id || "WRK-101");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Stopwatch timer for active in-progress job
@@ -209,6 +210,7 @@ function WorkerDashboard() {
     } catch (e) {
       console.warn("Socket connection warning:", e);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker]);
 
   // Fetch updated worker profile
@@ -619,7 +621,7 @@ function WorkerDashboard() {
       const res = await fetch(`${API_BASE}/api/workers/${worker?.workerId || worker?.id}/approve`, {
         method: "PUT"
       });
-      const data = await res.json();
+      await res.json();
       const updated = {
         ...worker,
         verificationStatus: "verified",

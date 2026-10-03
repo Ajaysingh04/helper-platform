@@ -1,13 +1,8 @@
 {
   "version": 2,
   "installCommand": "npm install --prefix frontend",
-  "buildCommand": "CI=false npm run build --prefix frontend",
+  "buildCommand": "npm run build --prefix frontend",
   "outputDirectory": "frontend/build",
-  "build": {
-    "env": {
-      "CI": "false"
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",

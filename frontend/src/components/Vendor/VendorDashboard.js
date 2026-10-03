@@ -272,6 +272,7 @@ function VendorDashboard() {
       localStorage.setItem("helper_vendor", JSON.stringify(defaultVendor));
     }
     fetchPendingWorkers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Refresh pending workers when members tab is active
@@ -279,6 +280,7 @@ function VendorDashboard() {
     if (activeTab === "members") {
       fetchPendingWorkers(vendor?.id || vendor?._id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, vendor?.id, vendor?._id]);
 
   // Connect Socket.IO

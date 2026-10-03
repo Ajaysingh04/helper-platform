@@ -103,7 +103,7 @@ function AdminProviders() {
 
   // Worker Management State
   const [workersList, setWorkersList] = useState(DEFAULT_WORKERS);
-  const [loadingWorkers, setLoadingWorkers] = useState(false);
+  const [, setLoadingWorkers] = useState(false);
   const [workerFilterType, setWorkerFilterType] = useState("All");
   const [workerSearchQuery, setWorkerSearchQuery] = useState("");
   const [showWorkerModal, setShowWorkerModal] = useState(false);
