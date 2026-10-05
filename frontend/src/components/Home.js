@@ -147,6 +147,36 @@ function Home() {
 
   const [heroIndex, setHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
+  const touchStartXRef = useRef(0);
+  const touchEndXRef = useRef(0);
+
+  const goToNextSlide = () => {
+    setHeroIndex((prev) => (prev + 1) % safeHeroSlides.length);
+  };
+
+  const goToPrevSlide = () => {
+    setHeroIndex((prev) => (prev - 1 + safeHeroSlides.length) % safeHeroSlides.length);
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchEndXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartXRef.current - touchEndXRef.current;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        goToNextSlide();
+      } else {
+        goToPrevSlide();
+      }
+    }
+  };
 
   // Auto-Slide Interval (respects slideSpeed and pause-on-hover setting)
   useEffect(() => {
@@ -471,6 +501,9 @@ function Home() {
         onMouseLeave={() => {
           if (!heroSettings.continuousSlide) setIsHeroPaused(false);
         }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="helper-hero-slider">
           {/* Full-Width Auto-Slider with Responsive Picture Elements */}
@@ -512,42 +545,93 @@ function Home() {
             <span className="ambient-sparkle sp-6" />
           </div>
 
-          {/* Subtle bottom gradient to ensure search bar and chips stand out cleanly */}
+          {/* Subtle Top & Bottom Gradient Scrim to ensure crisp contrast on any device */}
           <div className="hero-bottom-clean-scrim" />
 
-          {/* Centered Modern Floating Search Bar & Quick Categories */}
-          <div className="hero-centered-search-container">
-            <form 
-              className="hero-search-wrapper hero-search-centered" 
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (homeCatSearch.trim()) {
-                  const element = document.getElementById("popular-service-categories");
-                  if (element) element.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-            >
-              <div className="hero-search-location-chip">
-                <span className="location-pin">📍</span>
-                <span className="location-name">Indore</span>
-              </div>
-              <span className="hero-search-divider" />
-              <span className="hero-search-icon">🔍</span>
-              <input
-                type="text"
-                className="hero-search-input"
-                placeholder="Search 'Deep Cleaning', 'AC Repair', 'Plumber', 'Electrician'..."
-                value={homeCatSearch}
-                onChange={(e) => setHomeCatSearch(e.target.value)}
-              />
-              <button type="submit" className="hero-search-btn">
-                <span>Find Service ➔</span>
+          {/* Desktop Previous / Next Hover Arrows */}
+          {safeHeroSlides.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="hero-nav-arrow hero-nav-prev"
+                onClick={goToPrevSlide}
+                aria-label="Previous Banner Slide"
+              >
+                ‹
               </button>
-            </form>
+              <button
+                type="button"
+                className="hero-nav-arrow hero-nav-next"
+                onClick={goToNextSlide}
+                aria-label="Next Banner Slide"
+              >
+                ›
+              </button>
+            </>
+          )}
 
-            {/* Quick Popular Service Chips */}
-            <div className="hero-tags-centered">
-              <span className="quick-tags-label">Popular:</span>
+          {/* Slide Indicator Dots Pill */}
+          {safeHeroSlides.length > 1 && (
+            <div className="hero-slide-dots-container" role="tablist">
+              {safeHeroSlides.map((_, dotIdx) => (
+                <button
+                  key={dotIdx}
+                  type="button"
+                  className={`hero-slide-dot-pill ${dotIdx === heroIndex ? "active" : ""}`}
+                  onClick={() => setHeroIndex(dotIdx)}
+                  aria-label={`Switch to slide ${dotIdx + 1}`}
+                  role="tab"
+                  aria-selected={dotIdx === heroIndex}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Hero Search Bar & Popular Chips Container - Dedicated below banner */}
+        <div className="hero-centered-search-container">
+          {/* Live Trust / Verification Micro-Badge */}
+          <div className="hero-trust-tag-pill">
+            <span className="hero-trust-pulse" />
+            <span className="hero-trust-text">
+              {safeHeroSlides[heroIndex]?.badge || "🛡️ 50,000+ POLICE-VERIFIED SPECIALISTS"}
+            </span>
+          </div>
+
+          <form 
+            className="hero-search-wrapper hero-search-centered" 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (homeCatSearch.trim()) {
+                const element = document.getElementById("popular-service-categories");
+                if (element) element.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+          >
+            <div className="hero-search-location-chip">
+              <span className="location-pin">📍</span>
+              <span className="location-name">Indore</span>
+            </div>
+            <span className="hero-search-divider" />
+            <span className="hero-search-icon">🔍</span>
+            <input
+              type="text"
+              className="hero-search-input"
+              placeholder="Search 'AC Repair', 'Plumber', 'Cleaning'..."
+              value={homeCatSearch}
+              onChange={(e) => setHomeCatSearch(e.target.value)}
+              aria-label="Search Services"
+            />
+            <button type="submit" className="hero-search-btn" aria-label="Search">
+              <span className="hero-search-btn-text-full">Find Service ➔</span>
+              <span className="hero-search-btn-text-short">Find ➔</span>
+            </button>
+          </form>
+
+          {/* Quick Popular Service Chips */}
+          <div className="hero-tags-centered">
+            <span className="quick-tags-label">Popular:</span>
+            <div className="quick-tags-scroll-wrap">
               <div className="quick-tags-list">
                 <Link to="/category/cleaning" className="quick-service-chip">
                   <span>🧹 Deep Cleaning</span>
@@ -802,21 +886,20 @@ function Home() {
       <section className="nexora-content-section" id="popular-service-categories">
         <div className="nexora-section-container">
           
-          <div className="nexora-section-header" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
-            <div>
+          <div className="nexora-section-header pop-cat-header-wrap">
+            <div className="nexora-section-header-content">
               <div className="pill-tag-coral" style={{ background: "rgba(255, 77, 45, 0.12)", borderColor: "rgba(255, 77, 45, 0.35)", color: "#FF4D2D", display: "inline-flex", marginBottom: "8px" }}>
                 <span>🔥 ON-DEMAND SERVICE DIRECTORY</span>
               </div>
-              <h2 className="nexora-section-title" style={{ margin: 0 }}>Popular Service Categories</h2>
-              <p style={{ margin: "6px 0 0", color: "#64748B", fontSize: "14.5px" }}>
+              <h2 className="nexora-section-title">Popular Service Categories</h2>
+              <p className="nexora-section-subtitle">
                 Browse verified local technicians, home repairs, salons, clinics & daily service pros.
               </p>
             </div>
 
             <Link 
               to="/categories" 
-              className="pop-cat-expand-btn" 
-              style={{ textDecoration: "none", padding: "10px 22px", fontSize: "13.5px" }}
+              className="pop-cat-expand-btn pop-cat-header-btn"
             >
               <span>View All 85+ Categories ➔</span>
             </Link>
@@ -844,14 +927,13 @@ function Home() {
             </div>
 
             {/* Quick Search Input */}
-            <div className="pop-cat-search-box" style={{ maxWidth: "320px", padding: "8px 16px", margin: 0 }}>
-              <span style={{ fontSize: "15px" }}>🔎</span>
+            <div className="pop-cat-search-box">
+              <span className="pop-cat-search-icon">🔎</span>
               <input
                 type="text"
                 placeholder="Search services (AC, Plumber, Salon)..."
                 value={homeCatSearch}
                 onChange={(e) => setHomeCatSearch(e.target.value)}
-                style={{ fontSize: "13px" }}
               />
               {homeCatSearch && (
                 <button type="button" className="clear-btn" onClick={() => setHomeCatSearch("")}>✕</button>
@@ -920,11 +1002,11 @@ function Home() {
           )}
 
           {/* Bottom Callout & Direct Link to All Categories */}
-          <div className="pop-cat-expand-wrap" style={{ marginTop: "32px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-            <Link to="/categories" className="pop-cat-expand-btn" style={{ textDecoration: "none" }}>
+          <div className="pop-cat-expand-wrap">
+            <Link to="/categories" className="pop-cat-expand-btn pop-cat-footer-btn">
               <span>Browse Complete Directory (85+ Categories) ➔</span>
             </Link>
-            <span style={{ fontSize: "12.5px", color: "#94A3B8" }}>
+            <span className="pop-cat-guarantee-note">
               🛡️ All technicians background checked & covered with 30-day revisit warranty
             </span>
           </div>
@@ -1235,28 +1317,13 @@ function Home() {
       {activeLiveBooking && (
         <div 
           onClick={() => setActiveLiveBooking(activeLiveBooking)}
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            background: "rgba(15, 23, 42, 0.92)",
-            border: "1px solid rgba(255, 77, 45, 0.4)",
-            borderRadius: "100px",
-            padding: "10px 20px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            cursor: "pointer",
-            boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
-            zIndex: 998,
-            backdropFilter: "blur(12px)"
-          }}
+          className="home-floating-live-tracker"
         >
-          <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#10B981", boxShadow: "0 0 10px #10B981", animation: "pulse 1.5s infinite" }}></span>
-          <span style={{ color: "#FFFFFF", fontSize: "14px", fontWeight: 600, fontFamily: "Space Grotesk, sans-serif" }}>
+          <span className="live-tracker-pulse-dot" />
+          <span className="live-tracker-info-text">
             Live Dispatch: {activeLiveBooking.bookingId || "Active"} (OTP: {activeLiveBooking.startOtp || "3459"})
           </span>
-          <span style={{ color: "#FF4D2D", fontSize: "13px", fontWeight: 700 }}>Track 📡</span>
+          <span className="live-tracker-btn-text">Track 📡</span>
         </div>
       )}
 

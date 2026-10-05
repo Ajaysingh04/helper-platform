@@ -15,12 +15,19 @@
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Homepage Hero Header: floats over hero */
+/* Homepage Hero Header: sits cleanly above banner */
 .header-floating-wrapper.home-header {
-  margin-bottom: -76px;
-  background: transparent !important;
-  box-shadow: none !important;
-  pointer-events: none;
+  margin-bottom: 0 !important;
+  background: rgba(248, 249, 251, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 228, 233, 0.8);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+body.dark .header-floating-wrapper.home-header {
+  background: rgba(11, 15, 25, 0.92);
+  border-bottom-color: rgba(31, 41, 55, 0.8);
 }
 
 .header-floating-wrapper.home-header .header-pill-bar {
