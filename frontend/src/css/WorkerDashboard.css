@@ -1467,6 +1467,122 @@ body.dark .v-text .pulse-text {
   background: rgba(16, 185, 129, 0.18);
 }
 
+@media (max-width: 1024px) {
+  .worker-portal-layout .admin-top-bar {
+    padding: 10px 16px !important;
+    height: auto !important;
+    min-height: 58px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .worker-portal-layout .admin-view-body {
+    padding: 18px 14px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .worker-portal-layout .admin-top-bar {
+    padding: 10px 12px !important;
+    height: auto !important;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .worker-portal-layout .admin-top-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .worker-portal-layout .admin-view-body {
+    padding: 14px 10px !important;
+  }
+
+  /* Active Job Console */
+  .wrk-active-job-card {
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  .wrk-job-header {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .wrk-stepper-track {
+    padding: 12px 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+  }
+
+  .wrk-step-node {
+    min-width: 65px;
+  }
+
+  .wrk-job-body {
+    padding: 14px 12px;
+  }
+
+  .wrk-action-btn-row,
+  .wrk-job-actions-grid {
+    flex-direction: column !important;
+    display: flex !important;
+    gap: 10px !important;
+  }
+
+  .wrk-action-btn-row button,
+  .wrk-action-btn-row a,
+  .wrk-btn-primary,
+  .wrk-btn-secondary,
+  .wrk-btn-danger {
+    width: 100% !important;
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Earnings & Attendance Grids */
+  .wrk-earnings-summary-grid,
+  .wrk-attendance-grid,
+  .wrk-stats-bento {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Tables horizontal scroll */
+  .wrk-table-container,
+  .worker-table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+
+  .wrk-table {
+    min-width: 580px !important;
+  }
+
+  /* Modals */
+  .wrk-modal,
+  .otp-modal-box {
+    width: 100% !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+  }
+}
+
 @media (max-width: 600px) {
   .worker-pending-card {
     padding: 24px 16px;

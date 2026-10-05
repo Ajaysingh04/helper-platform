@@ -4331,45 +4331,78 @@ body:not(.dark) .quick-action-text strong {
   margin-top: 2px;
 }
 
-/* Responsive Overrides for Vendor Portal Layout */
+/* ==========================================================================
+   COMPREHENSIVE RESPONSIVE STYLES FOR VENDOR / SERVICE MAN PORTAL
+   ========================================================================== */
+
 @media (max-width: 1024px) {
   .vendor-portal-layout .admin-top-bar {
-    padding: 12px 16px;
+    padding: 10px 16px !important;
+    height: auto !important;
+    min-height: 58px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   .vendor-portal-layout .admin-view-body {
-    padding: 20px 16px;
+    padding: 18px 14px !important;
   }
 
   .vendor-overview-welcome-card {
     padding: 18px 20px;
     flex-direction: column;
     align-items: flex-start;
+    gap: 14px;
   }
 
   .vendor-overview-welcome-card .vendor-header-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .vendor-stats-grid,
+  .saas-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .saas-analytics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .worker-payroll-grid,
+  .recent-activity-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .vendor-portal-layout .admin-top-bar {
+    padding: 10px 12px !important;
+    height: auto !important;
+    min-height: 56px;
     flex-wrap: wrap;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: 8px;
   }
 
   .vendor-portal-layout .admin-top-actions {
     width: 100%;
-    justify-content: space-between;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .vendor-portal-layout .admin-view-body {
+    padding: 14px 10px !important;
   }
 
   .vendor-quick-actions-bar {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
 
   .vendor-quick-action-item {
@@ -4387,6 +4420,99 @@ body:not(.dark) .quick-action-text strong {
 
   .quick-action-text span {
     font-size: 11px;
+  }
+
+  /* Franchise Plans Grid */
+  .vendor-franchise-plans-grid,
+  .franchise-pricing-cards-row,
+  .franchise-plans-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Custom Services Rate Card Grid */
+  .vendor-services-grid,
+  .custom-services-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Team Members Grid */
+  .vendor-members-grid,
+  .shop-team-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Tables horizontal touch scrolling */
+  .vendor-table-container,
+  .admin-table-container,
+  .table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+
+  .vendor-table,
+  .admin-table {
+    min-width: 620px !important;
+  }
+
+  /* Modals */
+  .qr-camera-scanner-modal,
+  .vendor-payout-modal,
+  .vendor-modal,
+  .modal-dialog {
+    width: 100% !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Filter toolbar */
+  .vendor-filter-toolbar,
+  .admin-catalog-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .vendor-search-input,
+  .admin-search-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .vendor-stats-grid,
+  .saas-kpi-grid,
+  .worker-payroll-grid,
+  .recent-activity-cards-grid,
+  .worker-payroll-metrics {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .vendor-stat-card {
+    padding: 14px 16px;
+  }
+
+  .vendor-overview-welcome-card .vendor-header-actions button,
+  .vendor-overview-welcome-card .vendor-header-actions a {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center;
+  }
+
+  .vendor-quick-actions-bar {
+    grid-template-columns: 1fr !important;
   }
 }
 

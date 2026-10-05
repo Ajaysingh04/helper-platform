@@ -2970,14 +2970,39 @@ body.dark .status-select-pill.status-badge-cancelled {
   }
 }
 
+@media (max-width: 1024px) {
+  .admin-analytics-layout-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .admin-search-wrap {
     display: none;
   }
 
   .admin-top-bar {
-    padding: 0 14px;
-    height: 60px;
+    padding: 10px 14px !important;
+    height: auto !important;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .admin-top-left {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .admin-top-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
   }
 
   .admin-profile-pill .admin-name-text {
@@ -2985,12 +3010,12 @@ body.dark .status-select-pill.status-badge-cancelled {
   }
 
   .admin-view-body {
-    padding: 16px 12px;
+    padding: 16px 12px !important;
   }
 
   .admin-kpi-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: 1fr !important;
+    gap: 12px;
   }
 
   .admin-kpi-card {
@@ -2998,16 +3023,98 @@ body.dark .status-select-pill.status-badge-cancelled {
   }
 
   .admin-card-section {
-    padding: 18px 14px;
-    margin-bottom: 20px;
+    padding: 16px 14px !important;
+    margin-bottom: 18px;
+    border-radius: 16px;
+  }
+
+  .admin-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .admin-card-header button,
+  .admin-card-header .table-action-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center;
+  }
+
+  .admin-catalog-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .admin-search-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .admin-search-input {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .admin-filter-bar,
+  .admin-tabs-nav {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    padding-bottom: 4px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .admin-table-container {
-    -webkit-overflow-scrolling: touch;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+
+  .admin-table {
+    min-width: 620px !important;
+  }
+
+  .admin-modal-overlay,
+  .modal-overlay {
+    padding: 12px !important;
+  }
+
+  .admin-modal,
+  .admin-modal-content,
+  .modal-card {
+    width: 100% !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 18px 14px !important;
+    margin: auto !important;
+  }
+
+  .admin-pagination-bar,
+  .admin-pagination {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
   }
 }
 
 @media (max-width: 480px) {
+  .admin-top-bar {
+    padding: 8px 10px !important;
+  }
+
+  .admin-mobile-toggle-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
   .admin-live-badge span {
     display: none;
   }
@@ -3018,13 +3125,29 @@ body.dark .status-select-pill.status-badge-cancelled {
   }
 
   .admin-header-actions {
-    width: 100%;
+    width: 100% !important;
+    flex-direction: column;
+    gap: 8px;
   }
 
-  .admin-header-actions .btn-primary-glow {
-    width: 100%;
+  .admin-header-actions .btn-primary-glow,
+  .admin-header-actions .btn-secondary-glass,
+  .admin-header-actions button {
+    width: 100% !important;
     text-align: center;
     justify-content: center;
+  }
+
+  .admin-kpi-card {
+    padding: 14px 14px;
+  }
+
+  .kpi-value {
+    font-size: 20px !important;
+  }
+
+  .admin-brand-text h2 {
+    font-size: 15px !important;
   }
 }
 
