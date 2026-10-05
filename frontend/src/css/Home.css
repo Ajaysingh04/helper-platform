@@ -1181,20 +1181,6 @@ body.dark .hero-search-input {
    PERFECT RESPONSIVE DESIGN FOR UN-CROPPED HERO SECTION & SEARCH
    ========================================================================== */
 
-/* Laptops & Short Desktop Screens */
-@media (min-width: 1025px) and (max-height: 850px) {
-  .helper-hero-slider-wrap {
-    height: auto;
-    min-height: auto;
-  }
-  .helper-hero-slider {
-    max-height: 60vh;
-  }
-  .hero-centered-search-container {
-    padding: 12px 16px 18px;
-    gap: 10px;
-  }
-}
 
 /* Tablet Screens (769px - 1024px) */
 @media (max-width: 1024px) {
