@@ -1788,7 +1788,7 @@ function Home() {
 
                   <button 
                     type="submit" 
-                    className="modal-confirm-booking-btn btn-coral" 
+                    className="modal-confirm-booking-btn" 
                     disabled={isSubmittingBooking || enquiryPhone.length < 10 || !bookingAddress.trim() || !enquiryName.trim() || !selectedTimeSlot}
                   >
                     {isSubmittingBooking ? (

@@ -519,10 +519,10 @@ function CategoryPage() {
     setBookingTime("07:00 AM - 08:00 AM");
     setSlotFilter("All");
     const problems = getCategoryProblems(categoryTitle, item);
-    setBookingProblem(problems[0]?.title || "Inspection & Estimate");
+    setBookingProblem(problems[0]?.title || "Tap / Faucet Continuously Dripping");
     setCustomProblemText("");
-    setEnquiryPhone(currentUser?.phone || localStorage.getItem("helper_user_phone") || "");
-    setEnquiryName(currentUser?.name || localStorage.getItem("helper_user_name") || "");
+    setEnquiryPhone(currentUser?.phone || localStorage.getItem("helper_user_phone") || "98765 43210");
+    setEnquiryName(currentUser?.name || localStorage.getItem("helper_user_name") || "Ramesh Kumar");
     setEnquiryAddress(localStorage.getItem("helper_user_full_address") || "Palasia Square, Indore, Madhya Pradesh");
   };
 
@@ -1661,7 +1661,11 @@ function CategoryPage() {
                   {enquiryItem.avatar || enquiryItem.image ? (
                     <img src={enquiryItem.avatar || enquiryItem.image} alt={enquiryItem.name} className="modal-service-thumb-img" />
                   ) : (
-                    <span className="modal-service-icon" style={{ fontSize: "36px" }}>{categoryIcon || "🛠️"}</span>
+                    <img 
+                      src={getServicemanImage(categoryTitle, 0)} 
+                      alt={enquiryItem.name} 
+                      className="modal-service-thumb-img" 
+                    />
                   )}
                   <div className="modal-service-info-text">
                     <div className="modal-service-badges-row">
@@ -1670,7 +1674,7 @@ function CategoryPage() {
                     </div>
                     <h3 className="modal-service-title">{enquiryItem.shopName || enquiryItem.name}</h3>
                     <p className="modal-service-price-note">
-                      Starts at <strong className="modal-price-accent">₹{enquiryItem.hourlyRate ? String(enquiryItem.hourlyRate).replace(/[^\d]/g, "") || "249" : "249"}</strong>
+                      Starts at <strong className="modal-price-accent">₹{enquiryItem.price ? String(enquiryItem.price).replace(/[^\d]/g, "") : (enquiryItem.hourlyRate ? String(enquiryItem.hourlyRate).replace(/[^\d]/g, "") : "249") || "249"}</strong>
                       <span className="modal-rate-guarantee"> • Free Diagnostics with Service</span>
                     </p>
                   </div>
@@ -1897,14 +1901,14 @@ function CategoryPage() {
                   <div className="modal-footer-price-info">
                     <span className="footer-price-label">ESTIMATED BILL</span>
                     <strong className="footer-price-value">
-                      ₹{enquiryItem.hourlyRate ? String(enquiryItem.hourlyRate).replace(/[^\d]/g, "") || "249" : "249"}
+                      ₹{enquiryItem.price ? String(enquiryItem.price).replace(/[^\d]/g, "") : (enquiryItem.hourlyRate ? String(enquiryItem.hourlyRate).replace(/[^\d]/g, "") : "249") || "249"}
                     </strong>
                     <span className="footer-payment-mode">💵 Pay cash / UPI after service</span>
                   </div>
 
                   <button 
                     type="submit" 
-                    className="modal-confirm-booking-btn btn-coral" 
+                    className="modal-confirm-booking-btn" 
                     disabled={isSubmittingEnquiry || enquiryPhone.length < 10 || !enquiryAddress.trim() || !enquiryName.trim() || !bookingTime}
                   >
                     {isSubmittingEnquiry ? (

@@ -4609,10 +4609,151 @@ body.dark .provider-call-btn:hover {
 }
 
 body.dark .advanced-booking-modal {
-  background: #0F172A;
-  border-color: #334155;
-  color: #F8FAFC;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark .modal-service-summary-pro {
+  background: linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 122, 89, 0.03) 100%) !important;
+  border-bottom-color: #F1F5F9 !important;
+}
+
+body.dark .modal-service-title {
+  color: #0F172A !important;
+}
+
+body.dark .modal-service-price-note {
+  color: #64748B !important;
+}
+
+body.dark .section-step-title {
+  color: #0F172A !important;
+}
+
+body.dark .section-step-sub {
+  color: #64748B !important;
+}
+
+body.dark .problem-option-card {
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  color: #1E293B !important;
+}
+
+body.dark .problem-option-card.selected {
+  background: rgba(255, 77, 45, 0.08) !important;
+  border-color: #FF4D2D !important;
+}
+
+body.dark .problem-title {
+  color: #1E293B !important;
+}
+
+body.dark .problem-note-input {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+body.dark .booking-date-pill {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+body.dark .date-day-name {
+  color: #0F172A !important;
+}
+
+body.dark .date-formatted {
+  color: #64748B !important;
+}
+
+body.dark .booking-date-pill.active {
+  background: #0F172A !important;
+  border-color: #0F172A !important;
+}
+
+body.dark .booking-date-pill.active .date-day-name,
+body.dark .booking-date-pill.active .date-formatted {
+  color: #FFFFFF !important;
+}
+
+body.dark .slot-filter-btn {
+  border-color: #CBD5E1 !important;
+  color: #64748B !important;
+  background: transparent !important;
+}
+
+body.dark .slot-filter-btn.active {
+  background: rgba(255, 77, 45, 0.12) !important;
+  border-color: #FF4D2D !important;
+  color: #FF4D2D !important;
+}
+
+body.dark .booking-slots-grid .booking-slot-chip {
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+body.dark .slot-time-text {
+  color: #1E293B !important;
+}
+
+body.dark .booking-slots-grid .booking-slot-chip.selected {
+  background: linear-gradient(135deg, #FF4D2D 0%, #FF6B4A 100%) !important;
+  border-color: #FF4D2D !important;
+}
+
+body.dark .booking-slots-grid .booking-slot-chip.selected .slot-time-text,
+body.dark .booking-slots-grid .booking-slot-chip.selected .slot-clock-icon {
+  color: #FFFFFF !important;
+}
+
+body.dark .booking-field-label {
+  color: #334155 !important;
+}
+
+body.dark .booking-input-wrap-pro {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+body.dark .booking-text-input-pro {
+  color: #0F172A !important;
+}
+
+body.dark .booking-address-box-pro {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+body.dark .booking-addr-input-pro {
+  color: #0F172A !important;
+}
+
+body.dark .booking-phone-input-wrap-pro {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+body.dark .phone-flag-prefix-pro {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+body.dark .booking-phone-input-pro {
+  color: #0F172A !important;
+}
+
+body.dark .modal-booking-footer-bar {
+  background: #FFFFFF !important;
+  border-top-color: #F1F5F9 !important;
+}
+
+body.dark .footer-price-label {
+  color: #64748B !important;
 }
 
 .modal-close-btn {
