@@ -4577,142 +4577,734 @@ body.dark .provider-call-btn:hover {
   border-color: #FF4D2D;
 }
 
-/* ================= Modal ================= */
+/* ================= Modern Advanced Booking Modal ================= */
 .booking-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(11, 15, 25, 0.7);
-  backdrop-filter: blur(12px);
-  z-index: 2000;
+  background: rgba(11, 15, 25, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
-.booking-modal-box {
+.advanced-booking-modal {
   background: #FFFFFF;
-  border: 1px solid #E2E4E9;
+  border: 1px solid #E2E8F0;
   border-radius: 24px;
-  padding: 36px;
   width: 100%;
-  max-width: 440px;
+  max-width: 640px;
+  max-height: 90vh;
   position: relative;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
 }
 
-body.dark .booking-modal-box {
-  background: #111827;
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
+body.dark .advanced-booking-modal {
+  background: #0F172A;
+  border-color: #334155;
+  color: #F8FAFC;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
 }
 
 .modal-close-btn {
   position: absolute;
   top: 16px;
   right: 18px;
-  background: none;
+  background: rgba(0, 0, 0, 0.06);
   border: none;
-  font-size: 18px;
-  color: #868C98;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 700;
+  color: #64748B;
   cursor: pointer;
-}
-
-.modal-service-summary {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #E2E4E9;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s ease;
 }
 
-.modal-service-icon {
-  font-size: 36px;
+.modal-close-btn:hover {
+  background: #EF4444;
+  color: #FFFFFF;
 }
 
-.modal-service-summary h4 {
-  font-size: 17px;
-  font-weight: 700;
+body.dark .modal-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
 }
 
-.modal-service-summary p {
+/* Modal Service Header Summary */
+.modal-service-summary-pro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  background: linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 122, 89, 0.03) 100%);
+  border-bottom: 1.5px solid #F1F5F9;
+  position: relative;
+}
+
+body.dark .modal-service-summary-pro {
+  background: linear-gradient(135deg, rgba(255, 77, 45, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border-bottom-color: #1E293B;
+}
+
+.modal-service-thumb-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+}
+
+.modal-service-info-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-service-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.modal-dispatch-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #FF4D2D;
+  background: rgba(255, 77, 45, 0.12);
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.2px;
+}
+
+.modal-rating-badge {
+  font-size: 11px;
+  font-weight: 750;
+  color: #B45309;
+  background: #FEF3C7;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+body.dark .modal-rating-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FCD34D;
+}
+
+.modal-service-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 3px 0;
+  line-height: 1.25;
+}
+
+body.dark .modal-service-title {
+  color: #F8FAFC;
+}
+
+.modal-service-price-note {
   font-size: 13px;
   color: #64748B;
+  margin: 0;
 }
 
-.modal-quick-form label {
-  display: block;
-  font-size: 13px;
+body.dark .modal-service-price-note {
+  color: #94A3B8;
+}
+
+.modal-price-accent {
+  color: #FF4D2D;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.modal-rate-guarantee {
+  font-size: 12px;
+  color: #10B981;
   font-weight: 600;
-  color: var(--text-main);
-  margin-bottom: 8px;
 }
 
-.phone-input-wrap {
+/* Scrollable Modal Body */
+.modal-scrollable-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  max-height: calc(90vh - 180px);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.booking-modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-label-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.section-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #FF4D2D;
+  color: #FFFFFF;
   display: flex;
   align-items: center;
-  border: 1.5px solid #E2E4E9;
-  border-radius: 12px;
-  background: #F8F9FA;
-  overflow: hidden;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
-body.dark .phone-input-wrap {
-  background: #1F2937;
-  border-color: #374151;
+.section-step-title {
+  font-size: 14.5px;
+  font-weight: 750;
+  color: #0F172A;
+  margin: 0;
 }
 
-.phone-prefix {
-  padding: 10px 14px;
-  font-weight: 700;
+body.dark .section-step-title {
+  color: #F8FAFC;
+}
+
+.section-step-sub {
+  font-size: 12px;
   color: #64748B;
-  border-right: 1px solid #E2E4E9;
+  margin: 2px 0 0;
+}
+
+body.dark .section-step-sub {
+  color: #94A3B8;
+}
+
+/* Problem / Issue Selector Grid */
+.problem-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
+
+.problem-option-card {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid #E2E8F0;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+body.dark .problem-option-card {
+  background: #1E293B;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+
+.problem-option-card:hover {
+  border-color: #FF7A59;
+  background: rgba(255, 77, 45, 0.03);
+  transform: translateY(-1px);
+}
+
+.problem-option-card.selected {
+  border-color: #FF4D2D;
+  background: rgba(255, 77, 45, 0.08);
+  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.16);
+}
+
+body.dark .problem-option-card.selected {
+  background: rgba(255, 77, 45, 0.18);
+  border-color: #FF4D2D;
+}
+
+.problem-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.problem-title {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: #1E293B;
+  flex: 1;
+  line-height: 1.3;
+}
+
+body.dark .problem-title {
+  color: #F1F5F9;
+}
+
+.problem-radio-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #FFFFFF;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.problem-option-card.selected .problem-radio-dot {
+  background: #FF4D2D;
+  border-color: #FF4D2D;
+}
+
+.problem-custom-note-wrap {
+  margin-top: 4px;
+}
+
+.problem-note-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+  font-size: 13px;
+  font-family: inherit;
+  color: #0F172A;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+body.dark .problem-note-input {
+  background: #1E293B;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+
+.problem-note-input:focus {
+  border-color: #FF4D2D;
+  background: #FFFFFF;
+}
+
+body.dark .problem-note-input:focus {
+  background: #0F172A;
+}
+
+/* Date Selection Row */
+.booking-date-pills-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.booking-date-pills-row::-webkit-scrollbar {
+  display: none;
+}
+
+.booking-date-pill {
+  flex: 1;
+  min-width: 76px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+body.dark .booking-date-pill {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.date-day-name {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+body.dark .date-day-name {
+  color: #F8FAFC;
+}
+
+.date-formatted {
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+body.dark .date-formatted {
+  color: #94A3B8;
+}
+
+.booking-date-pill.active {
+  background: #0F172A;
+  border-color: #0F172A;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+}
+
+body.dark .booking-date-pill.active {
+  background: #FF4D2D;
+  border-color: #FF4D2D;
+}
+
+.booking-date-pill.active .date-day-name,
+.booking-date-pill.active .date-formatted {
+  color: #FFFFFF;
+}
+
+/* Slot Period Filters */
+.slot-period-filters {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+
+.slot-period-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.slot-filter-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #CBD5E1;
+  background: transparent;
+  color: #64748B;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+body.dark .slot-filter-btn {
+  border-color: #334155;
+  color: #94A3B8;
+}
+
+.slot-filter-btn.active {
+  background: rgba(255, 77, 45, 0.12);
+  border-color: #FF4D2D;
+  color: #FF4D2D;
+}
+
+/* Time Slots Grid (Starting strictly 7:00 AM) */
+.booking-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.booking-slot-chip {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid #E2E8F0;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+body.dark .booking-slot-chip {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.booking-slot-chip:hover {
+  border-color: #FF7A59;
+  background: rgba(255, 77, 45, 0.03);
+}
+
+.slot-clock-icon {
   font-size: 14px;
 }
 
-.phone-input-wrap input {
+.slot-time-text {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1E293B;
+  flex: 1;
+  text-align: left;
+}
+
+body.dark .slot-time-text {
+  color: #F8FAFC;
+}
+
+.slot-meta-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #FF4D2D;
+  background: rgba(255, 77, 45, 0.1);
+  padding: 2px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.booking-slot-chip.selected {
+  background: linear-gradient(135deg, #FF4D2D 0%, #FF6B4A 100%);
+  border-color: #FF4D2D;
+  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.32);
+}
+
+.booking-slot-chip.selected .slot-time-text,
+.booking-slot-chip.selected .slot-clock-icon {
+  color: #FFFFFF;
+}
+
+.booking-slot-chip.selected .slot-meta-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+/* Doorstep Address Field */
+.booking-address-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+}
+
+body.dark .booking-address-box {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.booking-addr-icon {
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.booking-addr-input {
   border: none;
   background: transparent;
   outline: none;
-  padding: 10px 14px;
-  font-size: 15px;
-  font-weight: 600;
   width: 100%;
-  color: var(--text-main);
-}
-
-.modal-success-state {
-  text-align: center;
-  padding: 10px 0;
-}
-
-.modal-success-state .success-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-}
-
-.modal-success-state h3 {
-  font-size: 20px;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.modal-success-state p {
   font-size: 13.5px;
-  color: #64748B;
-  margin-bottom: 16px;
+  font-weight: 600;
+  color: #0F172A;
+  font-family: inherit;
 }
 
-.success-pill {
-  display: inline-block;
-  background: #ECFDF5;
-  color: #059669;
-  border: 1px solid #A7F3D0;
-  border-radius: 9999px;
-  padding: 6px 16px;
+body.dark .booking-addr-input {
+  color: #F8FAFC;
+}
+
+/* Phone Field */
+.booking-phone-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-phone-label {
   font-size: 12px;
   font-weight: 700;
+  color: #475569;
+}
+
+body.dark .booking-phone-label {
+  color: #94A3B8;
+}
+
+/* Sticky Modal Footer */
+.modal-booking-footer-bar {
+  padding: 16px 24px;
+  border-top: 1.5px solid #F1F5F9;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  bottom: 0;
+}
+
+body.dark .modal-booking-footer-bar {
+  background: #0F172A;
+  border-top-color: #1E293B;
+}
+
+.modal-footer-price-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-price-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+body.dark .footer-price-label {
+  color: #94A3B8;
+}
+
+.footer-price-value {
+  font-size: 20px;
+  font-weight: 850;
+  color: #FF4D2D;
+  line-height: 1.1;
+}
+
+.footer-payment-mode {
+  font-size: 10.5px;
+  color: #10B981;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.modal-confirm-booking-btn {
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 14.5px;
+  font-weight: 800;
+  border: none;
+  background: linear-gradient(135deg, #FF4D2D 0%, #FF7A59 100%);
+  color: #FFFFFF;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(255, 77, 45, 0.35);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.modal-confirm-booking-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.modal-confirm-booking-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(255, 77, 45, 0.45);
+}
+
+/* Success State Extra Styles */
+.confirmed-slot-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #F1F5F9;
+  font-size: 13.5px;
+  font-weight: 750;
+  color: #0F172A;
+  margin: 10px 0 14px;
+}
+
+body.dark .confirmed-slot-pill {
+  background: #1E293B;
+  color: #F8FAFC;
+}
+
+.dot-divider {
+  color: #94A3B8;
+}
+
+.confirmed-problem-note {
+  font-size: 13px;
+  color: #475569;
+  margin: 0 0 10px;
+}
+
+body.dark .confirmed-problem-note {
+  color: #94A3B8;
+}
+
+/* Mobile Responsive Modal Adjustments */
+@media (max-width: 640px) {
+  .booking-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .advanced-booking-modal {
+    border-radius: 24px 24px 0 0;
+    max-height: 94vh;
+    border-bottom: none;
+  }
+
+  .modal-service-summary-pro {
+    padding: 16px;
+  }
+
+  .modal-service-thumb-img {
+    width: 52px;
+    height: 52px;
+  }
+
+  .modal-service-title {
+    font-size: 17px;
+  }
+
+  .modal-scrollable-body {
+    padding: 16px;
+    gap: 18px;
+    max-height: calc(94vh - 160px);
+  }
+
+  .problem-options-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-slots-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-booking-footer-bar {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .modal-confirm-booking-btn {
+    width: 100%;
+    padding: 13px;
+    font-size: 14px;
+  }
 }
 
 /* ================= Responsive Breakpoints ================= */
