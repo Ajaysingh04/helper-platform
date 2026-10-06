@@ -2,10 +2,55 @@ import React, { useContext, useState, useMemo, useEffect, useCallback } from "re
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { LocationContext } from "../context/LocationContext";
 import { DataContext } from "../context/DataContext";
+import { AuthContext } from "../context/AuthContext";
 import { popularCategories } from "../data/popularCategoriesData";
 import { getServicemanImagesForCategory, getServicemanImage } from "../data/categoryImages";
 import "../css/CategoryPage.css";
 import { API_BASE } from "../apiConfig";
+
+// Service-Specific Dynamic Problem Options for Category Directory
+export const getCategoryProblemChips = (category, item) => {
+  const cat = String(category || "").toLowerCase();
+  const name = String(item?.name || item?.shopName || "").toLowerCase();
+
+  if (cat.includes("plumb") || name.includes("plumb") || cat.includes("leak")) {
+    return ["Pipe Leakage", "Drainage Clog", "Tap Replacement", "Geyser Setup", "Flush Tank Fix", "Inspection"];
+  }
+  if (cat.includes("electr") || name.includes("electr") || cat.includes("wiring") || cat.includes("repair")) {
+    return ["Fan Repair", "Switchboard / Socket", "Wiring Issue", "MCB Tripping", "Inverter Setup", "Complete Safety Audit"];
+  }
+  if (cat.includes("ac") || cat.includes("appliance") || name.includes("ac") || name.includes("cool")) {
+    return ["Cooling Issue", "Gas Refill", "Water Leakage", "Filter Cleaning", "Jet Service", "AC Installation"];
+  }
+  if (cat.includes("clean") || name.includes("clean") || cat.includes("maid") || cat.includes("sanitiz")) {
+    return ["Deep Home Cleaning", "Bathroom Descaling", "Kitchen Chimney", "Sofa Shampoo Wash", "Balcony Clean", "Post-Paint Clean"];
+  }
+  if (cat.includes("paint") || name.includes("paint") || cat.includes("color")) {
+    return ["Full Wall Painting", "Waterproofing Seepage", "Putty & Crack Fill", "Texture Accent Wall", "Door Polish", "Exterior Coating"];
+  }
+  if (cat.includes("salon") || cat.includes("beauty") || cat.includes("spa") || cat.includes("massage") || name.includes("spa") || name.includes("salon")) {
+    return ["Haircut & Styling", "Facial & Glow Cleanup", "Head & Body Massage", "Waxing & Threading", "Manicure & Pedicure", "Party Makeup"];
+  }
+  if (cat.includes("carpent") || name.includes("carpent") || cat.includes("wood") || cat.includes("furniture") || cat.includes("lock")) {
+    return ["Furniture Repair", "Door & Lock Fitting", "Custom Wardrobe", "Hinges & Handles", "Bed Frame Assembly", "Wall Drilling"];
+  }
+  if (cat.includes("school") || cat.includes("teach") || cat.includes("tutor") || cat.includes("educat") || name.includes("school") || name.includes("academy") || name.includes("father") || name.includes("joseph")) {
+    return ["Admission Enquiry", "Home Tuition Demo", "Maths & Science Tutor", "Exam Prep & Coaching", "Monthly Syllabus Guidance", "Parent Consultation"];
+  }
+  if (cat.includes("car") || cat.includes("driver") || cat.includes("transport") || cat.includes("rental")) {
+    return ["Outstation Taxi Booking", "Airport Pickup & Drop", "Hourly City Driver", "Self Drive Car", "Commercial Vehicle", "Urgent Ride"];
+  }
+  if (cat.includes("pest") || name.includes("pest")) {
+    return ["Cockroach Control", "Termite Anti-Treatment", "Bed Bugs Eradication", "Mosquito Fogging", "Rodent Control", "Commercial Spray"];
+  }
+  if (cat.includes("pack") || cat.includes("mover") || name.includes("pack")) {
+    return ["1/2 BHK Home Shifting", "Office Relocation", "Vehicle Transportation", "Packing & Unpacking", "Single Item Move", "Inter-City Move"];
+  }
+  if (cat.includes("doctor") || cat.includes("health") || cat.includes("clinic") || cat.includes("hospital")) {
+    return ["Home Doctor Visit", "Blood Sample Collection", "Nursing & Injection", "Physiotherapy Session", "Elderly Care", "Medical Consultation"];
+  }
+  return ["Standard Service", "Emergency Repair", "Installation & Setup", "Annual Maintenance", "Inspection & Estimate", "Custom Request"];
+};
 
 // Global cache for ItemDetailsPage lookup
 export const categoryItemsRegistry = new Map();
@@ -76,6 +121,8 @@ function CategoryPage() {
   const navigate = useNavigate();
   const { location, fetchLocation, locationError } = useContext(LocationContext);
   const dataContext = useContext(DataContext);
+  const authContext = useContext(AuthContext);
+  const currentUser = authContext?.currentUser;
   const updateProviderInContext = dataContext?.updateProvider;
   const addProviderInContext = dataContext?.addProvider;
   const deleteProviderInContext = dataContext?.deleteProvider;
@@ -98,8 +145,8 @@ function CategoryPage() {
   const todayStr = new Date().toISOString().split("T")[0];
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
   const [bookingDate, setBookingDate] = useState(todayStr);
-  const [bookingTime, setBookingTime] = useState("11:00 AM");
-  const [bookingProblem, setBookingProblem] = useState("Water pipe leakage / repair");
+  const [bookingTime, setBookingTime] = useState("07:00 AM - 09:00 AM");
+  const [bookingProblem, setBookingProblem] = useState("");
 
   // Real-time Live Countdown, Stopwatch & Running Meter
   const [, setLiveCountdown] = useState("");
@@ -310,6 +357,19 @@ function CategoryPage() {
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
   }, [matchedCategory, currentSlug]);
+
+  const handleOpenEnquiry = (item) => {
+    setEnquiryItem(item);
+    setEnquirySent(false);
+    setConfirmedBookingInfo(null);
+    setBookingDate(todayStr);
+    setBookingTime("07:00 AM - 09:00 AM");
+    const chips = getCategoryProblemChips(categoryTitle, item);
+    setBookingProblem(chips[0] || "Inspection & Estimate");
+    setEnquiryPhone(currentUser?.phone || "");
+    setEnquiryName(currentUser?.name || "");
+    setEnquiryAddress(localStorage.getItem("helper_user_full_address") || "");
+  };
 
   const categoryIcon = matchedCategory?.icon || "⚡";
   const categoryImage = matchedCategory?.image || "";
@@ -879,7 +939,7 @@ function CategoryPage() {
                     <button
                       type="button"
                       className="compact-action-btn btn-book"
-                      onClick={() => setEnquiryItem(item)}
+                      onClick={() => handleOpenEnquiry(item)}
                       title="Quick Booking Enquiry"
                     >
                       <span>⚡ Book</span>
@@ -1186,7 +1246,7 @@ function CategoryPage() {
       {/* Quick Customer Enquiry / Booking Modal */}
       {enquiryItem && (
         <div className="cat-preview-modal-overlay" onClick={() => setEnquiryItem(null)}>
-          <div className="cat-preview-modal-box animate-fade-up" onClick={(e) => e.stopPropagation()}>
+          <div className="cat-preview-modal-box pro-booking-modal-dark animate-fade-up" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={() => setEnquiryItem(null)}>✕</button>
 
             <div className="cat-modal-header">
@@ -1529,13 +1589,21 @@ function CategoryPage() {
                   />
                 </div>
 
-                {/* Time Slot Picker */}
+                {/* Time Slot Picker (Starts from 07:00 AM!) */}
                 <div style={{ marginBottom: "12px" }}>
                   <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
                     ⏰ Select Time Slot (Kitne baje chahiye?) *
                   </label>
                   <div className="booking-chips-grid">
-                    {["09:00 AM - 11:00 AM", "11:00 AM - 01:00 PM", "02:00 PM - 04:00 PM", "04:00 PM - 06:00 PM", "06:00 PM - 08:00 PM"].map((slot) => (
+                    {[
+                      "07:00 AM - 09:00 AM",
+                      "09:00 AM - 11:00 AM",
+                      "11:00 AM - 01:00 PM",
+                      "02:00 PM - 04:00 PM",
+                      "04:00 PM - 06:00 PM",
+                      "06:00 PM - 08:00 PM",
+                      "08:00 PM - 10:00 PM"
+                    ].map((slot) => (
                       <button
                         key={slot}
                         type="button"
@@ -1548,17 +1616,17 @@ function CategoryPage() {
                   </div>
                 </div>
 
-                {/* Issue Description */}
+                {/* Issue Description (Dynamic by Category & Provider) */}
                 <div style={{ marginBottom: "12px" }}>
                   <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
-                    🔧 Problem / Work Needed (Kya problem hai?)
+                    🔧 Problem / Work Needed (Kya problem hai?) *
                   </label>
                   <div className="booking-chips-grid" style={{ marginBottom: "6px" }}>
-                    {["Pipe Leakage", "Drainage Clog", "Tap Replacement", "Geyser Setup", "Inspection"].map((tag) => (
+                    {getCategoryProblemChips(categoryTitle, enquiryItem).map((tag) => (
                       <button
                         key={tag}
                         type="button"
-                        className="booking-chip-btn"
+                        className={`booking-chip-btn ${bookingProblem === tag ? "active" : ""}`}
                         onClick={() => setBookingProblem(tag)}
                       >
                         {tag}
@@ -1567,9 +1635,10 @@ function CategoryPage() {
                   </div>
                   <input
                     type="text"
-                    placeholder="e.g. Bathroom sink water leakage"
+                    placeholder={`e.g. ${getCategoryProblemChips(categoryTitle, enquiryItem)[0] || "Describe your problem"}`}
                     value={bookingProblem}
                     onChange={(e) => setBookingProblem(e.target.value)}
+                    required
                     style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
                   />
                 </div>

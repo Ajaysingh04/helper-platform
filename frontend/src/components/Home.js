@@ -10,6 +10,42 @@ import { getServicemanImage } from "../data/categoryImages";
 import LiveTrackingModal from "./LiveTrackingModal";
 import { API_BASE } from "../apiConfig";
 
+// Service-Specific Dynamic Problem Options
+export const getServiceProblemChips = (service) => {
+  if (!service) return ["Standard Repair", "Inspection & Estimate", "Installation", "Maintenance"];
+  const name = (service.name || "").toLowerCase();
+  const tag = (service.tag || service.category || "").toLowerCase();
+
+  if (name.includes("ac") || tag.includes("ac") || tag.includes("appliance")) {
+    return ["Cooling Issue", "Gas Refill", "Water Leakage", "Filter Cleaning", "Jet Service", "AC Installation"];
+  }
+  if ((name.includes("electric") || tag.includes("electric") || tag.includes("repair")) && !name.includes("plumb")) {
+    return ["Fan Repair", "Switchboard / Socket", "Wiring Issue", "MCB Tripping", "Inverter Setup", "Complete Safety Audit"];
+  }
+  if (name.includes("plumb") || tag.includes("plumb") || name.includes("leak")) {
+    return ["Pipe Leakage", "Drainage Clog", "Tap Replacement", "Geyser Setup", "Flush Tank Fix", "Inspection"];
+  }
+  if (name.includes("clean") || tag.includes("clean") || tag.includes("sanitiz")) {
+    return ["Deep Home Cleaning", "Bathroom Descaling", "Kitchen Chimney", "Sofa Shampoo Wash", "Balcony Clean", "Post-Paint Clean"];
+  }
+  if (name.includes("paint") || tag.includes("paint") || tag.includes("decor")) {
+    return ["Full Wall Painting", "Waterproofing Seepage", "Putty & Crack Fill", "Texture Accent Wall", "Door Polish", "Exterior Coating"];
+  }
+  if (name.includes("salon") || name.includes("beauty") || tag.includes("beauty") || tag.includes("salon")) {
+    return ["Haircut & Styling", "Facial & Glow Cleanup", "Head & Body Massage", "Waxing & Threading", "Manicure & Pedicure", "Party Makeup"];
+  }
+  if (name.includes("massage") || name.includes("spa") || tag.includes("spa")) {
+    return ["Swedish Full Body", "Deep Tissue Therapy", "Aromatherapy Oil", "Foot Reflexology", "Head & Shoulder"];
+  }
+  if (name.includes("carpent") || name.includes("lock") || name.includes("wood")) {
+    return ["Furniture Repair", "Door & Lock Fitting", "Custom Wardrobe", "Hinges & Handles", "Bed Frame Assembly"];
+  }
+  if (name.includes("teach") || name.includes("tutor") || name.includes("school")) {
+    return ["Admission Enquiry", "Home Tuition Demo", "Maths & Science Tutor", "Exam Prep & Coaching", "Parent Consultation"];
+  }
+  return ["Quick Diagnostic", "Parts Replacement", "Standard Maintenance", "General Inspection", "Custom Requirement"];
+};
+
 // Dynamic Problem Symptoms based on Selected Service
 const getServiceProblems = (service) => {
   if (!service) return [];
@@ -155,15 +191,19 @@ function Home() {
   const currentUser = authContext?.currentUser;
   const addBooking = dataContext?.addBooking;
 
+  const todayStr = new Date().toISOString().split("T")[0];
+  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [enquirySuccess, setEnquirySuccess] = useState(false);
+  const [enquiryName, setEnquiryName] = useState(currentUser?.name || "");
   const [enquiryPhone, setEnquiryPhone] = useState("");
   const [selectedProblem, setSelectedProblem] = useState("");
   const [customProblemNote, setCustomProblemNote] = useState("");
-  const [selectedBookingDate, setSelectedBookingDate] = useState("");
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+  const [selectedBookingDate, setSelectedBookingDate] = useState(todayStr);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState("07:00 AM - 09:00 AM");
   const [slotFilter, setSlotFilter] = useState("All");
   const [bookingAddress, setBookingAddress] = useState("");
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
@@ -377,13 +417,13 @@ function Home() {
     setSelectedService(service);
     setSelectedProvider(provider);
     setEnquirySuccess(false);
+    setEnquiryName(currentUser?.name || "");
     setEnquiryPhone(currentUser?.phone || "");
-    const problems = getServiceProblems(service);
-    setSelectedProblem(problems[0]?.title || "");
+    const problems = getServiceProblemChips(service);
+    setSelectedProblem(problems[0] || "Inspection & Estimate");
     setCustomProblemNote("");
-    const dates = getBookingDates();
-    setSelectedBookingDate(dates[0]?.fullLabel || "Today");
-    setSelectedTimeSlot("07:00 AM - 08:00 AM");
+    setSelectedBookingDate(todayStr);
+    setSelectedTimeSlot("07:00 AM - 09:00 AM");
     setSlotFilter("All");
     const storedAddress = localStorage.getItem("helper_user_full_address") 
       || `${localStorage.getItem("helper_user_area") || "Palasia"} Square, ${localStorage.getItem("helper_user_city") || "Indore"}, Madhya Pradesh`;
@@ -417,7 +457,7 @@ function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerName: currentUser?.name || "Valued Customer",
+          customerName: enquiryName.trim() || currentUser?.name || "Customer",
           customerPhone: enquiryPhone,
           serviceName: selectedService.name,
           category: selectedService.tag || selectedService.category || "General",
@@ -440,7 +480,7 @@ function Home() {
           bookingDate: selectedBookingDate,
           timeSlot: selectedTimeSlot,
           problem: selectedProblem,
-          problemNotes: customProblemNote
+          problemNotes: customProblemNote || selectedProblem
         })
       });
 
@@ -461,30 +501,29 @@ function Home() {
             rating: selectedProvider.rating,
             photo: selectedProvider.image
           } : (bData.assignedProvider || {
-            name: "Ramesh Sharma",
+            name: `${selectedService.name} Specialist`,
             phone: "+91 98765 43210",
-            rating: 4.9,
-            photo: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200"
+            rating: 4.8,
+            photo: getServicemanImage(selectedService.name)
           })
         };
 
         if (addBooking) {
           addBooking({
             id: fullBooking.bookingId || fullBooking._id,
-            name: currentUser?.name || "Customer",
+            name: enquiryName.trim() || currentUser?.name || "Customer",
             phone: enquiryPhone,
             service: selectedService.name,
             price: `₹${numericPrice}`,
             address: selectedFullAddress,
             status: "Pending",
-            provider: selectedProvider ? selectedProvider.name : "Auto-Dispatched Pro",
+            provider: selectedProvider ? selectedProvider.name : `${selectedService.name} Specialist`,
             timeSlot: selectedTimeSlot,
             bookingDate: selectedBookingDate
           });
         }
 
-        setSelectedService(null);
-        setSelectedProvider(null);
+        setEnquirySuccess(true);
         setActiveLiveBooking(fullBooking);
       } else {
         throw new Error(json.message || "Failed to create booking");
@@ -509,26 +548,25 @@ function Home() {
         } : {
           name: `${selectedService.name} Specialist`,
           phone: "+91 98765 43210",
-          rating: 4.9,
+          rating: 4.8,
           photo: getServicemanImage(selectedService.name)
         }
       };
       if (addBooking) {
         addBooking({
           id: fallbackBooking.bookingId,
-          name: currentUser?.name || "Customer",
+          name: enquiryName.trim() || currentUser?.name || "Customer",
           phone: enquiryPhone,
           service: selectedService.name,
           price: `₹${numericPrice}`,
           address: selectedFullAddress,
           status: "Pending",
-          provider: selectedProvider ? selectedProvider.name : "Auto-Dispatched Pro",
+          provider: selectedProvider ? selectedProvider.name : `${selectedService.name} Specialist`,
           timeSlot: selectedTimeSlot,
           bookingDate: selectedBookingDate
         });
       }
-      setSelectedService(null);
-      setSelectedProvider(null);
+      setEnquirySuccess(true);
       setActiveLiveBooking(fallbackBooking);
     } finally {
       setIsSubmittingBooking(false);
@@ -1427,240 +1465,247 @@ function Home() {
           ADVANCED MULTI-OPTION BOOKING MODAL (Problem Selection, Slot & Address)
           ========================================================================= */}
       {selectedService && (
-        <div className="booking-modal-overlay" onClick={() => setSelectedService(null)}>
-          <div className="booking-modal-box advanced-booking-modal animate-fade-up" onClick={(e) => e.stopPropagation()}>
+        <div className="cat-preview-modal-overlay" onClick={() => setSelectedService(null)}>
+          <div className="cat-preview-modal-box pro-booking-modal-dark animate-fade-up" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={() => setSelectedService(null)} aria-label="Close modal">✕</button>
 
+            {/* Top Service Header */}
+            <div className="cat-modal-header">
+              <div className="cat-modal-icon">
+                {selectedService.image ? (
+                  <img src={selectedService.image} alt={selectedService.name} className="modal-header-thumb-img" />
+                ) : (
+                  <span>{selectedService.icon || "🛠️"}</span>
+                )}
+              </div>
+              <div>
+                <h3 className="cat-modal-title">{selectedService.name}</h3>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                  <span className="pop-cat-badge-live">🛡️ Verified Center</span>
+                  <span style={{ fontSize: "13px", color: "var(--beew-coral, #FF4D2D)", fontWeight: 700 }}>
+                    ★ {selectedService.rating || "4.8"} (380 Reviews)
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {enquirySuccess ? (
-              <div className="modal-success-state">
-                <div className="success-icon">🎉</div>
-                <h3>Booking Confirmed!</h3>
-                <p>Your appointment for <strong>{selectedService.name}</strong> is scheduled successfully.</p>
-                <div className="confirmed-slot-pill">
+              <div className="modal-success-state animate-fade-in" style={{ textAlign: "center", padding: "18px 6px" }}>
+                <div style={{ fontSize: "44px", marginBottom: "8px" }}>🎉</div>
+                <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#10B981", margin: "0 0 6px 0" }}>
+                  Booking Confirmed Successfully!
+                </h3>
+                <p style={{ fontSize: "13.5px", color: "#94A3B8", margin: "0 0 14px 0" }}>
+                  Direct doorstep service scheduled for <strong>{selectedService.name}</strong>.
+                </p>
+                <div style={{ display: "inline-flex", gap: "8px", padding: "8px 16px", borderRadius: "999px", background: "rgba(255, 77, 45, 0.12)", border: "1px solid #FF4D2D", color: "#FF4D2D", fontWeight: 700, fontSize: "13.5px", marginBottom: "12px" }}>
                   <span>📅 {selectedBookingDate}</span>
-                  <span className="dot-divider">•</span>
+                  <span>•</span>
                   <span>⏰ {selectedTimeSlot}</span>
                 </div>
                 {selectedProblem && (
-                  <p className="confirmed-problem-note">
-                    Selected Issue: <strong>{selectedProblem}</strong>
+                  <p style={{ fontSize: "13px", color: "#CBD5E1", margin: "0 0 12px 0" }}>
+                    Service Requirement: <strong>{selectedProblem}</strong>
                   </p>
                 )}
-                {selectedProvider && (
-                  <p style={{ marginTop: "6px", fontSize: "14px", color: "var(--beew-coral, #FF4D2D)" }}>
-                    Assigned Pro: <strong>{selectedProvider.name}</strong> ({selectedProvider.category})
-                  </p>
-                )}
-                <span className="success-pill">Technician Dispatched • OTP: 3459</span>
-                
-                <div style={{ marginTop: "24px", display: "flex", gap: "10px", justifyContent: "center" }}>
-                  <button 
-                    type="button" 
-                    className="btn-coral" 
-                    onClick={() => setSelectedService(null)}
-                  >
-                    Done ✓
-                  </button>
+                <div style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "12px", padding: "12px", margin: "12px 0", color: "#34D399", fontWeight: 700, fontSize: "13.5px" }}>
+                  Technician Dispatched • OTP: {activeLiveBooking?.startOtp || "3459"}
                 </div>
+                <button 
+                  type="button" 
+                  className="btn-coral" 
+                  style={{ width: "100%", padding: "12px", fontWeight: 700, fontSize: "14.5px", marginTop: "10px" }}
+                  onClick={() => {
+                    setSelectedService(null);
+                    setEnquirySuccess(false);
+                  }}
+                >
+                  Done & Back to Home ⚡
+                </button>
               </div>
             ) : (
-              <form onSubmit={handleEnquirySubmit} className="advanced-booking-form">
-                {/* 1. Header with Service Info */}
-                <div className="modal-service-summary-pro">
-                  {selectedService.image ? (
-                    <img src={selectedService.image} alt={selectedService.name} className="modal-service-thumb-img" />
-                  ) : (
-                    <span className="modal-service-icon">{selectedService.icon || "🛠️"}</span>
-                  )}
-                  <div className="modal-service-info-text">
-                    <div className="modal-service-badges-row">
-                      <span className="modal-dispatch-badge">⚡ 15-Min Express Arrival</span>
-                      <span className="modal-rating-badge">★ {selectedService.rating || "4.9"}</span>
-                    </div>
-                    <h3 className="modal-service-title">{selectedService.name}</h3>
-                    <p className="modal-service-price-note">
-                      Starts at <strong className="modal-price-accent">₹{typeof selectedService.price === "number" ? selectedService.price : String(selectedService.price).replace(/[^\d]/g, "")}</strong>
-                      <span className="modal-rate-guarantee"> • Free Diagnostics with Service</span>
-                    </p>
+              <form onSubmit={handleEnquirySubmit} style={{ marginTop: "14px" }}>
+                <p className="cat-modal-desc">
+                  Schedule direct doorstep service with <strong>{selectedProvider ? selectedProvider.name : `${selectedService.name} Specialist`}</strong> ({selectedService.subtitle || "Doorstep Experts"}).
+                </p>
+
+                {/* Transparent Upfront Pricing Card */}
+                <div className="pricing-transparency-card">
+                  <div className="pricing-transparency-row">
+                    <span>🏠 Doorstep Home Service Charge</span>
+                    <strong style={{ color: "#FFFFFF" }}>₹149 (Fixed)</strong>
                   </div>
-                </div>
-
-                <div className="modal-scrollable-body">
-                  {/* 2. Problem / Issue Selection for this specific service */}
-                  <div className="booking-modal-section">
-                    <div className="section-label-row">
-                      <span className="section-step-num">1</span>
-                      <div>
-                        <h4 className="section-step-title">Select Problem / Requirement</h4>
-                        <p className="section-step-sub">Select the issue you're facing with your {selectedService.name}:</p>
-                      </div>
-                    </div>
-
-                    <div className="problem-options-grid">
-                      {getServiceProblems(selectedService).map((prob) => {
-                        const isSelected = selectedProblem === prob.title;
-                        return (
-                          <button
-                            key={prob.id}
-                            type="button"
-                            className={`problem-option-card ${isSelected ? "selected" : ""}`}
-                            onClick={() => setSelectedProblem(prob.title)}
-                          >
-                            <span className="problem-icon">{prob.icon}</span>
-                            <span className="problem-title">{prob.title}</span>
-                            <span className="problem-radio-dot">{isSelected ? "✓" : ""}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Optional Custom Problem Notes */}
-                    <div className="problem-custom-note-wrap">
-                      <input
-                        type="text"
-                        placeholder="Any additional notes or specific details? (Optional)"
-                        value={customProblemNote}
-                        onChange={(e) => setCustomProblemNote(e.target.value)}
-                        className="problem-note-input"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 3. Date & Time Slot Selection (Starts at 7:00 AM) */}
-                  <div className="booking-modal-section">
-                    <div className="section-label-row">
-                      <span className="section-step-num">2</span>
-                      <div>
-                        <h4 className="section-step-title">Select Appointment Slot (From 7:00 AM)</h4>
-                        <p className="section-step-sub">Choose your preferred date and arrival time slot:</p>
-                      </div>
-                    </div>
-
-                    {/* Date Selector Pills */}
-                    <div className="booking-date-pills-row">
-                      {getBookingDates().map((dt) => (
-                        <button
-                          key={dt.key}
-                          type="button"
-                          className={`booking-date-pill ${selectedBookingDate === dt.fullLabel ? "active" : ""}`}
-                          onClick={() => setSelectedBookingDate(dt.fullLabel)}
-                        >
-                          <span className="date-day-name">{dt.dayName}</span>
-                          <span className="date-formatted">{dt.formattedDate}</span>
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Slot Period Filters (Morning / Afternoon / Evening) */}
-                    <div className="slot-period-filters">
-                      {["All", "Morning (7-12)", "Afternoon (12-5)", "Evening (5-9)"].map((filter) => {
-                        const filterKey = filter.split(" ")[0];
-                        return (
-                          <button
-                            key={filter}
-                            type="button"
-                            className={`slot-filter-btn ${slotFilter === filterKey ? "active" : ""}`}
-                            onClick={() => setSlotFilter(filterKey)}
-                          >
-                            {filter}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Time Slots Grid (Starting at 7:00 AM) */}
-                    <div className="booking-slots-grid">
-                      {bookingTimeSlots
-                        .filter((slot) => {
-                          if (slotFilter === "All") return true;
-                          if (slotFilter === "Morning") return slot.period === "Morning";
-                          if (slotFilter === "Afternoon") return slot.period === "Afternoon";
-                          if (slotFilter === "Evening") return slot.period === "Evening" || slot.period === "Night";
-                          return true;
-                        })
-                        .map((slot) => {
-                          const isSlotSelected = selectedTimeSlot === slot.label;
-                          return (
-                            <button
-                              key={slot.id}
-                              type="button"
-                              className={`booking-slot-chip ${isSlotSelected ? "selected" : ""}`}
-                              onClick={() => setSelectedTimeSlot(slot.label)}
-                            >
-                              <span className="slot-clock-icon">⏰</span>
-                              <span className="slot-time-text">{slot.label}</span>
-                              {slot.badge && (
-                                <span className="slot-meta-badge">{slot.badge}</span>
-                              )}
-                            </button>
-                          );
-                        })}
-                    </div>
-                  </div>
-
-                  {/* 4. Doorstep Address & Mobile Number */}
-                  <div className="booking-modal-section">
-                    <div className="section-label-row">
-                      <span className="section-step-num">3</span>
-                      <div>
-                        <h4 className="section-step-title">Address & Contact Phone</h4>
-                        <p className="section-step-sub">Technician will arrive at this address for doorstep service:</p>
-                      </div>
-                    </div>
-
-                    <div className="booking-address-box">
-                      <span className="booking-addr-icon">📍</span>
-                      <input 
-                        type="text" 
-                        value={bookingAddress} 
-                        onChange={(e) => setBookingAddress(e.target.value)} 
-                        placeholder="House / Flat No., Street, Area, Indore"
-                        className="booking-addr-input"
-                        required
-                      />
-                    </div>
-
-                    <div className="booking-phone-field">
-                      <label className="booking-phone-label">10-Digit Mobile Number (for dispatch & OTP)</label>
-                      <div className="phone-input-wrap">
-                        <span className="phone-prefix">+91</span>
-                        <input 
-                          type="tel"
-                          placeholder="98765 43210"
-                          value={enquiryPhone}
-                          onChange={(e) => setEnquiryPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
-                          required
-                          maxLength="10"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 5. Sticky Bottom Action Row */}
-                <div className="modal-booking-footer-bar">
-                  <div className="modal-footer-price-info">
-                    <span className="footer-price-label">Estimated Bill</span>
-                    <strong className="footer-price-value">
-                      ₹{typeof selectedService.price === "number" ? selectedService.price : String(selectedService.price).replace(/[^\d]/g, "")}
+                  <div className="pricing-transparency-row">
+                    <span>⏱️ Hourly Labor Rate</span>
+                    <strong style={{ color: "#FF4D2D" }}>
+                      {typeof selectedService.price === "number" ? `₹${selectedService.price}` : (selectedService.price || "₹299")} (Starts via Doorstep QR)
                     </strong>
-                    <span className="footer-payment-mode">💵 Pay cash / UPI after service</span>
                   </div>
+                  <div className="pricing-transparency-row" style={{ fontSize: "11.5px", color: "#10B981" }}>
+                    <span>🛡️ Protection</span>
+                    <strong>30-Day Work Warranty Included</strong>
+                  </div>
+                </div>
 
+                {/* Name & Mobile (2 Columns) */}
+                <div className="booking-two-col-row">
+                  <div>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                      Your Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ajay Singh"
+                      value={enquiryName}
+                      onChange={(e) => setEnquiryName(e.target.value)}
+                      required
+                      className="booking-modal-text-input"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                      Mobile Number *
+                    </label>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <span className="phone-prefix-pill">+91</span>
+                      <input
+                        type="tel"
+                        placeholder="98765 43210"
+                        value={enquiryPhone}
+                        onChange={(e) => setEnquiryPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
+                        required
+                        maxLength="10"
+                        className="booking-modal-text-input"
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date Picker & Quick Day Chips */}
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                    📅 Select Service Date (Konse din service chahiye?) *
+                  </label>
+                  <div className="booking-chips-grid">
+                    <button
+                      type="button"
+                      className={`booking-chip-btn ${selectedBookingDate === todayStr ? "active" : ""}`}
+                      onClick={() => setSelectedBookingDate(todayStr)}
+                    >
+                      Today ({todayStr})
+                    </button>
+                    <button
+                      type="button"
+                      className={`booking-chip-btn ${selectedBookingDate === tomorrowStr ? "active" : ""}`}
+                      onClick={() => setSelectedBookingDate(tomorrowStr)}
+                    >
+                      Tomorrow ({tomorrowStr})
+                    </button>
+                  </div>
+                  <input
+                    type="date"
+                    min={todayStr}
+                    value={selectedBookingDate}
+                    onChange={(e) => setSelectedBookingDate(e.target.value)}
+                    required
+                    className="booking-modal-text-input"
+                    style={{ width: "100%", marginTop: "6px" }}
+                  />
+                </div>
+
+                {/* Time Slot Picker (Starts strictly at 07:00 AM!) */}
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                    ⏰ Select Time Slot (Kitne baje chahiye?) *
+                  </label>
+                  <div className="booking-chips-grid">
+                    {[
+                      "07:00 AM - 09:00 AM",
+                      "09:00 AM - 11:00 AM",
+                      "11:00 AM - 01:00 PM",
+                      "02:00 PM - 04:00 PM",
+                      "04:00 PM - 06:00 PM",
+                      "06:00 PM - 08:00 PM",
+                      "08:00 PM - 10:00 PM"
+                    ].map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={`booking-chip-btn ${selectedTimeSlot === slot ? "active" : ""}`}
+                        onClick={() => setSelectedTimeSlot(slot)}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dynamic Problem / Issue Selection for this Service */}
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                    🔧 Problem / Work Needed (Kya problem hai?) *
+                  </label>
+                  <div className="booking-chips-grid" style={{ marginBottom: "6px" }}>
+                    {getServiceProblemChips(selectedService).map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className={`booking-chip-btn ${selectedProblem === tag ? "active" : ""}`}
+                        onClick={() => setSelectedProblem(tag)}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={`e.g. ${getServiceProblemChips(selectedService)[0] || "Describe your problem"}`}
+                    value={selectedProblem}
+                    onChange={(e) => setSelectedProblem(e.target.value)}
+                    required
+                    className="booking-modal-text-input"
+                    style={{ width: "100%" }}
+                  />
+                </div>
+
+                {/* Full Address & Area */}
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
+                    Full Address & Area *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Flat 304, Ahinsa Tower, MG Road, Indore"
+                    value={bookingAddress}
+                    onChange={(e) => setBookingAddress(e.target.value)}
+                    required
+                    className="booking-modal-text-input"
+                    style={{ width: "100%" }}
+                  />
+                </div>
+
+                {/* Action Buttons Row */}
+                <div style={{ display: "flex", gap: "10px" }}>
                   <button 
                     type="submit" 
-                    className="modal-confirm-booking-btn btn-coral" 
-                    disabled={isSubmittingBooking || enquiryPhone.length < 10 || !selectedTimeSlot}
+                    className="btn-coral" 
+                    style={{ flex: 1, padding: "13px 20px", fontWeight: 800, fontSize: "15px" }}
+                    disabled={isSubmittingBooking || enquiryPhone.length < 10}
                   >
-                    {isSubmittingBooking ? (
-                      <span>Dispatching Technician... ⏳</span>
-                    ) : (
-                      <span>Book Slot ({selectedTimeSlot ? selectedTimeSlot.split(" - ")[0] : "7:00 AM"}) ⚡</span>
-                    )}
+                    {isSubmittingBooking ? "Locking Appointment..." : `CONFIRM & BOOK SLOT (${selectedBookingDate || todayStr}) ⚡`}
                   </button>
+                  <a
+                    href="tel:+919876543210"
+                    className="btn-coral-outline"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", padding: "12px 16px", fontWeight: 700 }}
+                  >
+                    📞 Call Pro
+                  </a>
                 </div>
               </form>
             )}
+
           </div>
         </div>
       )}
