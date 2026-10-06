@@ -1,4 +1,4 @@
-import React, { useContext, useState, useMemo, useEffect, useCallback } from "react";
+import React, { useContext, useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { LocationContext } from "../context/LocationContext";
 import { DataContext } from "../context/DataContext";
@@ -14,42 +14,42 @@ export const getCategoryProblemChips = (category, item) => {
   const name = String(item?.name || item?.shopName || "").toLowerCase();
 
   if (cat.includes("plumb") || name.includes("plumb") || cat.includes("leak")) {
-    return ["Pipe Leakage", "Drainage Clog", "Tap Replacement", "Geyser Setup", "Flush Tank Fix", "Inspection"];
+    return ["Pipe Leakage", "Drainage Clog", "Tap Replacement", "Geyser Setup", "Flush Tank Fix", "Other / Custom Issue"];
   }
   if (cat.includes("electr") || name.includes("electr") || cat.includes("wiring") || cat.includes("repair")) {
-    return ["Fan Repair", "Switchboard / Socket", "Wiring Issue", "MCB Tripping", "Inverter Setup", "Complete Safety Audit"];
+    return ["Fan Repair", "Switchboard / Socket", "Wiring Issue", "MCB Tripping", "Inverter Setup", "Other / Custom Issue"];
   }
   if (cat.includes("ac") || cat.includes("appliance") || name.includes("ac") || name.includes("cool")) {
-    return ["Cooling Issue", "Gas Refill", "Water Leakage", "Filter Cleaning", "Jet Service", "AC Installation"];
+    return ["Cooling Issue", "Gas Refill", "Water Leakage", "Filter Cleaning", "Jet Service", "AC Installation", "Other / Custom Issue"];
   }
   if (cat.includes("clean") || name.includes("clean") || cat.includes("maid") || cat.includes("sanitiz")) {
-    return ["Deep Home Cleaning", "Bathroom Descaling", "Kitchen Chimney", "Sofa Shampoo Wash", "Balcony Clean", "Post-Paint Clean"];
+    return ["Deep Home Cleaning", "Bathroom Descaling", "Kitchen Chimney", "Sofa Shampoo Wash", "Balcony Clean", "Other / Custom Issue"];
   }
   if (cat.includes("paint") || name.includes("paint") || cat.includes("color")) {
-    return ["Full Wall Painting", "Waterproofing Seepage", "Putty & Crack Fill", "Texture Accent Wall", "Door Polish", "Exterior Coating"];
+    return ["Full Wall Painting", "Waterproofing Seepage", "Putty & Crack Fill", "Texture Accent Wall", "Door Polish", "Other / Custom Issue"];
   }
   if (cat.includes("salon") || cat.includes("beauty") || cat.includes("spa") || cat.includes("massage") || name.includes("spa") || name.includes("salon")) {
-    return ["Haircut & Styling", "Facial & Glow Cleanup", "Head & Body Massage", "Waxing & Threading", "Manicure & Pedicure", "Party Makeup"];
+    return ["Haircut & Styling", "Facial & Glow Cleanup", "Head & Body Massage", "Waxing & Threading", "Manicure & Pedicure", "Other / Custom Issue"];
   }
   if (cat.includes("carpent") || name.includes("carpent") || cat.includes("wood") || cat.includes("furniture") || cat.includes("lock")) {
-    return ["Furniture Repair", "Door & Lock Fitting", "Custom Wardrobe", "Hinges & Handles", "Bed Frame Assembly", "Wall Drilling"];
+    return ["Furniture Repair", "Door & Lock Fitting", "Custom Wardrobe", "Hinges & Handles", "Bed Frame Assembly", "Other / Custom Issue"];
   }
   if (cat.includes("school") || cat.includes("teach") || cat.includes("tutor") || cat.includes("educat") || name.includes("school") || name.includes("academy") || name.includes("father") || name.includes("joseph")) {
-    return ["Admission Enquiry", "Home Tuition Demo", "Maths & Science Tutor", "Exam Prep & Coaching", "Monthly Syllabus Guidance", "Parent Consultation"];
+    return ["Admission Enquiry", "Home Tuition Demo", "Maths & Science Tutor", "Exam Prep & Coaching", "Monthly Syllabus Guidance", "Other / Custom Issue"];
   }
   if (cat.includes("car") || cat.includes("driver") || cat.includes("transport") || cat.includes("rental")) {
-    return ["Outstation Taxi Booking", "Airport Pickup & Drop", "Hourly City Driver", "Self Drive Car", "Commercial Vehicle", "Urgent Ride"];
+    return ["Outstation Taxi Booking", "Airport Pickup & Drop", "Hourly City Driver", "Self Drive Car", "Commercial Vehicle", "Other / Custom Issue"];
   }
   if (cat.includes("pest") || name.includes("pest")) {
-    return ["Cockroach Control", "Termite Anti-Treatment", "Bed Bugs Eradication", "Mosquito Fogging", "Rodent Control", "Commercial Spray"];
+    return ["Cockroach Control", "Termite Anti-Treatment", "Bed Bugs Eradication", "Mosquito Fogging", "Rodent Control", "Other / Custom Issue"];
   }
   if (cat.includes("pack") || cat.includes("mover") || name.includes("pack")) {
-    return ["1/2 BHK Home Shifting", "Office Relocation", "Vehicle Transportation", "Packing & Unpacking", "Single Item Move", "Inter-City Move"];
+    return ["1/2 BHK Home Shifting", "Office Relocation", "Vehicle Transportation", "Packing & Unpacking", "Single Item Move", "Other / Custom Issue"];
   }
   if (cat.includes("doctor") || cat.includes("health") || cat.includes("clinic") || cat.includes("hospital")) {
-    return ["Home Doctor Visit", "Blood Sample Collection", "Nursing & Injection", "Physiotherapy Session", "Elderly Care", "Medical Consultation"];
+    return ["Home Doctor Visit", "Blood Sample Collection", "Nursing & Injection", "Physiotherapy Session", "Elderly Care", "Other / Custom Issue"];
   }
-  return ["Standard Service", "Emergency Repair", "Installation & Setup", "Annual Maintenance", "Inspection & Estimate", "Custom Request"];
+  return ["Standard Service", "Emergency Repair", "Installation & Setup", "Annual Maintenance", "Inspection & Estimate", "Other / Custom Issue"];
 };
 
 // Global cache for ItemDetailsPage lookup
@@ -147,6 +147,19 @@ function CategoryPage() {
   const [bookingDate, setBookingDate] = useState(todayStr);
   const [bookingTime, setBookingTime] = useState("07:00 AM - 09:00 AM");
   const [bookingProblem, setBookingProblem] = useState("");
+  const [customProblemText, setCustomProblemText] = useState("");
+  const customProblemInputRef = useRef(null);
+
+  const handleSelectProblemChip = (tag) => {
+    setBookingProblem(tag);
+    if (tag.toLowerCase().includes("other") || tag.toLowerCase().includes("custom")) {
+      setTimeout(() => {
+        if (customProblemInputRef.current) {
+          customProblemInputRef.current.focus();
+        }
+      }, 100);
+    }
+  };
 
   // Real-time Live Countdown, Stopwatch & Running Meter
   const [, setLiveCountdown] = useState("");
@@ -366,9 +379,10 @@ function CategoryPage() {
     setBookingTime("07:00 AM - 09:00 AM");
     const chips = getCategoryProblemChips(categoryTitle, item);
     setBookingProblem(chips[0] || "Inspection & Estimate");
-    setEnquiryPhone(currentUser?.phone || "");
-    setEnquiryName(currentUser?.name || "");
-    setEnquiryAddress(localStorage.getItem("helper_user_full_address") || "");
+    setCustomProblemText("");
+    setEnquiryPhone(currentUser?.phone || localStorage.getItem("helper_user_phone") || "");
+    setEnquiryName(currentUser?.name || localStorage.getItem("helper_user_name") || "");
+    setEnquiryAddress(localStorage.getItem("helper_user_full_address") || "Palasia Square, Indore, Madhya Pradesh");
   };
 
   const categoryIcon = matchedCategory?.icon || "⚡";
@@ -707,7 +721,7 @@ function CategoryPage() {
       scheduledDate: bookingDate,
       scheduledTime: bookingTime,
       scheduledTimestamp,
-      problemDescription: bookingProblem,
+      problemDescription: customProblemText.trim() || bookingProblem,
       address: enquiryAddress.trim() || enquiryItem.address || enquiryItem.location || "Indore Ahinsha Tower / Local Address",
       provider: enquiryItem.shopName ? `${enquiryItem.shopName} • ${enquiryItem.name}` : enquiryItem.name,
       assignedProvider: enquiryItem.name,
@@ -1508,7 +1522,7 @@ function CategoryPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleEnquirySubmit} style={{ marginTop: "14px" }}>
+              <form onSubmit={handleEnquirySubmit} className="cat-modal-pro-form" style={{ marginTop: "14px" }}>
                 <p className="cat-modal-desc">
                   Schedule direct doorstep service with <strong>{enquiryItem.name}</strong> ({enquiryItem.shopName || "Specialist"}).
                 </p>
@@ -1517,7 +1531,7 @@ function CategoryPage() {
                 <div className="pricing-transparency-card">
                   <div className="pricing-transparency-row">
                     <span>🏠 Doorstep Home Service Charge</span>
-                    <strong style={{ color: "#0F172A" }}>₹149 (Fixed)</strong>
+                    <strong style={{ color: "#FFFFFF" }}>₹149 (Fixed)</strong>
                   </div>
                   <div className="pricing-transparency-row">
                     <span>⏱️ Hourly Labor Rate</span>
@@ -1529,72 +1543,96 @@ function CategoryPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>Your Full Name *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Ajay Singh"
-                      value={enquiryName}
-                      onChange={(e) => setEnquiryName(e.target.value)}
-                      required
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
-                    />
+                {/* 1. Name & Mobile (2 Columns) */}
+                <div className="cat-form-two-col">
+                  <div className="cat-input-group">
+                    <label className="cat-field-label">
+                      <span>👤 Your Full Name</span>
+                      <span className="field-required">*</span>
+                    </label>
+                    <div className="cat-input-box-pro">
+                      <input
+                        type="text"
+                        placeholder="e.g. Ramesh Kumar"
+                        value={enquiryName}
+                        onChange={(e) => setEnquiryName(e.target.value)}
+                        required
+                        className="cat-native-input"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>Mobile Number *</label>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      <span style={{ padding: "9px 10px", background: "#F1F5F9", borderRadius: "10px", border: "1px solid #CBD5E1", fontWeight: 700, fontSize: "13px" }}>+91</span>
+                  <div className="cat-input-group">
+                    <div className="cat-field-label-row">
+                      <label className="cat-field-label">
+                        <span>📱 Mobile Number</span>
+                        <span className="field-required">*</span>
+                      </label>
+                      {enquiryPhone.length === 10 ? (
+                        <span className="cat-phone-valid-badge animate-scale-in">✓ Valid</span>
+                      ) : enquiryPhone.length > 0 ? (
+                        <span className="cat-phone-digits-badge">{10 - enquiryPhone.length} left</span>
+                      ) : null}
+                    </div>
+                    <div className={`cat-phone-box-pro ${enquiryPhone.length === 10 ? "is-valid" : ""}`}>
+                      <div className="cat-phone-prefix-pill">
+                        <span className="cat-flag">🇮🇳</span>
+                        <span>+91</span>
+                      </div>
                       <input
                         type="tel"
                         placeholder="98765 43210"
                         value={enquiryPhone}
                         onChange={(e) => setEnquiryPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
                         required
-                        style={{ flex: 1, padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
+                        maxLength="10"
+                        className="cat-native-input cat-phone-input"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Date Picker & Quick Day Chips */}
-                <div style={{ marginBottom: "12px" }}>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
-                    📅 Select Service Date (Konse din service chahiye?) *
+                {/* 2. Date Picker & Quick Day Chips */}
+                <div className="cat-input-group" style={{ marginBottom: "14px" }}>
+                  <label className="cat-field-label">
+                    <span>📅 Select Service Date (Konse din service chahiye?)</span>
+                    <span className="field-required">*</span>
                   </label>
-                  <div className="booking-chips-grid">
+                  <div className="cat-booking-chips-grid">
                     <button
                       type="button"
-                      className={`booking-chip-btn ${bookingDate === todayStr ? "active" : ""}`}
+                      className={`cat-booking-chip ${bookingDate === todayStr ? "active" : ""}`}
                       onClick={() => setBookingDate(todayStr)}
                     >
                       Today ({todayStr})
                     </button>
                     <button
                       type="button"
-                      className={`booking-chip-btn ${bookingDate === tomorrowStr ? "active" : ""}`}
+                      className={`cat-booking-chip ${bookingDate === tomorrowStr ? "active" : ""}`}
                       onClick={() => setBookingDate(tomorrowStr)}
                     >
                       Tomorrow ({tomorrowStr})
                     </button>
                   </div>
-                  <input
-                    type="date"
-                    min={todayStr}
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                    required
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px", marginTop: "6px" }}
-                  />
+                  <div className="cat-input-box-pro" style={{ marginTop: "6px" }}>
+                    <input
+                      type="date"
+                      min={todayStr}
+                      value={bookingDate}
+                      onChange={(e) => setBookingDate(e.target.value)}
+                      required
+                      className="cat-native-input cat-date-input"
+                    />
+                  </div>
                 </div>
 
-                {/* Time Slot Picker (Starts from 07:00 AM!) */}
-                <div style={{ marginBottom: "12px" }}>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
-                    ⏰ Select Time Slot (Kitne baje chahiye?) *
+                {/* 3. Time Slot Picker (Starts from 07:00 AM!) */}
+                <div className="cat-input-group" style={{ marginBottom: "14px" }}>
+                  <label className="cat-field-label">
+                    <span>⏰ Select Time Slot (Kitne baje chahiye?)</span>
+                    <span className="field-required">*</span>
                   </label>
-                  <div className="booking-chips-grid">
+                  <div className="cat-time-chips-grid">
                     {[
                       "07:00 AM - 09:00 AM",
                       "09:00 AM - 11:00 AM",
@@ -1607,68 +1645,119 @@ function CategoryPage() {
                       <button
                         key={slot}
                         type="button"
-                        className={`booking-chip-btn ${bookingTime === slot ? "active" : ""}`}
+                        className={`cat-time-slot-chip ${bookingTime === slot ? "active" : ""}`}
                         onClick={() => setBookingTime(slot)}
                       >
-                        {slot}
+                        <span className="cat-clock-icon">⏰</span>
+                        <span>{slot}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Issue Description (Dynamic by Category & Provider) */}
-                <div style={{ marginBottom: "12px" }}>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
-                    🔧 Problem / Work Needed (Kya problem hai?) *
+                {/* 4. Issue Description with "Other / Custom Issue" Option */}
+                <div className="cat-input-group" style={{ marginBottom: "14px" }}>
+                  <label className="cat-field-label">
+                    <span>🔧 Problem / Work Needed (Kya problem hai?)</span>
+                    <span className="field-required">*</span>
                   </label>
-                  <div className="booking-chips-grid" style={{ marginBottom: "6px" }}>
-                    {getCategoryProblemChips(categoryTitle, enquiryItem).map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        className={`booking-chip-btn ${bookingProblem === tag ? "active" : ""}`}
-                        onClick={() => setBookingProblem(tag)}
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                  <div className="cat-problem-chips-grid" style={{ marginBottom: "8px" }}>
+                    {getCategoryProblemChips(categoryTitle, enquiryItem).map((tag) => {
+                      const isSelected = bookingProblem === tag;
+                      const isOther = tag.toLowerCase().includes("other") || tag.toLowerCase().includes("custom");
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          className={`cat-prob-chip ${isSelected ? "active" : ""} ${isOther ? "is-other" : ""}`}
+                          onClick={() => handleSelectProblemChip(tag)}
+                        >
+                          <span>{tag}</span>
+                          {isSelected && <span className="cat-check">✓</span>}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <input
-                    type="text"
-                    placeholder={`e.g. ${getCategoryProblemChips(categoryTitle, enquiryItem)[0] || "Describe your problem"}`}
-                    value={bookingProblem}
-                    onChange={(e) => setBookingProblem(e.target.value)}
-                    required
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
-                  />
+
+                  {/* Highlighted text note input for Other / Custom Issue or details */}
+                  <div className={`cat-custom-note-wrap ${bookingProblem.toLowerCase().includes("other") ? "highlight-active" : ""}`}>
+                    {bookingProblem.toLowerCase().includes("other") && (
+                      <div className="cat-other-helper-badge animate-fade-in">
+                        <span>📝 Please describe your specific problem or requirement below:</span>
+                      </div>
+                    )}
+                    <div className="cat-input-box-pro">
+                      <input
+                        ref={customProblemInputRef}
+                        type="text"
+                        placeholder={
+                          bookingProblem.toLowerCase().includes("other")
+                            ? "Describe your specific problem or requirement here..."
+                            : `e.g. ${getCategoryProblemChips(categoryTitle, enquiryItem)[0] || "Describe your problem"}`
+                        }
+                        value={bookingProblem.toLowerCase().includes("other") ? customProblemText : bookingProblem}
+                        onChange={(e) => {
+                          if (bookingProblem.toLowerCase().includes("other")) {
+                            setCustomProblemText(e.target.value);
+                          } else {
+                            setBookingProblem(e.target.value);
+                          }
+                        }}
+                        required
+                        className="cat-native-input"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Service Address */}
-                <div style={{ marginBottom: "16px" }}>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>Full Address & Area *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Flat 304, Ahinsa Tower, MG Road, Indore"
-                    value={enquiryAddress}
-                    onChange={(e) => setEnquiryAddress(e.target.value)}
-                    required
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "13.5px" }}
-                  />
+                {/* 5. Service Address */}
+                <div className="cat-input-group" style={{ marginBottom: "18px" }}>
+                  <div className="cat-field-label-row">
+                    <label className="cat-field-label">
+                      <span>📍 Full Address & Area</span>
+                      <span className="field-required">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="cat-autofill-btn"
+                      onClick={() => {
+                        const saved = localStorage.getItem("helper_user_full_address") || "Palasia Square, Indore, Madhya Pradesh";
+                        setEnquiryAddress(saved);
+                      }}
+                      title="Use saved address"
+                    >
+                      ⚡ Use Saved Location
+                    </button>
+                  </div>
+                  <div className="cat-input-box-pro cat-address-box-pro">
+                    <span className="cat-addr-icon">📍</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. Flat 304, Ahinsa Tower, MG Road, Indore"
+                      value={enquiryAddress}
+                      onChange={(e) => setEnquiryAddress(e.target.value)}
+                      required
+                      className="cat-native-input"
+                    />
+                  </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "10px" }}>
+                {/* 6. Sticky Bottom Buttons Row */}
+                <div className="cat-modal-actions-row">
                   <button 
                     type="submit" 
-                    className="btn-coral" 
-                    style={{ flex: 1, padding: "13px 20px", fontWeight: 800, fontSize: "15px" }}
-                    disabled={isSubmittingEnquiry}
+                    className="cat-confirm-btn" 
+                    disabled={isSubmittingEnquiry || enquiryPhone.length < 10 || !enquiryAddress.trim() || !enquiryName.trim()}
                   >
-                    {isSubmittingEnquiry ? "Locking Appointment..." : `Confirm & Book Slot (${bookingDate}) ⚡`}
+                    {isSubmittingEnquiry ? (
+                      <span>Dispatching Technician... ⏳</span>
+                    ) : (
+                      <span>CONFIRM & BOOK SLOT ({bookingTime ? bookingTime.split(" - ")[0] : "07:00 AM"}) ⚡</span>
+                    )}
                   </button>
                   <a
                     href={`tel:${enquiryItem.phone || enquiryItem.contact || "+919876543210"}`}
-                    className="btn-coral-outline"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", padding: "12px 16px" }}
+                    className="cat-call-btn"
                   >
                     📞 Call Pro
                   </a>

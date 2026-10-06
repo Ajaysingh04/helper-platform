@@ -12,38 +12,38 @@ import { API_BASE } from "../apiConfig";
 
 // Service-Specific Dynamic Problem Options
 export const getServiceProblemChips = (service) => {
-  if (!service) return ["Standard Repair", "Inspection & Estimate", "Installation", "Maintenance"];
+  if (!service) return ["Standard Repair", "Inspection & Estimate", "Installation", "Other / Custom Issue"];
   const name = (service.name || "").toLowerCase();
   const tag = (service.tag || service.category || "").toLowerCase();
 
   if (name.includes("ac") || tag.includes("ac") || tag.includes("appliance")) {
-    return ["Cooling Issue", "Gas Refill", "Water Leakage", "Filter Cleaning", "Jet Service", "AC Installation"];
+    return ["Cooling Issue", "Gas Refill", "Water Leakage", "Filter Cleaning", "Jet Service", "AC Installation", "Other / Custom Issue"];
   }
   if ((name.includes("electric") || tag.includes("electric") || tag.includes("repair")) && !name.includes("plumb")) {
-    return ["Fan Repair", "Switchboard / Socket", "Wiring Issue", "MCB Tripping", "Inverter Setup", "Complete Safety Audit"];
+    return ["Fan Repair", "Switchboard / Socket", "Wiring Issue", "MCB Tripping", "Inverter Setup", "Complete Safety Audit", "Other / Custom Issue"];
   }
   if (name.includes("plumb") || tag.includes("plumb") || name.includes("leak")) {
-    return ["Pipe Leakage", "Drainage Clog", "Tap Replacement", "Geyser Setup", "Flush Tank Fix", "Inspection"];
+    return ["Pipe Leakage", "Drainage Clog", "Tap Replacement", "Geyser Setup", "Flush Tank Fix", "Other / Custom Issue"];
   }
   if (name.includes("clean") || tag.includes("clean") || tag.includes("sanitiz")) {
-    return ["Deep Home Cleaning", "Bathroom Descaling", "Kitchen Chimney", "Sofa Shampoo Wash", "Balcony Clean", "Post-Paint Clean"];
+    return ["Deep Home Cleaning", "Bathroom Descaling", "Kitchen Chimney", "Sofa Shampoo Wash", "Balcony Clean", "Post-Paint Clean", "Other / Custom Issue"];
   }
   if (name.includes("paint") || tag.includes("paint") || tag.includes("decor")) {
-    return ["Full Wall Painting", "Waterproofing Seepage", "Putty & Crack Fill", "Texture Accent Wall", "Door Polish", "Exterior Coating"];
+    return ["Full Wall Painting", "Waterproofing Seepage", "Putty & Crack Fill", "Texture Accent Wall", "Door Polish", "Exterior Coating", "Other / Custom Issue"];
   }
   if (name.includes("salon") || name.includes("beauty") || tag.includes("beauty") || tag.includes("salon")) {
-    return ["Haircut & Styling", "Facial & Glow Cleanup", "Head & Body Massage", "Waxing & Threading", "Manicure & Pedicure", "Party Makeup"];
+    return ["Haircut & Styling", "Facial & Glow Cleanup", "Head & Body Massage", "Waxing & Threading", "Manicure & Pedicure", "Party Makeup", "Other / Custom Issue"];
   }
   if (name.includes("massage") || name.includes("spa") || tag.includes("spa")) {
-    return ["Swedish Full Body", "Deep Tissue Therapy", "Aromatherapy Oil", "Foot Reflexology", "Head & Shoulder"];
+    return ["Swedish Full Body", "Deep Tissue Therapy", "Aromatherapy Oil", "Foot Reflexology", "Head & Shoulder", "Other / Custom Issue"];
   }
   if (name.includes("carpent") || name.includes("lock") || name.includes("wood")) {
-    return ["Furniture Repair", "Door & Lock Fitting", "Custom Wardrobe", "Hinges & Handles", "Bed Frame Assembly"];
+    return ["Furniture Repair", "Door & Lock Fitting", "Custom Wardrobe", "Hinges & Handles", "Bed Frame Assembly", "Other / Custom Issue"];
   }
   if (name.includes("teach") || name.includes("tutor") || name.includes("school")) {
-    return ["Admission Enquiry", "Home Tuition Demo", "Maths & Science Tutor", "Exam Prep & Coaching", "Parent Consultation"];
+    return ["Admission Enquiry", "Home Tuition Demo", "Maths & Science Tutor", "Exam Prep & Coaching", "Parent Consultation", "Other / Custom Issue"];
   }
-  return ["Quick Diagnostic", "Parts Replacement", "Standard Maintenance", "General Inspection", "Custom Requirement"];
+  return ["Quick Diagnostic", "Parts Replacement", "Standard Maintenance", "General Inspection", "Other / Custom Issue"];
 };
 
 // Dynamic Problem Symptoms based on Selected Service
