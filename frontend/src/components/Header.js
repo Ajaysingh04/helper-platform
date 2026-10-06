@@ -18,7 +18,7 @@ function Header() {
   const menuRef = useRef(null);
   const accountMenuRef = useRef(null);
 
-  // Global keyboard shortcut for search (Ctrl+K or Cmd+K)
+  // Global keyboard shortcut for search (Ctrl+K or Cmd+K) & custom open_search_modal event
   useEffect(() => {
     const handleGlobalSearchKey = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -26,8 +26,14 @@ function Header() {
         setSearchModalOpen((prev) => !prev);
       }
     };
+    const handleOpenModal = () => setSearchModalOpen(true);
+
     window.addEventListener("keydown", handleGlobalSearchKey);
-    return () => window.removeEventListener("keydown", handleGlobalSearchKey);
+    window.addEventListener("open_search_modal", handleOpenModal);
+    return () => {
+      window.removeEventListener("keydown", handleGlobalSearchKey);
+      window.removeEventListener("open_search_modal", handleOpenModal);
+    };
   }, []);
 
   // Vendor Session Detection and live synchronization

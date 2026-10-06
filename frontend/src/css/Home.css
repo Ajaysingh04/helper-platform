@@ -1245,108 +1245,9 @@ body.dark .hero-search-input {
     width: 16px;
   }
 
-  /* Search & Chips sit cleanly BELOW the banner - never covers any part of the image */
+  /* Mobile View: Hide bulky search bar and chips completely so hero banner is 100% clean and clear */
   .hero-centered-search-container {
-    position: relative !important;
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
-    margin: 12px auto 14px !important;
-    padding: 0 12px !important;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .hero-trust-tag-pill {
-    padding: 4px 10px;
-    margin-bottom: 0;
-  }
-
-  .hero-trust-text {
-    font-size: 10.5px;
-    letter-spacing: 0.2px;
-  }
-
-  .hero-search-centered {
-    padding: 5px 6px 5px 14px;
-    border-radius: 999px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-    border: 1.5px solid rgba(226, 232, 240, 0.85);
-  }
-
-  body.dark .hero-search-centered {
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
-  }
-
-  .hero-search-location-chip {
-    display: none;
-  }
-
-  .hero-search-divider {
-    display: none;
-  }
-
-  .hero-search-input {
-    font-size: 14px;
-    padding: 7px 6px;
-  }
-
-  .hero-search-btn {
-    padding: 8px 16px;
-    font-size: 12px;
-  }
-
-  .hero-search-btn-text-full {
-    display: none;
-  }
-
-  .hero-search-btn-text-short {
-    display: inline;
-  }
-
-  .hero-tags-centered {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .quick-tags-label {
-    display: none;
-  }
-
-  .quick-tags-scroll-wrap {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: 2px 0 6px;
-    mask-image: linear-gradient(90deg, black 0%, black 92%, transparent 100%);
-    -webkit-mask-image: linear-gradient(90deg, black 0%, black 92%, transparent 100%);
-  }
-
-  .quick-tags-scroll-wrap::-webkit-scrollbar {
-    display: none;
-  }
-
-  .quick-tags-list {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    gap: 7px;
-    padding-right: 24px;
-  }
-
-  .hero-tags-centered .quick-service-chip {
-    flex-shrink: 0;
-    white-space: nowrap;
-    font-size: 11.5px;
-    padding: 5px 12px;
-    background: #FFFFFF;
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  }
-
-  body.dark .hero-tags-centered .quick-service-chip {
-    background: rgba(15, 23, 42, 0.95);
-    border-color: rgba(255, 255, 255, 0.15);
+    display: none !important;
   }
 
   .home-3d-stack-sheet {
@@ -1395,45 +1296,6 @@ body.dark .hero-search-input {
   .hero-slide-img {
     object-fit: contain !important;
     object-position: center center !important;
-  }
-
-  .hero-centered-search-container {
-    margin: 10px auto 12px !important;
-    padding: 0 10px !important;
-    gap: 8px;
-  }
-
-  .hero-trust-tag-pill {
-    padding: 3px 9px;
-  }
-
-  .hero-trust-text {
-    font-size: 9.5px;
-    letter-spacing: 0.1px;
-  }
-
-  .hero-search-centered {
-    padding: 4px 5px 4px 12px;
-  }
-
-  .hero-search-icon {
-    font-size: 14px;
-    margin-right: 6px;
-  }
-
-  .hero-search-input {
-    font-size: 13.5px;
-    padding: 6px 4px;
-  }
-
-  .hero-search-btn {
-    padding: 8px 14px;
-    font-size: 11.5px;
-  }
-
-  .hero-tags-centered .quick-service-chip {
-    font-size: 11px;
-    padding: 4px 10px;
   }
 
   .home-3d-stack-sheet {
