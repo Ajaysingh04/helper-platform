@@ -4808,8 +4808,8 @@ body.dark .section-step-sub {
 }
 
 .problem-option-card {
-  padding: 10px 12px;
-  border-radius: 12px;
+  padding: 11px 13px;
+  border-radius: 14px;
   border: 1.5px solid #E2E8F0;
   background: #FFFFFF;
   display: flex;
@@ -4817,8 +4817,9 @@ body.dark .section-step-sub {
   gap: 10px;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  position: relative;
 }
 
 body.dark .problem-option-card {
@@ -4829,29 +4830,47 @@ body.dark .problem-option-card {
 
 .problem-option-card:hover {
   border-color: #FF7A59;
-  background: rgba(255, 77, 45, 0.03);
-  transform: translateY(-1px);
+  background: rgba(255, 77, 45, 0.04);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .problem-option-card.selected {
   border-color: #FF4D2D;
   background: rgba(255, 77, 45, 0.08);
-  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.16);
+  box-shadow: 0 4px 16px rgba(255, 77, 45, 0.18);
+  transform: translateY(-1px);
 }
 
 body.dark .problem-option-card.selected {
-  background: rgba(255, 77, 45, 0.18);
+  background: rgba(255, 77, 45, 0.2);
   border-color: #FF4D2D;
 }
 
+/* Other Option Special Accent */
+.problem-option-card.is-other-option {
+  border-style: dashed;
+}
+
+.problem-option-card.is-other-option.selected {
+  border-style: solid;
+  border-color: #FF4D2D;
+  background: rgba(255, 77, 45, 0.1);
+}
+
 .problem-icon {
-  font-size: 18px;
+  font-size: 20px;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.problem-option-card:hover .problem-icon {
+  transform: scale(1.12);
 }
 
 .problem-title {
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 700;
   color: #1E293B;
   flex: 1;
   line-height: 1.3;
@@ -4862,41 +4881,77 @@ body.dark .problem-title {
 }
 
 .problem-radio-dot {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: 1.5px solid #CBD5E1;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 850;
   color: #FFFFFF;
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: all 0.22s ease;
 }
 
 .problem-option-card.selected .problem-radio-dot {
   background: #FF4D2D;
   border-color: #FF4D2D;
+  animation: checkmarkPop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes checkmarkPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .problem-custom-note-wrap {
-  margin-top: 4px;
+  margin-top: 8px;
+  border-radius: 14px;
+  transition: all 0.25s ease;
+}
+
+.problem-custom-note-wrap.highlight-active {
+  padding: 10px;
+  background: rgba(255, 77, 45, 0.05);
+  border: 1.5px dashed rgba(255, 77, 45, 0.5);
+  animation: notePulseGlow 2s infinite alternate ease-in-out;
+}
+
+body.dark .problem-custom-note-wrap.highlight-active {
+  background: rgba(255, 77, 45, 0.12);
+  border-color: rgba(255, 77, 45, 0.6);
+}
+
+@keyframes notePulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(255, 77, 45, 0.1); }
+  100% { box-shadow: 0 0 0 6px rgba(255, 77, 45, 0.15); }
+}
+
+.other-helper-badge {
+  font-size: 12px;
+  font-weight: 750;
+  color: #FF4D2D;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .problem-note-input {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 11px 14px;
+  border-radius: 12px;
   border: 1.5px solid #E2E8F0;
   background: #F8FAFC;
-  font-size: 13px;
+  font-size: 13.5px;
   font-family: inherit;
   color: #0F172A;
   box-sizing: border-box;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: all 0.22s ease;
 }
 
 body.dark .problem-note-input {
@@ -4908,10 +4963,12 @@ body.dark .problem-note-input {
 .problem-note-input:focus {
   border-color: #FF4D2D;
   background: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.14);
 }
 
 body.dark .problem-note-input:focus {
   background: #0F172A;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.25);
 }
 
 /* Date Selection Row */
@@ -5093,56 +5150,265 @@ body.dark .slot-time-text {
   color: #FFFFFF;
 }
 
-/* Doorstep Address Field */
-.booking-address-box {
+/* Step 3 Form Fields (Name, Address & Phone) */
+.booking-field-group {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1.5px solid #E2E8F0;
-  background: #F8FAFC;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
-body.dark .booking-address-box {
+.booking-field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.booking-field-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 750;
+  color: #334155;
+}
+
+body.dark .booking-field-label {
+  color: #CBD5E1;
+}
+
+.field-required {
+  color: #EF4444;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.autofill-location-btn {
+  background: rgba(255, 77, 45, 0.09);
+  color: #FF4D2D;
+  border: 1px solid rgba(255, 77, 45, 0.3);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.autofill-location-btn:hover {
+  background: #FF4D2D;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+/* Modern Input Box Container */
+.booking-input-wrap-pro {
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+  border-radius: 14px;
+  transition: all 0.22s ease;
+}
+
+body.dark .booking-input-wrap-pro {
   background: #1E293B;
   border-color: #334155;
 }
 
-.booking-addr-icon {
-  font-size: 17px;
+.booking-input-wrap-pro:focus-within {
+  border-color: #FF4D2D;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.14);
+}
+
+body.dark .booking-input-wrap-pro:focus-within {
+  background: #0F172A;
+  border-color: #FF4D2D;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.25);
+}
+
+.booking-text-input-pro {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0F172A;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+body.dark .booking-text-input-pro {
+  color: #F8FAFC;
+}
+
+/* Doorstep Address Field */
+.booking-address-box-pro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 14px;
+  border-radius: 14px;
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+  transition: all 0.22s ease;
+}
+
+body.dark .booking-address-box-pro {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.booking-address-box-pro:focus-within {
+  border-color: #FF4D2D;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.14);
+}
+
+body.dark .booking-address-box-pro:focus-within {
+  background: #0F172A;
+  border-color: #FF4D2D;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.25);
+}
+
+.booking-addr-icon-pro {
+  font-size: 18px;
   flex-shrink: 0;
 }
 
-.booking-addr-input {
+.booking-addr-input-pro {
   border: none;
   background: transparent;
   outline: none;
   width: 100%;
+  padding: 10px 0;
   font-size: 13.5px;
   font-weight: 600;
   color: #0F172A;
   font-family: inherit;
 }
 
-body.dark .booking-addr-input {
+body.dark .booking-addr-input-pro {
   color: #F8FAFC;
 }
 
-/* Phone Field */
-.booking-phone-field {
+/* Redesigned Modern 10-Digit Mobile Phone Field */
+.booking-phone-input-wrap-pro {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px 4px 6px;
+  border-radius: 14px;
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+  transition: all 0.22s ease;
+}
+
+body.dark .booking-phone-input-wrap-pro {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.booking-phone-input-wrap-pro:focus-within {
+  border-color: #FF4D2D;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.14);
+}
+
+body.dark .booking-phone-input-wrap-pro:focus-within {
+  background: #0F172A;
+  border-color: #FF4D2D;
+  box-shadow: 0 0 0 4px rgba(255, 77, 45, 0.25);
+}
+
+.booking-phone-input-wrap-pro.is-valid {
+  border-color: #10B981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.phone-flag-prefix-pro {
+  display: flex;
+  align-items: center;
   gap: 6px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  background: #E2E8F0;
+  color: #0F172A;
+  font-size: 13.5px;
+  font-weight: 800;
+  flex-shrink: 0;
+  user-select: none;
 }
 
-.booking-phone-label {
-  font-size: 12px;
+body.dark .phone-flag-prefix-pro {
+  background: #334155;
+  color: #F8FAFC;
+}
+
+.phone-flag-emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.phone-prefix-code {
+  letter-spacing: 0.5px;
+}
+
+.booking-phone-input-pro {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  padding: 8px 0;
+  font-size: 16px;
+  font-weight: 750;
+  color: #0F172A;
+  letter-spacing: 1.2px;
+  font-family: inherit;
+}
+
+body.dark .booking-phone-input-pro {
+  color: #F8FAFC;
+}
+
+.booking-phone-input-pro::placeholder {
+  color: #94A3B8;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.phone-valid-badge {
+  background: #D1FAE5;
+  color: #059669;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  display: inline-flex;
+  align-items: center;
+  animation: checkmarkPop 0.25s ease;
+}
+
+body.dark .phone-valid-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+}
+
+.phone-digits-badge {
+  background: #F1F5F9;
+  color: #64748B;
+  font-size: 11px;
   font-weight: 700;
-  color: #475569;
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
-body.dark .booking-phone-label {
+body.dark .phone-digits-badge {
+  background: #334155;
   color: #94A3B8;
 }
 
@@ -5520,6 +5786,16 @@ body.dark .confirmed-problem-note {
     width: 100%;
     padding: 13px;
     font-size: 14px;
+  }
+
+  .booking-text-input-pro,
+  .booking-addr-input-pro,
+  .booking-phone-input-pro {
+    font-size: 16px !important;
+  }
+
+  .booking-phone-input-wrap-pro {
+    padding: 3px 10px 3px 5px;
   }
 }
 
