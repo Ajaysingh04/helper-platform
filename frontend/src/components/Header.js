@@ -242,12 +242,6 @@ function Header() {
             <Link to="/categories" className={`nav-link ${isActive("/categories")}`}>
               <span>CATEGORIES</span>
             </Link>
-            <Link to="/worker/dashboard" className={`nav-link ${isActive("/worker") || isActive("/worker/login") || isActive("/worker/dashboard")}`} title="Technician & Field Worker Dashboard">
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                <span>WORKER DASHBOARD</span>
-                <span style={{ fontSize: "10px", padding: "1px 6px", background: "rgba(16, 185, 129, 0.2)", color: "#10B981", borderRadius: "10px", fontWeight: 800 }}>PRO</span>
-              </span>
-            </Link>
             <Link to="/contact" className={`nav-link ${isActive("/contact")}`}>
               <span>CONTACT</span>
             </Link>
@@ -664,11 +658,6 @@ function Header() {
             <Link to="/categories" className={`mobile-nav-item ${isActive("/categories")}`} onClick={() => setMobileNavOpen(false)}>
               <span className="item-icon">📂</span>
               <span className="item-text">CATEGORIES</span>
-              <span className="item-arrow">→</span>
-            </Link>
-            <Link to="/worker/dashboard" className={`mobile-nav-item ${isActive("/worker") || isActive("/worker/login") || isActive("/worker/dashboard")}`} onClick={() => setMobileNavOpen(false)}>
-              <span className="item-icon">👷</span>
-              <span className="item-text" style={{ color: "#10B981", fontWeight: 700 }}>WORKER DASHBOARD (90% PAY)</span>
               <span className="item-arrow">→</span>
             </Link>
             <Link to="/contact" className={`mobile-nav-item ${isActive("/contact")}`} onClick={() => setMobileNavOpen(false)}>
