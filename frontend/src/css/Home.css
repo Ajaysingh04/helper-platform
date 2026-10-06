@@ -1182,15 +1182,16 @@ body.dark .hero-search-input {
    ========================================================================== */
 
 
-/* Tablet Screens (769px - 1024px) */
+/* Mobile & Tablet Screens (<= 1024px) - Completely hide hero search bar so banner is 100% clean */
 @media (max-width: 1024px) {
+  .hero-centered-search-container,
+  .hero-search-desktop-only,
+  .hero-search-wrapper,
   .hero-search-centered {
-    max-width: 660px;
-  }
-  .hero-centered-search-container {
-    padding: 0 16px;
-    bottom: 24px;
-    gap: 10px;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 }
 

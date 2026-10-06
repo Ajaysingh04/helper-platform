@@ -147,6 +147,18 @@ function Home() {
 
   const [heroIndex, setHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(() => {
+    return typeof window !== "undefined" ? window.innerWidth <= 1024 : false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileScreen(window.innerWidth <= 1024);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const touchStartXRef = useRef(0);
   const touchEndXRef = useRef(0);
 
@@ -587,70 +599,72 @@ function Home() {
             </div>
           )}
 
-          {/* Hero Search Bar & Popular Chips Container - Floating Overlay */}
-          <div className="hero-centered-search-container">
-            {/* Live Trust / Verification Micro-Badge */}
-            <div className="hero-trust-tag-pill">
-              <span className="hero-trust-pulse" />
-              <span className="hero-trust-text">
-                {safeHeroSlides[heroIndex]?.badge || "🛡️ 50,000+ POLICE-VERIFIED SPECIALISTS"}
-              </span>
-            </div>
-
-            <form 
-              className="hero-search-wrapper hero-search-centered" 
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (homeCatSearch.trim()) {
-                  const element = document.getElementById("popular-service-categories");
-                  if (element) element.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-            >
-              <div className="hero-search-location-chip">
-                <span className="location-pin">📍</span>
-                <span className="location-name">Indore</span>
+          {/* Hero Search Bar & Popular Chips Container - Floating Overlay (Desktop Only) */}
+          {!isMobileScreen && (
+            <div className="hero-centered-search-container hero-search-desktop-only">
+              {/* Live Trust / Verification Micro-Badge */}
+              <div className="hero-trust-tag-pill">
+                <span className="hero-trust-pulse" />
+                <span className="hero-trust-text">
+                  {safeHeroSlides[heroIndex]?.badge || "🛡️ 50,000+ POLICE-VERIFIED SPECIALISTS"}
+                </span>
               </div>
-              <span className="hero-search-divider" />
-              <span className="hero-search-icon">🔍</span>
-              <input
-                type="text"
-                className="hero-search-input"
-                placeholder="Search 'AC Repair', 'Plumber', 'Cleaning'..."
-                value={homeCatSearch}
-                onChange={(e) => setHomeCatSearch(e.target.value)}
-                aria-label="Search Services"
-              />
-              <button type="submit" className="hero-search-btn" aria-label="Search">
-                <span className="hero-search-btn-text-full">Find Service ➔</span>
-                <span className="hero-search-btn-text-short">Find ➔</span>
-              </button>
-            </form>
 
-            {/* Quick Popular Service Chips */}
-            <div className="hero-tags-centered">
-              <span className="quick-tags-label">Popular:</span>
-              <div className="quick-tags-scroll-wrap">
-                <div className="quick-tags-list">
-                  <Link to="/category/cleaning" className="quick-service-chip">
-                    <span>🧹 Deep Cleaning</span>
-                  </Link>
-                  <Link to="/category/ac-repair-services" className="quick-service-chip">
-                    <span>❄️ AC Repair</span>
-                  </Link>
-                  <Link to="/category/electricians" className="quick-service-chip">
-                    <span>⚡ Electrician</span>
-                  </Link>
-                  <Link to="/category/plumbers" className="quick-service-chip">
-                    <span>🚰 Plumber</span>
-                  </Link>
-                  <Link to="/category/beauty-parlours" className="quick-service-chip">
-                    <span>💇‍♀️ Salon & Spa</span>
-                  </Link>
+              <form 
+                className="hero-search-wrapper hero-search-centered" 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (homeCatSearch.trim()) {
+                    const element = document.getElementById("popular-service-categories");
+                    if (element) element.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+              >
+                <div className="hero-search-location-chip">
+                  <span className="location-pin">📍</span>
+                  <span className="location-name">Indore</span>
+                </div>
+                <span className="hero-search-divider" />
+                <span className="hero-search-icon">🔍</span>
+                <input
+                  type="text"
+                  className="hero-search-input"
+                  placeholder="Search 'AC Repair', 'Plumber', 'Cleaning'..."
+                  value={homeCatSearch}
+                  onChange={(e) => setHomeCatSearch(e.target.value)}
+                  aria-label="Search Services"
+                />
+                <button type="submit" className="hero-search-btn" aria-label="Search">
+                  <span className="hero-search-btn-text-full">Find Service ➔</span>
+                  <span className="hero-search-btn-text-short">Find ➔</span>
+                </button>
+              </form>
+
+              {/* Quick Popular Service Chips */}
+              <div className="hero-tags-centered">
+                <span className="quick-tags-label">Popular:</span>
+                <div className="quick-tags-scroll-wrap">
+                  <div className="quick-tags-list">
+                    <Link to="/category/cleaning" className="quick-service-chip">
+                      <span>🧹 Deep Cleaning</span>
+                    </Link>
+                    <Link to="/category/ac-repair-services" className="quick-service-chip">
+                      <span>❄️ AC Repair</span>
+                    </Link>
+                    <Link to="/category/electricians" className="quick-service-chip">
+                      <span>⚡ Electrician</span>
+                    </Link>
+                    <Link to="/category/plumbers" className="quick-service-chip">
+                      <span>🚰 Plumber</span>
+                    </Link>
+                    <Link to="/category/beauty-parlours" className="quick-service-chip">
+                      <span>💇‍♀️ Salon & Spa</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
