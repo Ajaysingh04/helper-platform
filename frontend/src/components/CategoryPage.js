@@ -511,14 +511,14 @@ function CategoryPage() {
   }, [matchedCategory, currentSlug]);
 
   const handleOpenEnquiry = (item) => {
-    // 1. Bina login ke booking nahi hogi
+    // 1. Login required for bookings
     if (!authContext?.isLoggedIn) {
-      alert("⚠️ Bina login ke booking nahi ho sakti! Kripya pehle apne Customer account me login karein.");
+      alert("⚠️ You must be logged in to book a service. Please sign in to your Customer account to continue.");
       navigate(`/login?role=user&redirect=/category/${name}`);
       return;
     }
 
-    // 2. Booking sirf customer (user) karta hai - Admin, Vendor, Worker restricted
+    // 2. Only customer (user) accounts can book services
     const isSpecialAccount = 
       authContext?.isAdmin || 
       authContext?.isVendor || 
@@ -529,7 +529,7 @@ function CategoryPage() {
       ["administrator", "admin", "partner", "vendor", "worker", "technician"].includes(currentUser?.role?.toLowerCase());
 
     if (isSpecialAccount) {
-      alert("⚠️ Booking sirf Customer accounts kar sakte hain! Admin, Vendor ya Worker accounts se customer booking allowed nahi hai.");
+      alert("⚠️ Only Customer accounts can place bookings. Administrator, Vendor, and Worker accounts are not permitted to book customer services.");
       return;
     }
 
@@ -1492,7 +1492,7 @@ function CategoryPage() {
 
                     <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px dashed #3B82F6", borderRadius: "12px", padding: "10px 14px", margin: "10px 0 16px", fontSize: "12.5px", color: "#1E3A8A", display: "flex", alignItems: "center", gap: "8px", textAlign: "left" }}>
                       <span style={{ fontSize: "18px" }}>💡</span>
-                      <span><strong>Don't worry!</strong> Agar aap ye screen abhi hata dete hain, toh ye OTP aapke <strong>Profile &gt; My Bookings</strong> section me hamesha rahega.</span>
+                      <span><strong>Don't worry!</strong> Even if you close this screen now, your booking OTP remains safely accessible in your <strong>Profile &gt; My Bookings</strong> section.</span>
                     </div>
                   </div>
                 )}

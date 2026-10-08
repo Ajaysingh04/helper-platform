@@ -54,14 +54,14 @@ function ItemDetailsPage() {
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();
-    // 1. Bina login ke booking nahi hogi
+    // 1. Login required for bookings
     if (!authContext?.isLoggedIn) {
-      alert("⚠️ Bina login ke booking nahi ho sakti! Kripya pehle apne Customer account me login karein.");
+      alert("⚠️ You must be logged in to book a service. Please sign in to your Customer account to continue.");
       navigate(`/login?role=user&redirect=/details/${id}`);
       return;
     }
 
-    // 2. Booking sirf user/customer karta hai - Admin, Vendor, Worker restricted
+    // 2. Only customer (user) accounts can book services
     const isSpecialAccount = 
       authContext?.isAdmin || 
       authContext?.isVendor || 
@@ -72,7 +72,7 @@ function ItemDetailsPage() {
       ["administrator", "admin", "partner", "vendor", "worker", "technician"].includes(currentUser?.role?.toLowerCase());
 
     if (isSpecialAccount) {
-      alert("⚠️ Booking sirf Customer accounts kar sakte hain! Admin, Vendor ya Worker accounts se customer booking allowed nahi hai.");
+      alert("⚠️ Only Customer accounts can place bookings. Administrator, Vendor, and Worker accounts are not permitted to book customer services.");
       return;
     }
 
@@ -376,7 +376,7 @@ function ItemDetailsPage() {
                   </div>
 
                   <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px dashed #3B82F6", borderRadius: "10px", padding: "8px 10px", margin: "8px 0 14px", fontSize: "11.5px", color: "#1E3A8A" }}>
-                    💡 <strong>Saved in Profile:</strong> Ye OTP aapke <strong>Profile &gt; My Bookings</strong> me hamesha rahega.
+                    💡 <strong>Saved in Profile:</strong> This OTP is permanently saved in your <strong>Profile &gt; My Bookings</strong> section.
                   </div>
 
                   <button
