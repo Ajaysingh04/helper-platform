@@ -461,6 +461,27 @@ function Header() {
                           </button>
                         )}
 
+                        {/* Customer: My Bookings & OTP */}
+                        {!isWorker && !isVendor && !isAdmin && (
+                          <button
+                            type="button"
+                            className="dropdown-menu-item"
+                            onClick={() => {
+                              setAccountMenuOpen(false);
+                              navigate("/my-bookings");
+                            }}
+                          >
+                            <div className="item-icon-box" style={{ background: "rgba(255, 77, 45, 0.12)", color: "#FF4D2D" }}>
+                              <span>📋</span>
+                            </div>
+                            <div className="item-text-box">
+                              <span className="item-title">My Bookings &amp; Service OTP</span>
+                              <span className="item-sub">View active bookings, technician OTP &amp; history</span>
+                            </div>
+                            <span className="item-arrow">›</span>
+                          </button>
+                        )}
+
                         {/* Become Worker / Technician option */}
                         {!isWorker && !isVendor && !isAdmin && (
                           <button
@@ -732,10 +753,26 @@ function Header() {
                     }}
                   >
                     <span>
-                      {isAdmin ? "🛡️ Admin Control Panel" : isVendor ? "🛠️ Vendor Profile & Shop" : isWorker ? "👷 Worker Profile & Trade" : "👤 Profile & Bookings"}
+                      {isAdmin ? "🛡️ Admin Control Panel" : isVendor ? "🛠️ Vendor Profile & Shop" : isWorker ? "👷 Worker Profile & Trade" : "👤 Profile & Settings"}
                     </span>
                     <span>›</span>
                   </button>
+
+                  {/* Customer: My Bookings & OTP */}
+                  {!isAdmin && !isVendor && !isWorker && (
+                    <button 
+                      type="button" 
+                      className="mobile-acc-btn"
+                      style={{ background: "rgba(255, 77, 45, 0.08)", border: "1px solid rgba(255, 77, 45, 0.25)", color: "#FF4D2D", fontWeight: 700 }}
+                      onClick={() => {
+                        setMobileNavOpen(false);
+                        navigate("/my-bookings");
+                      }}
+                    >
+                      <span>📋 My Bookings &amp; Service OTP</span>
+                      <span>›</span>
+                    </button>
+                  )}
 
                   {/* Worker Active Jobs */}
                   {isWorker && (

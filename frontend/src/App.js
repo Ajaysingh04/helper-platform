@@ -29,6 +29,7 @@ import VendorAuth from "./components/Vendor/VendorAuth";
 import VendorDashboard from "./components/Vendor/VendorDashboard";
 import WorkerAuth from "./components/Worker/WorkerAuth";
 import WorkerDashboard from "./components/Worker/WorkerDashboard";
+import MyBookings from "./components/MyBookings";
 
 function AppContent() {
   const location = useLocation();
@@ -82,6 +83,7 @@ function AppContent() {
         <Route path="/help" element={<Help />} />
         <Route path="/contact-support" element={<ContactSupport />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/category/:name" element={<CategoryPage />} />
         <Route path="/categories" element={<CategoriesPage />} />

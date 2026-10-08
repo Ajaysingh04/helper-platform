@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../css/Home.css";
 import LoginModal from "./LoginModal";
 import { AuthContext } from "../context/AuthContext";
@@ -199,6 +199,7 @@ function Home() {
   const authContext = useContext(AuthContext);
   const currentUser = authContext?.currentUser;
   const addBooking = dataContext?.addBooking;
+  const navigate = useNavigate();
 
   const todayStr = new Date().toISOString().split("T")[0];
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
@@ -440,6 +441,28 @@ function Home() {
   const displayedHomeCategories = filteredHomeCategories.slice(0, 16);
 
   const handleEnquire = (service, provider = null) => {
+    // 1. Bina login ke booking nahi hogi
+    if (!authContext?.isLoggedIn) {
+      alert("⚠️ Bina login ke booking nahi ho sakti! Kripya pehle apne Customer account me login karein.");
+      navigate("/login?role=user");
+      return;
+    }
+
+    // 2. Booking sirf user/customer karta hai - Admin, Vendor, Worker restricted
+    const isSpecialAccount = 
+      authContext?.isAdmin || 
+      authContext?.isVendor || 
+      authContext?.isWorker || 
+      localStorage.getItem("helper_admin_auth") === "true" ||
+      Boolean(localStorage.getItem("helper_vendor")) ||
+      Boolean(localStorage.getItem("helper_worker")) ||
+      ["administrator", "admin", "partner", "vendor", "worker", "technician"].includes(currentUser?.role?.toLowerCase());
+
+    if (isSpecialAccount) {
+      alert("⚠️ Booking sirf Customer accounts kar sakte hain! Admin, Vendor ya Worker accounts se customer booking allowed nahi hai.");
+      return;
+    }
+
     setSelectedService(service);
     setSelectedProvider(provider);
     setEnquirySuccess(false);
@@ -550,6 +573,11 @@ function Home() {
           });
         }
 
+        try {
+          const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+          localStorage.setItem("helper_user_bookings", JSON.stringify([fullBooking, ...existing]));
+        } catch (e) {}
+
         setEnquirySuccess(true);
         setActiveLiveBooking(fullBooking);
       } else {
@@ -564,6 +592,8 @@ function Home() {
         serviceName: selectedService.name,
         totalAmount: numericPrice,
         startOtp: "3459",
+        slotOtp: "3459",
+        doorOtp: "3459",
         bookingDate: selectedBookingDate,
         timeSlot: selectedTimeSlot,
         problem: selectedProblem,
@@ -593,6 +623,10 @@ function Home() {
           bookingDate: selectedBookingDate
         });
       }
+      try {
+        const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+        localStorage.setItem("helper_user_bookings", JSON.stringify([fallbackBooking, ...existing]));
+      } catch (e) {}
       setEnquirySuccess(true);
       setActiveLiveBooking(fallbackBooking);
     } finally {
@@ -1520,20 +1554,48 @@ function Home() {
                     Customer Note: <em>"{customProblemNote}"</em>
                   </p>
                 )}
-                <div style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "14px", padding: "14px", margin: "16px 0", color: "#059669", fontWeight: 700, fontSize: "14px" }}>
-                  ⚡ Technician Dispatched • Start OTP: {activeLiveBooking?.startOtp || "3459"}
+                <div style={{ background: "linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 120, 94, 0.08) 100%)", border: "2px solid #FF4D2D", borderRadius: "16px", padding: "18px 12px", margin: "14px 0" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 800, color: "#FF4D2D", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    🔑 Your Service Start OTP
+                  </div>
+                  <div style={{ fontSize: "38px", fontWeight: 900, letterSpacing: "6px", color: "#0F172A", margin: "6px 0" }}>
+                    {activeLiveBooking?.startOtp || activeLiveBooking?.slotOtp || "3459"}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#64748B", maxWidth: "340px", margin: "0 auto" }}>
+                    Share this 4-digit code with the technician upon doorstep arrival to begin service.
+                  </div>
                 </div>
-                <button 
-                  type="button" 
-                  className="btn-coral" 
-                  style={{ width: "100%", padding: "14px", fontWeight: 800, fontSize: "15px", marginTop: "10px", borderRadius: "12px" }}
-                  onClick={() => {
-                    setSelectedService(null);
-                    setEnquirySuccess(false);
-                  }}
-                >
-                  Done & Back to Home ⚡
-                </button>
+
+                <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px dashed #3B82F6", borderRadius: "12px", padding: "10px 14px", margin: "10px 0 16px", fontSize: "12.5px", color: "#1E3A8A", display: "flex", alignItems: "center", gap: "8px", textAlign: "left" }}>
+                  <span style={{ fontSize: "18px" }}>💡</span>
+                  <span><strong>Don't worry!</strong> Agar aap ye screen abhi hata ya band bhi kar dete hain, toh ye OTP aapke <strong>Profile &gt; My Bookings</strong> section me hamesha save rahega.</span>
+                </div>
+
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <button 
+                    type="button" 
+                    className="btn-coral" 
+                    style={{ flex: 1, padding: "14px", fontWeight: 800, fontSize: "14.5px", borderRadius: "12px" }}
+                    onClick={() => {
+                      setSelectedService(null);
+                      setEnquirySuccess(false);
+                      navigate("/my-bookings");
+                    }}
+                  >
+                    📋 Go to My Bookings &amp; OTP
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn-coral-outline" 
+                    style={{ flex: 1, padding: "14px", fontWeight: 800, fontSize: "14.5px", borderRadius: "12px" }}
+                    onClick={() => {
+                      setSelectedService(null);
+                      setEnquirySuccess(false);
+                    }}
+                  >
+                    Done &amp; Close ✕
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleEnquirySubmit} className="advanced-booking-form">

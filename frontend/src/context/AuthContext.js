@@ -128,8 +128,24 @@ export const AuthProvider = ({ children }) => {
     window.dispatchEvent(new Event("user_profile_updated"));
   };
 
+  const isAdmin = Boolean(
+    localStorage.getItem("helper_admin_auth") === "true" ||
+    (currentUser?.role && ["admin", "administrator", "superadmin"].includes(String(currentUser.role).toLowerCase()))
+  );
+  const isVendor = !isAdmin && Boolean(
+    localStorage.getItem("helper_vendor") ||
+    localStorage.getItem("helper_vendor_token") ||
+    (currentUser?.role && ["partner", "vendor", "serviceman", "provider"].includes(String(currentUser.role).toLowerCase()))
+  );
+  const isWorker = !isAdmin && !isVendor && Boolean(
+    localStorage.getItem("helper_worker") ||
+    localStorage.getItem("helper_worker_token") ||
+    (currentUser?.role && ["worker", "technician"].includes(String(currentUser.role).toLowerCase()))
+  );
+  const isCustomer = Boolean(isLoggedIn && !isAdmin && !isVendor && !isWorker);
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn, currentUser, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ isLoggedIn, currentUser, isCustomer, isAdmin, isVendor, isWorker, login, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

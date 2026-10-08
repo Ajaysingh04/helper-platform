@@ -511,6 +511,28 @@ function CategoryPage() {
   }, [matchedCategory, currentSlug]);
 
   const handleOpenEnquiry = (item) => {
+    // 1. Bina login ke booking nahi hogi
+    if (!authContext?.isLoggedIn) {
+      alert("⚠️ Bina login ke booking nahi ho sakti! Kripya pehle apne Customer account me login karein.");
+      navigate(`/login?role=user&redirect=/category/${name}`);
+      return;
+    }
+
+    // 2. Booking sirf customer (user) karta hai - Admin, Vendor, Worker restricted
+    const isSpecialAccount = 
+      authContext?.isAdmin || 
+      authContext?.isVendor || 
+      authContext?.isWorker || 
+      localStorage.getItem("helper_admin_auth") === "true" ||
+      Boolean(localStorage.getItem("helper_vendor")) ||
+      Boolean(localStorage.getItem("helper_worker")) ||
+      ["administrator", "admin", "partner", "vendor", "worker", "technician"].includes(currentUser?.role?.toLowerCase());
+
+    if (isSpecialAccount) {
+      alert("⚠️ Booking sirf Customer accounts kar sakte hain! Admin, Vendor ya Worker accounts se customer booking allowed nahi hai.");
+      return;
+    }
+
     setEnquiryItem(item);
     setEnquirySent(false);
     setConfirmedBookingInfo(null);
@@ -521,8 +543,8 @@ function CategoryPage() {
     const problems = getCategoryProblems(categoryTitle, item);
     setBookingProblem(problems[0]?.title || "Tap / Faucet Continuously Dripping");
     setCustomProblemText("");
-    setEnquiryPhone(currentUser?.phone || localStorage.getItem("helper_user_phone") || "98765 43210");
-    setEnquiryName(currentUser?.name || localStorage.getItem("helper_user_name") || "Ramesh Kumar");
+    setEnquiryPhone(currentUser?.phone || localStorage.getItem("helper_user_phone") || "");
+    setEnquiryName(currentUser?.name || localStorage.getItem("helper_user_name") || "");
     setEnquiryAddress(localStorage.getItem("helper_user_full_address") || "Palasia Square, Indore, Madhya Pradesh");
   };
 
@@ -880,10 +902,18 @@ function CategoryPage() {
       if (dataContext?.addBooking) {
         await dataContext.addBooking(newBookingData);
       }
+      try {
+        const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+        localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
+      } catch (e) {}
       setConfirmedBookingInfo(newBookingData);
       setEnquirySent(true);
       showToast(`🎉 Scheduled for ${bookingDate} at ${bookingTime}! Plumber will call to confirm. 📞`);
     } catch (err) {
+      try {
+        const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+        localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
+      } catch (e) {}
       showToast(`Booking registered: ${err.message}`);
       setConfirmedBookingInfo(newBookingData);
       setEnquirySent(true);
@@ -1459,6 +1489,11 @@ function CategoryPage() {
                         Tell this OTP to <strong>{enquiryItem.name}</strong> over the phone call so your appointment date and time are officially locked!
                       </div>
                     </div>
+
+                    <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px dashed #3B82F6", borderRadius: "12px", padding: "10px 14px", margin: "10px 0 16px", fontSize: "12.5px", color: "#1E3A8A", display: "flex", alignItems: "center", gap: "8px", textAlign: "left" }}>
+                      <span style={{ fontSize: "18px" }}>💡</span>
+                      <span><strong>Don't worry!</strong> Agar aap ye screen abhi hata dete hain, toh ye OTP aapke <strong>Profile &gt; My Bookings</strong> section me hamesha rahega.</span>
+                    </div>
                   </div>
                 )}
 
@@ -1641,18 +1676,33 @@ function CategoryPage() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  className="btn-coral"
-                  style={{ width: "100%", padding: "12px", fontWeight: 700 }}
-                  onClick={() => {
-                    setEnquirySent(false);
-                    setEnquiryItem(null);
-                    setConfirmedBookingInfo(null);
-                  }}
-                >
-                  Done & Back to Directory ⚡
-                </button>
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <button
+                    type="button"
+                    className="btn-coral"
+                    style={{ flex: 1, padding: "12px", fontWeight: 700 }}
+                    onClick={() => {
+                      setEnquirySent(false);
+                      setEnquiryItem(null);
+                      setConfirmedBookingInfo(null);
+                      navigate("/my-bookings");
+                    }}
+                  >
+                    📋 Go to My Bookings &amp; OTP
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-coral-outline"
+                    style={{ flex: 1, padding: "12px", fontWeight: 700 }}
+                    onClick={() => {
+                      setEnquirySent(false);
+                      setEnquiryItem(null);
+                      setConfirmedBookingInfo(null);
+                    }}
+                  >
+                    Done &amp; Close ✕
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleEnquirySubmit} className="advanced-booking-form">

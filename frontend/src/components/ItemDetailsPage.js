@@ -1,17 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { realData, categoryItemsRegistry } from "./CategoryPage";
 import { getServicemanImage } from "../data/categoryImages";
+import { AuthContext } from "../context/AuthContext";
+import { DataContext } from "../context/DataContext";
 import "../css/ItemDetailsPage.css";
 
 function ItemDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const authContext = useContext(AuthContext);
+  const dataContext = useContext(DataContext);
+  const currentUser = authContext?.currentUser;
+
   const [item, setItem] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [nameInput, setNameInput] = useState("");
-  const [phoneInput, setPhoneInput] = useState("");
+  const [createdBooking, setCreatedBooking] = useState(null);
+  const [nameInput, setNameInput] = useState(currentUser?.name || "");
+  const [phoneInput, setPhoneInput] = useState(currentUser?.phone || "");
   const [notesInput, setNotesInput] = useState("");
   const [reviewsList, setReviewsList] = useState([
     { author: "Vikram Sharma", rating: 5, date: "2 days ago", comment: "Outstanding service! Arrived exactly on time and fixed our issue within 30 minutes. Extremely professional." },
@@ -47,14 +54,63 @@ function ItemDetailsPage() {
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();
+    // 1. Bina login ke booking nahi hogi
+    if (!authContext?.isLoggedIn) {
+      alert("⚠️ Bina login ke booking nahi ho sakti! Kripya pehle apne Customer account me login karein.");
+      navigate(`/login?role=user&redirect=/details/${id}`);
+      return;
+    }
+
+    // 2. Booking sirf user/customer karta hai - Admin, Vendor, Worker restricted
+    const isSpecialAccount = 
+      authContext?.isAdmin || 
+      authContext?.isVendor || 
+      authContext?.isWorker || 
+      localStorage.getItem("helper_admin_auth") === "true" ||
+      Boolean(localStorage.getItem("helper_vendor")) ||
+      Boolean(localStorage.getItem("helper_worker")) ||
+      ["administrator", "admin", "partner", "vendor", "worker", "technician"].includes(currentUser?.role?.toLowerCase());
+
+    if (isSpecialAccount) {
+      alert("⚠️ Booking sirf Customer accounts kar sakte hain! Admin, Vendor ya Worker accounts se customer booking allowed nahi hai.");
+      return;
+    }
+
     if (phoneInput.length >= 10) {
+      const bookingCode = `HLP-${Math.floor(10000 + Math.random() * 90000)}`;
+      const slotOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      const newB = {
+        id: bookingCode,
+        bookingCode,
+        bookingId: bookingCode,
+        customerName: nameInput.trim() || currentUser?.name || "Customer",
+        name: nameInput.trim() || currentUser?.name || "Customer",
+        phone: phoneInput.startsWith("+91") ? phoneInput : `+91 ${phoneInput}`,
+        customerPhone: phoneInput.startsWith("+91") ? phoneInput : `+91 ${phoneInput}`,
+        service: item.shopName || item.name,
+        serviceName: item.shopName || item.name,
+        price: item.price || "₹349",
+        totalAmount: 349,
+        status: "assigned",
+        assignedProvider: item.name,
+        provider: item.name,
+        slotOtp,
+        startOtp: slotOtp,
+        doorOtp: slotOtp,
+        notes: notesInput,
+        date: "Just now"
+      };
+
+      if (dataContext?.addBooking) {
+        dataContext.addBooking(newB);
+      }
+      try {
+        const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+        localStorage.setItem("helper_user_bookings", JSON.stringify([newB, ...existing]));
+      } catch (err) {}
+
+      setCreatedBooking(newB);
       setBookingSuccess(true);
-      setTimeout(() => {
-        setBookingSuccess(false);
-        setNameInput("");
-        setPhoneInput("");
-        setNotesInput("");
-      }, 3500);
     } else {
       alert("Please enter a valid mobile number");
     }
@@ -300,10 +356,37 @@ function ItemDetailsPage() {
               </div>
 
               {bookingSuccess ? (
-                <div className="booking-success-alert animate-fade-in">
+                <div className="booking-success-alert animate-fade-in" style={{ textAlign: "center", padding: "20px 14px" }}>
                   <span className="success-icon-large">✅</span>
-                  <h3>Booking Confirmed!</h3>
-                  <p>Our expert from <strong>{item.name}</strong> will reach out on your phone shortly.</p>
+                  <h3 style={{ margin: "6px 0 4px", fontSize: "18px", color: "#10B981" }}>Booking Confirmed!</h3>
+                  <p style={{ fontSize: "13px", color: "#64748B", margin: "0 0 12px" }}>
+                    Our expert from <strong>{item.name}</strong> will reach out shortly.
+                  </p>
+
+                  <div style={{ background: "rgba(255, 77, 45, 0.08)", border: "2px solid #FF4D2D", borderRadius: "14px", padding: "14px 10px", margin: "10px 0" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#FF4D2D", textTransform: "uppercase" }}>
+                      🔑 Service Start OTP
+                    </div>
+                    <div style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "5px", color: "#0F172A", margin: "4px 0" }}>
+                      {createdBooking?.slotOtp || "3459"}
+                    </div>
+                    <div style={{ fontSize: "11.5px", color: "#64748B" }}>
+                      Share this OTP with technician at your doorstep
+                    </div>
+                  </div>
+
+                  <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px dashed #3B82F6", borderRadius: "10px", padding: "8px 10px", margin: "8px 0 14px", fontSize: "11.5px", color: "#1E3A8A" }}>
+                    💡 <strong>Saved in Profile:</strong> Ye OTP aapke <strong>Profile &gt; My Bookings</strong> me hamesha rahega.
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-primary-glow"
+                    style={{ width: "100%", padding: "12px", fontSize: "14px", fontWeight: 700 }}
+                    onClick={() => navigate("/my-bookings")}
+                  >
+                    📋 Go to My Bookings &amp; OTP
+                  </button>
                 </div>
               ) : (
                 <form onSubmit={handleBookingSubmit} className="quick-booking-form">

@@ -136,6 +136,17 @@ function Profile({ isOpen, onClose, isPage }) {
       {/* Settings navigation */}
       <div className="profile-quick-nav">
         <h4>Account Quick Actions</h4>
+        <button 
+          className="nav-menu-item" 
+          onClick={() => goToPage("/my-bookings")}
+          style={{ 
+            background: "linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 120, 94, 0.06) 100%)",
+            border: "1px solid rgba(255, 77, 45, 0.25)"
+          }}
+        >
+          <span style={{ fontWeight: 700, color: "var(--primary)" }}>📋 My Bookings &amp; Service OTPs</span>
+          <span style={{ fontSize: "11px", fontWeight: 800, background: "#FF4D2D", color: "#FFF", padding: "2px 8px", borderRadius: "10px" }}>OTP Live ›</span>
+        </button>
         <button className="nav-menu-item" onClick={() => goToPage("/edit-profile")}>
           <span>✏️ Full Edit Profile Page</span>
           <span>›</span>
@@ -296,6 +307,21 @@ function Profile({ isOpen, onClose, isPage }) {
                 <h3>Account Shortcuts & Security</h3>
               </div>
               <div className="page-shortcuts-list">
+                <button 
+                  className="shortcut-card-btn" 
+                  onClick={() => navigate("/my-bookings")}
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 120, 94, 0.06) 100%)",
+                    border: "1.5px solid rgba(255, 77, 45, 0.3)"
+                  }}
+                >
+                  <div className="shortcut-icon" style={{ background: "rgba(255, 77, 45, 0.15)", color: "#FF4D2D" }}>📋</div>
+                  <div>
+                    <h4 style={{ color: "#FF4D2D", fontWeight: 800 }}>My Bookings &amp; Service OTPs</h4>
+                    <p>Track live technicians, view 4-digit door OTP &amp; bookings</p>
+                  </div>
+                  <span style={{ fontSize: "11px", fontWeight: 800, background: "#FF4D2D", color: "#FFF", padding: "3px 8px", borderRadius: "10px" }}>View OTP ›</span>
+                </button>
                 <button className="shortcut-card-btn" onClick={() => navigate("/edit-profile")}>
                   <div className="shortcut-icon">✏️</div>
                   <div>
