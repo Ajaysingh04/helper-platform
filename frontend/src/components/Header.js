@@ -223,7 +223,7 @@ function Header() {
 
   return (
     <>
-      <header className={`header-floating-wrapper ${isHome ? "home-header" : ""} ${scrolled ? "scrolled" : ""}`}>
+      <header className={`header-floating-wrapper ${isDark ? "dark" : ""} ${isHome ? "home-header" : ""} ${scrolled ? "scrolled" : ""}`}>
         <div className="header-pill-bar nexora-header-bar">
           
           {/* Desktop Navigation Links */}
