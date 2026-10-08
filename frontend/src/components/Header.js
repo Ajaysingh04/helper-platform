@@ -482,27 +482,6 @@ function Header() {
                           </button>
                         )}
 
-                        {/* Become Worker / Technician option */}
-                        {!isWorker && !isVendor && !isAdmin && (
-                          <button
-                            type="button"
-                            className="dropdown-menu-item"
-                            onClick={() => {
-                              setAccountMenuOpen(false);
-                              navigate("/worker/login");
-                            }}
-                          >
-                            <div className="item-icon-box" style={{ background: "rgba(99, 102, 241, 0.12)", color: "#6366F1" }}>
-                              <span>👷</span>
-                            </div>
-                            <div className="item-text-box">
-                              <span className="item-title">Worker & Technician Login</span>
-                              <span className="item-sub">Work with top vendors & earn 90% per booking</span>
-                            </div>
-                            <span className="item-arrow">›</span>
-                          </button>
-                        )}
-
                         {/* Option 2: Help */}
                         <button
                           type="button"
