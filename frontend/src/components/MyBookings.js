@@ -7,7 +7,7 @@ import "../css/MyBookings.css";
 
 function MyBookings() {
   const navigate = useNavigate();
-  const { isLoggedIn, isCustomer, isAdmin, isVendor, isWorker, currentUser } = useContext(AuthContext);
+  const { isLoggedIn, isAdmin, isVendor, isWorker, currentUser } = useContext(AuthContext);
   const dataContext = useContext(DataContext);
 
   const [activeTab, setActiveTab] = useState("all"); // "all" | "active" | "completed"
@@ -39,9 +39,11 @@ function MyBookings() {
     };
     window.addEventListener("user_bookings_updated", handleUpdate);
     window.addEventListener("new_booking_created", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
     return () => {
       window.removeEventListener("user_bookings_updated", handleUpdate);
       window.removeEventListener("new_booking_created", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
     };
   }, []);
 
@@ -60,12 +62,16 @@ function MyBookings() {
       return false;
     });
 
-    // Merge without duplicates (by bookingId or id)
     const map = new Map();
-    [...localCustomerBookings, ...filteredContextBookings].forEach((item) => {
-      const key = item.id || item.bookingId || item.bookingCode;
-      if (key && !map.has(key)) {
-        map.set(key, item);
+    localCustomerBookings.forEach((b) => {
+      const key = b.bookingId || b.id || b._id || b.bookingCode;
+      if (key) map.set(String(key), b);
+    });
+
+    filteredContextBookings.forEach((b) => {
+      const key = b.bookingId || b.id || b._id || b.bookingCode;
+      if (key && !map.has(String(key))) {
+        map.set(String(key), b);
       }
     });
 
@@ -90,7 +96,7 @@ function MyBookings() {
         const q = searchTerm.toLowerCase();
         const service = (b.serviceName || b.service || "").toLowerCase();
         const code = (b.bookingId || b.id || b.bookingCode || "").toLowerCase();
-        const provider = (b.assignedProvider || b.provider || "").toLowerCase();
+        const provider = (b.assignedProviderName || b.assignedProvider?.name || b.provider || "").toLowerCase();
         if (!service.includes(q) && !code.includes(q) && !provider.includes(q)) return false;
       }
       return true;
@@ -109,7 +115,7 @@ function MyBookings() {
 
   // Cancel booking handler
   const handleCancelBooking = (bookingId) => {
-    if (window.confirm("Kya aap sach me ye booking cancel karna chahte hain?")) {
+    if (window.confirm("Are you sure you want to cancel this booking?")) {
       try {
         const updated = localCustomerBookings.map((b) => {
           if ((b.id || b.bookingId) === bookingId) {
@@ -138,7 +144,7 @@ function MyBookings() {
             <div className="not-logged-icon">🔒</div>
             <h2>Sign In to View Your Bookings &amp; Service OTPs</h2>
             <p>
-              Aapki active bookings aur technician start OTPs dekhne ke liye kripya apne registered customer account se log in karein.
+              Please log in to your registered customer account to track your scheduled services and access your 4-digit Doorstep Start OTP.
             </p>
             <div className="not-logged-actions">
               <button 
@@ -146,10 +152,10 @@ function MyBookings() {
                 className="btn-login-redirect"
                 onClick={() => navigate("/login?role=user")}
               >
-                Customer Sign In / Register →
+                Sign In to Customer Account →
               </button>
               <Link to="/" className="btn-browse-services">
-                Browse Services First
+                Browse Services
               </Link>
             </div>
           </div>
@@ -167,7 +173,7 @@ function MyBookings() {
             <div className="not-logged-icon">{isAdmin ? "🛡️" : isVendor ? "🛠️" : "👷"}</div>
             <h2>{isAdmin ? "Admin Account Detected" : isVendor ? "Vendor Account Detected" : "Worker Account Detected"}</h2>
             <p>
-              Ye page customer service bookings aur OTP tracking ke liye hai. Aapka current account <strong>{currentUser?.role || "Staff"}</strong> hai.
+              This console is dedicated to customer service orders and doorstep OTPs. Your current role is <strong>{currentUser?.role || "Staff Member"}</strong>.
             </p>
             <div className="not-logged-actions">
               {isAdmin && (
@@ -200,7 +206,7 @@ function MyBookings() {
     <div className="my-bookings-page-wrapper">
       <div className="my-bookings-container animate-fade-in">
 
-        {/* Toast Notification */}
+        {/* Floating Toast Notification */}
         {toastMsg && <div className="bookings-toast-pill animate-fade-up">{toastMsg}</div>}
 
         {/* Top Header & Breadcrumbs */}
@@ -213,18 +219,49 @@ function MyBookings() {
               <span>›</span>
               <span className="current">My Bookings</span>
             </div>
-            <h1 className="bookings-main-title">
-              <span>📋</span> My Service Bookings &amp; OTPs
-            </h1>
+            <div className="bookings-title-and-badge">
+              <h1 className="bookings-main-title">
+                My Service Bookings &amp; OTPs
+              </h1>
+              <span className="bookings-live-status-badge">
+                <span className="pulse-dot-green" />
+                <span>{activeCount} Active</span>
+              </span>
+            </div>
             <p className="bookings-subtitle">
-              Yahan aapki sabhi active bookings, assigned technician details aur unka <strong>4-Digit Service Start OTP</strong> hamesha safely available hai.
+              Manage your scheduled doorstep services, view assigned technician details, and access your <strong>4-Digit Service Start OTP</strong> anytime.
             </p>
           </div>
 
           <div className="bookings-header-quick-action">
             <Link to="/categories" className="btn-book-new-service">
-              <span>➕</span> Book New Service
+              <span>➕</span> Book Another Service
             </Link>
+          </div>
+        </div>
+
+        {/* Quick Stats Summary Grid */}
+        <div className="bookings-stats-strip">
+          <div className={`stats-strip-box ${activeTab === "all" ? "selected" : ""}`} onClick={() => setActiveTab("all")}>
+            <span className="stats-strip-icon">📋</span>
+            <div className="stats-strip-text">
+              <strong className="stats-strip-val">{allUserBookings.length}</strong>
+              <span className="stats-strip-label">Total Orders</span>
+            </div>
+          </div>
+          <div className={`stats-strip-box ${activeTab === "active" ? "selected" : ""}`} onClick={() => setActiveTab("active")}>
+            <span className="stats-strip-icon highlight-orange">⚡</span>
+            <div className="stats-strip-text">
+              <strong className="stats-strip-val highlight-orange">{activeCount}</strong>
+              <span className="stats-strip-label">Active &amp; Dispatched</span>
+            </div>
+          </div>
+          <div className={`stats-strip-box ${activeTab === "completed" ? "selected" : ""}`} onClick={() => setActiveTab("completed")}>
+            <span className="stats-strip-icon highlight-green">✓</span>
+            <div className="stats-strip-text">
+              <strong className="stats-strip-val highlight-green">{completedCount}</strong>
+              <span className="stats-strip-label">Completed</span>
+            </div>
           </div>
         </div>
 
@@ -244,7 +281,7 @@ function MyBookings() {
               onClick={() => setActiveTab("active")}
             >
               <span className="active-dot" />
-              Active &amp; Dispatched ({activeCount})
+              Active &amp; Scheduled ({activeCount})
             </button>
             <button
               type="button"
@@ -256,10 +293,10 @@ function MyBookings() {
           </div>
 
           <div className="bookings-search-input-box">
-            <span>🔍</span>
+            <span className="search-icon">🔍</span>
             <input
               type="text"
-              placeholder="Search by ID, service, provider..."
+              placeholder="Search by ID, service, technician..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -273,13 +310,13 @@ function MyBookings() {
         {filteredBookings.length === 0 ? (
           <div className="empty-bookings-card animate-fade-in">
             <div className="empty-icon">🛋️</div>
-            <h3>Koi Booking Nahi Mili</h3>
+            <h3>No Bookings Found</h3>
             <p>
               {searchTerm
-                ? "Aapke search query ke anusaar koi booking nahi mili."
+                ? "No service orders match your search query."
                 : activeTab === "active"
-                ? "Filhal aapki koi active booking nahi hai. Naye professional ko book karein!"
-                : "Aapne abhi tak koi service book nahi ki hai."}
+                ? "You do not have any active appointments at the moment."
+                : "You haven't placed any bookings yet. Book certified doorstep professionals in seconds!"}
             </p>
             <Link to="/categories" className="btn-empty-action">
               Explore 85+ Services &amp; Specialists →
@@ -295,139 +332,155 @@ function MyBookings() {
               const isCancelled = rawStatus === "cancelled";
               const isActive = !isFinished && !isCancelled;
               const providerName = b.assignedProviderName || b.assignedProvider?.name || b.provider || "Certified Specialist";
-              const providerPhone = b.assignedProviderPhone || b.assignedProvider?.phone || b.providerPhone || "+91 98765 43210";
+              const providerPhone = typeof b.assignedProvider === "object" ? b.assignedProvider?.phone : (b.assignedProviderPhone || b.providerPhone || "+91 98765 43210");
+              const serviceTitle = b.serviceName || b.service || "Home Service Specialist";
+              const schedDate = b.scheduledDate || b.bookingDate || "Today";
+              const schedTime = b.scheduledTime || b.timeSlot || "11:00 AM - 12:00 PM";
+              const priceDisplay = b.price ? (String(b.price).startsWith("₹") ? b.price : `₹${b.price}`) : (b.totalAmount ? `₹${b.totalAmount}` : "₹249");
 
               return (
-                <div key={bookingId} className={`booking-order-card ${isActive ? "card-active" : "card-archived"}`}>
+                <div key={bookingId} className={`booking-pro-card ${isActive ? "card-is-active" : "card-is-archived"}`}>
                   
-                  {/* Card Header */}
-                  <div className="card-top-bar">
-                    <div className="card-id-block">
-                      <span className="order-chip">ORDER ID</span>
-                      <strong className="order-id-text">#{bookingId}</strong>
+                  {/* Top Bar: Order ID, Date & Status */}
+                  <div className="pro-card-top-bar">
+                    <div className="pro-card-id-group">
+                      <span className="pro-order-chip">BOOKING ID</span>
+                      <strong className="pro-order-id-code">#{bookingId}</strong>
+                      <span className="pro-date-pill">📅 {schedDate}</span>
+                      <span className="pro-time-pill">⏰ {schedTime}</span>
                     </div>
 
-                    <div className="card-status-badge-wrap">
+                    <div className="pro-card-status-wrap">
                       {isCancelled ? (
-                        <span className="status-badge cancelled">✕ Cancelled</span>
+                        <span className="status-badge-pro cancelled">✕ Cancelled</span>
                       ) : isFinished ? (
-                        <span className="status-badge completed">✓ Work Completed</span>
+                        <span className="status-badge-pro completed">✓ Service Completed</span>
                       ) : rawStatus === "in_progress" ? (
-                        <span className="status-badge in-progress">
+                        <span className="status-badge-pro in-progress">
                           <span className="pulse-dot-green" /> Work in Progress
                         </span>
                       ) : (
-                        <span className="status-badge dispatched">
+                        <span className="status-badge-pro dispatched">
                           <span className="pulse-dot-orange" /> Technician Assigned
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Main Service Details */}
-                  <div className="card-body-section">
-                    <div className="service-info-row">
-                      <div className="service-icon-box">⚡</div>
-                      <div className="service-text-group">
-                        <h3 className="service-name-heading">{b.serviceName || b.service || "Home Service Specialist"}</h3>
-                        <div className="service-meta-pills">
-                          <span className="meta-pill">📅 {b.scheduledDate || b.bookingDate || "Today"}</span>
-                          <span className="meta-pill">⏰ {b.scheduledTime || b.timeSlot || "11:00 AM"}</span>
-                          {b.price && <span className="meta-pill price">💰 {b.price}</span>}
+                  {/* 2-Column Split Body */}
+                  <div className="pro-card-main-split">
+                    {/* LEFT COLUMN: Service Info & Technician Profile */}
+                    <div className="pro-split-left-col">
+                      <div className="pro-service-header-row">
+                        <div className="pro-service-avatar">⚡</div>
+                        <div className="pro-service-text">
+                          <h3 className="pro-service-title">{serviceTitle}</h3>
+                          <div className="pro-price-and-tag-row">
+                            <span className="pro-price-tag">Estimated: {priceDisplay}</span>
+                            <span className="pro-guarantee-tag">🛡️ Safety Insured</span>
+                          </div>
                         </div>
+                      </div>
+
+                      {b.problemDescription && (
+                        <div className="pro-problem-box">
+                          <span className="problem-label">Requirement:</span>
+                          <span className="problem-text">{b.problemDescription}</span>
+                        </div>
+                      )}
+
+                      {/* Technician Card */}
+                      <div className="pro-technician-card">
+                        <div className="tech-avatar-circle">👨‍🔧</div>
+                        <div className="tech-details-info">
+                          <div className="tech-name-line">
+                            <strong>{providerName}</strong>
+                            <span className="tech-verified-badge">✓ Verified Partner</span>
+                          </div>
+                          <div className="tech-contact-line">
+                            <span>📞 {providerPhone}</span>
+                            <span className="tech-dot">•</span>
+                            <span className="tech-addr">📍 {b.address || b.customerAddress || "Indore Area"}</span>
+                          </div>
+                        </div>
+                        {providerPhone && (
+                          <a href={`tel:${String(providerPhone).replace(/\s+/g, "")}`} className="btn-tech-call-pill">
+                            <span>📞 Call</span>
+                          </a>
+                        )}
                       </div>
                     </div>
 
-                    {b.problemDescription && (
-                      <div className="problem-notes-box">
-                        <span className="problem-label">Reported Issue:</span>
-                        <span className="problem-val">{b.problemDescription}</span>
-                      </div>
-                    )}
-
-                    {/* KEY FEATURE: PROMINENT HIGHLIGHTED SERVICE START OTP CARD */}
-                    {!isFinished && !isCancelled && (
-                      <div className="booking-otp-spotlight-box animate-fade-in">
-                        <div className="otp-spotlight-top">
-                          <div className="otp-label-group">
-                            <span className="otp-key-icon">🔐</span>
-                            <div>
-                              <span className="otp-heading-tag">YOUR SERVICE START OTP</span>
-                              <span className="otp-sub-hint">Show this to technician upon doorstep arrival</span>
+                    {/* RIGHT COLUMN: Service Start OTP & Action Hub */}
+                    <div className="pro-split-right-col">
+                      {/* Highlighted OTP Box */}
+                      {!isFinished && !isCancelled ? (
+                        <div className="pro-otp-vault-card">
+                          <div className="otp-vault-header">
+                            <div className="otp-vault-badge">
+                              <span>🔑</span>
+                              <span>SERVICE START OTP</span>
                             </div>
+                            <button
+                              type="button"
+                              className={`btn-otp-copy-inline ${copiedOtpId === bookingId ? "copied" : ""}`}
+                              onClick={() => handleCopyOtp(otp, bookingId)}
+                              title="Click to copy OTP"
+                            >
+                              {copiedOtpId === bookingId ? "✓ Copied!" : "📋 Copy"}
+                            </button>
                           </div>
-                          
+
+                          <div className="otp-vault-digits-row">
+                            {String(otp).split("").map((digit, idx) => (
+                              <span key={idx} className="otp-vault-digit">{digit}</span>
+                            ))}
+                          </div>
+
+                          <p className="otp-vault-security-hint">
+                            💡 <strong>Doorstep Verification:</strong> Share this 4-digit code with <strong>{providerName}</strong> upon arrival to begin work.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="pro-archived-status-box">
+                          <span className="archived-icon">{isCancelled ? "✕" : "✓"}</span>
+                          <h4>{isCancelled ? "Order Cancelled" : "Service Completed"}</h4>
+                          <p>{isCancelled ? "This appointment was cancelled." : "Completed with verified digital invoice."}</p>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="pro-card-action-buttons">
+                        {isActive && (
                           <button
                             type="button"
-                            className="btn-copy-otp"
-                            onClick={() => handleCopyOtp(otp, bookingId)}
-                            title="Click to copy OTP"
+                            className="btn-action-track-radar"
+                            onClick={() => setSelectedBookingForTracking(b)}
                           >
-                            {copiedOtpId === bookingId ? "✓ Copied!" : "📋 Copy"}
+                            <span>📡 Live Radar Track &amp; ETA</span>
                           </button>
-                        </div>
+                        )}
 
-                        <div className="otp-code-giant-display">
-                          {String(otp).split("").map((digit, idx) => (
-                            <span key={idx} className="otp-single-digit">{digit}</span>
-                          ))}
-                        </div>
+                        <div className="pro-secondary-actions-row">
+                          <a
+                            href={`tel:${String(providerPhone).replace(/\s+/g, "")}`}
+                            className="btn-action-contact"
+                          >
+                            <span>📞 Call Pro</span>
+                          </a>
 
-                        <div className="otp-safety-note">
-                          <span>🛡️</span>
-                          <span>
-                            <strong>Safety Guarantee:</strong> Jab technician aapke ghar pahunche aur work verify kare, tabhi ye OTP unko batayein. Bina OTP ke koi extra charge nahi lagta.
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Assigned Technician & Location Row */}
-                    <div className="provider-dispatch-details-row">
-                      <div className="provider-avatar-badge">
-                        <span>👤</span>
-                      </div>
-                      <div className="provider-info-block">
-                        <div className="provider-header-line">
-                          <strong>{providerName}</strong>
-                          <span className="verified-check-tag">✓ Verified Pro</span>
-                        </div>
-                        <div className="provider-phone-line">
-                          <span>📞 {providerPhone}</span>
-                          <span className="address-line">📍 {b.address || b.customerAddress || "Local Home Address"}</span>
+                          {isActive && rawStatus !== "in_progress" && (
+                            <button
+                              type="button"
+                              className="btn-action-cancel-order"
+                              onClick={() => handleCancelBooking(bookingId)}
+                            >
+                              Cancel Order
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Card Bottom Actions */}
-                  <div className="card-footer-actions">
-                    {/* Call Technician */}
-                    <a href={`tel:${providerPhone.replace(/\s+/g, "")}`} className="btn-action-call">
-                      <span>📞</span> Call Technician
-                    </a>
-
-                    {/* Live Tracking / Status */}
-                    {isActive && (
-                      <button
-                        type="button"
-                        className="btn-action-track"
-                        onClick={() => setSelectedBookingForTracking(b)}
-                      >
-                        <span>⚡</span> Live Status &amp; ETA
-                      </button>
-                    )}
-
-                    {/* Cancel Booking (only when still pending/assigned) */}
-                    {isActive && rawStatus !== "in_progress" && (
-                      <button
-                        type="button"
-                        className="btn-action-cancel"
-                        onClick={() => handleCancelBooking(bookingId)}
-                      >
-                        Cancel
-                      </button>
-                    )}
                   </div>
 
                 </div>
