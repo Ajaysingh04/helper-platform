@@ -1431,23 +1431,27 @@ function CategoryPage() {
       {/* Quick Customer Enquiry / Booking Modal */}
       {enquiryItem && (
         <div className="booking-modal-overlay" onClick={() => setEnquiryItem(null)}>
-          <div className="booking-modal-box advanced-booking-modal animate-fade-up" onClick={(e) => e.stopPropagation()}>
+          <div className={`booking-modal-box advanced-booking-modal ${enquirySent ? "booking-success-modal" : ""} animate-fade-up`} onClick={(e) => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={() => setEnquiryItem(null)} aria-label="Close modal">✕</button>
 
             {enquirySent ? (
-              <div className="modal-scrollable-body" style={{ textAlign: "center", padding: "24px 18px" }}>
-                <div style={{ fontSize: "48px", marginBottom: "8px" }}>🎉</div>
-                <h3 style={{ fontSize: "21px", fontWeight: 800, color: "#10B981", margin: "0 0 6px 0" }}>
-                  Booking Confirmed Successfully!
-                </h3>
-                <p style={{ fontSize: "13.5px", color: "#64748B", margin: "0 0 16px 0" }}>
-                  Direct doorstep service scheduled with <strong>{enquiryItem.name}</strong> ({enquiryItem.shopName || categoryTitle}).
-                </p>
+              <div className="booking-success-view-body animate-fade-in">
+                {/* Header Row */}
+                <div className="booking-success-header">
+                  <div className="success-icon-badge">🎉</div>
+                  <div className="success-header-text">
+                    <h3 className="success-title">Booking Confirmed Successfully!</h3>
+                    <p className="success-subtitle">
+                      Direct doorstep service scheduled with <strong>{enquiryItem.name}</strong> ({enquiryItem.shopName || categoryTitle}).
+                    </p>
+                  </div>
+                </div>
+
                 {/* 4-Stage Operational Stepper */}
-                <div className="booking-stepper">
+                <div className="booking-stepper compact-stepper">
                   <div className={`step-item ${confirmedBookingInfo?.slotConfirmed ? "completed" : "active"}`}>
                     <div className="step-icon-bubble">{confirmedBookingInfo?.slotConfirmed ? "✓" : "📞"}</div>
-                    <span>1. Call & OTP</span>
+                    <span>1. Call &amp; OTP</span>
                   </div>
                   <div className={`step-item ${confirmedBookingInfo?.status === "in_progress" || confirmedBookingInfo?.status === "work_completed" || confirmedBookingInfo?.status === "completed" ? "completed" : confirmedBookingInfo?.slotConfirmed ? "active" : ""}`}>
                     <div className="step-icon-bubble">{confirmedBookingInfo?.status === "in_progress" || confirmedBookingInfo?.status === "work_completed" ? "✓" : "⏳"}</div>
@@ -1459,163 +1463,175 @@ function CategoryPage() {
                   </div>
                   <div className={`step-item ${confirmedBookingInfo?.status === "work_completed" || confirmedBookingInfo?.status === "completed" ? "completed" : confirmedBookingInfo?.status === "in_progress" ? "active" : ""}`}>
                     <div className="step-icon-bubble">⏱️</div>
-                    <span>4. Stopwatch & Bill</span>
+                    <span>4. Stopwatch &amp; Bill</span>
                   </div>
                 </div>
 
-                {/* STAGE 1: Call & Slot OTP Verification */}
+                {/* STAGE 1: Call & Slot OTP Verification (2-Column Zero-Scroll Layout) */}
                 {!confirmedBookingInfo?.slotConfirmed && confirmedBookingInfo?.status === "assigned" && (
-                  <div className="animate-fade-in">
-                    <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: "14px", padding: "14px", marginBottom: "14px", textAlign: "left" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "24px" }}>📞</span>
-                        <div>
-                          <h4 style={{ margin: 0, fontSize: "14.5px", color: "#1E3A8A", fontWeight: 800 }}>Plumber will call you shortly</h4>
-                          <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: "#3B82F6" }}>
-                            <strong>{enquiryItem.name}</strong> will call on <strong>{confirmedBookingInfo?.customerPhone}</strong> to verify location & requirements.
+                  <div className="booking-success-stage-grid">
+                    {/* Left Column: Call alert & booking meta */}
+                    <div className="stage-info-column">
+                      <div className="technician-call-card">
+                        <div className="call-card-icon">📞</div>
+                        <div className="call-card-content">
+                          <h4 className="call-card-title">Plumber will call you shortly</h4>
+                          <p className="call-card-desc">
+                            <strong>{enquiryItem.name}</strong> will call on <strong>{confirmedBookingInfo?.customerPhone}</strong> to verify location &amp; requirements.
                           </p>
+                        </div>
+                      </div>
+
+                      <div className="booking-meta-mini-card">
+                        <div className="meta-mini-row">
+                          <span className="meta-label">Booking ID</span>
+                          <strong className="meta-val">{confirmedBookingInfo?.bookingCode || "HLP-72819"}</strong>
+                        </div>
+                        <div className="meta-mini-row">
+                          <span className="meta-label">Scheduled Slot</span>
+                          <strong className="meta-val highlight">{confirmedBookingInfo?.scheduledDate} at {confirmedBookingInfo?.scheduledTime}</strong>
+                        </div>
+                        <div className="meta-mini-row">
+                          <span className="meta-label">Professional</span>
+                          <strong className="meta-val">{enquiryItem.name}</strong>
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ background: "linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 120, 94, 0.08) 100%)", border: "2px solid #FF4D2D", borderRadius: "16px", padding: "18px 12px", margin: "14px 0" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 800, color: "#FF4D2D", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                        🔑 Your 4-Digit Slot Confirmation OTP
+                    {/* Right Column: Prominent OTP Box & Auto-Save Note */}
+                    <div className="stage-otp-column">
+                      <div className="booking-otp-vault-card">
+                        <div className="otp-card-header">
+                          <span className="otp-icon">🔑</span>
+                          <span>YOUR 4-DIGIT SLOT OTP</span>
+                        </div>
+                        <div className="otp-code-display">
+                          {confirmedBookingInfo?.slotOtp || "8544"}
+                        </div>
+                        <p className="otp-card-instruction">
+                          Share this OTP with <strong>{enquiryItem.name}</strong> over the phone call to lock your appointment!
+                        </p>
                       </div>
-                      <div style={{ fontSize: "38px", fontWeight: 900, letterSpacing: "6px", color: "#0F172A", margin: "6px 0" }}>
-                        {confirmedBookingInfo?.slotOtp || "8544"}
-                      </div>
-                      <div style={{ fontSize: "12px", color: "#64748B", maxWidth: "340px", margin: "0 auto" }}>
-                        Tell this OTP to <strong>{enquiryItem.name}</strong> over the phone call so your appointment date and time are officially locked!
-                      </div>
-                    </div>
 
-                    <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px dashed #3B82F6", borderRadius: "12px", padding: "10px 14px", margin: "10px 0 16px", fontSize: "12.5px", color: "#1E3A8A", display: "flex", alignItems: "center", gap: "8px", textAlign: "left" }}>
-                      <span style={{ fontSize: "18px" }}>💡</span>
-                      <span><strong>Don't worry!</strong> Even if you close this screen now, your booking OTP remains safely accessible in your <strong>Profile &gt; My Bookings</strong> section.</span>
+                      <div className="booking-safe-notice-pill">
+                        <span className="safe-icon">💡</span>
+                        <span>Saved permanently in <strong>Profile &gt; My Bookings</strong>.</span>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* STAGE 2 & 3: Slot Locked, Live Countdown & Doorstep QR Code */}
+                {/* STAGE 2 & 3: Slot Locked, Live Countdown & Doorstep QR Code (Side-by-Side) */}
                 {confirmedBookingInfo?.slotConfirmed && confirmedBookingInfo?.status !== "in_progress" && confirmedBookingInfo?.status !== "work_completed" && confirmedBookingInfo?.status !== "completed" && (
-                  <div className="animate-fade-in">
-                    <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "12px", padding: "10px 14px", marginBottom: "14px", color: "#166534", fontSize: "13.5px", fontWeight: 700 }}>
+                  <div>
+                    <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "10px", padding: "8px 12px", marginBottom: "10px", color: "#166534", fontSize: "12.5px", fontWeight: 700, textAlign: "center" }}>
                       ✅ Appointment Locked for <strong>{confirmedBookingInfo?.scheduledDate}</strong> at <strong>{confirmedBookingInfo?.scheduledTime}</strong>!
                     </div>
 
-                    {/* Live Glowing Countdown */}
-                    <div className="telemetry-countdown-box">
-                      <div className="telemetry-countdown-label">
-                        <span>⏳</span>
-                        <span>Plumber Arrival Live Countdown</span>
+                    <div className="booking-success-stage-grid">
+                      {/* Live Glowing Countdown */}
+                      <div className="telemetry-countdown-box compact-countdown">
+                        <div className="telemetry-countdown-label">
+                          <span>⏳</span>
+                          <span>Plumber Arrival Countdown</span>
+                        </div>
+
+                        <div className="countdown-digits-grid">
+                          <div className="countdown-digit-card">
+                            <div className="digit-val">{cdData.days || "00"}</div>
+                            <div className="digit-sub">DAYS</div>
+                          </div>
+                          <span className="digit-colon">:</span>
+                          <div className="countdown-digit-card">
+                            <div className="digit-val">{cdData.hours || "00"}</div>
+                            <div className="digit-sub">HOURS</div>
+                          </div>
+                          <span className="digit-colon">:</span>
+                          <div className="countdown-digit-card">
+                            <div className="digit-val">{cdData.mins || "00"}</div>
+                            <div className="digit-sub">MINS</div>
+                          </div>
+                          <span className="digit-colon">:</span>
+                          <div className="countdown-digit-card active-tick">
+                            <div className="digit-val" style={{ color: "#38BDF8" }}>{cdData.secs || "00"}</div>
+                            <div className="digit-sub">SECS</div>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: "11px", color: "#94A3B8", marginTop: "4px" }}>
+                          {cdData.isArrived
+                            ? "🚨 Scheduled appointment time arrived! Plumber is at doorstep."
+                            : `${confirmedBookingInfo?.scheduledDate || "Today"} at ${confirmedBookingInfo?.scheduledTime || "slot"}`}
+                        </div>
                       </div>
 
-                      {/* 4 Digital Countdown Blocks */}
-                      <div className="countdown-digits-grid">
-                        <div className="countdown-digit-card">
-                          <div className="digit-val">{cdData.days || "00"}</div>
-                          <div className="digit-sub">DAYS</div>
+                      {/* Compact Doorstep QR Code */}
+                      <div className="telemetry-qr-card compact-qr">
+                        <div style={{ fontSize: "12px", fontWeight: 800, color: "#0F172A", marginBottom: "4px" }}>
+                          📱 Doorstep QR Code
                         </div>
-                        <span className="digit-colon">:</span>
-                        <div className="countdown-digit-card">
-                          <div className="digit-val">{cdData.hours || "00"}</div>
-                          <div className="digit-sub">HOURS</div>
+                        <div className="qr-visual-box" style={{ margin: "2px auto" }}>
+                          <svg viewBox="0 0 200 200" width="88" height="88">
+                            <rect width="200" height="200" fill="#FFFFFF" rx="10" />
+                            <rect x="15" y="15" width="50" height="50" fill="#0F172A" rx="8" />
+                            <rect x="25" y="25" width="30" height="30" fill="#FFFFFF" rx="4" />
+                            <rect x="33" y="33" width="14" height="14" fill="#FF4D2D" rx="2" />
+                            <rect x="135" y="15" width="50" height="50" fill="#0F172A" rx="8" />
+                            <rect x="145" y="25" width="30" height="30" fill="#FFFFFF" rx="4" />
+                            <rect x="153" y="33" width="14" height="14" fill="#FF4D2D" rx="2" />
+                            <rect x="15" y="135" width="50" height="50" fill="#0F172A" rx="8" />
+                            <rect x="25" y="145" width="30" height="30" fill="#FFFFFF" rx="4" />
+                            <rect x="33" y="153" width="14" height="14" fill="#FF4D2D" rx="2" />
+                            <circle cx="85" cy="30" r="5" fill="#0F172A" />
+                            <circle cx="105" cy="30" r="5" fill="#0F172A" />
+                            <circle cx="95" cy="50" r="6" fill="#FF4D2D" />
+                            <circle cx="80" cy="70" r="5" fill="#0F172A" />
+                            <circle cx="100" cy="75" r="5" fill="#0F172A" />
+                            <circle cx="120" cy="70" r="5" fill="#0F172A" />
+                            <rect x="75" y="90" width="50" height="20" fill="#0F172A" rx="4" />
+                            <circle cx="100" cy="100" r="4" fill="#FFFFFF" />
+                            <circle cx="80" cy="130" r="5" fill="#0F172A" />
+                            <circle cx="100" cy="135" r="6" fill="#FF4D2D" />
+                            <circle cx="120" cy="130" r="5" fill="#0F172A" />
+                            <circle cx="145" cy="90" r="5" fill="#0F172A" />
+                            <circle cx="165" cy="105" r="5" fill="#0F172A" />
+                            <circle cx="150" cy="140" r="5" fill="#0F172A" />
+                            <circle cx="170" cy="155" r="6" fill="#FF4D2D" />
+                          </svg>
+                          <div className="qr-laser-scanner" />
                         </div>
-                        <span className="digit-colon">:</span>
-                        <div className="countdown-digit-card">
-                          <div className="digit-val">{cdData.mins || "00"}</div>
-                          <div className="digit-sub">MINS</div>
-                        </div>
-                        <span className="digit-colon">:</span>
-                        <div className="countdown-digit-card active-tick">
-                          <div className="digit-val" style={{ color: "#38BDF8" }}>{cdData.secs || "00"}</div>
-                          <div className="digit-sub">SECS</div>
-                        </div>
+                        <span className="qr-code-val">{confirmedBookingInfo?.startQrCode || `START-${confirmedBookingInfo?.slotOtp || "8544"}`}</span>
                       </div>
-
-                      <div style={{ fontSize: "11.5px", color: "#94A3B8", marginTop: "4px" }}>
-                        {cdData.isArrived
-                          ? "🚨 Scheduled appointment time has arrived! Plumber is at your doorstep."
-                          : `Time remaining until appointment on ${confirmedBookingInfo?.scheduledDate || "Today"} at ${confirmedBookingInfo?.scheduledTime || "slot"}`}
-                      </div>
-                    </div>
-
-                    {/* Authentic Doorstep QR Code */}
-                    <div className="telemetry-qr-card">
-                      <div style={{ fontSize: "13px", fontWeight: 800, color: "#0F172A", marginBottom: "8px" }}>
-                        📱 Show This QR Code to Plumber on Arrival
-                      </div>
-                      <div className="qr-visual-box">
-                        <svg viewBox="0 0 200 200" width="144" height="144">
-                          <rect width="200" height="200" fill="#FFFFFF" rx="10" />
-                          <rect x="15" y="15" width="50" height="50" fill="#0F172A" rx="8" />
-                          <rect x="25" y="25" width="30" height="30" fill="#FFFFFF" rx="4" />
-                          <rect x="33" y="33" width="14" height="14" fill="#FF4D2D" rx="2" />
-                          
-                          <rect x="135" y="15" width="50" height="50" fill="#0F172A" rx="8" />
-                          <rect x="145" y="25" width="30" height="30" fill="#FFFFFF" rx="4" />
-                          <rect x="153" y="33" width="14" height="14" fill="#FF4D2D" rx="2" />
-                          
-                          <rect x="15" y="135" width="50" height="50" fill="#0F172A" rx="8" />
-                          <rect x="25" y="145" width="30" height="30" fill="#FFFFFF" rx="4" />
-                          <rect x="33" y="153" width="14" height="14" fill="#FF4D2D" rx="2" />
-                          
-                          <circle cx="85" cy="30" r="5" fill="#0F172A" />
-                          <circle cx="105" cy="30" r="5" fill="#0F172A" />
-                          <circle cx="95" cy="50" r="6" fill="#FF4D2D" />
-                          <circle cx="80" cy="70" r="5" fill="#0F172A" />
-                          <circle cx="100" cy="75" r="5" fill="#0F172A" />
-                          <circle cx="120" cy="70" r="5" fill="#0F172A" />
-                          
-                          <rect x="75" y="90" width="50" height="20" fill="#0F172A" rx="4" />
-                          <circle cx="100" cy="100" r="4" fill="#FFFFFF" />
-                          
-                          <circle cx="80" cy="130" r="5" fill="#0F172A" />
-                          <circle cx="100" cy="135" r="6" fill="#FF4D2D" />
-                          <circle cx="120" cy="130" r="5" fill="#0F172A" />
-                          <circle cx="145" cy="90" r="5" fill="#0F172A" />
-                          <circle cx="165" cy="105" r="5" fill="#0F172A" />
-                          <circle cx="150" cy="140" r="5" fill="#0F172A" />
-                          <circle cx="170" cy="155" r="6" fill="#FF4D2D" />
-                        </svg>
-                        <div className="qr-laser-scanner" />
-                      </div>
-                      <span className="qr-label" style={{ fontSize: "11px", fontWeight: 700, color: "#64748B" }}>START TOKEN / PIN</span>
-                      <span className="qr-code-val">{confirmedBookingInfo?.startQrCode || `START-${confirmedBookingInfo?.slotOtp || "8544"}`}</span>
-                      <p style={{ fontSize: "11.5px", color: "#64748B", margin: "6px 0 0" }}>
-                        Plumber will scan this QR at your door to start the official work stopwatch.
-                      </p>
                     </div>
                   </div>
                 )}
 
                 {/* STAGE 4: Work in Progress - Live Work Stopwatch & Running Meter */}
                 {confirmedBookingInfo?.status === "in_progress" && (
-                  <div className="animate-fade-in">
-                    <div style={{ background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "12px", padding: "10px 14px", marginBottom: "14px", color: "#065F46", fontSize: "13.5px", fontWeight: 800 }}>
+                  <div>
+                    <div style={{ background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "10px", padding: "8px 12px", marginBottom: "10px", color: "#065F46", fontSize: "12.5px", fontWeight: 800, textAlign: "center" }}>
                       ⚡ {enquiryItem.name} is working at your doorstep right now!
                     </div>
 
-                    <div className="telemetry-stopwatch-box">
-                      <div style={{ fontSize: "12px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#A7F3D0" }}>
+                    <div className="telemetry-stopwatch-box" style={{ padding: "12px 16px", marginBottom: "8px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#A7F3D0" }}>
                         ⏱️ Live Work Stopwatch
                       </div>
-                      <div className="stopwatch-time-val">
+                      <div className="stopwatch-time-val" style={{ fontSize: "28px", margin: "4px 0" }}>
                         {liveStopwatch}
                       </div>
                       <div className="stopwatch-meter-row">
                         <div>
-                          <span style={{ display: "block", color: "#A7F3D0", fontSize: "11px" }}>Visiting Charge</span>
+                          <span style={{ display: "block", color: "#A7F3D0", fontSize: "10.5px" }}>Visiting Charge</span>
                           <strong>₹{confirmedBookingInfo?.homeServiceCharge || 149}</strong>
                         </div>
                         <div>
-                          <span style={{ display: "block", color: "#A7F3D0", fontSize: "11px" }}>Hourly Rate</span>
+                          <span style={{ display: "block", color: "#A7F3D0", fontSize: "10.5px" }}>Hourly Rate</span>
                           <strong>₹{confirmedBookingInfo?.hourlyRate || 299}/hr</strong>
                         </div>
                         <div>
-                          <span style={{ display: "block", color: "#34D399", fontSize: "11px" }}>Current Running Total</span>
-                          <strong style={{ color: "#34D399", fontSize: "15px" }}>₹{liveRunningCost}</strong>
+                          <span style={{ display: "block", color: "#34D399", fontSize: "10.5px" }}>Current Running Total</span>
+                          <strong style={{ color: "#34D399", fontSize: "14px" }}>₹{liveRunningCost}</strong>
                         </div>
                       </div>
                     </div>
@@ -1624,35 +1640,31 @@ function CategoryPage() {
 
                 {/* STAGE 5: Work Completed & Itemized Digital Invoice */}
                 {(confirmedBookingInfo?.status === "work_completed" || confirmedBookingInfo?.status === "completed") && (
-                  <div className="animate-fade-in">
-                    <div style={{ fontSize: "44px", marginBottom: "6px" }}>🎉</div>
-                    <h4 style={{ fontSize: "20px", fontWeight: 800, color: "#10B981", margin: "0 0 6px" }}>
-                      Work Completed Successfully!
-                    </h4>
-                    <p style={{ fontSize: "13px", color: "#64748B", margin: "0 0 14px" }}>
-                      {enquiryItem.name} has finished the service and stopped the timer.
-                    </p>
+                  <div>
+                    <div style={{ background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "10px", padding: "8px 12px", marginBottom: "10px", color: "#065F46", fontSize: "12.5px", fontWeight: 800, textAlign: "center" }}>
+                      🎉 Work Completed Successfully by {enquiryItem.name}!
+                    </div>
 
-                    <div className="telemetry-invoice-card">
-                      <div style={{ fontSize: "13.5px", fontWeight: 800, color: "#0F172A", marginBottom: "8px", display: "flex", justifyContent: "space-between" }}>
+                    <div className="telemetry-invoice-card" style={{ padding: "10px 14px", marginBottom: "8px" }}>
+                      <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0F172A", marginBottom: "6px", display: "flex", justifyContent: "space-between" }}>
                         <span>Itemized Bill Receipt</span>
                         <span style={{ color: "#059669" }}>⏱️ {confirmedBookingInfo?.workDurationFormatted || "1h 15m"}</span>
                       </div>
-                      <div className="invoice-item-row">
+                      <div className="invoice-item-row" style={{ fontSize: "11.5px", padding: "3px 0" }}>
                         <span>Doorstep Home Service Fee (Fixed)</span>
                         <strong>₹{confirmedBookingInfo?.homeServiceCharge || confirmedBookingInfo?.billBreakdown?.homeServiceCharge || 149}</strong>
                       </div>
-                      <div className="invoice-item-row">
+                      <div className="invoice-item-row" style={{ fontSize: "11.5px", padding: "3px 0" }}>
                         <span>Hourly Labor ({confirmedBookingInfo?.workDurationFormatted || "1h 15m"} @ ₹{confirmedBookingInfo?.hourlyRate || 299}/hr)</span>
                         <strong>₹{confirmedBookingInfo?.billBreakdown?.laborCharge || Math.round((confirmedBookingInfo?.hourlyRate || 299) * 1.3)}</strong>
                       </div>
                       {confirmedBookingInfo?.billBreakdown?.materialCost > 0 && (
-                        <div className="invoice-item-row">
+                        <div className="invoice-item-row" style={{ fontSize: "11.5px", padding: "3px 0" }}>
                           <span>Replacement Parts / Materials</span>
                           <strong>₹{confirmedBookingInfo?.billBreakdown?.materialCost}</strong>
                         </div>
                       )}
-                      <div className="invoice-total-row">
+                      <div className="invoice-total-row" style={{ fontSize: "13px", paddingTop: "6px" }}>
                         <span>Total Payable</span>
                         <span style={{ color: "#10B981" }}>₹{confirmedBookingInfo?.totalAmount || confirmedBookingInfo?.finalCalculatedAmount || 688}</span>
                       </div>
@@ -1660,27 +1672,29 @@ function CategoryPage() {
                   </div>
                 )}
 
-                {/* Booking Order Meta Bar */}
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "12px 14px", margin: "14px 0", textAlign: "left", fontSize: "12.5px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                    <span style={{ color: "#64748B" }}>Booking ID:</span>
-                    <strong>{confirmedBookingInfo?.bookingCode || "HLP-72819"}</strong>
+                {/* Booking Meta Strip for Non-Stage 1 States */}
+                {confirmedBookingInfo?.slotConfirmed && (
+                  <div className="booking-meta-mini-card" style={{ flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap", padding: "8px 12px" }}>
+                    <div>
+                      <span className="meta-label">ID: </span>
+                      <strong>{confirmedBookingInfo?.bookingCode || "HLP-72819"}</strong>
+                    </div>
+                    <div>
+                      <span className="meta-label">Slot: </span>
+                      <strong className="meta-val highlight">{confirmedBookingInfo?.scheduledDate} at {confirmedBookingInfo?.scheduledTime}</strong>
+                    </div>
+                    <div>
+                      <span className="meta-label">Professional: </span>
+                      <strong>{enquiryItem.name}</strong>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                    <span style={{ color: "#64748B" }}>Scheduled Slot:</span>
-                    <strong style={{ color: "#FF4D2D" }}>{confirmedBookingInfo?.scheduledDate} at {confirmedBookingInfo?.scheduledTime}</strong>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "#64748B" }}>Plumber:</span>
-                    <strong>{enquiryItem.name} ({enquiryItem.shopName || "Plumbing Care"})</strong>
-                  </div>
-                </div>
+                )}
 
-                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                {/* Action Buttons Footer */}
+                <div className="booking-success-actions-row">
                   <button
                     type="button"
-                    className="btn-coral"
-                    style={{ flex: 1, padding: "12px", fontWeight: 700 }}
+                    className="btn-coral success-action-btn primary"
                     onClick={() => {
                       setEnquirySent(false);
                       setEnquiryItem(null);
@@ -1692,8 +1706,7 @@ function CategoryPage() {
                   </button>
                   <button
                     type="button"
-                    className="btn-coral-outline"
-                    style={{ flex: 1, padding: "12px", fontWeight: 700 }}
+                    className="btn-coral-outline success-action-btn secondary"
                     onClick={() => {
                       setEnquirySent(false);
                       setEnquiryItem(null);

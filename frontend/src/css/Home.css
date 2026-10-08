@@ -7465,3 +7465,456 @@ body.dark .experts-showcase-card {
     padding: 8px 14px;
   }
 }
+
+/* ================= Modern Zero-Scroll Responsive Booking Success Modal ================= */
+.booking-modal-box.booking-success-modal {
+  max-width: 660px !important;
+  width: 95% !important;
+  max-height: 94vh !important;
+  padding: 0 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #FFFFFF !important;
+}
+
+.booking-success-view-body {
+  padding: 20px 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 94vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.booking-success-view-body::-webkit-scrollbar {
+  width: 5px;
+}
+.booking-success-view-body::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+.booking-success-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.success-icon-badge {
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: checkmarkPop 0.4s ease;
+}
+
+.success-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.success-title {
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  color: #10B981 !important;
+  margin: 0 0 2px 0 !important;
+  letter-spacing: -0.01em;
+}
+
+.success-subtitle {
+  font-size: 13px !important;
+  color: #64748B !important;
+  margin: 0 !important;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-stepper.compact-stepper {
+  margin-bottom: 0 !important;
+  padding: 6px 12px !important;
+  border-radius: 10px !important;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+.booking-stepper.compact-stepper .step-item {
+  font-size: 10.5px !important;
+  gap: 3px !important;
+}
+
+.booking-stepper.compact-stepper .step-icon-bubble {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 11px !important;
+}
+
+.booking-success-stage-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.stage-info-column,
+.stage-otp-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.technician-call-card {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+}
+
+.call-card-icon {
+  font-size: 20px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.call-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.call-card-title {
+  margin: 0 0 2px 0 !important;
+  font-size: 13px !important;
+  color: #1E3A8A !important;
+  font-weight: 800 !important;
+}
+
+.call-card-desc {
+  margin: 0 !important;
+  font-size: 11.5px !important;
+  color: #3B82F6 !important;
+  line-height: 1.35;
+}
+
+.booking-meta-mini-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  font-size: 12px;
+}
+
+.meta-mini-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-label {
+  color: #64748B;
+  font-size: 11.5px;
+}
+
+.meta-val {
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 12px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta-val.highlight {
+  color: #FF4D2D;
+}
+
+.booking-otp-vault-card {
+  background: linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 120, 94, 0.04) 100%);
+  border: 2px solid #FF4D2D;
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.otp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #FF4D2D;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.otp-code-display {
+  font-size: 34px !important;
+  font-weight: 900 !important;
+  letter-spacing: 6px !important;
+  color: #0F172A !important;
+  margin: 4px 0 !important;
+  line-height: 1.1;
+}
+
+.otp-card-instruction {
+  font-size: 11px !important;
+  color: #64748B !important;
+  margin: 0 !important;
+  line-height: 1.3;
+}
+
+.booking-safe-notice-pill {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px dashed #93C5FD;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #1E3A8A;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.safe-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.booking-success-actions-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.success-action-btn {
+  flex: 1;
+  padding: 11px 16px;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.success-action-btn.primary {
+  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.25);
+}
+
+.compact-countdown {
+  padding: 10px 12px !important;
+  margin-bottom: 0 !important;
+}
+
+.compact-countdown .telemetry-countdown-label {
+  font-size: 11px !important;
+  margin-bottom: 6px !important;
+}
+
+.compact-countdown .countdown-digits-grid {
+  gap: 6px !important;
+}
+
+.compact-countdown .countdown-digit-card {
+  padding: 6px 8px !important;
+}
+
+.compact-countdown .digit-val {
+  font-size: 18px !important;
+}
+
+.compact-qr {
+  padding: 10px 12px !important;
+  margin-bottom: 0 !important;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.compact-qr svg {
+  width: 90px !important;
+  height: 90px !important;
+}
+
+.compact-qr .qr-code-val {
+  font-size: 11px !important;
+  padding: 2px 8px !important;
+  margin-top: 4px !important;
+}
+
+/* Dark mode overrides */
+body.dark .booking-modal-box.booking-success-modal {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+  color: #F8FAFC !important;
+}
+
+body.dark .booking-success-view-body {
+  background: #1E293B !important;
+}
+
+body.dark .booking-stepper.compact-stepper {
+  background: #0F172A !important;
+  border-color: #334155 !important;
+}
+
+body.dark .technician-call-card {
+  background: rgba(30, 58, 138, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+
+body.dark .call-card-title {
+  color: #93C5FD !important;
+}
+
+body.dark .call-card-desc {
+  color: #BFDBFE !important;
+}
+
+body.dark .booking-meta-mini-card {
+  background: #0F172A !important;
+  border-color: #334155 !important;
+}
+
+body.dark .meta-val {
+  color: #F8FAFC !important;
+}
+
+body.dark .meta-label {
+  color: #94A3B8 !important;
+}
+
+body.dark .otp-code-display {
+  color: #FFFFFF !important;
+}
+
+body.dark .booking-otp-vault-card {
+  background: rgba(255, 77, 45, 0.12) !important;
+  border-color: #FF4D2D !important;
+}
+
+body.dark .booking-safe-notice-pill {
+  background: rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(96, 165, 250, 0.3) !important;
+  color: #93C5FD !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .booking-modal-box.booking-success-modal {
+    width: 96% !important;
+    max-height: 96vh !important;
+    border-radius: 18px !important;
+  }
+
+  .booking-success-view-body {
+    padding: 16px 14px 14px !important;
+    gap: 10px !important;
+  }
+
+  .booking-success-header {
+    gap: 10px !important;
+  }
+
+  .success-icon-badge {
+    font-size: 24px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+
+  .success-title {
+    font-size: 16px !important;
+  }
+
+  .success-subtitle {
+    font-size: 11.5px !important;
+    white-space: normal !important;
+  }
+
+  .booking-success-stage-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .technician-call-card {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .call-card-title {
+    font-size: 12px !important;
+  }
+
+  .call-card-desc {
+    font-size: 11px !important;
+  }
+
+  .booking-otp-vault-card {
+    padding: 10px 8px !important;
+  }
+
+  .otp-code-display {
+    font-size: 28px !important;
+    letter-spacing: 5px !important;
+    margin: 2px 0 !important;
+  }
+
+  .otp-card-instruction {
+    font-size: 10.5px !important;
+  }
+
+  .booking-meta-mini-card {
+    padding: 8px 10px !important;
+    gap: 4px !important;
+  }
+
+  .booking-stepper.compact-stepper span {
+    font-size: 9px !important;
+  }
+
+  .booking-success-actions-row {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .success-action-btn {
+    padding: 10px !important;
+    font-size: 13px !important;
+  }
+}

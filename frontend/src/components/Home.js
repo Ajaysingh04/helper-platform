@@ -1527,55 +1527,82 @@ function Home() {
           ========================================================================= */}
       {selectedService && (
         <div className="booking-modal-overlay" onClick={() => setSelectedService(null)}>
-          <div className="booking-modal-box advanced-booking-modal animate-fade-up" onClick={(e) => e.stopPropagation()}>
+          <div className={`booking-modal-box advanced-booking-modal ${enquirySuccess ? "booking-success-modal" : ""} animate-fade-up`} onClick={(e) => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={() => setSelectedService(null)} aria-label="Close modal">✕</button>
 
             {enquirySuccess ? (
-              <div className="modal-success-state animate-fade-in" style={{ textAlign: "center", padding: "28px 16px" }}>
-                <div style={{ fontSize: "52px", marginBottom: "12px", animation: "checkmarkPop 0.4s ease" }}>🎉</div>
-                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#10B981", margin: "0 0 6px 0" }}>
-                  Booking Confirmed Successfully!
-                </h3>
-                <p style={{ fontSize: "14px", color: "#64748B", margin: "0 0 16px 0" }}>
-                  Direct doorstep service scheduled for <strong>{selectedService.name}</strong>.
-                </p>
-                <div className="confirmed-slot-pill">
-                  <span>📅 {selectedBookingDate}</span>
-                  <span className="dot-divider">•</span>
-                  <span>⏰ {selectedTimeSlot}</span>
-                </div>
-                {selectedProblem && (
-                  <p style={{ fontSize: "13.5px", color: "#334155", margin: "12px 0 6px" }}>
-                    Selected Requirement: <strong>{selectedProblem}</strong>
-                  </p>
-                )}
-                {customProblemNote && (
-                  <p style={{ fontSize: "12.5px", color: "#64748B", margin: "0 0 12px" }}>
-                    Customer Note: <em>"{customProblemNote}"</em>
-                  </p>
-                )}
-                <div style={{ background: "linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 120, 94, 0.08) 100%)", border: "2px solid #FF4D2D", borderRadius: "16px", padding: "18px 12px", margin: "14px 0" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 800, color: "#FF4D2D", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    🔑 Your Service Start OTP
-                  </div>
-                  <div style={{ fontSize: "38px", fontWeight: 900, letterSpacing: "6px", color: "#0F172A", margin: "6px 0" }}>
-                    {activeLiveBooking?.startOtp || activeLiveBooking?.slotOtp || "3459"}
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#64748B", maxWidth: "340px", margin: "0 auto" }}>
-                    Share this 4-digit code with the technician upon doorstep arrival to begin service.
+              <div className="booking-success-view-body animate-fade-in">
+                {/* Header Row */}
+                <div className="booking-success-header">
+                  <div className="success-icon-badge">🎉</div>
+                  <div className="success-header-text">
+                    <h3 className="success-title">Booking Confirmed Successfully!</h3>
+                    <p className="success-subtitle">
+                      Direct doorstep service scheduled for <strong>{selectedService.name}</strong>.
+                    </p>
                   </div>
                 </div>
 
-                <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px dashed #3B82F6", borderRadius: "12px", padding: "10px 14px", margin: "10px 0 16px", fontSize: "12.5px", color: "#1E3A8A", display: "flex", alignItems: "center", gap: "8px", textAlign: "left" }}>
-                  <span style={{ fontSize: "18px" }}>💡</span>
-                  <span><strong>Don't worry!</strong> Even if you close this screen now, your Service OTP is permanently saved in your <strong>Profile &gt; My Bookings</strong> section.</span>
+                <div className="booking-success-stage-grid">
+                  {/* Left Column: Slot & Details */}
+                  <div className="stage-info-column">
+                    <div className="technician-call-card">
+                      <div className="call-card-icon">⚡</div>
+                      <div className="call-card-content">
+                        <h4 className="call-card-title">Express Technician Dispatched</h4>
+                        <p className="call-card-desc">
+                          Verified specialist assigned for <strong>{selectedService.name}</strong>.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="booking-meta-mini-card">
+                      <div className="meta-mini-row">
+                        <span className="meta-label">Scheduled Slot</span>
+                        <strong className="meta-val highlight">{selectedBookingDate} at {selectedTimeSlot}</strong>
+                      </div>
+                      {selectedProblem && (
+                        <div className="meta-mini-row">
+                          <span className="meta-label">Selected Issue</span>
+                          <strong className="meta-val">{selectedProblem}</strong>
+                        </div>
+                      )}
+                      {customProblemNote && (
+                        <div className="meta-mini-row">
+                          <span className="meta-label">Note</span>
+                          <strong className="meta-val">"{customProblemNote}"</strong>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column: OTP Vault Box & Safety Pill */}
+                  <div className="stage-otp-column">
+                    <div className="booking-otp-vault-card">
+                      <div className="otp-card-header">
+                        <span className="otp-icon">🔑</span>
+                        <span>YOUR SERVICE START OTP</span>
+                      </div>
+                      <div className="otp-code-display">
+                        {activeLiveBooking?.startOtp || activeLiveBooking?.slotOtp || "3459"}
+                      </div>
+                      <p className="otp-card-instruction">
+                        Share this 4-digit code with the technician upon doorstep arrival to begin service.
+                      </p>
+                    </div>
+
+                    <div className="booking-safe-notice-pill">
+                      <span className="safe-icon">💡</span>
+                      <span>Saved permanently in <strong>Profile &gt; My Bookings</strong>.</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                {/* Action Buttons Footer */}
+                <div className="booking-success-actions-row">
                   <button 
                     type="button" 
-                    className="btn-coral" 
-                    style={{ flex: 1, padding: "14px", fontWeight: 800, fontSize: "14.5px", borderRadius: "12px" }}
+                    className="btn-coral success-action-btn primary"
                     onClick={() => {
                       setSelectedService(null);
                       setEnquirySuccess(false);
@@ -1586,8 +1613,7 @@ function Home() {
                   </button>
                   <button 
                     type="button" 
-                    className="btn-coral-outline" 
-                    style={{ flex: 1, padding: "14px", fontWeight: 800, fontSize: "14.5px", borderRadius: "12px" }}
+                    className="btn-coral-outline success-action-btn secondary"
                     onClick={() => {
                       setSelectedService(null);
                       setEnquirySuccess(false);
