@@ -25,30 +25,59 @@
 }
 
 body.dark .header-floating-wrapper.home-header {
-  background: transparent !important;
-  border-bottom: none !important;
-  box-shadow: none !important;
+  background: linear-gradient(
+    180deg, 
+    rgba(11, 15, 25, 0.88) 0%, 
+    rgba(11, 15, 25, 0.65) 60%, 
+    rgba(11, 15, 25, 0.20) 90%, 
+    transparent 100%
+  ) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
 }
 
 .header-floating-wrapper.home-header .header-pill-bar {
   pointer-events: auto;
 }
 
-/* Non-home pages have standard clean transparent background */
+/* Non-home pages have standard clean frosted background */
 .header-floating-wrapper:not(.home-header) {
-  background: rgba(248, 249, 251, 0.4);
+  background: rgba(248, 249, 251, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(226, 228, 233, 0.4);
+  border-bottom: 1px solid rgba(226, 228, 233, 0.8);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 body.dark .header-floating-wrapper:not(.home-header) {
-  background: rgba(11, 15, 25, 0.4);
-  border-bottom-color: rgba(31, 41, 55, 0.4);
+  background: rgba(11, 15, 25, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.header-floating-wrapper.scrolled {
+.header-floating-wrapper.scrolled,
+.header-floating-wrapper.home-header.scrolled {
   padding: 6px 20px;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(226, 228, 233, 0.8) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+  pointer-events: auto !important;
+}
+
+body.dark .header-floating-wrapper.scrolled,
+body.dark .header-floating-wrapper.home-header.scrolled {
+  background: rgba(11, 15, 25, 0.96) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6) !important;
+  pointer-events: auto !important;
 }
 
 /* The Main Header Container - Open & Sleek (No Capsule Pill "Patti") */
@@ -209,16 +238,21 @@ body.dark .nexora-sub-tag {
 }
 
 body.dark .header-nav-desktop .nav-link {
-  color: #E2E8F0;
+  color: #FFFFFF;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.05em;
 }
 
 body.dark .header-nav-desktop .nav-link:hover,
 body.dark .header-nav-desktop .nav-link.active {
-  color: #FF785E;
+  color: #FF5A36;
+  text-shadow: 0 0 12px rgba(255, 90, 54, 0.6);
 }
 
 body.dark .header-nav-desktop .nav-link::after {
-  background: #FF785E;
+  background: #FF5A36;
+  box-shadow: 0 0 8px rgba(255, 90, 54, 0.8);
 }
 
 /* ==========================================================================
@@ -256,15 +290,24 @@ body.dark .header-nav-desktop .nav-link::after {
 }
 
 body.dark .header-location-pill {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #E2E8F0;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #F8FAFC;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .header-location-pill:hover {
   background: rgba(255, 255, 255, 0.7);
   border-color: rgba(255, 77, 45, 0.4);
   color: #FF4D2D;
+}
+
+body.dark .header-location-pill:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 77, 45, 0.6);
+  color: #FF785E;
 }
 
 .loc-pin-icon {
@@ -298,9 +341,12 @@ body.dark .header-location-pill {
 }
 
 body.dark .header-quick-search-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #CBD5E1;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #E2E8F0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .header-quick-search-btn:hover {
@@ -312,9 +358,9 @@ body.dark .header-quick-search-btn {
 }
 
 body.dark .header-quick-search-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(30, 41, 59, 0.95);
   border-color: #818CF8;
-  color: #A5B4FC;
+  color: #C7D2FE;
 }
 
 .search-btn-icon {
@@ -380,9 +426,12 @@ body.dark .search-btn-kbd {
 }
 
 body.dark .header-cart-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #CBD5E1;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #F8FAFC;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .header-cart-btn:hover {
@@ -390,6 +439,12 @@ body.dark .header-cart-btn {
   border-color: #3B82F6;
   color: #2563EB;
   transform: translateY(-1px);
+}
+
+body.dark .header-cart-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #3B82F6;
+  color: #60A5FA;
 }
 
 .cart-badge-dot {
@@ -429,12 +484,16 @@ body.dark .header-cart-btn {
 }
 
 body.dark .nexora-account-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 body.dark .nexora-account-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .nexora-account-btn.logged-in {
@@ -444,8 +503,9 @@ body.dark .nexora-account-btn:hover {
 }
 
 body.dark .nexora-account-btn.logged-in {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .nexora-account-btn.logged-in:hover,
@@ -455,7 +515,8 @@ body.dark .nexora-account-btn.logged-in {
 
 body.dark .nexora-account-btn.logged-in:hover,
 body.dark .nexora-account-btn.logged-in.active {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(30, 41, 59, 0.98);
+  border-color: rgba(255, 77, 45, 0.5);
 }
 
 /* Theme Toggle Button */
@@ -478,9 +539,12 @@ body.dark .nexora-account-btn.logged-in.active {
 }
 
 body.dark .theme-toggle-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   color: #F8FAFC;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .theme-toggle-btn:hover {
@@ -488,15 +552,10 @@ body.dark .theme-toggle-btn {
   transform: scale(1.06);
 }
 
-body.dark .nexora-account-btn.logged-in {
-  background: rgba(255, 77, 45, 0.12);
-  border-color: rgba(255, 77, 45, 0.3);
-}
-
-body.dark .nexora-account-btn.logged-in:hover,
-body.dark .nexora-account-btn.logged-in.active {
-  background: rgba(255, 77, 45, 0.2);
-  border-color: rgba(255, 77, 45, 0.5);
+body.dark .theme-toggle-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.06);
 }
 
 .account-user-icon {
@@ -893,36 +952,7 @@ body.dark .mobile-acc-btn.logout {
   color: #F87171;
 }
 
-/* Theme Toggle Button */
-.theme-toggle-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid #E2E8F0;
-  background: #F8FAFC;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
 
-body.dark .theme-toggle-btn {
-  background: #1E293B;
-  border-color: #334155;
-}
-
-.theme-toggle-btn:hover {
-  background: #FFFFFF;
-  border-color: #CBD5E1;
-  transform: rotate(15deg);
-}
-
-body.dark .theme-toggle-btn:hover {
-  background: #334155;
-}
 
 /* ==========================================================================
    4. HAMBURGER TOGGLE BUTTON
