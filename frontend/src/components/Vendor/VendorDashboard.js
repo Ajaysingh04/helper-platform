@@ -200,12 +200,56 @@ function VendorDashboard() {
     setTimeout(() => setToastMsg(""), 4000);
   };
 
-  // Load Vendor Session from localStorage
+  const safeSaveVendorLocal = (vendorData) => {
+    try {
+      localStorage.setItem("helper_vendor", JSON.stringify(vendorData));
+    } catch (err) {
+      console.warn("Storage quota warning, optimizing storage:", err);
+      try {
+        const copy = { ...vendorData };
+        if (copy.aadhaarDoc && copy.aadhaarDoc.length > 50000) copy.aadhaarDoc = "";
+        if (copy.panDoc && copy.panDoc.length > 50000) copy.panDoc = "";
+        if (copy.selfieDoc && copy.selfieDoc.length > 50000) copy.selfieDoc = "";
+        localStorage.setItem("helper_vendor", JSON.stringify(copy));
+      } catch (e2) {}
+    }
+  };
+
+  const compressImage = (file, maxWidth = 800, quality = 0.7) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Load Vendor Session from localStorage & sync with Server Database
   useEffect(() => {
+    let currentVendorId = "vdr_demo_01";
     const raw = localStorage.getItem("helper_vendor");
     if (raw) {
       try {
         const p = JSON.parse(raw);
+        currentVendorId = p.id || p._id || "vdr_demo_01";
         setVendor(p);
         const currentRate = String(p.hourlyRate || "299").replace(/[^0-9]/g, "");
         setTempRate(currentRate);
@@ -232,7 +276,7 @@ function VendorDashboard() {
           ]);
         }
 
-        if (p.age || p.aadhaarNumber || p.panNumber) {
+        if (p.age || p.aadhaarNumber || p.panNumber || p.panDoc || p.aadhaarDoc || p.selfieDoc) {
           setKycForm(prev => ({
             ...prev,
             age: p.age ? String(p.age) : prev.age,
@@ -245,7 +289,7 @@ function VendorDashboard() {
           }));
         }
 
-        if (p.customServices && Array.isArray(p.customServices)) {
+        if (p.customServices && Array.isArray(p.customServices) && p.customServices.length > 0) {
           setCustomServices(p.customServices);
         }
       } catch (e) {
@@ -269,8 +313,63 @@ function VendorDashboard() {
         franchiseAmount: 4000
       };
       setVendor(defaultVendor);
-      localStorage.setItem("helper_vendor", JSON.stringify(defaultVendor));
+      safeSaveVendorLocal(defaultVendor);
     }
+
+    // Fetch latest verified vendor data directly from backend server
+    const fetchLatestFromServer = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/providers/${currentVendorId}`);
+        const data = await res.json();
+        if (data && data.success && data.data) {
+          const s = data.data;
+          setVendor(prev => {
+            const merged = { ...prev, ...s };
+            safeSaveVendorLocal(merged);
+            return merged;
+          });
+          if (s.name || s.shopName || s.hourlyRate) {
+            const sRate = String(s.hourlyRate || "299").replace(/[^0-9]/g, "");
+            setTempRate(sRate);
+            setProfileForm(prev => ({
+              ...prev,
+              shopName: s.shopName || prev.shopName,
+              name: s.name || prev.name,
+              category: s.category || prev.category,
+              hourlyRate: sRate || prev.hourlyRate,
+              location: s.location || prev.location,
+              phone: s.phone || prev.phone,
+              altPhone: s.altPhone || prev.altPhone,
+              email: s.email || prev.email,
+              experience: s.experience || prev.experience,
+              bio: s.bio || prev.bio
+            }));
+          }
+          if (s.customServices && Array.isArray(s.customServices) && s.customServices.length > 0) {
+            setCustomServices(s.customServices);
+          }
+          if (s.teamMembers && Array.isArray(s.teamMembers) && s.teamMembers.length > 0) {
+            setTeamMembers(s.teamMembers);
+          }
+          if (s.age || s.aadhaarNumber || s.panNumber || s.panDoc || s.aadhaarDoc || s.selfieDoc) {
+            setKycForm(prev => ({
+              ...prev,
+              age: s.age ? String(s.age) : prev.age,
+              aadhaarNumber: s.aadhaarNumber || prev.aadhaarNumber,
+              aadhaarDoc: s.aadhaarDoc || prev.aadhaarDoc,
+              panNumber: s.panNumber || prev.panNumber,
+              panDoc: s.panDoc || prev.panDoc,
+              selfieDoc: s.selfieDoc || prev.selfieDoc,
+              kycStatus: s.kycStatus || prev.kycStatus
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn("Backend provider sync warning:", err);
+      }
+    };
+    fetchLatestFromServer();
+
     fetchPendingWorkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -551,21 +650,19 @@ function VendorDashboard() {
       customServices: customServices
     };
 
+    setVendor(updatedVendor);
+    safeSaveVendorLocal(updatedVendor);
+    window.dispatchEvent(new Event("vendor_updated"));
+
     try {
-      const vId = vendor?.id || vendor?._id || "vdr_default";
+      const vId = updatedVendor?.id || updatedVendor?._id || "vdr_demo_01";
       await fetch(`${API_BASE}/providers/${vId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedVendor)
       });
-      setVendor(updatedVendor);
-      localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
-      window.dispatchEvent(new Event("vendor_updated"));
       showToast("Shop work details, phone & location updated successfully! ✅");
     } catch (err) {
-      setVendor(updatedVendor);
-      localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
-      window.dispatchEvent(new Event("vendor_updated"));
       showToast("Details saved locally ✅");
     } finally {
       setSavingProfile(false);
@@ -588,11 +685,38 @@ function VendorDashboard() {
     setCustomServices(updated);
     setNewServiceName("");
     setNewServicePrice("");
+
+    const updatedVendor = { ...vendor, customServices: updated };
+    setVendor(updatedVendor);
+    safeSaveVendorLocal(updatedVendor);
+    window.dispatchEvent(new Event("vendor_updated"));
+
+    const vId = updatedVendor?.id || updatedVendor?._id || "vdr_demo_01";
+    fetch(`${API_BASE}/providers/${vId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customServices: updated })
+    }).catch(err => console.warn("Sync custom work to backend error:", err));
+
     showToast(`Work item "${newWork.name}" added to shop offerings! 🛠️`);
   };
 
   const handleDeleteCustomWork = (id) => {
-    setCustomServices(prev => prev.filter(s => s.id !== id));
+    const updated = customServices.filter(s => s.id !== id);
+    setCustomServices(updated);
+
+    const updatedVendor = { ...vendor, customServices: updated };
+    setVendor(updatedVendor);
+    safeSaveVendorLocal(updatedVendor);
+    window.dispatchEvent(new Event("vendor_updated"));
+
+    const vId = updatedVendor?.id || updatedVendor?._id || "vdr_demo_01";
+    fetch(`${API_BASE}/providers/${vId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customServices: updated })
+    }).catch(err => console.warn("Sync delete custom work to backend error:", err));
+
     showToast("Work item removed.");
   };
 
@@ -612,11 +736,11 @@ function VendorDashboard() {
     };
     setProfileForm(prev => ({ ...prev, hourlyRate: rateNum }));
     setVendor(updatedVendor);
-    localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
+    safeSaveVendorLocal(updatedVendor);
     window.dispatchEvent(new Event("vendor_updated"));
 
     try {
-      const vId = vendor?.id || vendor?._id || "vdr_default";
+      const vId = updatedVendor?.id || updatedVendor?._id || "vdr_demo_01";
       await fetch(`${API_BASE}/providers/${vId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -684,16 +808,17 @@ function VendorDashboard() {
     setShowMemberModal(false);
     showToast(`Member ${newMember.name} added! (Franchise fee: ₹0 Free) 👥`);
 
+    const updatedVendor = { ...vendor, teamMembers: updated };
+    setVendor(updatedVendor);
+    safeSaveVendorLocal(updatedVendor);
+
     try {
-      const vId = vendor?.id || vendor?._id || "vdr_default";
+      const vId = updatedVendor?.id || updatedVendor?._id || "vdr_demo_01";
       await fetch(`${API_BASE}/providers/${vId}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ member: newMember })
       });
-      const updatedVendor = { ...vendor, teamMembers: updated };
-      setVendor(updatedVendor);
-      localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
     } catch (e) {}
   };
 
@@ -706,7 +831,15 @@ function VendorDashboard() {
     setTeamMembers(updated);
     const updatedVendor = { ...vendor, teamMembers: updated };
     setVendor(updatedVendor);
-    localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
+    safeSaveVendorLocal(updatedVendor);
+
+    const vId = updatedVendor?.id || updatedVendor?._id || "vdr_demo_01";
+    fetch(`${API_BASE}/providers/${vId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamMembers: updated })
+    }).catch(err => console.warn("Backend remove member sync warning:", err));
+
     showToast("Team member removed from shop.");
   };
 
@@ -859,19 +992,41 @@ function VendorDashboard() {
   // =========================================================================
   // KYC & DOCUMENTS UPLOAD (AGE, AADHAAR, PAN, SELFIE)
   // =========================================================================
-  const handleFileUpload = (field, e) => {
+  const handleFileUpload = async (field, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setKycForm(prev => ({
-        ...prev,
-        [field]: reader.result
-      }));
-      showToast(`${field === "selfieDoc" ? "Live Selfie" : field === "aadhaarDoc" ? "Aadhaar Card" : "PAN Card"} captured successfully! 📸`);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressedDataUrl = await compressImage(file, 800, 0.7);
+      if (!compressedDataUrl) return;
+
+      setKycForm(prev => {
+        const updated = {
+          ...prev,
+          [field]: compressedDataUrl
+        };
+        return updated;
+      });
+
+      const currentVendor = vendor || JSON.parse(localStorage.getItem("helper_vendor") || "{}");
+      const updatedVendor = {
+        ...currentVendor,
+        [field]: compressedDataUrl
+      };
+      setVendor(updatedVendor);
+      safeSaveVendorLocal(updatedVendor);
+
+      const vId = updatedVendor?.id || updatedVendor?._id || "vdr_demo_01";
+      fetch(`${API_BASE}/providers/${vId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: compressedDataUrl })
+      }).catch(err => console.warn("Backend KYC auto-save error:", err));
+
+      showToast(`${field === "selfieDoc" ? "Live Selfie" : field === "aadhaarDoc" ? "Aadhaar Card" : "PAN Card"} captured & saved successfully! 📸`);
+    } catch (err) {
+      console.error("File upload error:", err);
+    }
   };
 
   const handleSubmitDocuments = async (e) => {
@@ -882,38 +1037,29 @@ function VendorDashboard() {
     }
 
     setSubmittingKyc(true);
+    const updatedVendor = {
+      ...vendor,
+      age: parseInt(kycForm.age) || 30,
+      aadhaarNumber: kycForm.aadhaarNumber,
+      aadhaarDoc: kycForm.aadhaarDoc,
+      panNumber: kycForm.panNumber,
+      panDoc: kycForm.panDoc,
+      selfieDoc: kycForm.selfieDoc,
+      kycStatus: "verified"
+    };
+
+    setVendor(updatedVendor);
+    safeSaveVendorLocal(updatedVendor);
+
     try {
-      const vId = vendor?.id || vendor?._id || "vdr_default";
+      const vId = updatedVendor?.id || updatedVendor?._id || "vdr_demo_01";
       await fetch(`${API_BASE}/providers/${vId}/documents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(kycForm)
       });
-
-      const updatedVendor = {
-        ...vendor,
-        age: parseInt(kycForm.age),
-        aadhaarNumber: kycForm.aadhaarNumber,
-        aadhaarDoc: kycForm.aadhaarDoc,
-        panNumber: kycForm.panNumber,
-        panDoc: kycForm.panDoc,
-        selfieDoc: kycForm.selfieDoc,
-        kycStatus: "verified"
-      };
-
-      setVendor(updatedVendor);
-      localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
-      showToast("🎉 All Verification Documents (Aadhaar, PAN, Selfie) verified successfully! 📑");
+      showToast("🎉 All Verification Documents (Aadhaar, PAN, Selfie) verified & saved successfully! 📑");
     } catch (err) {
-      const updatedVendor = {
-        ...vendor,
-        age: parseInt(kycForm.age),
-        aadhaarNumber: kycForm.aadhaarNumber,
-        panNumber: kycForm.panNumber,
-        kycStatus: "verified"
-      };
-      setVendor(updatedVendor);
-      localStorage.setItem("helper_vendor", JSON.stringify(updatedVendor));
       showToast("Documents saved and verified locally! ✅");
     } finally {
       setSubmittingKyc(false);

@@ -85,14 +85,18 @@ class DBStore {
   }
 
   update(collection, id, updates) {
-    if (!this.data[collection]) return null;
-    const index = this.data[collection].findIndex((item) => String(item.id) === String(id) || String(item._id) === String(id));
+    if (!this.data[collection]) this.data[collection] = [];
+    const index = this.data[collection].findIndex((item) => item && (String(item.id) === String(id) || String(item._id) === String(id)));
     if (index !== -1) {
       this.data[collection][index] = { ...this.data[collection][index], ...updates };
       this.save();
       return this.data[collection][index];
     }
-    return null;
+    // Auto-upsert if not found
+    const newItem = { id, _id: id, ...updates };
+    this.data[collection].unshift(newItem);
+    this.save();
+    return newItem;
   }
 
   delete(collection, id) {
