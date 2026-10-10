@@ -65,6 +65,125 @@ function Header() {
   const [selectedCity, setSelectedCity] = useState(() => localStorage.getItem("helper_user_city") || "Indore");
   const [selectedArea, setSelectedArea] = useState(() => localStorage.getItem("helper_user_area") || "Palasia");
   const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [isAnalyzingLocation, setIsAnalyzingLocation] = useState(false);
+  const [locationToast, setLocationToast] = useState("");
+
+  const analyzeAndDetectLocation = async (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (isAnalyzingLocation) return;
+    setIsAnalyzingLocation(true);
+    setLocationToast("📡 Analyzing GPS satellite signal & coordinates...");
+
+    const finishSuccess = (area, city, fullAddr, lat, lng, source = "GPS") => {
+      setSelectedArea(area);
+      setSelectedCity(city);
+      localStorage.setItem("helper_user_area", area);
+      localStorage.setItem("helper_user_city", city);
+      const full = fullAddr || `${area}, ${city}, Madhya Pradesh`;
+      localStorage.setItem("helper_user_full_address", full);
+      if (lat && lng) {
+        localStorage.setItem("helper_user_lat", String(lat));
+        localStorage.setItem("helper_user_lng", String(lng));
+      }
+      window.dispatchEvent(new CustomEvent("location_changed", {
+        detail: { city, area, fullAddress: full, lat, lng }
+      }));
+      setIsAnalyzingLocation(false);
+      setLocationToast(`📍 Location Analyzed: ${area}, ${city}`);
+      setTimeout(() => setLocationToast(""), 3500);
+    };
+
+    const fallbackToIp = async () => {
+      try {
+        setLocationToast("🌐 Analyzing network IP location...");
+        const res = await fetch("https://ipapi.co/json/");
+        const ipData = await res.json();
+        if (ipData && (ipData.city || ipData.region)) {
+          const detectedCity = ipData.city || "Indore";
+          const detectedArea = ipData.postal ? `${detectedCity} (${ipData.postal})` : (ipData.org?.split(" ")[0] || "Palasia");
+          const full = `${detectedArea}, ${detectedCity}, ${ipData.region || "Madhya Pradesh"}`;
+          finishSuccess(detectedArea, detectedCity, full, ipData.latitude, ipData.longitude, "Network IP");
+          return;
+        }
+      } catch (e1) {
+        try {
+          const res2 = await fetch("https://ipwho.is/");
+          const ipData2 = await res2.json();
+          if (ipData2 && ipData2.success) {
+            const detectedCity = ipData2.city || "Indore";
+            const detectedArea = ipData2.postal || "Palasia";
+            const full = `${detectedArea}, ${detectedCity}, ${ipData2.region || "Madhya Pradesh"}`;
+            finishSuccess(detectedArea, detectedCity, full, ipData2.latitude, ipData2.longitude, "Network IP");
+            return;
+          }
+        } catch (e2) {}
+      }
+      finishSuccess(selectedArea || "Palasia", selectedCity || "Indore", `${selectedArea || "Palasia"}, ${selectedCity || "Indore"}, Madhya Pradesh`, 22.7196, 75.8577, "Indore Central");
+    };
+
+    if (!navigator.geolocation) {
+      await fallbackToIp();
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        let resolvedArea = "";
+        let resolvedCity = "";
+        let resolvedFull = "";
+
+        // Fast client-side reverse geocoding via BigDataCloud
+        try {
+          const bdcRes = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          );
+          if (bdcRes.ok) {
+            const bdcData = await bdcRes.json();
+            resolvedCity = bdcData.city || bdcData.locality || bdcData.principalSubdivision || "Indore";
+            resolvedArea = bdcData.locality || bdcData.subLocality || bdcData.plus_code || "Palasia";
+            if (resolvedArea && resolvedCity && resolvedArea.toLowerCase() === resolvedCity.toLowerCase()) {
+              resolvedArea = bdcData.subLocality || bdcData.localityInfo?.administrative?.[3]?.name || "Central";
+            }
+            resolvedFull = `${resolvedArea}, ${resolvedCity}, ${bdcData.principalSubdivision || "Madhya Pradesh"}`;
+          }
+        } catch (err) {}
+
+        // Fallback or refine with OpenStreetMap Nominatim
+        if (!resolvedArea || resolvedArea === "Central") {
+          try {
+            const nomRes = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            );
+            if (nomRes.ok) {
+              const nomData = await nomRes.json();
+              if (nomData && nomData.address) {
+                const addr = nomData.address;
+                resolvedCity = addr.city || addr.town || addr.state_district || resolvedCity || "Indore";
+                resolvedArea = addr.suburb || addr.neighbourhood || addr.residential || addr.road || addr.county || resolvedArea || "Palasia";
+                resolvedFull = nomData.display_name;
+              }
+            }
+          } catch (err2) {}
+        }
+
+        if (!resolvedCity) resolvedCity = "Indore";
+        if (!resolvedArea) resolvedArea = "Palasia";
+
+        const accText = accuracy ? `±${Math.round(accuracy)}m` : "GPS";
+        finishSuccess(resolvedArea, resolvedCity, resolvedFull, latitude, longitude, `GPS ${accText}`);
+      },
+      async (err) => {
+        console.warn("Geolocation fallback to IP:", err);
+        await fallbackToIp();
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 9000,
+        maximumAge: 0
+      }
+    );
+  };
 
   const handleSelectArea = (city, area) => {
     setSelectedCity(city);
@@ -249,16 +368,22 @@ function Header() {
 
           {/* Right Section: Location Pill + Cart + Account + Theme */}
           <div className="header-right">
-            {/* Location Selector Pill (Clickable City & Area Picker) */}
+            {/* Location Selector Pill (Click to auto-detect and analyze) */}
             <div 
-              className="header-location-pill" 
-              onClick={() => setLocationModalOpen(true)}
+              className={`header-location-pill ${isAnalyzingLocation ? "loc-analyzing" : ""}`} 
+              onClick={analyzeAndDetectLocation}
               style={{ cursor: "pointer" }}
-              title="Click to select City & Area (e.g. Indore, Palasia)"
+              title="Click to analyze and detect your live location"
             >
-              <span className="loc-pin-icon">📍</span>
-              <span className="loc-text">{selectedArea}, {selectedCity}</span>
-              <span style={{ fontSize: "9px", opacity: 0.7 }}>▼</span>
+              <span className={`loc-pin-icon ${isAnalyzingLocation ? "loc-pulse-spin" : ""}`}>
+                {isAnalyzingLocation ? "📡" : "📍"}
+              </span>
+              <span className="loc-text">
+                {isAnalyzingLocation ? "Analyzing..." : `${selectedArea}, ${selectedCity}`}
+              </span>
+              <span style={{ fontSize: "9px", opacity: 0.7 }}>
+                {isAnalyzingLocation ? "⏳" : "▼"}
+              </span>
             </div>
 
             {/* Quick Smart Search Icon & Button */}
@@ -610,26 +735,30 @@ function Header() {
         >
           {/* 1. Interactive Service Location Chip */}
           <div 
-            className="mobile-drawer-location"
-            onClick={() => {
+            className={`mobile-drawer-location ${isAnalyzingLocation ? "loc-analyzing" : ""}`}
+            onClick={(e) => {
               setMobileNavOpen(false);
-              setLocationModalOpen(true);
+              analyzeAndDetectLocation(e);
             }}
             role="button"
             tabIndex={0}
-            title="Click to change location"
+            title="Click to analyze and detect your live location"
           >
-            <div className="mobile-loc-icon-bubble">📍</div>
+            <div className={`mobile-loc-icon-bubble ${isAnalyzingLocation ? "loc-pulse-spin" : ""}`}>
+              {isAnalyzingLocation ? "📡" : "📍"}
+            </div>
             <div className="mobile-loc-info">
               <span className="mobile-loc-label">SERVICE LOCATION</span>
-              <strong className="mobile-loc-val">{selectedArea || "Musakhedi"}, {selectedCity || "Indore"}</strong>
+              <strong className="mobile-loc-val">
+                {isAnalyzingLocation ? "Analyzing GPS Location..." : `${selectedArea || "Palasia"}, ${selectedCity || "Indore"}`}
+              </strong>
             </div>
             <div className="mobile-loc-tag-wrap">
               <span className="mobile-loc-badge">
                 <span className="live-pulse-dot" />
-                Active Zone
+                {isAnalyzingLocation ? "Analyzing..." : "Active Zone"}
               </span>
-              <span className="mobile-loc-change-text">Change ▾</span>
+              <span className="mobile-loc-change-text">{isAnalyzingLocation ? "📡" : "Auto-Detect ⚡"}</span>
             </div>
           </div>
 
@@ -930,6 +1059,14 @@ function Header() {
             </a>
           </div>
         </div>
+
+        {/* Floating Location Analysis Toast */}
+        {locationToast && (
+          <div className="header-location-analysis-toast animate-fade-in">
+            <span className="loc-toast-dot" />
+            <span>{locationToast}</span>
+          </div>
+        )}
 
       </header>
 
