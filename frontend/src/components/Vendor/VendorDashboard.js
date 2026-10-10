@@ -1329,11 +1329,19 @@ function VendorDashboard() {
   return (
     <div className="admin-layout-wrapper vendor-portal-layout">
       
-      {/* Toast Notification */}
+      {/* Floating Non-Overlapping Toast Notification */}
       {toastMsg && (
-        <div className="vendor-alert-banner success animate-fade-in" style={{ position: "fixed", top: "24px", right: "24px", zIndex: 999999, boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
-          <span>📢</span>
-          <span>{toastMsg}</span>
+        <div className="vendor-floating-toast" role="alert">
+          <span className="toast-icon-wrap">✓</span>
+          <span style={{ flex: 1 }}>{toastMsg}</span>
+          <button 
+            type="button" 
+            className="toast-close-btn" 
+            onClick={() => setToastMsg("")}
+            title="Dismiss notification"
+          >
+            ✕
+          </button>
         </div>
       )}
 
