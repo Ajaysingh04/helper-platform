@@ -441,7 +441,8 @@ const initialSettings = {
   supportEmail: "ajayworkon04@gmail.com",
   maintenanceMode: false,
   instantBookingEnabled: true,
-  taxPercent: "5%"
+  taxPercent: "5%",
+  expertShowcaseImage: "/images/verified_expert_pro.jpg"
 };
 
 export const DataProvider = ({ children }) => {
@@ -630,8 +631,14 @@ export const DataProvider = ({ children }) => {
   });
 
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem("helper_settings");
-    return saved ? JSON.parse(saved) : initialSettings;
+    try {
+      const saved = localStorage.getItem("helper_settings");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...initialSettings, ...parsed };
+      }
+    } catch (e) {}
+    return initialSettings;
   });
 
   const [isApiOnline, setIsApiOnline] = useState(false);
@@ -1376,7 +1383,13 @@ export const DataProvider = ({ children }) => {
 
   // Settings
   const updateSettings = async (newSettings) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
+    setSettings(prev => {
+      const updated = { ...prev, ...newSettings };
+      try {
+        localStorage.setItem("helper_settings", JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
 
     try {
       await fetch(`${API_BASE}/settings`, {

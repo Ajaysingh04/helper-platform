@@ -10,6 +10,7 @@ const SettingSchema = new mongoose.Schema(
     maintenanceMode: { type: Boolean, default: false },
     instantBookingEnabled: { type: Boolean, default: true },
     taxPercent: { type: String, default: "5%" },
+    expertShowcaseImage: { type: String, default: "/images/verified_expert_pro.jpg" },
     heroSettings: {
       type: mongoose.Schema.Types.Mixed,
       default: {

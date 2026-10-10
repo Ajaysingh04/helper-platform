@@ -199,7 +199,15 @@ function Home() {
   const authContext = useContext(AuthContext);
   const currentUser = authContext?.currentUser;
   const addBooking = dataContext?.addBooking;
+  const settings = dataContext?.settings;
+  const updateSettings = dataContext?.updateSettings;
+  const isAdmin = authContext?.isAdmin || currentUser?.role === "Administrator" || localStorage.getItem("helper_admin_auth") === "true";
   const navigate = useNavigate();
+
+  const [showAdminShowcaseModal, setShowAdminShowcaseModal] = useState(false);
+  const [adminShowcaseInput, setAdminShowcaseInput] = useState("");
+  const [adminShowcaseToast, setAdminShowcaseToast] = useState(false);
+  const currentShowcaseImg = settings?.expertShowcaseImage || localStorage.getItem("helper_expert_showcase_image") || "/images/verified_expert_pro.jpg";
 
   const todayStr = new Date().toISOString().split("T")[0];
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
@@ -1383,15 +1391,29 @@ function Home() {
               {/* Right Column: 3D Visual Showcase Card of home page5.jpg */}
               <div className="experts-visual-col">
                 <div className="experts-3d-card-frame">
+                  {isAdmin && (
+                    <button 
+                      type="button" 
+                      className="admin-edit-showcase-float-btn"
+                      onClick={() => {
+                        setAdminShowcaseInput(currentShowcaseImg);
+                        setShowAdminShowcaseModal(true);
+                      }}
+                      title="Admin: Change Homepage Showcase Photo"
+                    >
+                      <span>✏️ Change Photo</span>
+                    </button>
+                  )}
+
                   <div className="experts-image-wrapper">
                     <img 
-                      src="/images/verified_expert_pro.jpg" 
+                      src={currentShowcaseImg} 
                       alt="Helper Verified Service Professionals" 
                       className="experts-hero-photo"
                       loading="lazy"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/images/homepage_5.jpg";
+                        e.currentTarget.src = "/images/verified_doctor_pro.jpg";
                       }}
                     />
 
@@ -1918,6 +1940,256 @@ function Home() {
             Live Dispatch: {activeLiveBooking.bookingId || "Active"} (OTP: {activeLiveBooking.startOtp || "3459"})
           </span>
           <span className="live-tracker-btn-text">Track 📡</span>
+        </div>
+      )}
+
+      {/* =========================================================================
+          ADMIN SHOWCASE PHOTO CHANGER MODAL
+          ========================================================================= */}
+      {showAdminShowcaseModal && (
+        <div 
+          className="cat-preview-modal-overlay" 
+          onClick={() => setShowAdminShowcaseModal(false)}
+          style={{ zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
+        >
+          <div 
+            className="admin-showcase-modal-box" 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#0c1322",
+              color: "#fff",
+              borderRadius: "20px",
+              padding: "24px",
+              width: "100%",
+              maxWidth: "520px",
+              border: "1px solid rgba(255, 77, 45, 0.4)",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.85)",
+              position: "relative"
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "22px" }}>📸</span>
+                <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 800 }}>Admin: Change Showcase Photo</h3>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAdminShowcaseModal(false)}
+                style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "22px", cursor: "pointer", lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {adminShowcaseToast && (
+              <div style={{ background: "#10b981", color: "#fff", padding: "10px 14px", borderRadius: "8px", fontWeight: 700, fontSize: "13px", marginBottom: "16px" }}>
+                ✓ Showcase photo updated successfully!
+              </div>
+            )}
+
+            {/* Preview */}
+            <div style={{ display: "flex", gap: "16px", marginBottom: "18px", alignItems: "center" }}>
+              <div style={{ width: "90px", height: "115px", borderRadius: "10px", overflow: "hidden", background: "#1e293b", border: "2px solid #ff4d2d", flexShrink: 0 }}>
+                <img 
+                  src={adminShowcaseInput || currentShowcaseImg} 
+                  alt="Preview" 
+                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/images/verified_doctor_pro.jpg"; }}
+                />
+              </div>
+              <div style={{ fontSize: "12.5px", color: "#94a3b8" }}>
+                <strong style={{ color: "#fff", display: "block", marginBottom: "4px" }}>Selected Photo Preview</strong>
+                Upload an image from your computer, paste an image URL, or pick from presets below.
+              </div>
+            </div>
+
+            {/* Upload File */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{
+                display: "block",
+                padding: "11px 16px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #ff4d2d 0%, #ff7a00 100%)",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "13px",
+                cursor: "pointer",
+                textAlign: "center",
+                boxShadow: "0 4px 12px rgba(255, 77, 45, 0.3)"
+              }}>
+                📁 Upload Photo from Computer
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const b64 = event.target?.result;
+                        if (b64) setAdminShowcaseInput(b64);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+
+            {/* URL Input */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ fontSize: "12px", color: "#94a3b8", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                Or Direct Image URL:
+              </label>
+              <input 
+                type="text" 
+                value={adminShowcaseInput} 
+                onChange={(e) => setAdminShowcaseInput(e.target.value)}
+                placeholder="https://..."
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  background: "#1e293b",
+                  color: "#fff",
+                  fontSize: "13px",
+                  boxSizing: "border-box"
+                }}
+              />
+            </div>
+
+            {/* Presets */}
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ fontSize: "12px", color: "#94a3b8", display: "block", marginBottom: "8px", fontWeight: 700 }}>
+                Or Select Preset:
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => setAdminShowcaseInput("/images/verified_doctor_pro.jpg")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    background: adminShowcaseInput === "/images/verified_doctor_pro.jpg" ? "rgba(255, 77, 45, 0.25)" : "#1e293b",
+                    border: adminShowcaseInput === "/images/verified_doctor_pro.jpg" ? "1px solid #ff4d2d" : "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#fff",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    textAlign: "left"
+                  }}
+                >
+                  👩‍⚕️ Doctor / Specialist
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAdminShowcaseInput("/images/electrician.png")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    background: adminShowcaseInput === "/images/electrician.png" ? "rgba(255, 77, 45, 0.25)" : "#1e293b",
+                    border: adminShowcaseInput === "/images/electrician.png" ? "1px solid #ff4d2d" : "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#fff",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    textAlign: "left"
+                  }}
+                >
+                  👨‍🔧 Electrician Pro
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAdminShowcaseInput("/images/banner_all_experts.png")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    background: adminShowcaseInput === "/images/banner_all_experts.png" ? "rgba(255, 77, 45, 0.25)" : "#1e293b",
+                    border: adminShowcaseInput === "/images/banner_all_experts.png" ? "1px solid #ff4d2d" : "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#fff",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    textAlign: "left"
+                  }}
+                >
+                  👥 All Services Crew
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAdminShowcaseInput("https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=700")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    background: adminShowcaseInput?.includes("1581578731548") ? "rgba(255, 77, 45, 0.25)" : "#1e293b",
+                    border: adminShowcaseInput?.includes("1581578731548") ? "1px solid #ff4d2d" : "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#fff",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    textAlign: "left"
+                  }}
+                >
+                  🧹 Cleaning Specialist
+                </button>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const finalPhoto = adminShowcaseInput || "/images/verified_doctor_pro.jpg";
+                  if (updateSettings) {
+                    updateSettings({ expertShowcaseImage: finalPhoto });
+                  }
+                  localStorage.setItem("helper_expert_showcase_image", finalPhoto);
+                  setAdminShowcaseToast(true);
+                  setTimeout(() => {
+                    setAdminShowcaseToast(false);
+                    setShowAdminShowcaseModal(false);
+                  }, 1200);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "12px 18px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #ff4d2d 0%, #ff7a00 100%)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: "13.5px",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(255, 77, 45, 0.4)"
+                }}
+              >
+                ⚡ Save & Apply Photo
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/admin")}
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  background: "#1e293b",
+                  color: "#94a3b8",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  cursor: "pointer"
+                }}
+              >
+                ⚙️ Admin Panel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

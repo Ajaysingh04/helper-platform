@@ -491,6 +491,7 @@ const initialSettings = {
   serviceRadiusKm: 25,
   autoAssignProviders: true,
   maintenanceMode: false,
+  expertShowcaseImage: "/images/verified_expert_pro.jpg",
   heroSettings: {
     slideSpeed: 2500,
     continuousSlide: true,

@@ -7958,3 +7958,41 @@ body.dark .booking-safe-notice-pill {
     font-size: 13px !important;
   }
 }
+
+/* Floating Admin Edit Button for Trust Showcase Section */
+.admin-edit-showcase-float-btn {
+  position: absolute;
+  top: -14px;
+  right: -10px;
+  z-index: 30;
+  background: linear-gradient(135deg, #FF4D2D 0%, #FF7A00 100%);
+  color: #FFFFFF !important;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(255, 77, 45, 0.55);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.admin-edit-showcase-float-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(255, 77, 45, 0.75);
+  background: linear-gradient(135deg, #E03E1F 0%, #FF5500 100%);
+}
+
+.admin-showcase-modal-box {
+  animation: adminModalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes adminModalScale {
+  0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
