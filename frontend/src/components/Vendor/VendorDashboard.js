@@ -1814,11 +1814,7 @@ function VendorDashboard() {
                       return (
                         <div 
                           key={key} 
-                          style={{
-                            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "14px",
-                            padding: "16px 20px", borderRadius: "14px",
-                            background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)"
-                          }}
+                          className="vendor-overview-order-row"
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                             <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "rgba(255, 77, 45, 0.12)", color: "#FF4D2D", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>
@@ -2543,11 +2539,11 @@ function VendorDashboard() {
               </div>
             </form>
 
-            <hr style={{ borderColor: "rgba(255, 255, 255, 0.08)", margin: "32px 0 24px" }} />
+            <hr className="vendor-section-divider" style={{ margin: "32px 0 24px" }} />
 
             {/* Custom Work Offerings Manager */}
             <div>
-              <h4 style={{ fontSize: "17px", fontWeight: 800, color: "#0F172A", marginBottom: "6px" }}>
+              <h4 className="vendor-section-subheading" style={{ fontSize: "17px", fontWeight: 800, marginBottom: "6px" }}>
                 Add Custom Work & Task Offerings
               </h4>
               <p style={{ fontSize: "13.5px", color: "#64748B", margin: "0 0 16px 0" }}>
@@ -2556,33 +2552,33 @@ function VendorDashboard() {
 
               <form onSubmit={handleAddCustomWork} style={{ display: "grid", gridTemplateColumns: "1fr 140px 120px auto", gap: "10px", alignItems: "flex-end" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#475569", display: "block", marginBottom: "4px", fontWeight: 700 }}>Work / Service Title</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-muted, #475569)", display: "block", marginBottom: "4px", fontWeight: 700 }}>Work / Service Title</label>
                   <input 
                     type="text"
+                    className="custom-work-inline-input"
                     placeholder="e.g. Water Tank Deep Cleaning"
                     value={newServiceName}
                     onChange={(e) => setNewServiceName(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A" }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#475569", display: "block", marginBottom: "4px", fontWeight: 700 }}>Price (₹)</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-muted, #475569)", display: "block", marginBottom: "4px", fontWeight: 700 }}>Price (₹)</label>
                   <input 
                     type="number"
+                    className="custom-work-inline-input"
                     placeholder="e.g. 599"
                     value={newServicePrice}
                     onChange={(e) => setNewServicePrice(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A" }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#475569", display: "block", marginBottom: "4px", fontWeight: 700 }}>Duration</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-muted, #475569)", display: "block", marginBottom: "4px", fontWeight: 700 }}>Duration</label>
                   <input 
                     type="text"
+                    className="custom-work-inline-input"
                     placeholder="45 mins"
                     value={newServiceTime}
                     onChange={(e) => setNewServiceTime(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A" }}
                   />
                 </div>
                 <button

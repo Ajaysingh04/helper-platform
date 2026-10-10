@@ -1503,6 +1503,38 @@
   color: #059669;
 }
 
+.custom-work-inline-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #0F172A;
+  font-size: 13.5px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.custom-work-inline-input:focus {
+  border-color: #FF4D2D;
+  background: #FFFFFF;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 77, 45, 0.15);
+}
+
+body.dark .custom-work-inline-input {
+  background: #080D1A !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #FFFFFF !important;
+}
+
+body.dark .custom-work-inline-input:focus {
+  border-color: #FF4D2D !important;
+  background: #0A1122 !important;
+  box-shadow: 0 0 0 3px rgba(255, 77, 45, 0.25) !important;
+}
+
 /* ==========================================================================
    12. WALLET & ADMIN TABLES
    ========================================================================== */
@@ -3690,10 +3722,11 @@
 
 /* ==========================================================================
    UNIFIED HIGH-TECH DARK SAAS DASHBOARD THEME OVERRIDES (Helper Pro)
+   (Properly scoped to body.dark so Light Theme stays crisp and clean)
    ========================================================================== */
 
-/* Main Content Card */
-.vendor-tab-content-card {
+/* Main Content Card (Dark Mode) */
+body.dark .vendor-tab-content-card {
   background: linear-gradient(145deg, #111A2E 0%, #0D1424 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 24px !important;
@@ -3702,46 +3735,46 @@
   color: #F8FAFC !important;
 }
 
-.vendor-card-head {
+body.dark .vendor-card-head {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding-bottom: 18px !important;
   margin-bottom: 24px !important;
 }
 
-.vendor-card-head h3 {
+body.dark .vendor-card-head h3 {
   color: #FFFFFF !important;
   font-size: 21px !important;
   font-weight: 850 !important;
   letter-spacing: -0.02em !important;
 }
 
-.vendor-card-head span,
-.vendor-card-head p {
+body.dark .vendor-card-head span,
+body.dark .vendor-card-head p {
   color: #94A3B8 !important;
 }
 
-.btn-demo-quick {
+body.dark .btn-demo-quick {
   background: rgba(255, 255, 255, 0.06) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: #E2E8F0 !important;
 }
 
-.btn-demo-quick:hover {
+body.dark .btn-demo-quick:hover {
   background: rgba(255, 255, 255, 0.12) !important;
   border-color: rgba(255, 77, 45, 0.4) !important;
   color: #FFFFFF !important;
 }
 
-/* Forms & Inputs */
-.vendor-input-group label {
+/* Forms & Inputs (Dark Mode) */
+body.dark .vendor-input-group label {
   color: #E2E8F0 !important;
   font-weight: 700 !important;
   font-size: 13px !important;
 }
 
-.vendor-input-group input,
-.vendor-input-group select,
-.vendor-input-group textarea {
+body.dark .vendor-input-group input,
+body.dark .vendor-input-group select,
+body.dark .vendor-input-group textarea {
   background: #080D1A !important;
   border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
   color: #FFFFFF !important;
@@ -3750,56 +3783,56 @@
   transition: all 0.2s ease !important;
 }
 
-.vendor-input-group input:focus,
-.vendor-input-group select:focus,
-.vendor-input-group textarea:focus {
+body.dark .vendor-input-group input:focus,
+body.dark .vendor-input-group select:focus,
+body.dark .vendor-input-group textarea:focus {
   border-color: #FF4D2D !important;
   box-shadow: 0 0 0 3px rgba(255, 77, 45, 0.25) !important;
   background: #0A1122 !important;
   outline: none !important;
 }
 
-.vendor-input-group select option {
+body.dark .vendor-input-group select option {
   background: #0F172A !important;
   color: #FFFFFF !important;
 }
 
-.vendor-rate-prefix span {
+body.dark .vendor-rate-prefix span {
   color: #94A3B8 !important;
   font-weight: 800 !important;
 }
 
-.vendor-rate-prefix input {
+body.dark .vendor-rate-prefix input {
   background: #080D1A !important;
   color: #FFFFFF !important;
   padding-left: 32px !important;
 }
 
-/* Custom Work Offerings */
-.work-item-row {
+/* Custom Work Offerings (Dark Mode) */
+body.dark .work-item-row {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 14px !important;
   color: #FFFFFF !important;
 }
 
-.work-item-row:hover {
+body.dark .work-item-row:hover {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
-.work-item-name {
+body.dark .work-item-name {
   color: #FFFFFF !important;
   font-weight: 750 !important;
 }
 
-.work-item-rate {
+body.dark .work-item-rate {
   color: #34D399 !important;
   font-weight: 900 !important;
 }
 
-/* Customer Booking Cards */
-.vendor-booking-card {
+/* Customer Booking Cards (Dark Mode) */
+body.dark .vendor-booking-card {
   background: #111A2E !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-left: 5px solid #FF4D2D !important;
@@ -3808,174 +3841,174 @@
   color: #F8FAFC !important;
 }
 
-.vendor-booking-card:hover {
+body.dark .vendor-booking-card:hover {
   border-color: rgba(255, 255, 255, 0.18) !important;
   box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.65) !important;
 }
 
-.booking-service-title-row h4 {
+body.dark .booking-service-title-row h4 {
   color: #FFFFFF !important;
   font-weight: 850 !important;
 }
 
-.booking-schedule-bar {
+body.dark .booking-schedule-bar {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: #E2E8F0 !important;
 }
 
-.booking-customer-meta > span {
+body.dark .booking-customer-meta > span {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: #CBD5E1 !important;
 }
 
-.booking-customer-meta strong {
+body.dark .booking-customer-meta strong {
   color: #FFFFFF !important;
 }
 
-.quick-call-btn {
+body.dark .quick-call-btn {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #FFFFFF !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
-.quick-call-btn:hover {
+body.dark .quick-call-btn:hover {
   background: rgba(255, 255, 255, 0.16) !important;
   border-color: #38BDF8 !important;
 }
 
-.vendor-stage-stepper {
+body.dark .vendor-stage-stepper {
   background: rgba(255, 255, 255, 0.03) !important;
   border: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
-.step-num {
+body.dark .step-num {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #94A3B8 !important;
 }
 
-.stepper-line {
+body.dark .stepper-line {
   background: rgba(255, 255, 255, 0.08) !important;
 }
 
-.booking-operations-box {
+body.dark .booking-operations-box {
   border-top-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-.stage-slot-confirmation {
+body.dark .stage-slot-confirmation {
   background: rgba(245, 158, 11, 0.09) !important;
   border: 1px solid rgba(245, 158, 11, 0.28) !important;
 }
 
-.slot-instructions h5 {
+body.dark .slot-instructions h5 {
   color: #FCD34D !important;
 }
 
-.slot-instructions p {
+body.dark .slot-instructions p {
   color: #FDE68A !important;
 }
 
-.input-slot-otp {
+body.dark .input-slot-otp {
   background: #080D1A !important;
   color: #FFFFFF !important;
   border: 1.5px solid #F59E0B !important;
 }
 
-.stage-qr-verify-box {
+body.dark .stage-qr-verify-box {
   background: rgba(99, 102, 241, 0.1) !important;
   border: 1px solid rgba(99, 102, 241, 0.28) !important;
 }
 
-.input-qr-token {
+body.dark .input-qr-token {
   background: #080D1A !important;
   color: #FFFFFF !important;
   border: 1.5px solid rgba(99, 102, 241, 0.4) !important;
 }
 
-.stage-work-completed-receipt {
+body.dark .stage-work-completed-receipt {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1.5px dashed rgba(255, 255, 255, 0.15) !important;
 }
 
-.receipt-item {
+body.dark .receipt-item {
   color: #CBD5E1 !important;
 }
 
-.receipt-total {
+body.dark .receipt-total {
   color: #FFFFFF !important;
   border-top-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-.receipt-split-box {
+body.dark .receipt-split-box {
   background: rgba(255, 255, 255, 0.03) !important;
   border: 1.5px dashed rgba(255, 255, 255, 0.12) !important;
 }
 
-.booking-worker-assign-box {
+body.dark .booking-worker-assign-box {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: #FFFFFF !important;
 }
 
-.select-worker-assign {
+body.dark .select-worker-assign {
   background: #080D1A !important;
   color: #FFFFFF !important;
   border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
 }
 
-/* KYC Documents */
-.kyc-doc-card {
+/* KYC Documents (Dark Mode) */
+body.dark .kyc-doc-card {
   background: rgba(255, 255, 255, 0.03) !important;
   border: 1.5px dashed rgba(255, 255, 255, 0.14) !important;
   color: #FFFFFF !important;
 }
 
-.kyc-doc-card:hover {
+body.dark .kyc-doc-card:hover {
   background: rgba(255, 255, 255, 0.07) !important;
   border-color: #FF4D2D !important;
 }
 
-.kyc-doc-card.completed {
+body.dark .kyc-doc-card.completed {
   background: rgba(16, 185, 129, 0.1) !important;
   border-color: #10B981 !important;
 }
 
-.doc-preview-box {
+body.dark .doc-preview-box {
   background: #080D1A !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.doc-upload-label {
+body.dark .doc-upload-label {
   background: rgba(255, 255, 255, 0.06) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: #FFFFFF !important;
 }
 
-.doc-upload-label:hover {
+body.dark .doc-upload-label:hover {
   background: rgba(255, 255, 255, 0.12) !important;
   border-color: #FF4D2D !important;
 }
 
-/* Wallet Table */
-.vendor-dash-wrapper .admin-table-container {
+/* Wallet Table (Dark Mode) */
+body.dark .vendor-dash-wrapper .admin-table-container {
   background: rgba(11, 17, 32, 0.6) !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
 }
 
-.vendor-dash-wrapper .admin-table th {
+body.dark .vendor-dash-wrapper .admin-table th {
   background: rgba(255, 255, 255, 0.04) !important;
   color: #94A3B8 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.vendor-dash-wrapper .admin-table td {
+body.dark .vendor-dash-wrapper .admin-table td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   color: #E2E8F0 !important;
 }
 
-/* Modals */
-.cat-preview-modal-box {
+/* Modals (Dark Mode) */
+body.dark .cat-preview-modal-box {
   background: #0F172A !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   color: #FFFFFF !important;
@@ -4253,10 +4286,350 @@ body:not(.dark) .vendor-tab-content-card {
   background: #FFFFFF !important;
   border: 1px solid #E2E8F0 !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04) !important;
+  color: #0F172A !important;
 }
 
 body:not(.dark) .vendor-tab-content-card h3 {
   color: #0F172A !important;
+}
+
+body:not(.dark) .vendor-card-head {
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+body:not(.dark) .vendor-card-head span,
+body:not(.dark) .vendor-card-head p {
+  color: #64748B !important;
+}
+
+/* Forms & Inputs in Light Mode */
+body:not(.dark) .vendor-input-group label {
+  color: #1E293B !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+body:not(.dark) .vendor-input-group input,
+body:not(.dark) .vendor-input-group select,
+body:not(.dark) .vendor-input-group textarea {
+  background: #FFFFFF !important;
+  border: 1.5px solid #CBD5E1 !important;
+  color: #0F172A !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+body:not(.dark) .vendor-input-group input::placeholder,
+body:not(.dark) .vendor-input-group textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+body:not(.dark) .vendor-input-group input:hover,
+body:not(.dark) .vendor-input-group select:hover,
+body:not(.dark) .vendor-input-group textarea:hover {
+  border-color: #94A3B8 !important;
+}
+
+body:not(.dark) .vendor-input-group input:focus,
+body:not(.dark) .vendor-input-group select:focus,
+body:not(.dark) .vendor-input-group textarea:focus {
+  border-color: #FF4D2D !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 0 0 3px rgba(255, 77, 45, 0.15) !important;
+  outline: none !important;
+}
+
+body:not(.dark) .vendor-input-group select option {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+body:not(.dark) .vendor-rate-prefix span {
+  color: #64748B !important;
+  font-weight: 800 !important;
+}
+
+body:not(.dark) .vendor-rate-prefix input {
+  background: #FFFFFF !important;
+  border: 1.5px solid #CBD5E1 !important;
+  color: #0F172A !important;
+  padding-left: 32px !important;
+}
+
+/* Dividers & Subheadings */
+body:not(.dark) .vendor-section-divider,
+body:not(.dark) .vendor-tab-content-card hr {
+  border: none !important;
+  border-top: 1px solid #E2E8F0 !important;
+}
+
+body:not(.dark) .vendor-section-subheading {
+  color: #0F172A !important;
+}
+
+/* Custom Work Offerings in Light Mode */
+body:not(.dark) .work-item-row {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+body:not(.dark) .work-item-row:hover {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+}
+
+body:not(.dark) .work-item-name {
+  color: #0F172A !important;
+  font-weight: 750 !important;
+}
+
+body:not(.dark) .work-item-rate {
+  color: #059669 !important;
+  font-weight: 900 !important;
+}
+
+body:not(.dark) .btn-demo-quick {
+  background: #F1F5F9 !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #334155 !important;
+}
+
+body:not(.dark) .btn-demo-quick:hover {
+  background: #E2E8F0 !important;
+  border-color: #FF4D2D !important;
+  color: #FF4D2D !important;
+}
+
+/* Overview Recent Order Rows in Light Mode */
+body:not(.dark) .vendor-overview-order-row {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+body:not(.dark) .vendor-overview-order-row:hover {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+}
+
+/* Booking Cards in Light Mode */
+body:not(.dark) .vendor-booking-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-left: 5px solid #FF4D2D !important;
+  color: #0F172A !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+body:not(.dark) .vendor-booking-card:hover {
+  border-color: #CBD5E1 !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08) !important;
+}
+
+body:not(.dark) .booking-service-title-row h4 {
+  color: #0F172A !important;
+}
+
+body:not(.dark) .booking-schedule-bar {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #334155 !important;
+}
+
+body:not(.dark) .booking-customer-meta > span {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #475569 !important;
+}
+
+body:not(.dark) .booking-customer-meta strong {
+  color: #0F172A !important;
+}
+
+body:not(.dark) .quick-call-btn {
+  background: #0F172A !important;
+  color: #FFFFFF !important;
+  border: 1px solid #0F172A !important;
+}
+
+body:not(.dark) .quick-call-btn:hover {
+  background: #1E293B !important;
+  color: #FFFFFF !important;
+}
+
+body:not(.dark) .vendor-stage-stepper {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+body:not(.dark) .step-num {
+  background: #E2E8F0 !important;
+  color: #64748B !important;
+}
+
+body:not(.dark) .stepper-line {
+  background: #E2E8F0 !important;
+}
+
+body:not(.dark) .booking-operations-box {
+  border-top-color: #E2E8F0 !important;
+}
+
+body:not(.dark) .stage-slot-confirmation {
+  background: #FFFBEB !important;
+  border: 1px solid #FCD34D !important;
+}
+
+body:not(.dark) .slot-instructions h5 {
+  color: #92400E !important;
+}
+
+body:not(.dark) .slot-instructions p {
+  color: #B45309 !important;
+}
+
+body:not(.dark) .input-slot-otp {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1.5px solid #F59E0B !important;
+}
+
+body:not(.dark) .stage-qr-verify-box {
+  background: #EEF2FF !important;
+  border: 1px solid #C7D2FE !important;
+}
+
+body:not(.dark) .stage-qr-verify-box h5 {
+  color: #1E3A8A !important;
+}
+
+body:not(.dark) .stage-qr-verify-box p {
+  color: #3B82F6 !important;
+}
+
+body:not(.dark) .input-qr-token {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1.5px solid #6366F1 !important;
+}
+
+body:not(.dark) .stage-work-completed-receipt {
+  background: #F8FAFC !important;
+  border: 1.5px dashed #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+body:not(.dark) .receipt-item {
+  color: #475569 !important;
+}
+
+body:not(.dark) .receipt-total {
+  color: #0F172A !important;
+  border-top-color: #CBD5E1 !important;
+}
+
+body:not(.dark) .receipt-split-box {
+  background: #F8FAFC !important;
+  border: 1.5px dashed #CBD5E1 !important;
+}
+
+body:not(.dark) .booking-worker-assign-box {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+body:not(.dark) .select-worker-assign {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1.5px solid #CBD5E1 !important;
+}
+
+/* KYC Documents in Light Mode */
+body:not(.dark) .kyc-doc-card {
+  background: #F8FAFC !important;
+  border: 1.5px dashed #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+body:not(.dark) .kyc-doc-card:hover {
+  background: #F1F5F9 !important;
+  border-color: #FF4D2D !important;
+}
+
+body:not(.dark) .kyc-doc-card.completed {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: #10B981 !important;
+}
+
+body:not(.dark) .kyc-doc-card strong {
+  color: #0F172A !important;
+}
+
+body:not(.dark) .doc-preview-box {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+body:not(.dark) .doc-upload-label {
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #334155 !important;
+}
+
+body:not(.dark) .doc-upload-label:hover {
+  background: #F8FAFC !important;
+  border-color: #FF4D2D !important;
+  color: #FF4D2D !important;
+}
+
+/* Worker Zero-Fee Franchise Policy Banner in Light Mode */
+body:not(.dark) .worker-policy-banner {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%) !important;
+  border: 1.5px solid #FCD34D !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.08) !important;
+  color: #78350F !important;
+}
+
+body:not(.dark) .worker-policy-banner h4 {
+  color: #92400E !important;
+}
+
+body:not(.dark) .worker-policy-banner p {
+  color: #78350F !important;
+}
+
+body:not(.dark) .worker-policy-banner .policy-pill {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid #FDE68A !important;
+  color: #78350F !important;
+}
+
+/* Wallet Table in Light Mode */
+body:not(.dark) .vendor-dash-wrapper .admin-table-container {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+body:not(.dark) .vendor-dash-wrapper .admin-table th {
+  background: #F8FAFC !important;
+  color: #475569 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+body:not(.dark) .vendor-dash-wrapper .admin-table td {
+  border-bottom: 1px solid #F1F5F9 !important;
+  color: #1E293B !important;
+}
+
+/* Modals in Light Mode */
+body:not(.dark) .cat-preview-modal-box {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0F172A !important;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.2) !important;
 }
 
 body:not(.dark) .vendor-stat-card {
