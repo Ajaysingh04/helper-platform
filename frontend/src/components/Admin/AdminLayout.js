@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { DataContext } from "../../context/DataContext";
 import AdminDashboard from "./AdminDashboard";
 import AdminBookings from "./AdminBookings";
@@ -15,6 +15,7 @@ import OtpInput from "../OtpInput";
 import "../../css/Admin/Admin.css";
 
 function AdminLayout() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState("");
@@ -59,6 +60,15 @@ function AdminLayout() {
   const handleLock = () => {
     setIsAuthenticated(false);
     localStorage.removeItem("helper_admin_auth");
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("helper_admin_auth");
+    localStorage.removeItem("helper_admin_token");
+    localStorage.removeItem("admin_token");
+    window.dispatchEvent(new Event("admin_updated"));
+    navigate("/");
   };
 
   const toggleTheme = () => {
@@ -295,12 +305,12 @@ function AdminLayout() {
             <span>🌐 View Website</span>
           </Link>
           <button 
-            className="table-action-btn delete" 
-            onClick={handleLock}
-            style={{ padding: "4px 8px", fontSize: "11px" }}
-            title="Lock Session"
+            type="button"
+            className="admin-logout-btn" 
+            onClick={handleLogout}
+            title="Sign Out of Admin Control Center"
           >
-            🔒 Lock
+            <span>🚪 Logout</span>
           </button>
         </div>
       </aside>
@@ -324,7 +334,7 @@ function AdminLayout() {
               <span className="admin-search-icon">🔍</span>
               <input 
                 type="text" 
-                placeholder="Search bookings, pros, services..."
+                placeholder="Search bookings, pros, services..." 
               />
             </div>
           </div>
@@ -349,6 +359,21 @@ function AdminLayout() {
               </div>
               <span className="admin-name-text">Super Admin</span>
             </div>
+
+            <button 
+              type="button"
+              className="admin-logout-btn"
+              onClick={handleLogout}
+              title="Sign Out of Admin Control Center"
+              style={{
+                width: "auto",
+                padding: "8px 14px",
+                fontSize: "12px",
+                borderRadius: "10px"
+              }}
+            >
+              <span>🚪 Logout</span>
+            </button>
           </div>
         </header>
 
