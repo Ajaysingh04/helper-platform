@@ -1895,6 +1895,36 @@ function CategoryPage() {
                       </div>
                     </div>
 
+                    {/* Redesigned Modern 10-Digit Mobile Phone Input */}
+                    <div className="booking-field-group">
+                      <div className="booking-field-label-row">
+                        <label className="booking-field-label">
+                          <span>📱 10-Digit Mobile Number (for dispatch & OTP)</span>
+                          <span className="field-required">*</span>
+                        </label>
+                        {enquiryPhone.length === 10 ? (
+                          <span className="phone-valid-badge animate-scale-in">✓ Valid Mobile</span>
+                        ) : enquiryPhone.length > 0 ? (
+                          <span className="phone-digits-badge">{10 - enquiryPhone.length} digits left</span>
+                        ) : null}
+                      </div>
+                      <div className={`booking-phone-input-wrap-pro ${enquiryPhone.length === 10 ? "is-valid" : ""}`}>
+                        <div className="phone-flag-prefix-pro">
+                          <span className="phone-flag-emoji">🇮🇳</span>
+                          <span className="phone-prefix-code">+91</span>
+                        </div>
+                        <input 
+                          type="tel"
+                          placeholder="98765 43210"
+                          value={enquiryPhone}
+                          onChange={(e) => setEnquiryPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
+                          required
+                          maxLength="10"
+                          className="booking-phone-input-pro"
+                        />
+                      </div>
+                    </div>
+
                     {/* Doorstep Address Input with Auto-Fill Button */}
                     <div className="booking-field-group">
                       <div className="booking-field-label-row">
@@ -1923,36 +1953,6 @@ function CategoryPage() {
                           placeholder="Palasia Square, Indore, Madhya Pradesh"
                           className="booking-addr-input-pro"
                           required
-                        />
-                      </div>
-                    </div>
-
-                    {/* Redesigned Modern 10-Digit Mobile Phone Input */}
-                    <div className="booking-field-group">
-                      <div className="booking-field-label-row">
-                        <label className="booking-field-label">
-                          <span>📱 10-Digit Mobile Number (for dispatch & OTP)</span>
-                          <span className="field-required">*</span>
-                        </label>
-                        {enquiryPhone.length === 10 ? (
-                          <span className="phone-valid-badge animate-scale-in">✓ Valid Mobile</span>
-                        ) : enquiryPhone.length > 0 ? (
-                          <span className="phone-digits-badge">{10 - enquiryPhone.length} digits left</span>
-                        ) : null}
-                      </div>
-                      <div className={`booking-phone-input-wrap-pro ${enquiryPhone.length === 10 ? "is-valid" : ""}`}>
-                        <div className="phone-flag-prefix-pro">
-                          <span className="phone-flag-emoji">🇮🇳</span>
-                          <span className="phone-prefix-code">+91</span>
-                        </div>
-                        <input 
-                          type="tel"
-                          placeholder="98765 43210"
-                          value={enquiryPhone}
-                          onChange={(e) => setEnquiryPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
-                          required
-                          maxLength="10"
-                          className="booking-phone-input-pro"
                         />
                       </div>
                     </div>

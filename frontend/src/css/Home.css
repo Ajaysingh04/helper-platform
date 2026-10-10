@@ -4611,6 +4611,16 @@ body.dark .provider-call-btn:hover {
   padding: 0;
 }
 
+.advanced-booking-form {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+}
+
 body.dark .advanced-booking-modal {
   background: #FFFFFF !important;
   border-color: #E2E8F0 !important;
@@ -4888,9 +4898,11 @@ body.dark .modal-service-price-note {
 
 /* Scrollable Modal Body */
 .modal-scrollable-body {
-  padding: 20px 24px;
+  padding: 20px 24px 50px;
   overflow-y: auto;
-  max-height: calc(90vh - 180px);
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -5565,8 +5577,10 @@ body.dark .phone-digits-badge {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  position: sticky;
-  bottom: 0;
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
 }
 
 body.dark .modal-booking-footer-bar {
@@ -5888,12 +5902,25 @@ body.dark .confirmed-problem-note {
 
   .advanced-booking-modal {
     border-radius: 24px 24px 0 0;
-    max-height: 94vh;
+    max-height: 92vh !important;
+    height: 92vh !important;
     border-bottom: none;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .advanced-booking-form {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
   }
 
   .modal-service-summary-pro {
     padding: 16px;
+    flex-shrink: 0;
   }
 
   .modal-service-thumb-img {
@@ -5906,9 +5933,13 @@ body.dark .confirmed-problem-note {
   }
 
   .modal-scrollable-body {
-    padding: 16px;
+    padding: 16px 16px 50px !important;
     gap: 18px;
-    max-height: calc(94vh - 160px);
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .problem-options-grid {
@@ -5924,6 +5955,10 @@ body.dark .confirmed-problem-note {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
+    flex-shrink: 0 !important;
+    position: relative !important;
+    bottom: auto !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08) !important;
   }
 
   .modal-confirm-booking-btn {
