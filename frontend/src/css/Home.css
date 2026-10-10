@@ -4898,7 +4898,7 @@ body.dark .modal-service-price-note {
 
 /* Scrollable Modal Body */
 .modal-scrollable-body {
-  padding: 20px 24px 50px;
+  padding: 20px 24px 80px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1 1 auto;
@@ -5933,7 +5933,7 @@ body.dark .confirmed-problem-note {
   }
 
   .modal-scrollable-body {
-    padding: 16px 16px 50px !important;
+    padding: 16px 16px 100px !important;
     gap: 18px;
     flex: 1 1 auto !important;
     min-height: 0 !important;
@@ -7415,9 +7415,14 @@ body.dark .experts-showcase-card {
   .booking-modal-overlay {
     padding: 12px;
   }
-  .booking-modal-box {
+  .booking-modal-box:not(.advanced-booking-modal) {
     padding: 22px 16px;
     border-radius: 18px;
+  }
+  .booking-modal-box.advanced-booking-modal,
+  .advanced-booking-modal {
+    padding: 0 !important;
+    overflow: hidden !important;
   }
   .modal-service-summary {
     gap: 10px;

@@ -543,7 +543,9 @@ function CategoryPage() {
     const problems = getCategoryProblems(categoryTitle, item);
     setBookingProblem(problems[0]?.title || "Tap / Faucet Continuously Dripping");
     setCustomProblemText("");
-    setEnquiryPhone(currentUser?.phone || localStorage.getItem("helper_user_phone") || "");
+    const userPhoneRaw = currentUser?.phone || localStorage.getItem("helper_user_phone") || "";
+    const cleanPhone = String(userPhoneRaw).replace(/^\+91/, "").replace(/[^0-9]/g, "").slice(0, 10);
+    setEnquiryPhone(cleanPhone);
     setEnquiryName(currentUser?.name || localStorage.getItem("helper_user_name") || "");
     setEnquiryAddress(localStorage.getItem("helper_user_full_address") || "Palasia Square, Indore, Madhya Pradesh");
   };

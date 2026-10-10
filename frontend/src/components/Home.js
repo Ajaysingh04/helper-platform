@@ -467,7 +467,9 @@ function Home() {
     setSelectedProvider(provider);
     setEnquirySuccess(false);
     setEnquiryName(currentUser?.name || localStorage.getItem("helper_user_name") || "");
-    setEnquiryPhone(currentUser?.phone || localStorage.getItem("helper_user_phone") || "");
+    const userPhoneRaw = currentUser?.phone || localStorage.getItem("helper_user_phone") || "";
+    const cleanPhone = String(userPhoneRaw).replace(/^\+91/, "").replace(/[^0-9]/g, "").slice(0, 10);
+    setEnquiryPhone(cleanPhone);
     const problems = getServiceProblems(service);
     setSelectedProblem(problems[0]?.title || "Inspection & Estimate");
     setCustomProblemNote("");
