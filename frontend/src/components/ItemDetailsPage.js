@@ -72,7 +72,7 @@ function ItemDetailsPage() {
       ["administrator", "admin", "partner", "vendor", "worker", "technician"].includes(currentUser?.role?.toLowerCase());
 
     if (isSpecialAccount) {
-      alert("⚠️ Only Customer accounts can place bookings. Administrator, Vendor, and Worker accounts are not permitted to book customer services.");
+      alert("⚠️ Only customers can book services. Please log in as a customer.");
       return;
     }
 
