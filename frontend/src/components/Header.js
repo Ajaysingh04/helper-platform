@@ -602,72 +602,106 @@ function Header() {
           />
         )}
 
-        {/* ================= Mobile Slide-Down Menu ================= */}
+        {/* ================= Modern Glassmorphic Mobile Navigation Drawer ================= */}
         <div 
           ref={menuRef}
           className={`mobile-nav-drawer ${mobileNavOpen ? "open" : ""}`}
           aria-hidden={!mobileNavOpen}
         >
-          {/* Mobile Location Card */}
-          <div className="mobile-drawer-location">
-            <div className="mobile-loc-icon">📍</div>
+          {/* 1. Interactive Service Location Chip */}
+          <div 
+            className="mobile-drawer-location"
+            onClick={() => {
+              setMobileNavOpen(false);
+              setLocationModalOpen(true);
+            }}
+            role="button"
+            tabIndex={0}
+            title="Click to change location"
+          >
+            <div className="mobile-loc-icon-bubble">📍</div>
             <div className="mobile-loc-info">
               <span className="mobile-loc-label">SERVICE LOCATION</span>
-              <strong className="mobile-loc-val">Musakhedi, Indore, MP</strong>
+              <strong className="mobile-loc-val">{selectedArea || "Musakhedi"}, {selectedCity || "Indore"}</strong>
             </div>
-            <span className="mobile-loc-badge">Active Zone</span>
+            <div className="mobile-loc-tag-wrap">
+              <span className="mobile-loc-badge">
+                <span className="live-pulse-dot" />
+                Active Zone
+              </span>
+              <span className="mobile-loc-change-text">Change ▾</span>
+            </div>
           </div>
 
-          {/* Main Mobile Navigation Links */}
-          <nav className="mobile-drawer-links" aria-label="Mobile Navigation">
-            <button
-              type="button"
-              className="mobile-nav-item"
-              onClick={() => {
-                setMobileNavOpen(false);
-                setSearchModalOpen(true);
-              }}
-              style={{
-                width: "100%",
-                background: "linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(255, 77, 45, 0.08) 100%)",
-                border: "1px solid rgba(99, 102, 241, 0.25)",
-                cursor: "pointer",
-                textAlign: "left"
-              }}
-            >
-              <span className="item-icon">🔍</span>
-              <span className="item-text" style={{ color: "#4F46E5", fontWeight: 700 }}>SMART SEARCH & ANALYZER</span>
-              <span className="item-arrow">➔</span>
-            </button>
+          {/* 2. Modern Smart Search Spotlight Button */}
+          <button
+            type="button"
+            className="mobile-drawer-search-btn"
+            onClick={() => {
+              setMobileNavOpen(false);
+              setSearchModalOpen(true);
+            }}
+          >
+            <div className="search-btn-left">
+              <span className="search-icon-bubble">🔍</span>
+              <div className="search-text-group">
+                <span className="search-title">Smart Search &amp; Analyzer</span>
+                <span className="search-subtitle">Find verified pros, repair &amp; rentals</span>
+              </div>
+            </div>
+            <kbd className="search-kbd-chip">⌘K</kbd>
+          </button>
 
-            <Link to="/" className={`mobile-nav-item ${isActive("/")}`} onClick={() => setMobileNavOpen(false)}>
-              <span className="item-icon">🏠</span>
-              <span className="item-text">HOME</span>
-              <span className="item-arrow">→</span>
+          {/* 3. Main Navigation Tiles (With Icon Badges & Subtitles) */}
+          <nav className="mobile-drawer-links" aria-label="Mobile Navigation">
+            <Link to="/" className={`mobile-nav-tile ${isActive("/")}`} onClick={() => setMobileNavOpen(false)}>
+              <span className="tile-icon-bubble coral">🏠</span>
+              <div className="tile-text-group">
+                <span className="tile-title">Home</span>
+                <span className="tile-sub">Fastest doorstep service hub</span>
+              </div>
+              <span className="tile-arrow">›</span>
             </Link>
-            <Link to="/about" className={`mobile-nav-item ${isActive("/about")}`} onClick={() => setMobileNavOpen(false)}>
-              <span className="item-icon">ℹ️</span>
-              <span className="item-text">ABOUT US</span>
-              <span className="item-arrow">→</span>
+
+            <Link to="/services" className={`mobile-nav-tile ${isActive("/services")}`} onClick={() => setMobileNavOpen(false)}>
+              <span className="tile-icon-bubble amber">⚡</span>
+              <div className="tile-text-group">
+                <span className="tile-title">Services</span>
+                <span className="tile-sub">100+ On-demand repairs &amp; fixes</span>
+              </div>
+              <span className="tile-badge-pill">Hot</span>
+              <span className="tile-arrow">›</span>
             </Link>
-            <Link to="/services" className={`mobile-nav-item ${isActive("/services")}`} onClick={() => setMobileNavOpen(false)}>
-              <span className="item-icon">⚡</span>
-              <span className="item-text">SERVICES</span>
-              <span className="item-arrow">→</span>
+
+            <Link to="/categories" className={`mobile-nav-tile ${isActive("/categories")}`} onClick={() => setMobileNavOpen(false)}>
+              <span className="tile-icon-bubble indigo">📂</span>
+              <div className="tile-text-group">
+                <span className="tile-title">Categories</span>
+                <span className="tile-sub">Electrician, AC, Cleaning &amp; more</span>
+              </div>
+              <span className="tile-arrow">›</span>
             </Link>
-            <Link to="/categories" className={`mobile-nav-item ${isActive("/categories")}`} onClick={() => setMobileNavOpen(false)}>
-              <span className="item-icon">📂</span>
-              <span className="item-text">CATEGORIES</span>
-              <span className="item-arrow">→</span>
+
+            <Link to="/about" className={`mobile-nav-tile ${isActive("/about")}`} onClick={() => setMobileNavOpen(false)}>
+              <span className="tile-icon-bubble cyan">ℹ️</span>
+              <div className="tile-text-group">
+                <span className="tile-title">About Us</span>
+                <span className="tile-sub">Safety guarantee &amp; verified pros</span>
+              </div>
+              <span className="tile-arrow">›</span>
             </Link>
-            <Link to="/contact" className={`mobile-nav-item ${isActive("/contact")}`} onClick={() => setMobileNavOpen(false)}>
-              <span className="item-icon">📞</span>
-              <span className="item-text">CONTACT</span>
-              <span className="item-arrow">→</span>
+
+            <Link to="/contact" className={`mobile-nav-tile ${isActive("/contact")}`} onClick={() => setMobileNavOpen(false)}>
+              <span className="tile-icon-bubble emerald">📞</span>
+              <div className="tile-text-group">
+                <span className="tile-title">Contact &amp; Support</span>
+                <span className="tile-sub">Instant 15-min arrival helpdesk</span>
+              </div>
+              <span className="tile-arrow">›</span>
             </Link>
           </nav>
 
-          {/* Mobile Footer Quick Actions */}
+          {/* 4. User Account & Action Section */}
           <div className="mobile-drawer-footer">
             {!isLoggedIn ? (
               <button 
@@ -678,19 +712,24 @@ function Header() {
                   navigate("/login");
                 }}
               >
-                <span>Sign In or Create Account</span>
-                <span>→</span>
+                <span className="login-btn-icon">🔐</span>
+                <div className="login-btn-text">
+                  <strong>Sign In or Register</strong>
+                  <small>Book appointments &amp; track verified experts</small>
+                </div>
+                <span className="login-arrow">➔</span>
               </button>
             ) : (
               <div className="mobile-logged-section">
-                <div className="mobile-user-card">
+                {/* VIP User Profile Header */}
+                <div className="mobile-user-card-pro">
                   <div 
-                    className="dropdown-avatar-circle" 
+                    className="drawer-avatar-glow"
                     style={
                       isAdmin
-                        ? { background: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)", color: "#FFFFFF", fontSize: "18px" }
+                        ? { background: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)", color: "#FFFFFF" }
                         : isVendor
-                        ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF", fontSize: "18px" }
+                        ? { background: "linear-gradient(135deg, #FF4D2D 0%, #FF8C38 100%)", color: "#FFFFFF" }
                         : {}
                     }
                   >
@@ -699,22 +738,23 @@ function Header() {
                     ) : isVendor ? (
                       <span>🛠️</span>
                     ) : currentUser?.avatar ? (
-                      <img src={currentUser.avatar} alt="Avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                      <img src={currentUser.avatar} alt="Avatar" className="drawer-avatar-img" />
                     ) : (
-                      <span>{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
+                      <span className="drawer-avatar-initial">{(currentUser?.name?.trim()?.charAt(0) || "A").toUpperCase()}</span>
                     )}
                   </div>
-                  <div className="dropdown-user-info">
-                    <strong className="dropdown-user-name">{displayName}</strong>
-                    <span className="dropdown-user-badge">
-                      <span className="active-green-dot" />
-                      {displayBadge}
-                    </span>
+                  <div className="drawer-user-details">
+                    <strong className="drawer-user-name">{displayName}</strong>
+                    <div className="drawer-member-status">
+                      <span className="live-pulse-dot" />
+                      <span className="drawer-status-label">{displayBadge || "Verified Member"}</span>
+                    </div>
                   </div>
                 </div>
 
+                {/* Account Action Buttons */}
                 <div className="mobile-action-buttons">
-                  {/* Option 1: Profile / Dashboard */}
+                  {/* Profile / Dashboard */}
                   <button 
                     type="button" 
                     className="mobile-acc-btn profile"
@@ -731,25 +771,37 @@ function Header() {
                       }
                     }}
                   >
-                    <span>
-                      {isAdmin ? "🛡️ Admin Control Panel" : isVendor ? "🛠️ Vendor Profile & Shop" : isWorker ? "👷 Worker Profile & Trade" : "👤 Profile & Settings"}
-                    </span>
-                    <span>›</span>
+                    <div className="acc-btn-left">
+                      <span className="acc-btn-icon-bubble purple">👤</span>
+                      <div className="acc-btn-text-wrap">
+                        <span className="acc-btn-primary">
+                          {isAdmin ? "Admin Control Panel" : isVendor ? "Vendor Profile & Shop" : isWorker ? "Worker Workplace" : "Profile & Settings"}
+                        </span>
+                        <span className="acc-btn-secondary">Manage account details</span>
+                      </div>
+                    </div>
+                    <span className="acc-chevron">›</span>
                   </button>
 
                   {/* Customer: My Bookings & OTP */}
                   {!isAdmin && !isVendor && !isWorker && (
                     <button 
                       type="button" 
-                      className="mobile-acc-btn"
-                      style={{ background: "rgba(255, 77, 45, 0.08)", border: "1px solid rgba(255, 77, 45, 0.25)", color: "#FF4D2D", fontWeight: 700 }}
+                      className="mobile-acc-btn bookings"
                       onClick={() => {
                         setMobileNavOpen(false);
                         navigate("/my-bookings");
                       }}
                     >
-                      <span>📋 My Bookings &amp; Service OTP</span>
-                      <span>›</span>
+                      <div className="acc-btn-left">
+                        <span className="acc-btn-icon-bubble coral">📋</span>
+                        <div className="acc-btn-text-wrap">
+                          <span className="acc-btn-primary">My Bookings &amp; Service OTP</span>
+                          <span className="acc-btn-secondary">Track live technician arrival</span>
+                        </div>
+                      </div>
+                      <span className="acc-badge-pill">OTP Vault</span>
+                      <span className="acc-chevron">›</span>
                     </button>
                   )}
 
@@ -757,31 +809,41 @@ function Header() {
                   {isWorker && (
                     <button 
                       type="button" 
-                      className="mobile-acc-btn"
-                      style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.2)" }}
+                      className="mobile-acc-btn jobs"
                       onClick={() => {
                         setMobileNavOpen(false);
                         navigate("/worker/dashboard?tab=active_jobs");
                       }}
                     >
-                      <span>⚡ Assigned Field Jobs & Radar</span>
-                      <span>›</span>
+                      <div className="acc-btn-left">
+                        <span className="acc-btn-icon-bubble emerald">⚡</span>
+                        <div className="acc-btn-text-wrap">
+                          <span className="acc-btn-primary">Assigned Jobs &amp; Radar</span>
+                          <span className="acc-btn-secondary">Live customer requests</span>
+                        </div>
+                      </div>
+                      <span className="acc-chevron">›</span>
                     </button>
                   )}
 
-                  {/* Admin Bookings / Operations */}
+                  {/* Admin Bookings */}
                   {isAdmin && (
                     <button 
                       type="button" 
-                      className="mobile-acc-btn"
-                      style={{ background: "rgba(220, 38, 38, 0.08)", border: "1px solid rgba(220, 38, 38, 0.2)" }}
+                      className="mobile-acc-btn admin"
                       onClick={() => {
                         setMobileNavOpen(false);
                         navigate("/admin/bookings");
                       }}
                     >
-                      <span>📊 All Customer Orders</span>
-                      <span>›</span>
+                      <div className="acc-btn-left">
+                        <span className="acc-btn-icon-bubble red">📊</span>
+                        <div className="acc-btn-text-wrap">
+                          <span className="acc-btn-primary">All Customer Orders</span>
+                          <span className="acc-btn-secondary">Manage dispatch &amp; verification</span>
+                        </div>
+                      </div>
+                      <span className="acc-chevron">›</span>
                     </button>
                   )}
 
@@ -789,19 +851,24 @@ function Header() {
                   {isVendor && !isAdmin && (
                     <button 
                       type="button" 
-                      className="mobile-acc-btn"
-                      style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.2)" }}
+                      className="mobile-acc-btn vendor"
                       onClick={() => {
                         setMobileNavOpen(false);
                         navigate("/vendor/dashboard?tab=bookings");
                       }}
                     >
-                      <span>📋 Vendor Orders & Bookings</span>
-                      <span>›</span>
+                      <div className="acc-btn-left">
+                        <span className="acc-btn-icon-bubble amber">📋</span>
+                        <div className="acc-btn-text-wrap">
+                          <span className="acc-btn-primary">Vendor Orders &amp; Bookings</span>
+                          <span className="acc-btn-secondary">Customer dispatch console</span>
+                        </div>
+                      </div>
+                      <span className="acc-chevron">›</span>
                     </button>
                   )}
 
-                  {/* Option 2: Help */}
+                  {/* Help & Support */}
                   <button 
                     type="button" 
                     className="mobile-acc-btn help"
@@ -810,11 +877,17 @@ function Header() {
                       navigate("/help");
                     }}
                   >
-                    <span>❓ Help & Support</span>
-                    <span>›</span>
+                    <div className="acc-btn-left">
+                      <span className="acc-btn-icon-bubble teal">❓</span>
+                      <div className="acc-btn-text-wrap">
+                        <span className="acc-btn-primary">Help &amp; Support</span>
+                        <span className="acc-btn-secondary">Instant answers &amp; FAQs</span>
+                      </div>
+                    </div>
+                    <span className="acc-chevron">›</span>
                   </button>
 
-                  {/* Option 3: Logout */}
+                  {/* Logout */}
                   <button 
                     type="button" 
                     className="mobile-acc-btn logout"
@@ -834,16 +907,26 @@ function Header() {
                       }
                     }}
                   >
-                    <span>🚪 Logout (Sign Out)</span>
-                    <span>➔</span>
+                    <div className="acc-btn-left">
+                      <span className="acc-btn-icon-bubble crimson">🚪</span>
+                      <div className="acc-btn-text-wrap">
+                        <span className="acc-btn-primary">Logout (Sign Out)</span>
+                        <span className="acc-btn-secondary">Safely exit your session</span>
+                      </div>
+                    </div>
+                    <span className="acc-chevron logout-arrow">➔</span>
                   </button>
                 </div>
               </div>
             )}
 
+            {/* Helpline Pill Banner */}
             <a href="tel:+919876543210" className="mobile-emergency-call">
-              <span className="call-icon">📞</span>
-              <span>24/7 Helpline: <strong>+91 98765 43210</strong></span>
+              <span className="call-icon-pulse">📞</span>
+              <div className="call-text-wrap">
+                <span className="call-label">24/7 Priority Emergency Support</span>
+                <strong className="call-phone-val">+91 98765 43210</strong>
+              </div>
             </a>
           </div>
         </div>
