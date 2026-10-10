@@ -1294,7 +1294,10 @@ body.dark .mobile-emergency-call {
 /* Small Tablets & Large Phones (< 768px) */
 @media (max-width: 768px) {
   .header-floating-wrapper {
-    padding: 6px 14px;
+    padding: 6px 10px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
   }
 
   .header-floating-wrapper.home-header {
@@ -1312,64 +1315,133 @@ body.dark .mobile-emergency-call {
     border-bottom-color: rgba(31, 41, 55, 0.8) !important;
   }
 
-  /* Hide bulky elements from top bar on mobile (they are now in mobile drawer) */
-  .header-location-pill {
-    display: none;
-  }
-
-  .account-btn-text {
-    display: none;
-  }
-
-  .nexora-account-btn {
-    padding: 0;
-  }
-
-  .nexora-sub-tag {
-    display: none;
+  .header-pill-bar {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
   }
 
   .header-right {
-    gap: 8px;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+    margin-left: 0 !important;
+  }
+
+  .header-location-pill {
+    display: flex !important;
+    padding: 5px 8px !important;
+    max-width: 125px !important;
+    font-size: 11.5px !important;
+    gap: 4px !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    border-radius: 8px !important;
+  }
+
+  .header-location-pill .loc-text {
+    max-width: 75px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .account-btn-text,
+  .nexora-sub-tag {
+    display: none !important;
+  }
+
+  .nexora-account-btn {
+    padding: 0 !important;
+  }
+
+  .header-cart-btn,
+  .theme-toggle-btn,
+  .header-quick-search-btn {
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .mobile-nav-toggle {
+    display: flex !important;
+    width: 34px !important;
+    height: 34px !important;
+    flex-shrink: 0 !important;
+    margin-right: 0 !important;
+    margin-left: 2px !important;
+    box-sizing: border-box !important;
+    border-radius: 8px !important;
+    border: 1px solid #CBD5E1 !important;
+  }
+
+  body.dark .mobile-nav-toggle {
+    border-color: #334155 !important;
+  }
+
+  .hamburger-box {
+    width: 16px !important;
+    height: 12px !important;
+  }
+
+  .hamburger-inner,
+  .hamburger-box::before,
+  .hamburger-box::after {
+    width: 16px !important;
+    height: 2px !important;
   }
 }
 
 /* Mobile Screens (< 480px / 360px) */
 @media (max-width: 480px) {
   .header-floating-wrapper {
-    padding: 4px 10px;
+    padding: 4px 6px !important;
   }
 
   .header-pill-bar {
-    height: 52px;
-    padding: 0 12px;
+    height: 52px !important;
+    padding: 0 2px !important;
   }
 
-  .nexora-brand-text {
-    font-size: 18px;
+  .header-right {
+    gap: 4px !important;
   }
 
-  .nexora-go-badge {
-    font-size: 10px;
-    padding: 2px 6px;
+  .header-location-pill {
+    max-width: 105px !important;
+    padding: 4px 6px !important;
+    font-size: 11px !important;
   }
 
+  .header-location-pill .loc-text {
+    max-width: 60px !important;
+  }
+
+  .header-quick-search-btn,
   .header-cart-btn,
-  .theme-toggle-btn,
-  .mobile-nav-toggle {
-    width: 32px;
-    height: 32px;
+  .theme-toggle-btn {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
   }
 
-  .account-user-icon {
-    width: 30px;
-    height: 30px;
-  }
-
+  .account-user-icon,
   .profile-avatar-circle {
-    width: 30px;
-    height: 30px;
-    font-size: 12px;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 12px !important;
+  }
+
+  .mobile-nav-toggle {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    margin-right: 2px !important;
   }
 
   .mobile-nav-drawer {
@@ -1377,5 +1449,38 @@ body.dark .mobile-emergency-call {
     right: 8px;
     padding: 14px;
     border-radius: 20px;
+  }
+}
+
+/* Extra Small Phones (< 360px) */
+@media (max-width: 360px) {
+  .header-floating-wrapper {
+    padding: 3px 4px !important;
+  }
+
+  .header-right {
+    gap: 3px !important;
+  }
+
+  .header-location-pill {
+    max-width: 85px !important;
+    padding: 3px 5px !important;
+  }
+
+  .header-location-pill .loc-text {
+    max-width: 42px !important;
+  }
+
+  .header-quick-search-btn,
+  .header-cart-btn,
+  .theme-toggle-btn {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .mobile-nav-toggle {
+    width: 32px !important;
+    height: 32px !important;
+    margin-right: 1px !important;
   }
 }

@@ -253,7 +253,7 @@ function Header() {
             <div 
               className="header-location-pill" 
               onClick={() => setLocationModalOpen(true)}
-              style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+              style={{ cursor: "pointer" }}
               title="Click to select City & Area (e.g. Indore, Palasia)"
             >
               <span className="loc-pin-icon">📍</span>
