@@ -147,25 +147,98 @@
 }
 
 .admin-sidebar-footer {
-  padding: 16px 20px;
+  padding: 16px 18px;
   border-top: 1px solid var(--border-color);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface-card);
+  margin-top: auto;
 }
 
 .admin-back-site-btn {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  transition: all var(--transition-fast);
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--surface-input, #F8FAFC);
+  border: 1px solid var(--border-color, #E2E8F0);
+  text-decoration: none;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .admin-back-site-btn:hover {
-  color: var(--primary);
+  background: rgba(16, 185, 129, 0.08);
+  color: #10B981;
+  border-color: rgba(16, 185, 129, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.admin-logout-btn {
+  font-size: 13px;
+  font-weight: 700;
+  color: #EF4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1.5px solid rgba(239, 68, 68, 0.2);
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  outline: none;
+}
+
+.admin-logout-btn:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+  border-color: #EF4444;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+}
+
+.admin-logout-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+body.dark .admin-sidebar-footer {
+  background: #0F172A;
+  border-top-color: #1E293B;
+}
+
+body.dark .admin-back-site-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #1E293B;
+  color: #94A3B8;
+}
+
+body.dark .admin-back-site-btn:hover {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34D399;
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+body.dark .admin-logout-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #F87171;
+}
+
+body.dark .admin-logout-btn:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+  border-color: #EF4444;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
 }
 
 /* ================= Main Content Container ================= */

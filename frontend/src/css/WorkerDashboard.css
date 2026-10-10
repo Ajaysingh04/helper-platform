@@ -1613,4 +1613,243 @@ body.dark .v-text .pulse-text {
   }
 }
 
+/* ==========================================================================
+   DYNAMIC DASHBOARD ANIMATIONS & MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* 1. Staggered Entrance Animations */
+@keyframes cardCascadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.admin-stats-summary-grid .admin-summary-card {
+  animation: cardCascadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.admin-stats-summary-grid .admin-summary-card:nth-child(1) { animation-delay: 0.04s; }
+.admin-stats-summary-grid .admin-summary-card:nth-child(2) { animation-delay: 0.12s; }
+.admin-stats-summary-grid .admin-summary-card:nth-child(3) { animation-delay: 0.20s; }
+.admin-stats-summary-grid .admin-summary-card:nth-child(4) { animation-delay: 0.28s; }
+
+/* 2. Metallic Shimmer & Hover Lift on Metric Cards */
+.admin-summary-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.admin-summary-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-25deg);
+  transition: all 0.75s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.admin-summary-card:hover::before {
+  left: 140%;
+}
+
+.admin-summary-card:hover {
+  transform: translateY(-5px) scale(1.015) !important;
+}
+
+.admin-summary-card:nth-child(1):hover {
+  box-shadow: 0 12px 28px -4px rgba(16, 185, 129, 0.22) !important;
+  border-color: #10B981 !important;
+}
+
+.admin-summary-card:nth-child(2):hover {
+  box-shadow: 0 12px 28px -4px rgba(245, 158, 11, 0.22) !important;
+  border-color: #F59E0B !important;
+}
+
+.admin-summary-card:nth-child(3):hover {
+  box-shadow: 0 12px 28px -4px rgba(59, 130, 246, 0.22) !important;
+  border-color: #3B82F6 !important;
+}
+
+.admin-summary-card:nth-child(4):hover {
+  box-shadow: 0 12px 28px -4px rgba(139, 92, 246, 0.22) !important;
+  border-color: #8B5CF6 !important;
+}
+
+.admin-summary-card:hover .summary-card-icon {
+  transform: scale(1.2) rotate(6deg) !important;
+}
+
+/* 3. Live Radar / Status Ping */
+@keyframes radarRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.status-pill.online,
+.admin-duty-badge,
+span[style*="ONLINE (DUTY)"],
+button[style*="ONLINE (DUTY)"],
+.wrk-duty-toggle {
+  position: relative;
+  animation: radarRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes liveDotRadar {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.live-radar-dot {
+  display: inline-block;
+  animation: liveDotRadar 1.8s infinite;
+}
+
+/* 4. Sidebar Navigation Interactive Micro-interactions */
+.admin-nav-btn {
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  position: relative;
+}
+
+.admin-nav-btn:hover {
+  transform: translateX(6px) !important;
+  background: var(--surface-input, rgba(16, 185, 129, 0.08)) !important;
+}
+
+.admin-nav-btn .nav-icon {
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.admin-nav-btn:hover .nav-icon {
+  transform: scale(1.25) rotate(6deg);
+}
+
+.admin-nav-btn.active {
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.18) !important;
+  border-left: 3.5px solid #10B981 !important;
+}
+
+.admin-nav-btn.active .nav-icon {
+  transform: scale(1.1);
+}
+
+/* Alert Badge Subtle Heartbeat Bounce */
+@keyframes badgeAlertBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.admin-nav-count.alert {
+  animation: badgeAlertBounce 2s ease-in-out infinite;
+}
+
+/* 5. KYC & Verification Badges Breathing Glow */
+@keyframes kycBreathingPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 14px 2px rgba(16, 185, 129, 0.4);
+  }
+}
+
+.admin-count-pill[style*="10B981"],
+.wrk-verified-pill {
+  animation: kycBreathingPulse 3s infinite ease-in-out;
+  transition: all 0.25s ease;
+}
+
+.wrk-verified-pill:hover {
+  transform: scale(1.05);
+}
+
+/* 6. Technician Avatar Floating Halo & Tilt */
+img[alt="Avatar"] {
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+}
+
+img[alt="Avatar"]:hover {
+  transform: scale(1.06) rotate(1.5deg);
+  box-shadow: 0 10px 28px rgba(16, 185, 129, 0.38) !important;
+}
+
+/* 7. Skill Specialty Badges Interactive Hover */
+.admin-card-section div[style*="flex-wrap: wrap"] span {
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: default;
+}
+
+.admin-card-section div[style*="flex-wrap: wrap"] span:hover {
+  transform: translateY(-3px) scale(1.05);
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: #10B981 !important;
+  color: #10B981 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+/* 8. Tab Transitions & Smooth Scale Entrance */
+@keyframes tabSlideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-card-section.animate-fade-in {
+  animation: tabSlideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 9. Punch In Button Modern Shimmer */
+button[style*="Punch In"],
+.admin-action-btn.punch-in {
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+button[style*="Punch In"]:hover,
+.admin-action-btn.punch-in:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.25);
+}
+
+button[style*="Punch In"]:active,
+.admin-action-btn.punch-in:active {
+  transform: translateY(0) scale(0.97);
+}
+
 

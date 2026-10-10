@@ -1057,6 +1057,7 @@ function WorkerDashboard() {
             {/* Live Duty Toggle */}
             <button 
               type="button"
+              className="wrk-duty-toggle"
               onClick={handleToggleOnline}
               style={{
                 padding: "7px 14px",
@@ -1073,13 +1074,14 @@ function WorkerDashboard() {
               }}
               title="Toggle Live Online/Offline Status"
             >
-              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: worker?.availability?.isOnline !== false ? "#10B981" : "#94A3B8" }} />
+              <span className="live-radar-dot" style={{ width: "8px", height: "8px", borderRadius: "50%", background: worker?.availability?.isOnline !== false ? "#10B981" : "#94A3B8" }} />
               <span>{worker?.availability?.isOnline !== false ? "ONLINE (DUTY)" : "OFFLINE"}</span>
             </button>
 
             {/* Shift Punch Button */}
             <button 
               type="button"
+              className="admin-action-btn punch-in"
               onClick={handleTogglePunch}
               style={{
                 padding: "7px 14px",

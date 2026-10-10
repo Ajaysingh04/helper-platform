@@ -1617,12 +1617,11 @@ function VendorDashboard() {
           </Link>
           <button 
             type="button"
-            className="table-action-btn delete" 
+            className="admin-logout-btn" 
             onClick={handleLogout}
-            style={{ padding: "6px 12px", fontSize: "12px" }}
             title="Sign Out"
           >
-            🚪 Logout
+            <span>🚪 Logout</span>
           </button>
         </div>
       </aside>
