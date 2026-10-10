@@ -4272,21 +4272,182 @@ body.dark .cat-preview-modal-box {
   gap: 20px;
 }
 
+body:not(.dark) .vendor-portal-layout {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+body:not(.dark) .vendor-portal-layout .admin-main-viewport {
+  background-color: #F8FAFC !important;
+}
+
+body:not(.dark) .vendor-portal-layout .admin-top-bar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+body:not(.dark) .vendor-portal-layout .admin-sidebar {
+  background: #FFFFFF !important;
+  border-right: 1px solid #E2E8F0 !important;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.02) !important;
+}
+
+body:not(.dark) .vendor-status-toggle-pill.online {
+  background: #ECFDF5 !important;
+  border: 1px solid #A7F3D0 !important;
+  color: #047857 !important;
+  font-weight: 750 !important;
+}
+
+body:not(.dark) .vendor-status-toggle-pill.offline {
+  background: #FFFBEB !important;
+  border: 1px solid #FDE68A !important;
+  color: #B45309 !important;
+  font-weight: 750 !important;
+}
+
+body:not(.dark) .vendor-top-franchise-btn.active {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%) !important;
+  border: 1px solid #FDE68A !important;
+  color: #B45309 !important;
+  font-weight: 750 !important;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.12) !important;
+}
+
+body:not(.dark) .vendor-portal-layout .theme-toggle-btn {
+  background: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #475569 !important;
+  border-radius: 10px !important;
+}
+
+body:not(.dark) .vendor-portal-layout .admin-profile-pill {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+body:not(.dark) .vendor-portal-layout .admin-profile-pill .admin-name-text {
+  color: #0F172A !important;
+  font-weight: 700 !important;
+}
+
 body:not(.dark) .vendor-overview-welcome-card {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 24px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 14px 28px -4px rgba(15, 23, 42, 0.05) !important;
+  padding: 26px 28px !important;
+}
+
+body:not(.dark) .vendor-avatar-circle {
+  background: linear-gradient(135deg, #FF4D2D 0%, #FF7A00 100%) !important;
+  border: 3px solid #FFFFFF !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 20px rgba(255, 77, 45, 0.28) !important;
+}
+
+body:not(.dark) .vendor-avatar-circle::after {
+  border: 2.5px solid #FFFFFF !important;
+  background: #10B981 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35) !important;
 }
 
 body:not(.dark) .vendor-overview-welcome-card .vendor-header-title h2 {
   color: #0F172A !important;
+  font-size: 23px !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.02em !important;
+}
+
+body:not(.dark) .vendor-verified-pill {
+  background: #ECFDF5 !important;
+  border: 1px solid #A7F3D0 !important;
+  color: #047857 !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.12) !important;
+}
+
+body:not(.dark) .vendor-cat-badge {
+  background: #FFF5F2 !important;
+  border: 1px solid #FFD4C8 !important;
+  color: #C2410C !important;
+  font-weight: 750 !important;
+  font-size: 12px !important;
+}
+
+body:not(.dark) .vendor-location-tag {
+  background: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #334155 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+
+body:not(.dark) .vendor-owner-tag {
+  background: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #334155 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+
+body:not(.dark) .vendor-capacity-badge {
+  background: #EFF6FF !important;
+  border: 1px solid #BFDBFE !important;
+  color: #1D4ED8 !important;
+  font-weight: 750 !important;
+  font-size: 12px !important;
+}
+
+body:not(.dark) .vendor-franchise-badge {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%) !important;
+  border: 1px solid #FDE68A !important;
+  color: #92400E !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.15) !important;
+}
+
+body:not(.dark) .vendor-nav-telemetry {
+  background: #F0FDF4 !important;
+  border: 1px solid #BBF7D0 !important;
+}
+
+body:not(.dark) .vendor-telemetry-tag {
+  color: #15803D !important;
+  font-weight: 750 !important;
+  font-size: 12.5px !important;
+}
+
+body:not(.dark) .btn-franchise-manage {
+  background: linear-gradient(135deg, #FF4D2D 0%, #FF7A00 100%) !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  padding: 10px 22px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 4px 14px rgba(255, 77, 45, 0.35) !important;
+}
+
+body:not(.dark) .btn-franchise-manage:hover {
+  background: linear-gradient(135deg, #E03E1F 0%, #FF6600 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(255, 77, 45, 0.5) !important;
+  color: #FFFFFF !important;
 }
 
 body:not(.dark) .vendor-tab-content-card {
   background: #FFFFFF !important;
   border: 1px solid #E2E8F0 !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03) !important;
   color: #0F172A !important;
+  border-radius: 20px !important;
 }
 
 body:not(.dark) .vendor-tab-content-card h3 {
@@ -4635,15 +4796,80 @@ body:not(.dark) .cat-preview-modal-box {
 body:not(.dark) .vendor-stat-card {
   background: #FFFFFF !important;
   border: 1px solid #E2E8F0 !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 8px 18px -2px rgba(15, 23, 42, 0.05) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body:not(.dark) .vendor-stat-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.09) !important;
+  border-color: #CBD5E1 !important;
+}
+
+body:not(.dark) .stat-icon-rate {
+  background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%) !important;
+  border: 1px solid #C7D2FE !important;
+  color: #4F46E5 !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12) !important;
+}
+
+body:not(.dark) .stat-icon-pending {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%) !important;
+  border: 1px solid #FDE68A !important;
+  color: #D97706 !important;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.12) !important;
+}
+
+body:not(.dark) .stat-icon-jobs {
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%) !important;
+  border: 1px solid #A7F3D0 !important;
+  color: #059669 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12) !important;
+}
+
+body:not(.dark) .stat-icon-revenue {
+  background: linear-gradient(135deg, #FFF5F2 0%, #FFEDD5 100%) !important;
+  border: 1px solid #FED7AA !important;
+  color: #EA580C !important;
+  box-shadow: 0 4px 12px rgba(255, 77, 45, 0.14) !important;
 }
 
 body:not(.dark) .vendor-stat-info h4 {
   color: #64748B !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
 }
 
 body:not(.dark) .vendor-stat-val {
   color: #0F172A !important;
+  font-size: 26px !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.02em !important;
+}
+
+body:not(.dark) .vendor-stat-sub {
+  color: #64748B !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+body:not(.dark) .btn-stat-action {
+  background: #FFF5F2 !important;
+  border: 1px solid #FFD4C8 !important;
+  color: #C2410C !important;
+  font-weight: 750 !important;
+  font-size: 11.5px !important;
+  box-shadow: 0 1px 2px rgba(255, 77, 45, 0.1) !important;
+}
+
+body:not(.dark) .btn-stat-action:hover {
+  background: #FF4D2D !important;
+  color: #FFFFFF !important;
+  border-color: #FF4D2D !important;
+  box-shadow: 0 4px 12px rgba(255, 77, 45, 0.35) !important;
 }
 
 /* Quick Actions Bar */
@@ -4755,18 +4981,88 @@ body:not(.dark) .quick-action-text strong {
 
 @media (max-width: 768px) {
   .vendor-portal-layout .admin-top-bar {
-    padding: 10px 12px !important;
+    padding: 10px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    min-height: 56px !important;
     height: auto !important;
-    min-height: 56px;
-    flex-wrap: wrap;
-    gap: 8px;
   }
 
   .vendor-portal-layout .admin-top-actions {
-    width: 100%;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: 8px;
+    width: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+  }
+
+  .vendor-status-toggle-pill {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    gap: 5px !important;
+  }
+
+  .vendor-top-franchise-btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    gap: 4px !important;
+  }
+
+  .vendor-portal-layout .theme-toggle-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .vendor-portal-layout .admin-profile-pill {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .vendor-portal-layout .admin-profile-pill .admin-name-text {
+    display: none !important;
+  }
+
+  .vendor-portal-layout .admin-avatar-small {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 15px !important;
+    border-radius: 10px !important;
+  }
+
+  .vendor-overview-welcome-card {
+    padding: 20px 18px !important;
+    gap: 16px !important;
+  }
+
+  .vendor-overview-welcome-card .vendor-header-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .vendor-overview-welcome-card .vendor-nav-telemetry {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .vendor-overview-welcome-card .btn-franchise-manage {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px 18px !important;
+    box-sizing: border-box !important;
   }
 
   .vendor-portal-layout .admin-view-body {
