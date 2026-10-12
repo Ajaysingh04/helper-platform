@@ -16,6 +16,9 @@ const ProviderSchema = new mongoose.Schema(
       type: String,
       default: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200"
     },
+    image: {
+      type: String
+    },
     hourlyRate: { type: String, default: "₹299/hr" },
     location: { type: String, default: "Sector 18, Central Zone" },
     address: { type: String, default: "14 Palm Avenue, Metro Zone, City Central" },

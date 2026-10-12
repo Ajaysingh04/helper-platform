@@ -433,9 +433,54 @@ function CategoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confirmedBookingInfo?.bookingCode]);
 
+  // Serviceman Avatar Presets
+  const SERVICEMAN_AVATAR_PRESETS = useMemo(() => [
+    { label: "Pro 1", url: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400" },
+    { label: "Pro 2", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" },
+    { label: "Pro 3", url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" },
+    { label: "Pro 4", url: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400" },
+    { label: "Pro 5", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400" },
+    { label: "Pro 6", url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400" }
+  ], []);
+
+  // Helper to read and compress image files for lightning-fast database persistence
+  const compressImage = useCallback((file, maxWidth = 600, quality = 0.82) => {
+    return new Promise((resolve) => {
+      if (!file) return resolve(null);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          } catch (err) {
+            resolve(e.target.result);
+          }
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
   // Edit Provider Modal State (Updates Backend)
   const [editingProvider, setEditingProvider] = useState(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editImageMode, setEditImageMode] = useState("file"); // "file" | "url" | "presets"
+  const editFileInputRef = useRef(null);
   const [editForm, setEditForm] = useState({
     name: "",
     shopName: "",
@@ -443,12 +488,15 @@ function CategoryPage() {
     distance: "",
     experience: "",
     rating: 4.9,
-    address: ""
+    address: "",
+    image: ""
   });
 
   // Add New Provider Modal State
   const [showAddModal, setShowAddModal] = useState(false);
   const [isAddingPro, setIsAddingPro] = useState(false);
+  const [addImageMode, setAddImageMode] = useState("file"); // "file" | "url" | "presets"
+  const addFileInputRef = useRef(null);
   const [addForm, setAddForm] = useState({
     name: "",
     shopName: "",
@@ -456,8 +504,36 @@ function CategoryPage() {
     distance: "1.2 km",
     experience: "5+ Years Exp",
     rating: 4.9,
-    address: "Central Zone, Main Market"
+    address: "Central Zone, Main Market",
+    image: ""
   });
+
+  const handleEditPhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file (JPG, PNG, WEBP)");
+      return;
+    }
+    const optimized = await compressImage(file);
+    if (optimized) {
+      setEditForm(prev => ({ ...prev, image: optimized }));
+      showToast("📸 Photo selected! Click 'Save Changes' to update backend.");
+    }
+  };
+
+  const handleAddPhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file (JPG, PNG, WEBP)");
+      return;
+    }
+    const optimized = await compressImage(file);
+    if (optimized) {
+      setAddForm(prev => ({ ...prev, image: optimized }));
+    }
+  };
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -755,6 +831,7 @@ function CategoryPage() {
   // Open Edit Modal with existing provider data
   const handleOpenEdit = (item) => {
     setEditingProvider(item);
+    setEditImageMode("file");
     setEditForm({
       name: item.name || "",
       shopName: item.shopName || "",
@@ -762,7 +839,8 @@ function CategoryPage() {
       distance: item.distance || "1.2 km",
       experience: item.experience || "5+ Years Exp",
       rating: item.rating || 4.9,
-      address: item.address || item.location || ""
+      address: item.address || item.location || "",
+      image: item.image || item.avatar || ""
     });
   };
 
@@ -772,6 +850,8 @@ function CategoryPage() {
     if (!editingProvider) return;
     setIsSavingEdit(true);
 
+    const chosenImage = editForm.image || editingProvider.image || editingProvider.avatar || "";
+
     const updatedFields = {
       name: editForm.name.trim(),
       shopName: editForm.shopName.trim(),
@@ -780,13 +860,21 @@ function CategoryPage() {
       experience: editForm.experience.trim().toLowerCase().includes("exp") ? editForm.experience.trim() : `${editForm.experience.trim()} Exp`,
       rating: parseFloat(editForm.rating) || 4.9,
       address: editForm.address.trim(),
-      location: editForm.address.trim()
+      location: editForm.address.trim(),
+      image: chosenImage,
+      avatar: chosenImage
     };
 
     try {
       if (updateProviderInContext) {
         await updateProviderInContext(editingProvider.id || editingProvider._id, updatedFields);
       }
+      setBackendCategoryProviders(prev => prev.map(p => 
+        (String(p.id) === String(editingProvider.id || editingProvider._id) || String(p._id) === String(editingProvider.id || editingProvider._id))
+          ? { ...p, ...updatedFields }
+          : p
+      ));
+      categoryItemsRegistry.set(String(editingProvider.id || editingProvider._id), { ...editingProvider, ...updatedFields });
       showToast(`✅ Saved! ${updatedFields.name} updated in Backend Database.`);
       setEditingProvider(null);
     } catch (err) {
@@ -801,6 +889,8 @@ function CategoryPage() {
   const handleSaveNewProvider = async (e) => {
     e.preventDefault();
     setIsAddingPro(true);
+
+    const chosenImg = addForm.image || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400";
 
     const newPro = {
       id: `prv_${Date.now()}`,
@@ -817,13 +907,15 @@ function CategoryPage() {
       verified: true,
       status: "Active",
       facilities: ["Certified Specialist", "Instant Booking", "Warranty Covered"],
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400"
+      avatar: chosenImg,
+      image: chosenImg
     };
 
     try {
       if (addProviderInContext) {
         await addProviderInContext(newPro);
       }
+      setBackendCategoryProviders(prev => [newPro, ...prev]);
       showToast(`🎉 New Serviceman ${newPro.name} added to ${categoryTitle} in Backend!`);
       setShowAddModal(false);
       setAddForm({
@@ -833,7 +925,8 @@ function CategoryPage() {
         distance: "1.2 km",
         experience: "5+ Years Exp",
         rating: 4.9,
-        address: "Central Zone, Main Market"
+        address: "Central Zone, Main Market",
+        image: ""
       });
     } catch (err) {
       showToast(`Added locally: ${err.message}`);
@@ -1161,6 +1254,223 @@ function CategoryPage() {
             </div>
 
             <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {/* Serviceman Profile Photo / Image Upload & Change Option */}
+              <div style={{
+                background: "#F8FAFC",
+                border: "1px solid #E2E8F0",
+                borderRadius: "14px",
+                padding: "12px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#1E293B", margin: 0 }}>
+                    Serviceman Photo / Image 📸
+                  </label>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setEditImageMode("file")}
+                      style={{
+                        padding: "3px 9px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        borderRadius: "6px",
+                        border: editImageMode === "file" ? "1px solid #FF4D2D" : "1px solid #CBD5E1",
+                        background: editImageMode === "file" ? "#FFF1EE" : "#fff",
+                        color: editImageMode === "file" ? "#FF4D2D" : "#64748B",
+                        cursor: "pointer"
+                      }}
+                    >
+                      📁 Upload
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditImageMode("url")}
+                      style={{
+                        padding: "3px 9px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        borderRadius: "6px",
+                        border: editImageMode === "url" ? "1px solid #FF4D2D" : "1px solid #CBD5E1",
+                        background: editImageMode === "url" ? "#FFF1EE" : "#fff",
+                        color: editImageMode === "url" ? "#FF4D2D" : "#64748B",
+                        cursor: "pointer"
+                      }}
+                    >
+                      🔗 Link URL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditImageMode("presets")}
+                      style={{
+                        padding: "3px 9px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        borderRadius: "6px",
+                        border: editImageMode === "presets" ? "1px solid #FF4D2D" : "1px solid #CBD5E1",
+                        background: editImageMode === "presets" ? "#FFF1EE" : "#fff",
+                        color: editImageMode === "presets" ? "#FF4D2D" : "#64748B",
+                        cursor: "pointer"
+                      }}
+                    >
+                      ⚡ Presets
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  {/* Photo Preview Circle with Camera Overlay */}
+                  <div
+                    onClick={() => editFileInputRef.current?.click()}
+                    title="Click to choose a photo from device"
+                    style={{
+                      position: "relative",
+                      width: "66px",
+                      height: "66px",
+                      borderRadius: "14px",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      border: "2px solid #FF4D2D",
+                      boxShadow: "0 3px 10px rgba(255, 77, 45, 0.18)",
+                      flexShrink: 0
+                    }}
+                  >
+                    <img
+                      src={editForm.image || editingProvider.image || editingProvider.avatar || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400"}
+                      alt="Serviceman preview"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400";
+                      }}
+                    />
+                    <div style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: "rgba(0,0,0,0.6)",
+                      color: "#fff",
+                      fontSize: "9px",
+                      textAlign: "center",
+                      padding: "2px 0",
+                      fontWeight: 700
+                    }}>
+                      Edit 📷
+                    </div>
+                  </div>
+
+                  {/* Input Based on Mode */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <input
+                      type="file"
+                      ref={editFileInputRef}
+                      onChange={handleEditPhotoUpload}
+                      accept="image/*"
+                      style={{ display: "none" }}
+                    />
+
+                    {editImageMode === "file" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                          <button
+                            type="button"
+                            onClick={() => editFileInputRef.current?.click()}
+                            style={{
+                              padding: "7px 14px",
+                              background: "#FF4D2D",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "8px",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            📁 Choose Photo from Device
+                          </button>
+                          {editForm.image && editForm.image !== (editingProvider.image || editingProvider.avatar) && (
+                            <button
+                              type="button"
+                              onClick={() => setEditForm(prev => ({ ...prev, image: editingProvider.image || editingProvider.avatar || "" }))}
+                              style={{
+                                padding: "6px 10px",
+                                background: "#fff",
+                                color: "#64748B",
+                                border: "1px solid #CBD5E1",
+                                borderRadius: "8px",
+                                fontSize: "11px",
+                                cursor: "pointer"
+                              }}
+                            >
+                              ↺ Reset
+                            </button>
+                          )}
+                        </div>
+                        <span style={{ fontSize: "11px", color: "#64748B" }}>
+                          Choose any photo (JPG, PNG, WEBP) - auto-compressed for fast loading
+                        </span>
+                      </div>
+                    )}
+
+                    {editImageMode === "url" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <input
+                          type="url"
+                          placeholder="Paste image link (e.g. https://...)"
+                          value={editForm.image}
+                          onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                          style={{
+                            width: "100%",
+                            padding: "8px 11px",
+                            borderRadius: "8px",
+                            border: "1px solid #CBD5E1",
+                            fontSize: "12.5px"
+                          }}
+                        />
+                        <span style={{ fontSize: "11px", color: "#64748B" }}>
+                          Paste any direct image URL (Unsplash, CDN, etc.)
+                        </span>
+                      </div>
+                    )}
+
+                    {editImageMode === "presets" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+                          {SERVICEMAN_AVATAR_PRESETS.map((p, idx) => (
+                            <img
+                              key={idx}
+                              src={p.url}
+                              alt={p.label}
+                              title={`Choose ${p.label}`}
+                              onClick={() => setEditForm({ ...editForm, image: p.url })}
+                              style={{
+                                width: "32px",
+                                height: "32px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                cursor: "pointer",
+                                border: editForm.image === p.url ? "2.5px solid #FF4D2D" : "1.5px solid #CBD5E1",
+                                transform: editForm.image === p.url ? "scale(1.15)" : "scale(1)",
+                                transition: "all 0.15s ease",
+                                boxShadow: editForm.image === p.url ? "0 2px 8px rgba(255, 77, 45, 0.3)" : "none"
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <span style={{ fontSize: "11px", color: "#64748B" }}>
+                          Tap any preset photo to apply instantly
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
@@ -1305,6 +1615,223 @@ function CategoryPage() {
             </div>
 
             <form onSubmit={handleSaveNewProvider} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {/* Serviceman Profile Photo / Image Upload & Option */}
+              <div style={{
+                background: "#F8FAFC",
+                border: "1px solid #E2E8F0",
+                borderRadius: "14px",
+                padding: "12px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#1E293B", margin: 0 }}>
+                    Serviceman Photo / Image 📸
+                  </label>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setAddImageMode("file")}
+                      style={{
+                        padding: "3px 9px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        borderRadius: "6px",
+                        border: addImageMode === "file" ? "1px solid #FF4D2D" : "1px solid #CBD5E1",
+                        background: addImageMode === "file" ? "#FFF1EE" : "#fff",
+                        color: addImageMode === "file" ? "#FF4D2D" : "#64748B",
+                        cursor: "pointer"
+                      }}
+                    >
+                      📁 Upload
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddImageMode("url")}
+                      style={{
+                        padding: "3px 9px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        borderRadius: "6px",
+                        border: addImageMode === "url" ? "1px solid #FF4D2D" : "1px solid #CBD5E1",
+                        background: addImageMode === "url" ? "#FFF1EE" : "#fff",
+                        color: addImageMode === "url" ? "#FF4D2D" : "#64748B",
+                        cursor: "pointer"
+                      }}
+                    >
+                      🔗 Link URL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddImageMode("presets")}
+                      style={{
+                        padding: "3px 9px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        borderRadius: "6px",
+                        border: addImageMode === "presets" ? "1px solid #FF4D2D" : "1px solid #CBD5E1",
+                        background: addImageMode === "presets" ? "#FFF1EE" : "#fff",
+                        color: addImageMode === "presets" ? "#FF4D2D" : "#64748B",
+                        cursor: "pointer"
+                      }}
+                    >
+                      ⚡ Presets
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  {/* Photo Preview Circle with Camera Overlay */}
+                  <div
+                    onClick={() => addFileInputRef.current?.click()}
+                    title="Click to choose a photo from device"
+                    style={{
+                      position: "relative",
+                      width: "66px",
+                      height: "66px",
+                      borderRadius: "14px",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      border: "2px solid #FF4D2D",
+                      boxShadow: "0 3px 10px rgba(255, 77, 45, 0.18)",
+                      flexShrink: 0
+                    }}
+                  >
+                    <img
+                      src={addForm.image || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400"}
+                      alt="Serviceman preview"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400";
+                      }}
+                    />
+                    <div style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: "rgba(0,0,0,0.6)",
+                      color: "#fff",
+                      fontSize: "9px",
+                      textAlign: "center",
+                      padding: "2px 0",
+                      fontWeight: 700
+                    }}>
+                      Upload 📷
+                    </div>
+                  </div>
+
+                  {/* Input Based on Mode */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <input
+                      type="file"
+                      ref={addFileInputRef}
+                      onChange={handleAddPhotoUpload}
+                      accept="image/*"
+                      style={{ display: "none" }}
+                    />
+
+                    {addImageMode === "file" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                          <button
+                            type="button"
+                            onClick={() => addFileInputRef.current?.click()}
+                            style={{
+                              padding: "7px 14px",
+                              background: "#FF4D2D",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "8px",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            📁 Choose Photo from Device
+                          </button>
+                          {addForm.image && (
+                            <button
+                              type="button"
+                              onClick={() => setAddForm(prev => ({ ...prev, image: "" }))}
+                              style={{
+                                padding: "6px 10px",
+                                background: "#fff",
+                                color: "#64748B",
+                                border: "1px solid #CBD5E1",
+                                borderRadius: "8px",
+                                fontSize: "11px",
+                                cursor: "pointer"
+                              }}
+                            >
+                              ↺ Clear
+                            </button>
+                          )}
+                        </div>
+                        <span style={{ fontSize: "11px", color: "#64748B" }}>
+                          Choose any photo (JPG, PNG, WEBP) - auto-compressed for fast loading
+                        </span>
+                      </div>
+                    )}
+
+                    {addImageMode === "url" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <input
+                          type="url"
+                          placeholder="Paste image link (e.g. https://...)"
+                          value={addForm.image}
+                          onChange={(e) => setAddForm({ ...addForm, image: e.target.value })}
+                          style={{
+                            width: "100%",
+                            padding: "8px 11px",
+                            borderRadius: "8px",
+                            border: "1px solid #CBD5E1",
+                            fontSize: "12.5px"
+                          }}
+                        />
+                        <span style={{ fontSize: "11px", color: "#64748B" }}>
+                          Paste any direct image URL (Unsplash, CDN, etc.)
+                        </span>
+                      </div>
+                    )}
+
+                    {addImageMode === "presets" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+                          {SERVICEMAN_AVATAR_PRESETS.map((p, idx) => (
+                            <img
+                              key={idx}
+                              src={p.url}
+                              alt={p.label}
+                              title={`Choose ${p.label}`}
+                              onClick={() => setAddForm({ ...addForm, image: p.url })}
+                              style={{
+                                width: "32px",
+                                height: "32px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                cursor: "pointer",
+                                border: addForm.image === p.url ? "2.5px solid #FF4D2D" : "1.5px solid #CBD5E1",
+                                transform: addForm.image === p.url ? "scale(1.15)" : "scale(1)",
+                                transition: "all 0.15s ease",
+                                boxShadow: addForm.image === p.url ? "0 2px 8px rgba(255, 77, 45, 0.3)" : "none"
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <span style={{ fontSize: "11px", color: "#64748B" }}>
+                          Tap any preset photo to apply instantly
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, marginBottom: "4px" }}>
