@@ -6,29 +6,99 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  TextInput,
   Dimensions,
   FlatList,
   StatusBar,
-  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
 
-// Stories / Flash Highlight Row
+// Stories / Flash Highlight Row with specific target routes & filters
 const STORIES = [
-  { id: 'st1', label: 'Offer 50%', icon: '🏷️', color: '#FF4D2D', border: '#FF4D2D' },
-  { id: 'st2', label: '15m Express', icon: '⚡', color: '#10B981', border: '#10B981' },
-  { id: 'st3', label: 'AC Foam', icon: '❄️', color: '#06B6D4', border: '#06B6D4' },
-  { id: 'st4', label: 'Cleaning', icon: '🧹', color: '#8B5CF6', border: '#8B5CF6' },
-  { id: 'st5', label: 'Verified', icon: '🛡️', color: '#F59E0B', border: '#F59E0B' },
-  { id: 'st6', label: 'Salon', icon: '💇‍♀️', color: '#EC4899', border: '#EC4899' },
-  { id: 'st7', label: 'Pay Later', icon: '💵', color: '#14B8A6', border: '#14B8A6' },
+  {
+    id: 'st1',
+    label: 'Offer 50%',
+    icon: '🏷️',
+    color: '#FF4D2D',
+    border: '#FF4D2D',
+    action: (nav) => nav.navigate('Explore', { initialFilter: '50% OFF' }),
+  },
+  {
+    id: 'st2',
+    label: '15m Express',
+    icon: '⚡',
+    color: '#10B981',
+    border: '#10B981',
+    action: (nav) => nav.navigate('Explore', { initialFilter: 'Repairs' }),
+  },
+  {
+    id: 'st3',
+    label: 'AC Foam',
+    icon: '❄️',
+    color: '#06B6D4',
+    border: '#06B6D4',
+    action: (nav) =>
+      nav.navigate('CategoryDetails', {
+        category: { id: 'ac-repair-services', name: 'AC Repair', icon: '❄️' },
+      }),
+  },
+  {
+    id: 'st4',
+    label: 'Cleaning',
+    icon: '🧹',
+    color: '#8B5CF6',
+    border: '#8B5CF6',
+    action: (nav) =>
+      nav.navigate('CategoryDetails', {
+        category: { id: 'cleaning', name: 'Cleaning', icon: '🧹' },
+      }),
+  },
+  {
+    id: 'st5',
+    label: 'Verified',
+    icon: '🛡️',
+    color: '#F59E0B',
+    border: '#F59E0B',
+    action: (nav) =>
+      nav.navigate('CategoryDetails', {
+        category: { id: 'electricians', name: 'Electrician', icon: '⚡' },
+      }),
+  },
+  {
+    id: 'st6',
+    label: 'Salon',
+    icon: '💇‍♀️',
+    color: '#EC4899',
+    border: '#EC4899',
+    action: (nav) =>
+      nav.navigate('CategoryDetails', {
+        category: { id: 'beauty-parlours', name: 'Salon', icon: '💇‍♀️' },
+      }),
+  },
+  {
+    id: 'st7',
+    label: 'Plumber',
+    icon: '🚰',
+    color: '#6366F1',
+    border: '#6366F1',
+    action: (nav) =>
+      nav.navigate('CategoryDetails', {
+        category: { id: 'plumbers', name: 'Plumber', icon: '🚰' },
+      }),
+  },
+  {
+    id: 'st8',
+    label: 'Pay Later',
+    icon: '💵',
+    color: '#14B8A6',
+    border: '#14B8A6',
+    action: (nav) => nav.navigate('Explore', { initialFilter: 'All' }),
+  },
 ];
 
+// 4 distinct banners with clear face visibility
 const HERO_BANNERS = [
   {
     id: 'b1',
@@ -39,6 +109,7 @@ const HERO_BANNERS = [
     image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=900',
     price: 499,
     originalPrice: 799,
+    categoryRoute: { id: 'ac-repair-services', name: 'AC Repair', icon: '❄️' },
   },
   {
     id: 'b2',
@@ -49,6 +120,7 @@ const HERO_BANNERS = [
     image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=900',
     price: 899,
     originalPrice: 1499,
+    categoryRoute: { id: 'cleaning', name: 'Cleaning', icon: '🧹' },
   },
   {
     id: 'b3',
@@ -59,6 +131,18 @@ const HERO_BANNERS = [
     image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=900',
     price: 249,
     originalPrice: 399,
+    categoryRoute: { id: 'electricians', name: 'Electrician', icon: '⚡' },
+  },
+  {
+    id: 'b4',
+    title: 'Master Plumbing & Leak Fix',
+    subtitle: 'Tap replacement, concealed pipe & drainage fix',
+    tag: '🚰 24/7 ARRIVAL',
+    badge: 'EXPRESS',
+    image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=900',
+    price: 299,
+    originalPrice: 499,
+    categoryRoute: { id: 'plumbers', name: 'Plumber', icon: '🚰' },
   },
 ];
 
@@ -85,6 +169,7 @@ const TOP_SPECIALISTS = [
     avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400',
     verified: true,
     price: 249,
+    categoryRoute: { id: 'electricians', name: 'Electrician', icon: '⚡' },
   },
   {
     id: 'pro2',
@@ -97,6 +182,7 @@ const TOP_SPECIALISTS = [
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
     verified: true,
     price: 499,
+    categoryRoute: { id: 'ac-repair-services', name: 'AC Repair', icon: '❄️' },
   },
   {
     id: 'pro3',
@@ -109,6 +195,7 @@ const TOP_SPECIALISTS = [
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400',
     verified: true,
     price: 899,
+    categoryRoute: { id: 'cleaning', name: 'Cleaning', icon: '🧹' },
   },
 ];
 
@@ -127,6 +214,18 @@ const BESTSELLER_SERVICES = [
   },
   {
     id: 'bs2',
+    name: 'Full Home Deep Cleaning',
+    category: 'Cleaning',
+    price: 899,
+    originalPrice: 1499,
+    discount: '50% OFF',
+    rating: 4.95,
+    reviews: 580,
+    time: '3-4 hrs',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=600',
+  },
+  {
+    id: 'bs3',
     name: 'Switchboard & MCB Repair',
     category: 'Electrician',
     price: 249,
@@ -138,28 +237,16 @@ const BESTSELLER_SERVICES = [
     image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=600',
   },
   {
-    id: 'bs3',
-    name: 'Full Home Deep Cleaning',
-    category: 'Cleaning',
-    price: 899,
-    originalPrice: 1499,
-    discount: '40% OFF',
-    rating: 4.9,
-    reviews: 580,
-    time: '3-4 hrs',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=600',
-  },
-  {
     id: 'bs4',
     name: 'Tap Leakage & Blockage Fix',
     category: 'Plumber',
     price: 299,
     originalPrice: 499,
     discount: '40% OFF',
-    rating: 4.8,
+    rating: 4.85,
     reviews: 245,
     time: '40 mins',
-    image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=600',
+    image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=600',
   },
 ];
 
@@ -259,7 +346,7 @@ export default function HomeScreen({ navigation }) {
               key={st.id}
               style={styles.storyItem}
               activeOpacity={0.8}
-              onPress={() => navigation.navigate('Explore')}
+              onPress={() => st.action(navigation)}
             >
               <View style={[styles.storyRing, { borderColor: st.border }]}>
                 <View style={[styles.storyInner, { backgroundColor: '#131A2B' }]}>
@@ -271,7 +358,7 @@ export default function HomeScreen({ navigation }) {
           ))}
         </ScrollView>
 
-        {/* PANORAMIC CAROUSEL BANNER */}
+        {/* PANORAMIC CAROUSEL BANNER WITH FACE VISIBLE AT TOP & INFO AT BOTTOM */}
         <View style={styles.heroSection}>
           <FlatList
             ref={bannerListRef}
@@ -289,8 +376,10 @@ export default function HomeScreen({ navigation }) {
             }}
             renderItem={({ item }) => (
               <View style={[styles.heroCard, { width: BANNER_WIDTH }]}>
-                <Image source={{ uri: item.image }} style={styles.heroBgImg} />
-                <View style={styles.heroOverlay}>
+                {/* Visual Image Section - 100% Face Clear */}
+                <View style={styles.heroImageSection}>
+                  <Image source={{ uri: item.image }} style={styles.heroBgImg} resizeMode="cover" />
+                  {/* Subtle top corner tags only */}
                   <View style={styles.heroTopRow}>
                     <View style={styles.heroTagBadge}>
                       <Text style={styles.heroTagText}>{item.tag}</Text>
@@ -299,16 +388,19 @@ export default function HomeScreen({ navigation }) {
                       <Text style={styles.heroMostBookedText}>{item.badge}</Text>
                     </View>
                   </View>
+                </View>
 
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.heroTitle}>{item.title}</Text>
-                    <Text style={styles.heroSubtitle}>{item.subtitle}</Text>
+                {/* Dedicated Dark Glass Info Bar at the Bottom */}
+                <View style={styles.heroBottomBar}>
+                  <View style={styles.heroMetaLeft}>
+                    <Text style={styles.heroTitle} numberOfLines={1}>{item.title}</Text>
+                    <Text style={styles.heroSubtitle} numberOfLines={1}>{item.subtitle}</Text>
                   </View>
 
-                  <View style={styles.heroBottomRow}>
-                    <View>
-                      <Text style={styles.heroPriceLabel}>LIMITED TIME FARE</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+                  <View style={styles.heroActionRow}>
+                    <View style={styles.heroPriceBlock}>
+                      <Text style={styles.heroPriceLabel}>FARE</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5 }}>
                         <Text style={styles.heroPriceVal}>₹{item.price}</Text>
                         <Text style={styles.heroOldPrice}>₹{item.originalPrice}</Text>
                       </View>
@@ -438,10 +530,7 @@ export default function HomeScreen({ navigation }) {
               style={styles.proCard}
               activeOpacity={0.85}
               onPress={() =>
-                navigation.navigate('BookingCheckout', {
-                  service: { name: `${pro.specialty} Inspection`, price: pro.price, image: pro.avatar },
-                  pro,
-                })
+                navigation.navigate('CategoryDetails', { category: pro.categoryRoute })
               }
             >
               <View style={styles.proHeaderRow}>
@@ -774,38 +863,40 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  // Hero Carousel
+  // Hero Carousel - Redesigned with Face Clear & Bottom Info Bar
   heroSection: {
     marginTop: 6,
   },
   heroCard: {
-    height: 190,
+    height: 250,
     borderRadius: 18,
     overflow: 'hidden',
-    position: 'relative',
     marginRight: 14,
-    backgroundColor: '#0F1523',
+    backgroundColor: '#0D1322',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  heroImageSection: {
+    height: 160,
+    width: '100%',
+    position: 'relative',
+    backgroundColor: '#1E293B',
   },
   heroBgImg: {
     width: '100%',
     height: '100%',
-    position: 'absolute',
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(7, 10, 18, 0.72)',
-    padding: 14,
-    justifyContent: 'space-between',
   },
   heroTopRow: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   heroTagBadge: {
-    backgroundColor: 'rgba(255, 77, 45, 0.25)',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
     borderWidth: 1,
     borderColor: 'rgba(255, 77, 45, 0.5)',
     paddingHorizontal: 8,
@@ -818,7 +909,9 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   heroMostBookedBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -828,45 +921,56 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontWeight: '800',
   },
+  heroBottomBar: {
+    height: 90,
+    backgroundColor: '#0F1523',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  heroMetaLeft: {
+    marginBottom: 4,
+  },
   heroTitle: {
-    fontSize: 18,
+    fontSize: 15.5,
     fontWeight: '900',
     color: '#FFFFFF',
-    marginTop: 6,
   },
   heroSubtitle: {
-    fontSize: 11.5,
-    color: '#CBD5E1',
-    marginTop: 2,
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 1,
   },
-  heroBottomRow: {
+  heroActionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.12)',
-    paddingTop: 8,
+    alignItems: 'center',
+  },
+  heroPriceBlock: {
+    flexDirection: 'column',
   },
   heroPriceLabel: {
-    color: '#94A3B8',
-    fontSize: 8.5,
+    color: '#64748B',
+    fontSize: 8,
     fontWeight: '800',
   },
   heroPriceVal: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
   },
   heroOldPrice: {
     color: '#64748B',
-    fontSize: 12,
+    fontSize: 11,
     textDecorationLine: 'line-through',
   },
   heroBookBtn: {
     backgroundColor: '#FF4D2D',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
   },
   heroBookBtnText: {
     color: '#FFFFFF',

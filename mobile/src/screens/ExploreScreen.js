@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,121 +7,140 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 const ALL_SERVICES = [
   {
     id: 's1',
-    name: 'Electrician - Wiring & Switchboard',
-    category: 'Repairs',
-    price: 249,
-    originalPrice: 399,
-    rating: 4.9,
-    reviews: 380,
-    duration: '30-45 mins',
-    image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=500',
-    tag: '⚡ 15-Min Arrival',
-  },
-  {
-    id: 's2',
-    name: 'Emergency Plumbing & Leak Fix',
-    category: 'Plumbing',
-    price: 299,
-    originalPrice: 499,
-    rating: 4.8,
-    reviews: 245,
-    duration: '45 mins',
-    image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=500',
-    tag: '🛡️ Verified Pro',
-  },
-  {
-    id: 's3',
     name: 'AC Jet Foam Deep Cleaning',
     category: 'AC Repair',
     price: 499,
     originalPrice: 799,
+    discount: '38% OFF',
     rating: 5.0,
     reviews: 512,
     duration: '60 mins',
-    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=500',
+    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600',
     tag: '❄️ Best Seller',
   },
   {
-    id: 's4',
-    name: 'Full Home Deep Cleaning',
+    id: 's2',
+    name: 'Full Home Deep Sanitization',
     category: 'Cleaning',
     price: 899,
     originalPrice: 1499,
-    rating: 4.9,
+    discount: '50% OFF',
+    rating: 4.95,
     reviews: 620,
     duration: '3-4 hrs',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500',
-    tag: '✨ Sanitized',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=600',
+    tag: '✨ 50% OFF Deal',
+  },
+  {
+    id: 's3',
+    name: 'Electrician - Wiring & Switchboard',
+    category: 'Repairs',
+    price: 249,
+    originalPrice: 399,
+    discount: '37% OFF',
+    rating: 4.9,
+    reviews: 380,
+    duration: '30-45 mins',
+    image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=600',
+    tag: '⚡ 15-Min Arrival',
+  },
+  {
+    id: 's4',
+    name: 'Emergency Pipe Leak & Tap Fix',
+    category: 'Plumbing',
+    price: 299,
+    originalPrice: 499,
+    discount: '40% OFF',
+    rating: 4.85,
+    reviews: 245,
+    duration: '45 mins',
+    image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=600',
+    tag: '🛡️ Verified Pro',
   },
   {
     id: 's5',
-    name: 'Carpenter - Furniture Repair & Lock',
-    category: 'Carpentry',
-    price: 349,
-    originalPrice: 599,
-    rating: 4.8,
-    reviews: 190,
-    duration: '45 mins',
-    image: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=500',
-    tag: '🔨 Expert',
-  },
-  {
-    id: 's6',
-    name: 'Waterproof Wall Painting',
-    category: 'Painting',
-    price: 599,
-    originalPrice: 999,
-    rating: 4.9,
-    reviews: 280,
-    duration: '2-3 hrs',
-    image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=500',
-    tag: '🎨 Clean Finish',
-  },
-  {
-    id: 's7',
-    name: 'Salon at Home for Women',
+    name: 'Salon at Home for Women (Facial + Wax)',
     category: 'Beauty',
     price: 699,
-    originalPrice: 1199,
+    originalPrice: 1399,
+    discount: '50% OFF',
     rating: 5.0,
     reviews: 430,
     duration: '60-90 mins',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=500',
-    tag: '💅 Top Rated',
+    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=600',
+    tag: '💅 50% OFF Special',
+  },
+  {
+    id: 's6',
+    name: 'Carpenter - Godrej Lock & Hinge Repair',
+    category: 'Carpentry',
+    price: 349,
+    originalPrice: 599,
+    discount: '42% OFF',
+    rating: 4.8,
+    reviews: 190,
+    duration: '45 mins',
+    image: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=600',
+    tag: '🔨 Wood Expert',
+  },
+  {
+    id: 's7',
+    name: 'Waterproof Wall & Texture Painting',
+    category: 'Painting',
+    price: 599,
+    originalPrice: 999,
+    discount: '40% OFF',
+    rating: 4.9,
+    reviews: 280,
+    duration: '2-3 hrs',
+    image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=600',
+    tag: '🎨 Clean Finish',
   },
   {
     id: 's8',
-    name: 'Washing Machine & Fridge Repair',
+    name: 'Washing Machine & Refrigerator Repair',
     category: 'Appliance',
     price: 399,
     originalPrice: 699,
-    rating: 4.8,
+    discount: '43% OFF',
+    rating: 4.88,
     reviews: 215,
     duration: '45 mins',
-    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=500',
+    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=600',
     tag: '🔧 Genuine Parts',
   },
 ];
 
-const FILTERS = ['All', 'Repairs', 'Cleaning', 'AC Repair', 'Plumbing', 'Painting', 'Beauty', 'Carpentry'];
+const FILTERS = ['All', '50% OFF', 'AC Repair', 'Cleaning', 'Repairs', 'Plumbing', 'Painting', 'Beauty', 'Carpentry'];
 
-export default function ExploreScreen({ navigation }) {
+export default function ExploreScreen({ route, navigation }) {
   const [activeFilter, setActiveFilter] = useState('All');
   const [query, setQuery] = useState('');
 
+  // Handle incoming filter parameters from stories or search
+  useEffect(() => {
+    if (route.params?.initialFilter) {
+      setActiveFilter(route.params.initialFilter);
+    }
+  }, [route.params?.initialFilter]);
+
   const filteredServices = ALL_SERVICES.filter((item) => {
-    const matchesFilter = activeFilter === 'All' || item.category.toLowerCase().includes(activeFilter.toLowerCase());
-    const matchesQuery = item.name.toLowerCase().includes(query.toLowerCase()) || item.category.toLowerCase().includes(query.toLowerCase());
+    let matchesFilter = true;
+    if (activeFilter === '50% OFF') {
+      matchesFilter = item.discount === '50% OFF' || item.price <= 499;
+    } else if (activeFilter !== 'All') {
+      matchesFilter = item.category.toLowerCase().includes(activeFilter.toLowerCase()) ||
+                      item.name.toLowerCase().includes(activeFilter.toLowerCase());
+    }
+    const matchesQuery = item.name.toLowerCase().includes(query.toLowerCase()) ||
+                         item.category.toLowerCase().includes(query.toLowerCase());
     return matchesFilter && matchesQuery;
   });
 
@@ -130,7 +149,7 @@ export default function ExploreScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Explore 100+ Services</Text>
-        <Text style={styles.headerSub}>Doorstep delivery in 15-30 minutes</Text>
+        <Text style={styles.headerSub}>Doorstep delivery in 15-30 minutes across Indore</Text>
 
         {/* Search */}
         <View style={styles.searchBox}>
@@ -144,7 +163,7 @@ export default function ExploreScreen({ navigation }) {
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')}>
-              <Text style={{ color: '#94A3B8' }}>✕</Text>
+              <Text style={{ color: '#94A3B8', fontWeight: '800' }}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -169,7 +188,7 @@ export default function ExploreScreen({ navigation }) {
 
       {/* Services List */}
       <ScrollView contentContainerStyle={styles.serviceList} showsVerticalScrollIndicator={false}>
-        <Text style={styles.resultsCount}>Showing {filteredServices.length} verified services</Text>
+        <Text style={styles.resultsCount}>Showing {filteredServices.length} verified services in Indore</Text>
 
         {filteredServices.map((service) => (
           <View key={service.id} style={styles.serviceCard}>
@@ -186,11 +205,11 @@ export default function ExploreScreen({ navigation }) {
               </View>
 
               <Text style={styles.serviceName}>{service.name}</Text>
-              <Text style={styles.durationText}>⏱️ {service.duration} • 100% Guaranteed</Text>
+              <Text style={styles.durationText}>⏱️ {service.duration} • 100% Quality Guaranteed</Text>
 
               <View style={styles.actionRow}>
                 <View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
                     <Text style={styles.price}>₹{service.price}</Text>
                     <Text style={styles.originalPrice}>₹{service.originalPrice}</Text>
                   </View>
@@ -199,6 +218,7 @@ export default function ExploreScreen({ navigation }) {
 
                 <TouchableOpacity
                   style={styles.bookBtn}
+                  activeOpacity={0.85}
                   onPress={() => navigation.navigate('BookingCheckout', { service })}
                 >
                   <Text style={styles.bookBtnText}>Book ➔</Text>
@@ -215,14 +235,14 @@ export default function ExploreScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.darkBg,
+    backgroundColor: '#070A12',
   },
   header: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderDark,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   headerTitle: {
     fontSize: 20,
@@ -238,9 +258,9 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.darkCard,
+    backgroundColor: '#0F1523',
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 44,
@@ -253,10 +273,11 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#F1F5F9',
     fontSize: 13,
+    fontWeight: '600',
   },
   filterScrollWrap: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderDark,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   filterRow: {
     paddingHorizontal: 16,
@@ -264,16 +285,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterChip: {
-    backgroundColor: colors.darkCard,
+    backgroundColor: '#0F1523',
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   activeFilterChip: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: '#FF4D2D',
+    borderColor: '#FF4D2D',
   },
   filterText: {
     color: '#94A3B8',
@@ -294,16 +315,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   serviceCard: {
-    backgroundColor: colors.darkCard,
-    borderRadius: 14,
+    backgroundColor: '#0F1523',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     overflow: 'hidden',
     marginBottom: 14,
   },
   serviceImage: {
     width: '100%',
-    height: 140,
+    height: 145,
   },
   cardDetails: {
     padding: 14,
@@ -321,7 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   tagText: {
-    color: colors.primary,
+    color: '#FF4D2D',
     fontSize: 10,
     fontWeight: '800',
   },
@@ -352,7 +373,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: colors.borderDark,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
     paddingTop: 10,
   },
   price: {
@@ -371,7 +392,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   bookBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#FF4D2D',
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 8,
