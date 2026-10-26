@@ -1013,12 +1013,12 @@ export const DataProvider = ({ children }) => {
       scheduledTimestamp: bookingData.scheduledTimestamp || (Date.now() + 7200000),
       problemDescription: bookingData.problemDescription || "",
       date: bookingData.date || "Just now",
-      address: bookingData.address || "Ahinsa Tower, Indore, MP",
-      customerAddress: bookingData.address || "Ahinsa Tower, Indore, MP",
-      provider: bookingData.provider || bookingData.assignedProvider || "Amritam • Rahul Gandhi",
-      assignedProvider: bookingData.provider || bookingData.assignedProvider || "Amritam • Rahul Gandhi",
-      assignedProviderName: bookingData.assignedProviderName || bookingData.provider || "Rahul Gandhi",
-      providerId: bookingData.providerId || "vdr_rahul_amritam"
+      address: bookingData.address || "Palasia Square, Indore, MP",
+      customerAddress: bookingData.address || "Palasia Square, Indore, MP",
+      provider: bookingData.provider || bookingData.assignedProvider || "Ramesh Express Plumbing & Home Care • Ramesh Kumar",
+      assignedProvider: bookingData.assignedProvider || bookingData.provider || "Ramesh Express Plumbing & Home Care",
+      assignedProviderName: bookingData.assignedProviderName || "Ramesh Kumar",
+      providerId: bookingData.providerId || "vdr_demo_01"
     };
 
     setBookings(prev => [item, ...prev]);

@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs");
 const Provider = require("../models/Provider");
 const Booking = require("../models/Booking");
+const { getStatus } = require("../config/db");
+const dbStore = require("../data/dbStore");
 
 /**
  * Smart Geospatial Provider Matching Engine
@@ -14,27 +16,40 @@ async function findAndRankNearbyProviders({
   const maxDistanceMeters = isEmergency ? 25000 : 15000; // 25km for emergency, 15km standard
 
   try {
-    // 1. GeoJSON $nearSphere query
-    let nearbyProviders = await Provider.find({
-      availabilityStatus: "online",
-      serviceCategories: { $regex: new RegExp(category, "i") },
-      currentLocation: {
-        $nearSphere: {
-          $geometry: {
-            type: "Point",
-            coordinates: [lng, lat]
-          },
-          $maxDistance: maxDistanceMeters
-        }
-      }
-    }).limit(10);
+    let nearbyProviders = [];
 
-    // Fallback: If 2dsphere index query returns empty or coordinates not yet initialized
-    if (!nearbyProviders || nearbyProviders.length === 0) {
+    if (getStatus()) {
+      // 1. GeoJSON $nearSphere query
       nearbyProviders = await Provider.find({
         availabilityStatus: "online",
-        serviceCategories: { $regex: new RegExp(category, "i") }
-      }).limit(5);
+        serviceCategories: { $regex: new RegExp(category, "i") },
+        currentLocation: {
+          $nearSphere: {
+            $geometry: {
+              type: "Point",
+              coordinates: [lng, lat]
+            },
+            $maxDistance: maxDistanceMeters
+          }
+        }
+      }).limit(10).catch(() => []);
+
+      // Fallback: If 2dsphere index query returns empty or coordinates not yet initialized
+      if (!nearbyProviders || nearbyProviders.length === 0) {
+        nearbyProviders = await Provider.find({
+          availabilityStatus: "online",
+          serviceCategories: { $regex: new RegExp(category, "i") }
+        }).limit(5).catch(() => []);
+      }
+    }
+
+    if (!nearbyProviders || nearbyProviders.length === 0) {
+      const allPros = dbStore.getAll("providers") || [];
+      nearbyProviders = allPros.filter(p => 
+        (p.serviceCategories || []).some(c => c.toLowerCase().includes(category.toLowerCase())) ||
+        (p.category || "").toLowerCase().includes(category.toLowerCase()) ||
+        true
+      ).slice(0, 5);
     }
 
     // 2. Compute Weighted Score for Each Provider

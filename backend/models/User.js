@@ -17,6 +17,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200"
     },
+    photo: { type: String },
+    city: { type: String },
+    address: { type: String },
+    bio: { type: String },
     isPhoneVerified: { type: Boolean, default: false },
     isEmailVerified: { type: Boolean, default: false },
     savedAddresses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Address" }],
@@ -27,6 +31,7 @@ const UserSchema = new mongoose.Schema(
     fcmTokens: [{ type: String }],
     totalBookings: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true, index: true },
+    activeSessionId: { type: String },
     lastActiveAt: { type: Date, default: Date.now }
   },
   { timestamps: true }

@@ -229,14 +229,37 @@ function LiveTrackingModal({ booking, onClose }) {
     }
   };
 
-  // Pro details
+  // Check whether worker has confirmed acceptance
+  const isWorkerAccepted = 
+    workerStatus === "accepted" || 
+    workerStatus === "traveling" || 
+    workerStatus === "arrived" || 
+    workerStatus === "in_progress" || 
+    workerStatus === "completed" ||
+    status === "slot_confirmed" ||
+    status === "in_progress" ||
+    status === "completed";
+
+  // Pro & Vendor details
   const w = currentBooking?.assignedWorker;
-  const proName = w?.name || currentBooking?.assignedWorkerName || currentBooking?.assignedProviderName || "Sunil Sharma";
-  const proPhone = w?.phone || currentBooking?.assignedWorkerPhone || "+91 98765 00101";
-  const proTrade = w?.category || currentBooking?.serviceCategory || currentBooking?.serviceName || "Certified Plumber";
+  const proName = isWorkerAccepted 
+    ? (w?.name || currentBooking?.assignedWorkerName || "Sunil Verma (Technician)")
+    : (currentBooking?.assignedProviderName || currentBooking?.assignedProvider?.name || currentBooking?.provider || "Ramesh Express Plumbing & Home Care (Demo Vendor)");
+  const proPhone = isWorkerAccepted 
+    ? (w?.phone || currentBooking?.assignedWorkerPhone || "+91 98765 00101")
+    : (currentBooking?.assignedProviderPhone || "+91 98765 00001");
+  const proTrade = isWorkerAccepted 
+    ? (w?.category || currentBooking?.serviceCategory || currentBooking?.serviceName || "Certified Field Technician")
+    : "Authorized Service Provider";
   const proRating = w?.performance?.rating || w?.rating || 4.95;
   const proJobs = w?.performance?.completedJobsCount || w?.completedJobsCount || 148;
-  const proPhoto = w?.photo || w?.avatar || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200";
+  const proPhoto = isWorkerAccepted 
+    ? (w?.photo || w?.avatar || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200")
+    : "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200";
+
+  // Scheduled date & remaining hours
+  const schedDate = currentBooking?.scheduledDate || currentBooking?.bookingDate || "Scheduled Date";
+  const schedTime = currentBooking?.scheduledTime || currentBooking?.timeSlot || "Scheduled Slot";
 
   return (
     <div className="tracking-modal-overlay animate-fade-in">
@@ -254,6 +277,35 @@ function LiveTrackingModal({ booking, onClose }) {
           <button type="button" className="close-track-btn" onClick={onClose}>
             ✕
           </button>
+        </div>
+
+        {/* Real Date & Scheduled Time Badge */}
+        <div style={{
+          padding: "10px 16px",
+          background: "rgba(99, 102, 241, 0.08)",
+          borderRadius: "12px",
+          marginBottom: "16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "8px",
+          fontSize: "12.5px",
+          fontWeight: 700,
+          color: "#3730a3",
+          border: "1px solid rgba(99, 102, 241, 0.2)"
+        }}>
+          <span>📅 {schedDate} • ⏰ {schedTime}</span>
+          <span style={{
+            background: isWorkerAccepted ? "#10b981" : "#f59e0b",
+            color: "#ffffff",
+            padding: "2px 8px",
+            borderRadius: "6px",
+            fontSize: "11px",
+            fontWeight: 800
+          }}>
+            {isWorkerAccepted ? "✓ TECHNICIAN CONFIRMED" : "⏳ AWAITING WORKER ACCEPTANCE"}
+          </span>
         </div>
 
         {/* Status Stepper */}
@@ -299,14 +351,21 @@ function LiveTrackingModal({ booking, onClose }) {
               alt={proName} 
               onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200"; }}
             />
-            <span className="provider-verified-check">✓</span>
+            <span className="provider-verified-check">{isWorkerAccepted ? "✓" : "🏢"}</span>
           </div>
 
           <div className="provider-info-meta">
             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
               <h4 style={{ margin: 0 }}>{proName}</h4>
-              <span style={{ fontSize: "11px", padding: "1px 6px", background: "rgba(16, 185, 129, 0.15)", color: "#10B981", borderRadius: "8px", fontWeight: 700 }}>
-                Verified Pro
+              <span style={{
+                fontSize: "11px",
+                padding: "1px 6px",
+                background: isWorkerAccepted ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                color: isWorkerAccepted ? "#10B981" : "#d97706",
+                borderRadius: "8px",
+                fontWeight: 700
+              }}>
+                {isWorkerAccepted ? "Verified Technician" : "Service Vendor (Assigning)"}
               </span>
             </div>
             <span className="service-title-pill">{proTrade}</span>
@@ -317,10 +376,17 @@ function LiveTrackingModal({ booking, onClose }) {
           </div>
 
           <div className="provider-contact-actions">
-            <a href={`tel:${proPhone.replace(/[^0-9+]/g, "")}`} className="btn-call-pro" title="Call Field Technician">
-              <span>📞</span>
-              <span>Call Pro</span>
-            </a>
+            {isWorkerAccepted ? (
+              <a href={`tel:${proPhone.replace(/[^0-9+]/g, "")}`} className="btn-call-pro" title="Call Field Technician">
+                <span>📞</span>
+                <span>Call Pro</span>
+              </a>
+            ) : (
+              <a href={`tel:${proPhone.replace(/[^0-9+]/g, "")}`} className="btn-call-pro" style={{ background: "#475569" }} title="Call Vendor Office">
+                <span>📞</span>
+                <span>Call Vendor</span>
+              </a>
+            )}
             <button 
               type="button" 
               className="btn-sos-emergency"

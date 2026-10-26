@@ -521,7 +521,9 @@ function Home() {
           customerPhone: enquiryPhone,
           serviceName: selectedService.name,
           category: selectedService.tag || selectedService.category || "General",
-          assignedProviderName: selectedProvider ? selectedProvider.name : undefined,
+          providerId: selectedProvider ? (selectedProvider.id || selectedProvider._id) : "vdr_demo_01",
+          assignedProvider: selectedProvider ? selectedProvider.name : "Ramesh Express Plumbing & Home Care",
+          assignedProviderName: selectedProvider ? selectedProvider.name : "Ramesh Kumar",
           customerAddress: selectedFullAddress,
           fullAddress: selectedFullAddress,
           customerLocation: {
@@ -538,7 +540,9 @@ function Home() {
           paymentMethod: "cash_after_service",
           isEmergency: false,
           bookingDate: selectedBookingDate,
+          scheduledDate: selectedBookingDate,
           timeSlot: selectedTimeSlot,
+          scheduledTime: selectedTimeSlot,
           problem: selectedProblem,
           problemNotes: customProblemNote || selectedProblem
         })

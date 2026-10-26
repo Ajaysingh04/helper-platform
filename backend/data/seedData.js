@@ -1,3 +1,4 @@
+
 const popularCategories = require("./popularCategoriesData");
 
 const initialCategories = popularCategories;
@@ -12,6 +13,8 @@ const initialServices = [
     price: 249,
     originalPrice: 399,
     rating: 4.9,
+  
+
     reviewsCount: 380,
     duration: "30-60 mins",
     icon: "💡",
@@ -389,47 +392,7 @@ const seedProviders = require("./seedProvidersData");
 
 const initialProviders = seedProviders;
 
-const initialBookings = [
-  {
-    id: "BK-9021",
-    customerName: "Rahul Sharma",
-    customerPhone: "+91 98765 00001",
-    customerAddress: "Flat 402, Green Valley Apts, Sector 62, Noida",
-    serviceName: "Deep House Cleaning",
-    servicePrice: 1499,
-    date: "2026-09-17",
-    time: "10:00 AM",
-    status: "Confirmed",
-    assignedProvider: "Sunil Kumar",
-    createdAt: "2026-09-15 14:30"
-  },
-  {
-    id: "BK-9022",
-    customerName: "Pooja Patel",
-    customerPhone: "+91 98765 00002",
-    customerAddress: "House 12, Block B, Golf Course Rd, Gurugram",
-    serviceName: "AC Deep Foam Jet Service",
-    servicePrice: 599,
-    date: "2026-09-18",
-    time: "02:00 PM",
-    status: "Pending",
-    assignedProvider: "Unassigned",
-    createdAt: "2026-09-15 15:45"
-  },
-  {
-    id: "BK-9020",
-    customerName: "Vikas Malhotra",
-    customerPhone: "+91 98765 00003",
-    customerAddress: "Villa 9, Greater Kailash 1, New Delhi",
-    serviceName: "Emergency Plumbing & Leak Fix",
-    servicePrice: 299,
-    date: "2026-09-15",
-    time: "11:30 AM",
-    status: "Completed",
-    assignedProvider: "Rajesh Sharma",
-    createdAt: "2026-09-15 09:10"
-  }
-];
+const initialBookings = [];
 
 const initialSlides = [
   {

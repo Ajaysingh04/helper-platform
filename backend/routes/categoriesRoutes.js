@@ -1,14 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const Category = require("../models/Category");
+const Service = require("../models/Service");
+const Booking = require("../models/Booking");
 const dbStore = require("../data/dbStore");
 const { getStatus } = require("../config/db");
 const popularCategoriesData = require("../data/popularCategoriesData");
+const { deduplicateAll } = require("../utils/deduplicateData");
+
+let isDeduplicated = false;
 
 // Helper to auto-seed popular categories in MongoDB if empty or outdated
 async function ensureCategoriesSeeded() {
   try {
     if (!getStatus()) return;
+    if (!isDeduplicated) {
+      isDeduplicated = true;
+      await deduplicateAll();
+    }
     const countWithImage = await Category.countDocuments({ image: { $exists: true, $ne: "" } });
     if (countWithImage < popularCategoriesData.length) {
       console.log(`[Categories] Seeding/Updating ${popularCategoriesData.length} popular categories with images in MongoDB...`);
@@ -16,7 +25,7 @@ async function ensureCategoriesSeeded() {
         await Category.findOneAndUpdate(
           { $or: [{ id: cat.id }, { name: cat.name }] },
           { ...cat, active: true },
-          { upsert: true, new: true }
+          { upsert: true, returnDocument: 'after' }
         );
       }
       console.log("[Categories] Successfully seeded 85 popular categories with images to MongoDB.");
@@ -25,6 +34,16 @@ async function ensureCategoriesSeeded() {
     console.warn("[Categories] Auto-seed note:", err.message);
   }
 }
+
+// POST /api/categories/deduplicate - Admin trigger to clean duplicate categories & services
+router.post("/deduplicate", async (req, res) => {
+  try {
+    const summary = await deduplicateAll();
+    res.json({ success: true, message: "Deduplication completed successfully", summary });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // GET /api/categories/popular
 router.get("/popular", async (req, res) => {
@@ -111,7 +130,7 @@ router.post("/seed", async (req, res) => {
         await Category.findOneAndUpdate(
           { $or: [{ id: cat.id }, { name: cat.name }] },
           { ...cat, active: true },
-          { upsert: true, new: true }
+          { upsert: true, returnDocument: 'after' }
         );
         seeded++;
       }
@@ -130,17 +149,35 @@ router.post("/seed", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { name, icon, count, path, tag, image, group } = req.body;
-    if (!name) {
+    if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: "Category name is required" });
+    }
+
+    const trimmedName = name.trim();
+
+    // Check duplicate category name (case-insensitive)
+    if (getStatus()) {
+      const existing = await Category.findOne({
+        name: { $regex: new RegExp(`^${trimmedName}$`, "i") }
+      });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "This name is already in use" });
+      }
+    } else {
+      const all = dbStore.getAll("categories") || [];
+      const existing = all.find(c => (c.name || "").trim().toLowerCase() === trimmedName.toLowerCase());
+      if (existing) {
+        return res.status(400).json({ success: false, message: "This name is already in use" });
+      }
     }
 
     const newCat = {
       id: `${Date.now()}`,
-      name,
+      name: trimmedName,
       icon: icon || "⚡",
       image: image || "",
       count: count || "0+ Pros",
-      path: path || name.toLowerCase().replace(/\s+/g, "-"),
+      path: path || trimmedName.toLowerCase().replace(/\s+/g, "-"),
       tag: tag || "General",
       group: group || "Services",
       active: true
@@ -161,17 +198,79 @@ router.post("/", async (req, res) => {
 // PUT /api/categories/:id
 router.put("/:id", async (req, res) => {
   try {
+    const { name, image, icon, count, path, tag, group } = req.body;
+    const catId = req.params.id;
+
     if (getStatus()) {
-      let updated = await Category.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
-      if (!updated) {
-        updated = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true }).catch(() => null);
+      const currentCat = await Category.findOne({ id: catId }) || await Category.findById(catId).catch(() => null);
+      if (!currentCat) {
+        return res.status(404).json({ success: false, message: "Category not found" });
       }
-      if (!updated) return res.status(404).json({ success: false, message: "Category not found" });
+
+      const oldName = currentCat.name;
+      const newName = name ? name.trim() : oldName;
+
+      // If name is changing, check for duplicates
+      if (name && newName.toLowerCase() !== oldName.toLowerCase()) {
+        const existing = await Category.findOne({
+          _id: { $ne: currentCat._id },
+          id: { $ne: catId },
+          name: { $regex: new RegExp(`^${newName}$`, "i") }
+        });
+        if (existing) {
+          return res.status(400).json({ success: false, message: "This name is already in use" });
+        }
+      }
+
+      // Update category
+      const updatePayload = { ...req.body };
+      if (name) updatePayload.name = newName;
+
+      const updated = await Category.findByIdAndUpdate(currentCat._id, updatePayload, { returnDocument: 'after' });
+
+      // CASCADE: If name changed, update all services and bookings referencing oldName
+      if (newName.toLowerCase() !== oldName.toLowerCase()) {
+        console.log(`[Category Update] Cascading category name change from "${oldName}" to "${newName}"`);
+        await Service.updateMany(
+          { category: { $regex: new RegExp(`^${oldName}$`, "i") } },
+          { $set: { category: newName } }
+        );
+        await Booking.updateMany(
+          { serviceCategory: { $regex: new RegExp(`^${oldName}$`, "i") } },
+          { $set: { serviceCategory: newName } }
+        );
+      }
+
       return res.json({ success: true, message: "Category updated successfully", data: updated });
     }
 
-    const updated = dbStore.update("categories", req.params.id, req.body);
-    if (!updated) return res.status(404).json({ success: false, message: "Category not found" });
+    // Local DB / dbStore fallback
+    const all = dbStore.getAll("categories") || [];
+    const currentCat = all.find(c => c.id === catId || c._id === catId);
+    if (!currentCat) return res.status(404).json({ success: false, message: "Category not found" });
+
+    const oldName = currentCat.name;
+    const newName = name ? name.trim() : oldName;
+
+    if (name && newName.toLowerCase() !== oldName.toLowerCase()) {
+      const existing = all.find(c => (c.id !== catId && c._id !== catId) && (c.name || "").trim().toLowerCase() === newName.toLowerCase());
+      if (existing) {
+        return res.status(400).json({ success: false, message: "This name is already in use" });
+      }
+    }
+
+    const updated = dbStore.update("categories", catId, { ...req.body, name: newName });
+    if (newName.toLowerCase() !== oldName.toLowerCase()) {
+      if (dbStore.data && Array.isArray(dbStore.data.services)) {
+        dbStore.data.services.forEach(s => {
+          if (s.category && s.category.toLowerCase() === oldName.toLowerCase()) {
+            s.category = newName;
+          }
+        });
+        dbStore.save();
+      }
+    }
+
     res.json({ success: true, message: "Category updated successfully", data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

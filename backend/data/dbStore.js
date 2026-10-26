@@ -47,6 +47,18 @@ class DBStore {
           this.data.workers = seedData.initialWorkers || [];
           this.save();
         }
+
+        // Ensure default demo vendor vdr_demo_01 is always present
+        if (Array.isArray(this.data.providers)) {
+          const hasDemo = this.data.providers.some(p => p.id === "vdr_demo_01" || p._id === "vdr_demo_01");
+          if (!hasDemo && seedData.initialProviders && seedData.initialProviders.length > 0) {
+            const demoProv = seedData.initialProviders.find(p => p.id === "vdr_demo_01");
+            if (demoProv) {
+              this.data.providers.unshift(demoProv);
+              this.save();
+            }
+          }
+        }
       } else {
         this.save();
       }

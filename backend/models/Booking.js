@@ -29,14 +29,25 @@ const BookingSchema = new mongoose.Schema(
     customerAddress: { type: String },
     doorOtp: { type: String, default: "1234" },
     
+    assignedWorkerName: { type: String },
+    assignedWorkerPhone: { type: String },
+    assignedWorkerEmail: { type: String },
+    assignedWorkerExperience: { type: String },
+    distance: { type: String, default: "2.4 km away" },
+    distanceKm: { type: Number, default: 2.4 },
+    
     // Worker Assignment Fields
     assignedWorker: {
       workerId: { type: String, index: true },
       name: { type: String },
       phone: { type: String },
+      email: { type: String },
       avatar: { type: String },
       skills: [{ type: String }],
       rating: { type: Number, default: 4.9 },
+      role: { type: String, default: "Technician" },
+      experience: { type: String, default: "5 Years Exp" },
+      experienceYears: { type: Number, default: 5 },
       assignedAt: { type: Date }
     },
     assignedWorkers: [
@@ -44,8 +55,10 @@ const BookingSchema = new mongoose.Schema(
         workerId: { type: String },
         name: { type: String },
         phone: { type: String },
+        email: { type: String },
         avatar: { type: String },
-        role: { type: String, default: "Technician" }
+        role: { type: String, default: "Technician" },
+        experience: { type: String, default: "5 Years Exp" }
       }
     ],
     workerStatus: {
@@ -74,6 +87,7 @@ const BookingSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
+        "pending",
         "requested",
         "searching_provider",
         "assigned",
@@ -93,7 +107,7 @@ const BookingSchema = new mongoose.Schema(
         "Completed",
         "Cancelled"
       ],
-      default: "assigned",
+      default: "pending",
       index: true
     },
 

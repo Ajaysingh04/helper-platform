@@ -94,8 +94,11 @@ const WorkerSchema = new mongoose.Schema(
       aadhaarDoc: { type: String, default: "" },
       panNumber: { type: String, default: "" },
       panDoc: { type: String, default: "" },
-      certificates: [{ type: String }],
-      policeVerificationDoc: { type: String, default: "" }
+      certificates: { type: [mongoose.Schema.Types.Mixed], default: [] },
+      policeVerificationDoc: { type: String, default: "" },
+      policeVerificationStatus: { type: String, default: "Approved / Clean Record" },
+      drivingLicense: { type: String, default: "" },
+      verificationStatus: { type: String, default: "Verified" }
     },
     availability: {
       isOnline: { type: Boolean, default: true, index: true },

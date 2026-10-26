@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import io from "socket.io-client";
 import { AuthContext } from "../context/AuthContext";
 import { DataContext } from "../context/DataContext";
+import { API_BASE, SOCKET_URL } from "../apiConfig";
 import LiveTrackingModal from "./LiveTrackingModal";
 import "../css/MyBookings.css";
 
@@ -15,6 +17,7 @@ function MyBookings() {
   const [copiedOtpId, setCopiedOtpId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [toastMsg, setToastMsg] = useState("");
+  const [nowTime, setNowTime] = useState(Date.now());
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -30,6 +33,15 @@ function MyBookings() {
     return [];
   });
 
+  // Live 1-second interval ticker for dynamic countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Listen to local events and real-time Socket.IO events from backend
   useEffect(() => {
     const handleUpdate = () => {
       try {
@@ -37,15 +49,164 @@ function MyBookings() {
         if (saved) setLocalCustomerBookings(JSON.parse(saved));
       } catch (e) {}
     };
+
     window.addEventListener("user_bookings_updated", handleUpdate);
     window.addEventListener("new_booking_created", handleUpdate);
     window.addEventListener("storage", handleUpdate);
+
+    // Socket.io for live updates when vendor or worker accepts
+    let socket = null;
+    try {
+      socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+
+      socket.on("booking:status_changed", (data) => {
+        if (!data) return;
+        const targetId = data.bookingId || data.id;
+        setLocalCustomerBookings((prev) => {
+          const updated = prev.map((item) => {
+            const itemId = item.bookingId || item.id || item._id || item.bookingCode;
+            if (itemId === targetId || String(itemId) === String(targetId)) {
+              return {
+                ...item,
+                status: data.status || item.status,
+                workerStatus: data.workerStatus || item.workerStatus,
+                assignedWorker: data.assignedWorker || item.assignedWorker,
+                assignedWorkerName: data.assignedWorker?.name || item.assignedWorkerName,
+                assignedWorkerPhone: data.assignedWorker?.phone || item.assignedWorkerPhone
+              };
+            }
+            return item;
+          });
+          try { localStorage.setItem("helper_user_bookings", JSON.stringify(updated)); } catch (e) {}
+          return updated;
+        });
+      });
+
+      socket.on("worker:status_update", (data) => {
+        if (!data) return;
+        const targetId = data.bookingId || data.id;
+        setLocalCustomerBookings((prev) => {
+          const updated = prev.map((item) => {
+            const itemId = item.bookingId || item.id || item._id || item.bookingCode;
+            if (itemId === targetId || String(itemId) === String(targetId)) {
+              return {
+                ...item,
+                status: data.status === "in_progress" ? "in_progress" : (data.workerStatus === "accepted" ? "slot_confirmed" : item.status),
+                workerStatus: data.status || data.workerStatus || "accepted",
+                assignedWorker: data.assignedWorker || (data.workerName ? { name: data.workerName, phone: data.workerPhone } : item.assignedWorker),
+                assignedWorkerName: data.assignedWorker?.name || data.workerName || item.assignedWorkerName,
+                assignedWorkerPhone: data.assignedWorker?.phone || data.workerPhone || item.assignedWorkerPhone
+              };
+            }
+            return item;
+          });
+          try { localStorage.setItem("helper_user_bookings", JSON.stringify(updated)); } catch (e) {}
+          return updated;
+        });
+      });
+    } catch (err) {}
+
     return () => {
       window.removeEventListener("user_bookings_updated", handleUpdate);
       window.removeEventListener("new_booking_created", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
+      if (socket) socket.disconnect();
     };
   }, []);
+
+  // Parse date and calculate exact days, remaining hours, and countdown text
+  const getCountdownData = (b, currentNow) => {
+    let targetMs = b.scheduledTimestamp ? Number(b.scheduledTimestamp) : 0;
+    const dateStr = b.scheduledDate || b.bookingDate || "";
+    const timeStr = b.scheduledTime || b.timeSlot || "";
+
+    if (!targetMs || isNaN(targetMs)) {
+      if (dateStr) {
+        const monthMap = {
+          jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+          jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+        };
+        let year = 2026;
+        let month = 9;
+        let day = 29;
+
+        const isoMatch = dateStr.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (isoMatch) {
+          year = parseInt(isoMatch[1], 10);
+          month = parseInt(isoMatch[2], 10) - 1;
+          day = parseInt(isoMatch[3], 10);
+        } else {
+          const dMatch = dateStr.match(/(\d{1,2})\s+([a-zA-Z]{3})/i) || dateStr.match(/([a-zA-Z]{3})\s+(\d{1,2})/i);
+          if (dMatch) {
+            const first = dMatch[1];
+            const second = dMatch[2];
+            const num = isNaN(parseInt(first, 10)) ? parseInt(second, 10) : parseInt(first, 10);
+            const monStr = (isNaN(parseInt(first, 10)) ? first : second).toLowerCase();
+            if (monthMap[monStr] !== undefined) {
+              month = monthMap[monStr];
+              day = num;
+            }
+          } else if (dateStr.toLowerCase().includes("tomorrow")) {
+            const tm = new Date(currentNow + 86400000);
+            year = tm.getFullYear();
+            month = tm.getMonth();
+            day = tm.getDate();
+          } else if (dateStr.toLowerCase().includes("today")) {
+            const td = new Date(currentNow);
+            year = td.getFullYear();
+            month = td.getMonth();
+            day = td.getDate();
+          }
+        }
+
+        let hours = 11;
+        let minutes = 0;
+        const tMatch = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)/i);
+        if (tMatch) {
+          let h = parseInt(tMatch[1], 10);
+          const m = tMatch[2] ? parseInt(tMatch[2], 10) : 0;
+          const ampm = tMatch[3].toLowerCase();
+          if (ampm === "pm" && h < 12) h += 12;
+          if (ampm === "am" && h === 12) h = 0;
+          hours = h;
+          minutes = m;
+        }
+        targetMs = new Date(year, month, day, hours, minutes, 0).getTime();
+      }
+    }
+
+    if (!targetMs || isNaN(targetMs)) return null;
+
+    const diffMs = targetMs - currentNow;
+    if (diffMs <= 0) {
+      return { isPast: true, badgeText: "🟢 Slot is active now", totalHours: 0, days: 0 };
+    }
+
+    const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(totalHours / 24);
+    const remHours = totalHours % 24;
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+    let badgeText = "";
+    if (days > 0) {
+      badgeText = `⏳ ${days} Day${days > 1 ? "s" : ""} ${remHours} Hr${remHours !== 1 ? "s" : ""} left (${totalHours} hrs left)`;
+    } else if (totalHours > 0) {
+      badgeText = `⏳ ${totalHours} Hour${totalHours > 1 ? "s" : ""} ${minutes}m ${seconds}s left`;
+    } else {
+      badgeText = `⏳ ${minutes} Min${minutes !== 1 ? "s" : ""} ${seconds}s left`;
+    }
+
+    return {
+      isPast: false,
+      days,
+      totalHours,
+      remHours,
+      minutes,
+      seconds,
+      badgeText
+    };
+  };
 
   // Combine local customer bookings with DataContext bookings matching current user
   const allUserBookings = useMemo(() => {
@@ -322,21 +483,47 @@ function MyBookings() {
               Explore 85+ Services &amp; Specialists →
             </Link>
           </div>
-        ) : (
-          <div className="bookings-cards-grid">
-            {filteredBookings.map((b) => {
+             {filteredBookings.map((b) => {
               const bookingId = b.bookingId || b.id || b.bookingCode || "HLP-10001";
               const otp = b.slotOtp || b.startOtp || b.doorOtp || "3459";
               const rawStatus = (b.status || "pending").toLowerCase();
+              const workerStatus = (b.workerStatus || "").toLowerCase();
               const isFinished = rawStatus === "completed" || rawStatus === "work_completed";
               const isCancelled = rawStatus === "cancelled";
               const isActive = !isFinished && !isCancelled;
-              const providerName = b.assignedProviderName || b.assignedProvider?.name || b.provider || "Certified Specialist";
-              const providerPhone = typeof b.assignedProvider === "object" ? b.assignedProvider?.phone : (b.assignedProviderPhone || b.providerPhone || "+91 98765 43210");
+
+              // Worker accepted status:
+              // Only when worker accepts (or subsequent active states), worker name & phone are visible!
+              const isWorkerAccepted = 
+                workerStatus === "accepted" || 
+                workerStatus === "traveling" || 
+                workerStatus === "arrived" || 
+                workerStatus === "in_progress" || 
+                workerStatus === "completed" ||
+                rawStatus === "slot_confirmed" ||
+                rawStatus === "in_progress" ||
+                rawStatus === "completed";
+
+              const isVendorAccepted = 
+                isWorkerAccepted || 
+                rawStatus === "ready_for_worker" || 
+                rawStatus === "assigned" || 
+                workerStatus === "assigned";
+
+              const vendorName = b.assignedProviderName || b.assignedProvider?.name || b.provider || "Ramesh Express Plumbing & Home Care (Demo Vendor)";
+              const vendorPhone = typeof b.assignedProvider === "object" ? b.assignedProvider?.phone : (b.assignedProviderPhone || b.providerPhone || "+91 98765 00001");
+              
+              const assignedWorker = b.assignedWorker || {};
+              const workerName = assignedWorker.name || b.assignedWorkerName || "Sunil Verma";
+              const workerPhone = assignedWorker.phone || b.assignedWorkerPhone || "+91 98765 00101";
+
               const serviceTitle = b.serviceName || b.service || "Home Service Specialist";
-              const schedDate = b.scheduledDate || b.bookingDate || "Today";
-              const schedTime = b.scheduledTime || b.timeSlot || "11:00 AM - 12:00 PM";
+              const schedDate = b.scheduledDate || b.bookingDate || "Scheduled Date";
+              const schedTime = b.scheduledTime || b.timeSlot || "Scheduled Slot";
               const priceDisplay = b.price ? (String(b.price).startsWith("₹") ? b.price : `₹${b.price}`) : (b.totalAmount ? `₹${b.totalAmount}` : "₹249");
+
+              // Dynamic real date countdown calculation:
+              const countdown = getCountdownData(b, nowTime);
 
               return (
                 <div key={bookingId} className={`booking-pro-card ${isActive ? "card-is-active" : "card-is-archived"}`}>
@@ -359,12 +546,34 @@ function MyBookings() {
                         <span className="status-badge-pro in-progress">
                           <span className="pulse-dot-green" /> Work in Progress
                         </span>
+                      ) : isWorkerAccepted ? (
+                        <span className="status-badge-pro worker-confirmed">
+                          <span className="pulse-dot-green" /> ✓ Technician Confirmed
+                        </span>
+                      ) : isVendorAccepted ? (
+                        <span className="status-badge-pro ready-worker">
+                          <span className="pulse-dot-orange" /> ⚡ Vendor Accepted • Ready for Worker
+                        </span>
                       ) : (
-                        <span className="status-badge-pro dispatched">
-                          <span className="pulse-dot-orange" /> Technician Assigned
+                        <span className="status-badge-pro pending-vendor">
+                          <span className="pulse-dot-orange" /> ⏳ Awaiting Vendor Acceptance
                         </span>
                       )}
                     </div>
+                  </div>
+
+                  {/* Real Date & Dynamic Countdown Banner */}
+                  <div className={`pro-countdown-banner ${countdown?.isPast ? "is-active-now" : "is-future"}`}>
+                    <div className="countdown-date-info">
+                      <span>🗓️ <strong>Scheduled Date:</strong> {schedDate}</span>
+                      <span>•</span>
+                      <span>⏰ <strong>Time:</strong> {schedTime}</span>
+                    </div>
+                    {countdown && (
+                      <span className={`countdown-timer-chip ${countdown.isPast ? "active-now" : countdown.days === 0 ? "urgent" : ""}`}>
+                        {countdown.badgeText}
+                      </span>
+                    )}
                   </div>
 
                   {/* 2-Column Split Body */}
@@ -389,26 +598,47 @@ function MyBookings() {
                         </div>
                       )}
 
-                      {/* Technician Card */}
-                      <div className="pro-technician-card">
-                        <div className="tech-avatar-circle">👨‍🔧</div>
-                        <div className="tech-details-info">
-                          <div className="tech-name-line">
-                            <strong>{providerName}</strong>
-                            <span className="tech-verified-badge">✓ Verified Partner</span>
+                      {/* Technician Card or Pending Vendor Notice */}
+                      {isWorkerAccepted ? (
+                        <div className="pro-technician-card">
+                          <div className="tech-avatar-circle">👨‍🔧</div>
+                          <div className="tech-details-info">
+                            <div className="tech-name-line">
+                              <strong>{workerName}</strong>
+                              <span className="tech-verified-badge">✓ Technician Confirmed</span>
+                            </div>
+                            <div className="tech-contact-line">
+                              <span>📞 {workerPhone}</span>
+                              <span className="tech-dot">•</span>
+                              <span className="tech-addr">📍 {b.address || b.customerAddress || "Indore Area"}</span>
+                            </div>
                           </div>
-                          <div className="tech-contact-line">
-                            <span>📞 {providerPhone}</span>
-                            <span className="tech-dot">•</span>
-                            <span className="tech-addr">📍 {b.address || b.customerAddress || "Indore Area"}</span>
-                          </div>
+                          {workerPhone && (
+                            <a href={`tel:${String(workerPhone).replace(/\s+/g, "")}`} className="btn-tech-call-pill">
+                              <span>📞 Call</span>
+                            </a>
+                          )}
                         </div>
-                        {providerPhone && (
-                          <a href={`tel:${String(providerPhone).replace(/\s+/g, "")}`} className="btn-tech-call-pill">
-                            <span>📞 Call</span>
-                          </a>
-                        )}
-                      </div>
+                      ) : (
+                        <div className="pro-worker-unaccepted-box">
+                          <div className="pending-vendor-title">
+                            <span>{isVendorAccepted ? "⚡ Vendor Accepted • Assigning Field Technician" : "⏳ Awaiting Demo Vendor Confirmation"}</span>
+                          </div>
+                          <p className="pending-vendor-desc">
+                            {isVendorAccepted ? (
+                              <>
+                                <strong>{vendorName}</strong> has accepted your booking and dispatched it to the field worker. 
+                                Technician name, phone number, and direct call button will unlock here automatically once the technician accepts.
+                              </>
+                            ) : (
+                              <>
+                                Your booking request has been forwarded to <strong>{vendorName}</strong>. 
+                                Technician details and call contact will appear here after the vendor accepts and the technician confirms the slot.
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* RIGHT COLUMN: Service Start OTP & Action Hub */}
@@ -438,7 +668,7 @@ function MyBookings() {
                           </div>
 
                           <p className="otp-vault-security-hint">
-                            💡 <strong>Doorstep Verification:</strong> Share this 4-digit code with <strong>{providerName}</strong> upon arrival to begin work.
+                            💡 <strong>Doorstep Verification:</strong> Share this 4-digit code with {isWorkerAccepted ? <strong>{workerName}</strong> : <strong>the technician</strong>} upon arrival to begin work.
                           </p>
                         </div>
                       ) : (
@@ -462,12 +692,22 @@ function MyBookings() {
                         )}
 
                         <div className="pro-secondary-actions-row">
-                          <a
-                            href={`tel:${String(providerPhone).replace(/\s+/g, "")}`}
-                            className="btn-action-contact"
-                          >
-                            <span>📞 Call Pro</span>
-                          </a>
+                          {isWorkerAccepted ? (
+                            <a
+                              href={`tel:${String(workerPhone).replace(/\s+/g, "")}`}
+                              className="btn-action-contact"
+                            >
+                              <span>📞 Call Worker</span>
+                            </a>
+                          ) : (
+                            <a
+                              href={`tel:${String(vendorPhone).replace(/\s+/g, "")}`}
+                              className="btn-action-contact"
+                              title="Call Vendor Support"
+                            >
+                              <span>📞 Call Vendor</span>
+                            </a>
+                          )}
 
                           {isActive && rawStatus !== "in_progress" && (
                             <button
@@ -481,8 +721,6 @@ function MyBookings() {
                         </div>
                       </div>
                     </div>
-                  </div>
-
                 </div>
               );
             })}

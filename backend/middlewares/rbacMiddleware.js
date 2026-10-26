@@ -12,7 +12,12 @@ const authorize = (...allowedRoles) => {
     const userRole = (req.user.role || "").toLowerCase();
     const normalizedAllowed = allowedRoles.map((r) => r.toLowerCase());
 
-    if (!normalizedAllowed.includes(userRole) && userRole !== "superadmin") {
+    // Superadmin and Admin have 100% full access to EVERY route and resource
+    if (userRole === "superadmin" || userRole === "admin") {
+      return next();
+    }
+
+    if (!normalizedAllowed.includes(userRole)) {
       return res.status(403).json({
         success: false,
         message: `Forbidden: Access restricted to roles [${allowedRoles.join(", ")}]. Current role: '${req.user.role}'`

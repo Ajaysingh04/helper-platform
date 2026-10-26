@@ -1,4 +1,38 @@
 const seedProviders = [
+  // 0. Default Demo Vendor Partner: Ramesh Kumar (Ramesh Express Plumbing & Home Care)
+  {
+    id: "vdr_demo_01",
+    _id: "vdr_demo_01",
+    name: "Ramesh Kumar",
+    shopName: "Ramesh Express Plumbing & Home Care",
+    category: "Plumber",
+    serviceCategories: ["Plumber", "Plumbing", "Home Repairs", "Pipe Leakage", "Repairs", "General"],
+    phone: "+91 98765 00001",
+    email: "vendor.demo@helper.com",
+    distance: "0.5 km",
+    distanceKm: 0.5,
+    experience: "8+ Years Exp",
+    experienceYears: 8,
+    rating: 4.95,
+    totalReviewsCount: 320,
+    hourlyRate: "₹299/hr",
+    location: "Palasia Square, Indore / Sector 62, Noida",
+    address: "Palasia Square, Indore, Madhya Pradesh",
+    facilities: ["Verified Partner", "Franchise Master", "Instant Dispatch", "Emergency Repair", "100% Guaranteed"],
+    avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300",
+    image: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=600",
+    verified: true,
+    status: "Online",
+    franchiseActive: true,
+    franchisePlan: "monthly",
+    franchiseAmount: 4000,
+    teamMembers: [
+      { id: "mem_1", name: "Ramesh Kumar (Owner / Lead)", phone: "+91 98765 00001", role: "Master Specialist", active: true, isOwner: true, upiId: "ramesh@upi" },
+      { id: "WRK-101", workerId: "WRK-101", name: "Sunil Verma", phone: "+91 98765 00101", role: "Senior Plumber & Field Tech", active: true, isOwner: false, upiId: "sunil.verma@upi" },
+      { id: "mem_3", name: "Amit Sharma", phone: "+91 97123 44556", role: "Apprentice / Assistant", active: true, isOwner: false, upiId: "amit.plumber@paytm" }
+    ],
+    bio: "Certified master plumbing & home care franchise partner. Fast 15-minute doorstep service."
+  },
   // 1. Featured Partner: Rahul Gandhi (Amritam)
   {
     id: "vdr_rahul_amritam",

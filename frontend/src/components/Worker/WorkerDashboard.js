@@ -216,7 +216,7 @@ function WorkerDashboard() {
   // Fetch updated worker profile
   const fetchWorkerProfile = async (id) => {
     try {
-      const res = await fetch(`${API_BASE}/api/workers/${id}`);
+      const res = await fetch(`${API_BASE}/workers/${id}`);
       const data = await res.json();
       if (data.success && data.worker) {
         setWorker(data.worker);
@@ -229,7 +229,7 @@ function WorkerDashboard() {
   const fetchWorkerJobs = async (id) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/workers/${id}/jobs`);
+      const res = await fetch(`${API_BASE}/workers/${id}/jobs`);
       const data = await res.json();
       if (data.success && Array.isArray(data.jobs) && data.jobs.length > 0) {
         setJobs(data.jobs);
@@ -246,7 +246,7 @@ function WorkerDashboard() {
 
   const fetchFallbackJobs = async (id) => {
     try {
-      const res = await fetch(`${API_BASE}/api/bookings`);
+      const res = await fetch(`${API_BASE}/bookings`);
       const data = await res.json();
       const all = Array.isArray(data.data) ? data.data : (Array.isArray(data.bookings) ? data.bookings : []);
       const workerJobs = all.filter(
@@ -254,6 +254,8 @@ function WorkerDashboard() {
           b.assignedWorker?.workerId === id ||
           b.assignedWorker?.id === id ||
           (b.assignedWorkers || []).some((w) => w.workerId === id) ||
+          b.status === "ready_for_worker" ||
+          b.workerStatus === "assigned" ||
           b.status === "assigned"
       );
       if (workerJobs.length > 0) {
@@ -315,7 +317,7 @@ function WorkerDashboard() {
     const nextOnline = !currentOnline;
 
     try {
-      await fetch(`${API_BASE}/api/workers/${workerId}/availability`, {
+      await fetch(`${API_BASE}/workers/${workerId}/availability`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isOnline: nextOnline })
@@ -346,7 +348,7 @@ function WorkerDashboard() {
 
     try {
       const workerId = worker?.workerId || worker?.id;
-      await fetch(`${API_BASE}/api/workers/${workerId}/attendance`, {
+      await fetch(`${API_BASE}/workers/${workerId}/attendance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: nextState ? "check_in" : "check_out" })
@@ -357,22 +359,26 @@ function WorkerDashboard() {
   // Stage 1: Accept Job
   const handleAcceptJob = async (bookingId) => {
     try {
-      await fetch(`${API_BASE}/api/bookings/${bookingId}/worker-accept`, {
+      await fetch(`${API_BASE}/bookings/${bookingId}/worker-accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerId: worker?.workerId || worker?.id })
+        body: JSON.stringify({
+          workerId: worker?.workerId || worker?.id || "WRK-101",
+          workerName: worker?.name || "Sunil Verma",
+          workerPhone: worker?.phone || "+91 98765 00101"
+        })
       });
-      showToast("Job accepted! Now tap 'Start Traveling' when on the way.");
-      updateJobStateLocally(bookingId, { workerStatus: "accepted", status: "accepted" });
+      showToast("🎉 Job accepted! Your contact number, name and arrival schedule are now visible to customer.");
+      updateJobStateLocally(bookingId, { workerStatus: "accepted", status: "slot_confirmed", slotConfirmed: true });
     } catch (e) {
-      updateJobStateLocally(bookingId, { workerStatus: "accepted", status: "accepted" });
+      updateJobStateLocally(bookingId, { workerStatus: "accepted", status: "slot_confirmed", slotConfirmed: true });
     }
   };
 
   // Stage 2: Start Traveling
   const handleStartTraveling = async (bookingId) => {
     try {
-      await fetch(`${API_BASE}/api/bookings/${bookingId}/worker-traveling`, {
+      await fetch(`${API_BASE}/bookings/${bookingId}/worker-traveling`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workerId: worker?.workerId || worker?.id, etaMinutes: 15 })
@@ -397,7 +403,7 @@ function WorkerDashboard() {
   // Stage 3: Arrived At Doorstep
   const handleArrived = async (bookingId) => {
     try {
-      await fetch(`${API_BASE}/api/bookings/${bookingId}/worker-arrived`, {
+      await fetch(`${API_BASE}/bookings/${bookingId}/worker-arrived`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workerId: worker?.workerId || worker?.id })
@@ -417,7 +423,7 @@ function WorkerDashboard() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/bookings/${bookingId}/worker-start`, {
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}/worker-start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workerId: worker?.workerId || worker?.id, otp: doorOtpInput })
@@ -618,7 +624,7 @@ function WorkerDashboard() {
   // Instant One-Click Approval Simulation for Test/Demo
   const handleInstantApproveSim = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/workers/${worker?.workerId || worker?.id}/approve`, {
+      const res = await fetch(`${API_BASE}/workers/${worker?.workerId || worker?.id}/approve`, {
         method: "PUT"
       });
       await res.json();
@@ -646,7 +652,7 @@ function WorkerDashboard() {
 
   const handleCheckApprovalStatus = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/workers/${worker?.workerId || worker?.id}`);
+      const res = await fetch(`${API_BASE}/workers/${worker?.workerId || worker?.id}`);
       const data = await res.json();
       if (data && data.success && data.worker) {
         if (data.worker.verificationStatus === "verified" || data.worker.status === "active") {

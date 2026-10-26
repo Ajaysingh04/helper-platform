@@ -846,7 +846,7 @@ function VendorDashboard() {
   const fetchPendingWorkers = async (vId) => {
     try {
       const id = vId || vendor?.id || vendor?._id || "VND-101";
-      const res = await fetch(`${API_BASE}/api/workers/vendor/${id}/pending`);
+      const res = await fetch(`${API_BASE}/workers/vendor/${id}/pending`);
       const data = await res.json();
       if (data && data.success && Array.isArray(data.workers)) {
         setPendingWorkersList(data.workers);
@@ -858,7 +858,7 @@ function VendorDashboard() {
 
   const handleApproveWorker = async (workerId, workerName) => {
     try {
-      const res = await fetch(`${API_BASE}/api/workers/${workerId}/approve`, {
+      const res = await fetch(`${API_BASE}/workers/${workerId}/approve`, {
         method: "PUT"
       });
       const data = await res.json();
@@ -903,7 +903,7 @@ function VendorDashboard() {
 
   const handleRejectWorker = async (workerId) => {
     try {
-      await fetch(`${API_BASE}/api/workers/${workerId}/verification`, {
+      await fetch(`${API_BASE}/workers/${workerId}/verification`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ verificationStatus: "rejected" })
@@ -915,14 +915,41 @@ function VendorDashboard() {
     }
   };
 
-  // Assign worker to job with live 10% admin cut / 90% worker split
-  const handleAssignWorker = (bookingId, workerId) => {
+  // Assign worker to job and persist to backend
+  const handleAssignWorker = async (bookingId, workerId) => {
+    const assignedMember = teamMembers.find(m => m.id === workerId) || {
+      id: workerId,
+      name: "Sunil Verma",
+      phone: "+91 98765 00101",
+      role: "Senior Technician"
+    };
+
     setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === bookingId ? {
       ...b,
-      assignedWorkerId: workerId
+      assignedWorkerId: workerId,
+      assignedWorker: assignedMember,
+      assignedWorkerName: assignedMember.name,
+      assignedWorkerPhone: assignedMember.phone,
+      workerStatus: "assigned",
+      status: "ready_for_worker"
     } : b));
-    const assignedMember = teamMembers.find(m => m.id === workerId);
-    showToast(`Job assigned to ${assignedMember?.name || "Worker"}! 10% Admin Cut / 90% Worker Net calculated. 🛠️`);
+
+    showToast(`Job assigned to ${assignedMember?.name || "Worker"}! Sent to worker dashboard. 🛠️`);
+
+    try {
+      await fetch(`${API_BASE}/bookings/${bookingId}/assign-worker`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workerId: assignedMember.id || assignedMember.workerId || "WRK-101",
+          workerName: assignedMember.name,
+          workerPhone: assignedMember.phone,
+          workerRole: assignedMember.role || "Technician"
+        })
+      });
+    } catch (e) {
+      console.warn("Backend assign worker error:", e);
+    }
   };
 
   // Open worker UPI Payout Modal
@@ -1072,7 +1099,7 @@ function VendorDashboard() {
 
   // Robust Target Timestamp & Countdown Calculator
   const parseTargetCountdown = (b) => {
-    if (!b) return { days: "00", hours: "00", mins: "00", secs: "00", isArrived: false, text: "00:00:00" };
+    if (!b) return { days: "00", hours: "00", mins: "00", secs: "00", totalHours: 0, isArrived: false, text: "00:00:00" };
     const now = Date.now();
     let target = b.scheduledTimestamp;
 
@@ -1093,6 +1120,22 @@ function VendorDashboard() {
           m = parseInt(parts[1], 10) - 1;
           d = parseInt(parts[2], 10);
         }
+      } else {
+        const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        const matchDM = sDate.match(/(\d{1,2})\s+([A-Za-z]{3})/i) || sDate.match(/([A-Za-z]{3})\s+(\d{1,2})/i);
+        if (matchDM) {
+          const dVal = /^\d+$/.test(matchDM[1]) ? parseInt(matchDM[1], 10) : parseInt(matchDM[2], 10);
+          const mStr = (/^\d+$/.test(matchDM[1]) ? matchDM[2] : matchDM[1]).toLowerCase();
+          const mIdx = monthNames.indexOf(mStr.slice(0, 3));
+          if (mIdx !== -1) {
+            m = mIdx;
+            d = dVal;
+            const testD = new Date(y, m, d, 23, 59, 59);
+            if (testD.getTime() < now - 24 * 3600 * 1000) {
+              y += 1;
+            }
+          }
+        }
       }
 
       let hours = 11;
@@ -1108,14 +1151,9 @@ function VendorDashboard() {
 
       const parsedDate = new Date(y, m, d, hours, minutes, 0, 0);
       target = parsedDate.getTime();
-
-      // If target in past or invalid, set default to 45 mins from now so timer always ticks live
-      if (isNaN(target) || target <= now) {
-        target = now + 45 * 60 * 1000;
-      }
     }
 
-    const diff = target - now;
+    const diff = (target && !isNaN(target)) ? (target - now) : 0;
 
     if (diff <= 0) {
       return {
@@ -1123,11 +1161,13 @@ function VendorDashboard() {
         hours: "00",
         mins: "00",
         secs: "00",
+        totalHours: 0,
         isArrived: true,
         text: "00:00:00"
       };
     }
 
+    const totalHours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
     const mins = Math.floor((diff / (1000 * 60)) % 60);
@@ -1138,6 +1178,7 @@ function VendorDashboard() {
       hours: String(hours).padStart(2, "0"),
       mins: String(mins).padStart(2, "0"),
       secs: String(secs).padStart(2, "0"),
+      totalHours,
       isArrived: false,
       text: `${days > 0 ? `${days}d ` : ""}${String(hours).padStart(2, "0")}h ${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`
     };
@@ -1186,29 +1227,40 @@ function VendorDashboard() {
     return () => clearInterval(timer);
   }, [bookings]);
 
-  // Accept incoming job/booking directly
+  // Accept incoming job offer and ready for worker
   const handleAcceptBooking = async (booking) => {
+    if (!booking) return;
     const key = booking.bookingId || booking.id || booking._id;
-    const vId = vendor?.id || vendor?._id;
-    const vName = vendor?.shopName ? `${vendor.shopName} • ${vendor.name}` : (vendor?.name || "Verified Pro");
+    const vId = vendor?.id || vendor?._id || "vdr_demo_01";
+    const vName = vendor?.shopName ? `${vendor.shopName} • ${vendor.name}` : (vendor?.name || "Ramesh Express Plumbing & Home Care");
+    const primaryWorker = teamMembers.find(m => !m.isOwner) || {
+      id: "WRK-101",
+      workerId: "WRK-101",
+      name: "Sunil Verma",
+      phone: "+91 98765 00101",
+      role: "Senior Technician"
+    };
 
     // Optimistic update
     setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
       ...b,
-      status: "accepted",
-      slotConfirmed: true,
+      status: "ready_for_worker",
+      workerStatus: "assigned",
       assignedProvider: vName,
-      assignedProviderName: vendor?.name || "Verified Pro"
+      assignedProviderName: vendor?.name || "Ramesh Kumar",
+      assignedWorker: primaryWorker,
+      assignedWorkerName: primaryWorker.name,
+      assignedWorkerPhone: primaryWorker.phone
     } : b));
 
     if (incomingOffer && (incomingOffer.bookingId === key || incomingOffer.id === key)) {
       setIncomingOffer(null);
     }
-    showToast(`🎉 Order #${key} Accepted! Customer has been notified. 🚀`);
+    showToast(`🎉 Order #${key} Accepted & Ready! Dispatched to worker ${primaryWorker.name}. 🚀`);
 
     // Socket notification
     if (socketRef.current) {
-      socketRef.current.emit("job:accept", { bookingId: key, providerId: vId });
+      socketRef.current.emit("job:accept", { bookingId: key, providerId: vId, workerId: primaryWorker.workerId || primaryWorker.id });
     }
 
     // Backend call
@@ -1216,7 +1268,13 @@ function VendorDashboard() {
       await fetch(`${API_BASE}/bookings/${key}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId: vId, providerName: vName })
+        body: JSON.stringify({
+          providerId: vId,
+          providerName: vName,
+          workerId: primaryWorker.workerId || primaryWorker.id || "WRK-101",
+          workerName: primaryWorker.name,
+          workerPhone: primaryWorker.phone
+        })
       });
     } catch (e) {
       console.warn("Backend accept booking error:", e);

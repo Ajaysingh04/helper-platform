@@ -13,6 +13,75 @@ const { findAndRankNearbyProviders, generateSecureStartOtp } = require("../servi
 const { getIO } = require("../services/socketService");
 
 /**
+ * Robust Target Timestamp Calculator
+ * Accurately parses scheduledDate & scheduledTime into future epoch timestamp
+ */
+function calculateScheduledTimestamp(scheduledDate, scheduledTime) {
+  if (!scheduledDate) return Date.now() + 2 * 3600 * 1000;
+  
+  const now = new Date();
+  let year = now.getFullYear();
+  let month = now.getMonth();
+  let day = now.getDate();
+  
+  const sDate = String(scheduledDate).trim();
+  
+  if (/^\d{4}-\d{2}-\d{2}$/.test(sDate)) {
+    const parts = sDate.split("-");
+    year = parseInt(parts[0], 10);
+    month = parseInt(parts[1], 10) - 1;
+    day = parseInt(parts[2], 10);
+  } else if (/today/i.test(sDate)) {
+    // Keep today's date
+  } else if (/tomorrow/i.test(sDate)) {
+    const tmrw = new Date(now);
+    tmrw.setDate(tmrw.getDate() + 1);
+    year = tmrw.getFullYear();
+    month = tmrw.getMonth();
+    day = tmrw.getDate();
+  } else {
+    const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const match = sDate.match(/(\d{1,2})\s+([A-Za-z]{3})/i) || sDate.match(/([A-Za-z]{3})\s+(\d{1,2})/i);
+    if (match) {
+      let dVal, mStr;
+      if (/^\d+$/.test(match[1])) {
+        dVal = parseInt(match[1], 10);
+        mStr = match[2].toLowerCase();
+      } else {
+        mStr = match[1].toLowerCase();
+        dVal = parseInt(match[2], 10);
+      }
+      const mIdx = monthNames.indexOf(mStr.slice(0, 3));
+      if (mIdx !== -1) {
+        month = mIdx;
+        day = dVal;
+        const testDate = new Date(year, month, day, 23, 59, 59);
+        if (testDate.getTime() < now.getTime() - 24 * 3600 * 1000) {
+          year += 1;
+        }
+      }
+    }
+  }
+
+  // Parse time
+  let hours = 11;
+  let minutes = 0;
+  const sTime = String(scheduledTime || "11:00 AM").trim();
+  const timeMatch = sTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (timeMatch) {
+    hours = parseInt(timeMatch[1], 10);
+    minutes = parseInt(timeMatch[2], 10);
+    const meridiem = (timeMatch[3] || "").toUpperCase();
+    if (meridiem === "PM" && hours < 12) hours += 12;
+    if (meridiem === "AM" && hours === 12) hours = 0;
+  }
+
+  const result = new Date(year, month, day, hours, minutes, 0, 0);
+  const ts = result.getTime();
+  return isNaN(ts) ? Date.now() + 2 * 3600 * 1000 : ts;
+}
+
+/**
  * @route   POST /api/bookings/quote
  * @desc    Calculate dynamic upfront fare breakdown
  */
@@ -195,38 +264,58 @@ router.post("/", async (req, res) => {
       nearestPro = rankedPros.length > 0 ? rankedPros[0].provider : null;
     }
 
+    // Default to platform demo vendor if none matched
+    if (!targetPro && !nearestPro) {
+      targetPro = dbStore.getById("providers", "vdr_demo_01") || {
+        _id: "vdr_demo_01",
+        id: "vdr_demo_01",
+        name: "Ramesh Kumar",
+        shopName: "Ramesh Express Plumbing & Home Care",
+        category: "Plumber",
+        hourlyRate: "299",
+        phone: "+91 98765 00001"
+      };
+      nearestPro = targetPro;
+    }
+
     // 4. Create Booking in Database
     const bookingCode = req.body.id || req.body.bookingCode || ("HLP-" + Math.floor(10000 + Math.random() * 90000));
 
     const finalAssignedName = targetPro 
       ? (targetPro.shopName ? `${targetPro.shopName} • ${targetPro.name}` : targetPro.name)
-      : (nearestPro ? nearestPro.name : "Nearest Verified Pro");
+      : (nearestPro ? nearestPro.name : "Ramesh Express Plumbing & Home Care");
 
     const finalCategory = targetPro?.category || serviceCategory;
 
     const generatedSlotOtp = req.body.slotOtp || Math.floor(1000 + Math.random() * 9000).toString();
     const generatedStartQrCode = req.body.startQrCode || `QR-HLP-${bookingCode}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Parse scheduled date + time into exact epoch timestamp for live countdown
-    let scheduledTimestamp = Date.now() + 3600 * 1000 * 2;
-    try {
-      if (scheduledDate) {
-        let cleanTime = scheduledTime || "11:00 AM";
-        if (cleanTime.includes("-")) cleanTime = cleanTime.split("-")[0].trim();
-        const d = new Date(`${scheduledDate} ${cleanTime}`).getTime();
-        if (!isNaN(d)) scheduledTimestamp = d;
-      }
-    } catch (e) {}
+    const finalSchedDate = scheduledDate || req.body.bookingDate || req.body.date || "Today";
+    const finalSchedTime = scheduledTime || req.body.timeSlot || req.body.slotTime || "11:00 AM";
+
+    // Accurately calculate scheduled timestamp with full future calendar date & time
+    const scheduledTimestamp = calculateScheduledTimestamp(finalSchedDate, finalSchedTime);
 
     const homeServiceCharge = req.body.homeServiceCharge || 149;
     const providerHourlyRate = targetPro?.hourlyRate 
       ? parseInt(String(targetPro.hourlyRate).replace(/[^0-9]/g, "")) || 299
       : 299;
 
+    let customerUserId = null;
+    if (getStatus()) {
+      const User = require("../models/User");
+      try {
+        const u = await User.findOne({ $or: [{ phone: finalPhone }, { id: req.body.customerId }] });
+        if (u) customerUserId = u._id;
+      } catch (e) {}
+    }
+
     const bookingData = {
       bookingCode,
       bookingId: bookingCode,
       id: bookingCode,
+      customer: customerUserId || req.body.customerId || undefined,
+      customerId: customerUserId ? String(customerUserId) : (req.body.customerId || undefined),
       customerName: finalName,
       customerPhone: finalPhone,
       phone: finalPhone,
@@ -240,7 +329,9 @@ router.post("/", async (req, res) => {
       address: finalAddress,
       customerAddress: finalAddress,
       problemDescription: req.body.problemDescription || req.body.notes || "",
-      status: "assigned",
+      distance: req.body.distance || (req.body.distanceKm ? `${req.body.distanceKm} km away` : "2.4 km away"),
+      distanceKm: req.body.distanceKm || 2.4,
+      status: req.body.status || "pending",
       slotConfirmed: false,
       slotOtp: generatedSlotOtp,
       startQrCode: generatedStartQrCode,
@@ -258,8 +349,8 @@ router.post("/", async (req, res) => {
         startOtpPlainForCustomer: generatedSlotOtp
       },
       isEmergency,
-      scheduledDate: scheduledDate || new Date().toISOString().split("T")[0],
-      scheduledTime: scheduledTime || "11:00 AM",
+      scheduledDate: finalSchedDate,
+      scheduledTime: finalSchedTime,
       scheduledTimestamp,
       pricing: {
         ...pricing,
@@ -273,28 +364,15 @@ router.post("/", async (req, res) => {
         etaMinutes: isEmergency ? 15 : 25,
         distanceRemainingKm: isEmergency ? 1.8 : 3.2,
         lastLocationUpdateAt: new Date()
-      }
+      },
+      assignedWorker: null,
+      assignedWorkers: [],
+      assignedWorkerName: null,
+      assignedWorkerPhone: null,
+      assignedWorkerEmail: null,
+      assignedWorkerExperience: null,
+      workerStatus: "unassigned"
     };
-
-    // Auto-attach primary verified worker (e.g. Sunil Sharma) for instant dispatch
-    const primaryWorker = {
-      workerId: "WRK-101",
-      id: "WRK-101",
-      name: "Sunil Sharma",
-      phone: "+91 98765 00101",
-      avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200",
-      skills: [finalCategory, "Sanitary Repair", "Pipe Fitting"],
-      category: finalCategory,
-      rating: 4.95,
-      role: `Certified ${finalCategory || "Technician"}`,
-      assignedAt: new Date()
-    };
-
-    bookingData.assignedWorker = primaryWorker;
-    bookingData.assignedWorkers = [primaryWorker];
-    bookingData.assignedWorkerName = primaryWorker.name;
-    bookingData.assignedWorkerPhone = primaryWorker.phone;
-    bookingData.workerStatus = "assigned";
 
     let savedBooking = null;
     if (getStatus()) {
@@ -303,10 +381,10 @@ router.post("/", async (req, res) => {
       savedBooking = dbStore.insert("bookings", { ...bookingData, id: bookingCode });
     }
 
-    // 5. Trigger Real-Time Socket.IO Alert to Target/Nearest Provider
+    // 5. Trigger Real-Time Socket.IO Alert to Target/Nearest Provider & Demo Vendor
     const io = getIO();
     const alertPro = targetPro || nearestPro;
-    const alertProId = alertPro ? (alertPro.id || alertPro._id) : null;
+    const alertProId = alertPro ? (alertPro.id || alertPro._id) : "vdr_demo_01";
     const finalBookingId = savedBooking._id || savedBooking.id || bookingCode;
 
     const offerAlertData = {
@@ -331,10 +409,11 @@ router.post("/", async (req, res) => {
       isEmergency,
       scheduledDate: bookingData.scheduledDate,
       scheduledTime: bookingData.scheduledTime,
+      scheduledTimestamp,
       providerId: alertProId,
       provider: alertProId,
       assignedProvider: finalAssignedName,
-      assignedProviderName: targetPro?.name || (nearestPro ? nearestPro.name : "Pro"),
+      assignedProviderName: targetPro?.name || (nearestPro ? nearestPro.name : "Ramesh Kumar"),
       expiresInSeconds: 60,
       createdAt: new Date().toISOString()
     };
@@ -346,8 +425,12 @@ router.post("/", async (req, res) => {
           io.to(`provider_${alertPro._id}`).emit("job:offer_alert", offerAlertData);
         }
       }
+      // Guarantee demo vendor receives the alert directly
+      io.to("provider_vdr_demo_01").emit("job:offer_alert", offerAlertData);
+      io.to("provider_vdr_demo_01").emit("new_booking_created", { ...savedBooking, ...offerAlertData });
       // Also emit to all connected service providers so open dashboard reacts instantly
       io.emit("new_booking_created", { ...savedBooking, ...offerAlertData });
+      io.emit("job:offer_alert", offerAlertData);
       console.log(`📡 [DISPATCH] Alert emitted to provider ${finalAssignedName} (${alertProId}) for ${bookingCode}`);
     }
 
@@ -390,19 +473,35 @@ router.post("/", async (req, res) => {
  */
 router.post("/:id/accept", async (req, res) => {
   try {
-    const { providerId, providerName } = req.body;
+    const { providerId, providerName, workerId, workerName, workerPhone } = req.body;
     let booking = null;
     let provider = null;
+
+    const assignedWorkerObj = {
+      workerId: workerId || "WRK-101",
+      name: workerName || "Sunil Verma",
+      phone: workerPhone || "+91 98765 00101",
+      avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300",
+      category: "Plumber",
+      rating: 4.95,
+      role: "Senior Technician",
+      experience: "6 Years Exp"
+    };
 
     if (getStatus()) {
       booking = await Booking.findById(req.params.id) || await Booking.findOne({ bookingCode: req.params.id }) || await Booking.findOne({ id: req.params.id });
       if (booking) {
-        booking.status = "accepted";
+        booking.status = "ready_for_worker";
+        booking.workerStatus = "assigned";
         if (providerId) booking.provider = providerId;
         if (providerName) {
           booking.assignedProvider = providerName;
           booking.assignedProviderName = providerName;
         }
+        booking.assignedWorker = assignedWorkerObj;
+        booking.assignedWorkerName = assignedWorkerObj.name;
+        booking.assignedWorkerPhone = assignedWorkerObj.phone;
+        booking.assignedWorkers = [assignedWorkerObj];
         await booking.save();
       }
     }
@@ -412,7 +511,12 @@ router.post("/:id/accept", async (req, res) => {
       if (booking) {
         if (providerId) provider = dbStore.getById("providers", providerId);
         const updates = {
-          status: "accepted",
+          status: "ready_for_worker",
+          workerStatus: "assigned",
+          assignedWorker: assignedWorkerObj,
+          assignedWorkerName: assignedWorkerObj.name,
+          assignedWorkerPhone: assignedWorkerObj.phone,
+          assignedWorkers: [assignedWorkerObj],
           ...(providerId ? { providerId, provider: providerId } : {}),
           ...(providerName ? { assignedProvider: providerName, assignedProviderName: providerName } : 
              (provider ? { assignedProvider: provider.shopName ? `${provider.shopName} • ${provider.name}` : provider.name, assignedProviderName: provider.name } : {}))
@@ -432,18 +536,46 @@ router.post("/:id/accept", async (req, res) => {
       const updateData = {
         bookingId: bId,
         bookingCode: bCode,
-        status: "accepted",
+        status: "ready_for_worker",
+        workerStatus: "assigned",
+        assignedWorker: assignedWorkerObj,
+        assignedWorkerName: assignedWorkerObj.name,
+        assignedWorkerPhone: assignedWorkerObj.phone,
         provider: {
           id: providerId || booking.providerId || booking.provider,
-          name: providerName || booking.assignedProviderName || "Verified Specialist"
+          name: providerName || booking.assignedProviderName || "Ramesh Express Plumbing & Home Care"
         }
       };
       io.to(`booking_${bId}`).emit("booking:status_changed", updateData);
       io.to(`booking_${bCode}`).emit("booking:status_changed", updateData);
+      io.to(`worker_${assignedWorkerObj.workerId}`).emit("worker:new_job_alert", {
+        bookingId: bId,
+        bookingCode: bCode,
+        serviceName: booking.serviceName || booking.service,
+        customerName: booking.customerName,
+        customerPhone: booking.customerPhone,
+        customerAddress: booking.customerAddress || booking.address,
+        scheduledDate: booking.scheduledDate,
+        scheduledTime: booking.scheduledTime,
+        scheduledTimestamp: booking.scheduledTimestamp,
+        amount: booking.totalAmount || booking.price
+      });
+      io.emit("worker:new_job_alert", {
+        bookingId: bId,
+        bookingCode: bCode,
+        serviceName: booking.serviceName || booking.service,
+        workerId: assignedWorkerObj.workerId
+      });
       io.emit("booking:updated", updateData);
     }
 
-    res.json({ success: true, message: "Booking accepted successfully!", data: booking, booking });
+    res.json({
+      success: true,
+      message: "Booking accepted & marked ready! Dispatched to worker Sunil Verma.",
+      data: booking,
+      booking,
+      assignedWorker: assignedWorkerObj
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -807,6 +939,7 @@ router.post("/:id/assign-worker", async (req, res) => {
         w = dbStore.getById("workers", wid);
       }
       if (w) {
+        const exp = req.body.workerExperience || req.body.experience || (w.experienceYears ? `${w.experienceYears} Years Exp` : (w.experience || "5 Years Exp"));
         assignedList.push({
           workerId: w.workerId || w.id,
           name: w.name,
@@ -815,27 +948,73 @@ router.post("/:id/assign-worker", async (req, res) => {
           skills: w.skills || [w.category],
           rating: w.performance?.rating || 4.9,
           role: w.category || "Technician",
+          experience: exp,
+          experienceYears: w.experienceYears || 5,
           assignedAt: new Date()
         });
       }
+    }
+
+    if (assignedList.length === 0 && (req.body.workerName || req.body.name)) {
+      const customName = req.body.workerName || req.body.name;
+      const customPhone = req.body.workerPhone || req.body.phone || "+91 98765 00101";
+      const customExp = req.body.workerExperience || req.body.experience || "5 Years Exp";
+      assignedList.push({
+        workerId: req.body.workerId || req.body.id || "WRK-CUSTOM",
+        name: customName,
+        phone: customPhone,
+        avatar: req.body.avatar || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=200",
+        skills: req.body.skills || [booking?.serviceCategory || "Specialist"],
+        rating: req.body.rating || 4.95,
+        role: req.body.role || req.body.specialty || `${booking?.serviceCategory || "Technician"} Specialist`,
+        experience: customExp,
+        experienceYears: 5,
+        assignedAt: new Date()
+      });
     }
 
     if (assignedList.length === 0) {
       return res.status(404).json({ success: false, message: "Specified worker(s) not found" });
     }
 
-    const primaryWorker = assignedList[0];
+    const firstW = assignedList[0];
+    const cleanPhone = (firstW.phone || "9876500000").replace(/[^0-9]/g, "");
+    const primaryWorker = {
+      ...firstW,
+      experience: firstW.experience || req.body.workerExperience || req.body.experience || "5 Years Exp",
+      email: firstW.email || `${cleanPhone}@worker.helper.com`
+    };
+
+    const vendorEstimatedTime = req.body.vendorEstimatedTime || "45 mins";
+    const vendorCustomPrice = req.body.vendorCustomPrice || (booking?.price || bookingLocal?.price || "₹299");
+    const numPrice = parseInt(String(vendorCustomPrice).replace(/[^0-9]/g, "")) || 299;
 
     if (booking) {
       booking.assignedWorker = primaryWorker;
+      booking.assignedWorkerName = primaryWorker.name;
+      booking.assignedWorkerPhone = primaryWorker.phone;
+      booking.assignedWorkerEmail = primaryWorker.email;
+      booking.assignedWorkerExperience = primaryWorker.experience;
       booking.assignedWorkers = assignedList;
+      booking.vendorEstimatedTime = vendorEstimatedTime;
+      booking.vendorCustomPrice = `₹${numPrice}`;
+      booking.price = `₹${numPrice}`;
+      booking.totalAmount = numPrice;
       booking.workerStatus = "assigned";
       booking.status = "assigned";
       await booking.save();
     } else if (bookingLocal) {
       dbStore.update("bookings", id, {
         assignedWorker: primaryWorker,
+        assignedWorkerName: primaryWorker.name,
+        assignedWorkerPhone: primaryWorker.phone,
+        assignedWorkerEmail: primaryWorker.email,
+        assignedWorkerExperience: primaryWorker.experience,
         assignedWorkers: assignedList,
+        vendorEstimatedTime,
+        vendorCustomPrice: `₹${numPrice}`,
+        price: `₹${numPrice}`,
+        totalAmount: numPrice,
         workerStatus: "assigned",
         status: "assigned"
       });
@@ -846,13 +1025,17 @@ router.post("/:id/assign-worker", async (req, res) => {
       io.to(`booking_${id}`).emit("worker:assigned", {
         bookingId: id,
         worker: primaryWorker,
-        workers: assignedList
+        workers: assignedList,
+        vendorEstimatedTime,
+        vendorCustomPrice: `₹${numPrice}`
       });
       io.to(`worker_${primaryWorker.workerId}`).emit("worker:new_job_alert", {
         bookingId: id,
         serviceName: booking?.serviceName || bookingLocal?.serviceName,
         customerAddress: booking?.customerAddress || bookingLocal?.customerAddress,
-        amount: booking?.finalCalculatedAmount || bookingLocal?.finalCalculatedAmount || 499
+        amount: numPrice,
+        vendorEstimatedTime,
+        vendorCustomPrice: `₹${numPrice}`
       });
     }
 
@@ -936,21 +1119,79 @@ router.post("/:id/worker-accept", async (req, res) => {
     let booking = await Booking.findOne({ $or: [{ bookingCode: id }, { bookingId: id }, { id }] }).catch(() => null);
     if (!booking) booking = await Booking.findById(id).catch(() => null);
 
+    let activeWorker = booking?.assignedWorker;
+    if (!activeWorker) {
+      const localB = dbStore.getById("bookings", id);
+      activeWorker = localB?.assignedWorker;
+    }
+    if (!activeWorker) {
+      activeWorker = {
+        workerId: req.body.workerId || "WRK-101",
+        name: req.body.workerName || "Sunil Verma",
+        phone: req.body.workerPhone || "+91 98765 00101",
+        avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300",
+        rating: 4.95,
+        role: "Senior Technician",
+        experience: "6 Years Exp"
+      };
+    }
+
     if (booking) {
       booking.workerStatus = "accepted";
       booking.status = "slot_confirmed";
       booking.slotConfirmed = true;
+      if (!booking.assignedWorker) {
+        booking.assignedWorker = activeWorker;
+        booking.assignedWorkerName = activeWorker.name;
+        booking.assignedWorkerPhone = activeWorker.phone;
+        booking.assignedWorkers = [activeWorker];
+      }
       await booking.save();
     } else {
-      dbStore.update("bookings", id, { workerStatus: "accepted", status: "slot_confirmed", slotConfirmed: true });
+      const updatedLocal = dbStore.update("bookings", id, {
+        workerStatus: "accepted",
+        status: "slot_confirmed",
+        slotConfirmed: true,
+        assignedWorker: activeWorker,
+        assignedWorkerName: activeWorker.name,
+        assignedWorkerPhone: activeWorker.phone,
+        assignedWorkers: [activeWorker]
+      });
+      booking = updatedLocal;
     }
 
     const io = getIO();
+    const bId = booking?._id || booking?.id || id;
+    const bCode = booking?.bookingCode || booking?.id || id;
+
     if (io) {
-      io.to(`booking_${id}`).emit("worker:status_update", { status: "accepted", message: "Worker accepted your job" });
+      const statusPayload = {
+        bookingId: bId,
+        bookingCode: bCode,
+        status: "slot_confirmed",
+        workerStatus: "accepted",
+        message: `Worker ${activeWorker.name} accepted your job! Direct contact and arrival schedule are now active.`,
+        worker: activeWorker,
+        assignedWorker: activeWorker,
+        assignedWorkerName: activeWorker.name,
+        assignedWorkerPhone: activeWorker.phone,
+        scheduledDate: booking?.scheduledDate,
+        scheduledTime: booking?.scheduledTime,
+        scheduledTimestamp: booking?.scheduledTimestamp
+      };
+
+      io.to(`booking_${bId}`).emit("worker:status_update", statusPayload);
+      io.to(`booking_${bCode}`).emit("worker:status_update", statusPayload);
+      io.emit("booking:updated", { ...booking, ...statusPayload });
+      console.log(`📡 [WORKER ACCEPTED] Emitted for booking ${bCode}: ${activeWorker.name} (${activeWorker.phone})`);
     }
 
-    res.json({ success: true, message: "Job accepted by worker!" });
+    res.json({
+      success: true,
+      message: `Job accepted by worker ${activeWorker.name}! Customer can now view contact details and schedule.`,
+      worker: activeWorker,
+      booking
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to accept job" });
   }
@@ -1101,9 +1342,10 @@ router.post("/:id/worker-complete", async (req, res) => {
     const hoursWorked = Math.max(1, Math.ceil(durationSeconds / 3600));
     const finalAmount = homeVisitingCharge + (hourlyRate * hoursWorked) + materials;
 
-    // 90% to worker, 10% shop vendor commission
-    const workerEarnings = Math.round(finalAmount * 0.9);
-    const vendorEarnings = finalAmount - workerEarnings;
+    // 10% Helper Platform Fee, 90% Vendor Account Share (from which Vendor pays Worker)
+    const helperFee = Math.round(finalAmount * 0.10);
+    const vendorEarnings = finalAmount - helperFee;
+    const workerEarnings = Math.round(vendorEarnings * 0.75);
 
     const workerId = booking?.assignedWorker?.workerId || bookingLocal?.assignedWorker?.workerId;
 
@@ -1123,8 +1365,9 @@ router.post("/:id/worker-complete", async (req, res) => {
       booking.totalAmount = finalAmount;
       booking.price = `₹${finalAmount}`;
       booking.completionPhotos = Array.isArray(completionPhotos) ? completionPhotos : [];
-      booking.workerEarningsAmount = workerEarnings;
+      booking.helperCommission = helperFee;
       booking.vendorEarningsAmount = vendorEarnings;
+      booking.workerEarningsAmount = workerEarnings;
       if (paymentMode) booking.paymentMode = paymentMode;
       await booking.save();
     } else if (bookingLocal) {
@@ -1269,6 +1512,20 @@ router.post("/:id/pay", async (req, res) => {
     const finalAmount = Number(paidAmount) || Number(booking?.finalCalculatedAmount || bookingLocal?.finalCalculatedAmount || booking?.totalAmount || bookingLocal?.totalAmount || 499);
     const now = new Date();
     const txnId = transactionId || `TXN-UPI-${Date.now().toString().slice(-8)}`;
+    const helperFee = Math.round(finalAmount * 0.10); // 10% Helper Platform Cut
+    const vendorShare = finalAmount - helperFee; // 90% Vendor Share
+    const workerPayout = Math.round(vendorShare * 0.75); // Worker Share from Vendor
+
+    const settlement = {
+      totalCollected: finalAmount,
+      helperFee,
+      helperPercentage: "10%",
+      vendorShare,
+      vendorPercentage: "90%",
+      workerPayout,
+      platformUpi: "helper.indore@icici",
+      settledAt: now
+    };
 
     if (booking) {
       booking.paymentStatus = "captured";
@@ -1276,6 +1533,10 @@ router.post("/:id/pay", async (req, res) => {
       booking.paidAt = now;
       booking.paymentMode = paymentMethod;
       booking.transactionId = txnId;
+      booking.settlement = settlement;
+      booking.helperCommission = helperFee;
+      booking.vendorEarningsAmount = vendorShare;
+      booking.workerEarningsAmount = workerPayout;
       await booking.save();
     } else if (bookingLocal) {
       dbStore.update("bookings", id, {
@@ -1283,8 +1544,45 @@ router.post("/:id/pay", async (req, res) => {
         status: "completed",
         paidAt: now,
         paymentMode: paymentMethod,
-        transactionId: txnId
+        transactionId: txnId,
+        settlement,
+        helperCommission: helperFee,
+        vendorEarningsAmount: vendorShare,
+        workerEarningsAmount: workerPayout
       });
+    }
+
+    // Credit Vendor Wallet with 90%
+    const providerId = booking?.provider || booking?.providerId || bookingLocal?.provider || bookingLocal?.providerId;
+    if (providerId) {
+      try {
+        if (getStatus()) {
+          let wallet = await Wallet.findOne({ ownerId: providerId });
+          if (!wallet) {
+            wallet = await Wallet.create({
+              ownerId: providerId,
+              ownerType: "Provider",
+              currentBalance: vendorShare,
+              totalLifetimeEarned: vendorShare
+            });
+          } else {
+            wallet.currentBalance += vendorShare;
+            wallet.totalLifetimeEarned += vendorShare;
+            await wallet.save();
+          }
+          await Transaction.create({
+            walletId: wallet._id,
+            bookingId: booking?._id || id,
+            type: "vendor_settlement",
+            direction: "credit",
+            amount: vendorShare,
+            runningBalanceAfter: wallet.currentBalance,
+            description: `90% Net settlement for job ${booking?.serviceName || 'Service'} (10% Helper fee ₹${helperFee} deducted)`
+          });
+        }
+      } catch (wErr) {
+        console.warn("Wallet credit error:", wErr.message);
+      }
     }
 
     const io = getIO();
@@ -1294,26 +1592,90 @@ router.post("/:id/pay", async (req, res) => {
         paymentStatus: "paid",
         status: "completed",
         paidAmount: finalAmount,
+        settlement,
         transactionId: txnId,
-        message: "Payment successfully verified! Thank you."
+        message: "Payment successfully received by Helper Platform! 90% settled to Vendor Hub."
       });
       io.to(`booking_${id}`).emit("booking:status_changed", {
         bookingId: id,
         status: "completed",
         paymentStatus: "paid",
+        settlement,
         message: "Payment completed! Please rate your worker."
       });
     }
 
     res.json({
       success: true,
-      message: `Payment of ₹${finalAmount} verified successfully!`,
+      message: `Payment of ₹${finalAmount} verified! ₹${vendorShare} (90%) credited to Vendor Hub, ₹${helperFee} (10%) to Helper Platform.`,
       paymentStatus: "paid",
+      settlement,
       transactionId: txnId
     });
   } catch (err) {
     console.error("Pay error:", err);
     res.status(500).json({ success: false, message: "Payment verification failed" });
+  }
+});
+
+// Admin Update Any Booking (Status, Worker, Details)
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (getStatus()) {
+      let updated = null;
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        updated = await Booking.findByIdAndUpdate(id, updates, { new: true });
+      }
+      if (!updated) {
+        updated = await Booking.findOneAndUpdate({ id }, updates, { new: true });
+      }
+      if (!updated) return res.status(404).json({ success: false, message: "Booking not found" });
+
+      const io = getIO();
+      if (io && updates.status) {
+        io.to(`booking_${id}`).emit("booking:status_changed", {
+          bookingId: id,
+          status: updates.status,
+          message: `Booking updated to ${updates.status}`
+        });
+      }
+
+      return res.json({ success: true, message: "Booking updated successfully", data: updated });
+    }
+
+    const updated = dbStore.update("bookings", id, updates);
+    if (!updated) return res.status(404).json({ success: false, message: "Booking not found" });
+    res.json({ success: true, message: "Booking updated successfully", data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Admin Delete Any Booking
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (getStatus()) {
+      let deleted = null;
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        deleted = await Booking.findByIdAndDelete(id);
+      }
+      if (!deleted) {
+        deleted = await Booking.findOneAndDelete({
+          $or: [{ id }, { bookingCode: id }]
+        });
+      }
+      return res.json({ success: true, message: "Booking deleted successfully" });
+    }
+
+    const deleted = dbStore.delete("bookings", id);
+    if (!deleted) return res.status(404).json({ success: false, message: "Booking not found" });
+    res.json({ success: true, message: "Booking deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

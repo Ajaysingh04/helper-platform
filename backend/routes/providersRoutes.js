@@ -351,8 +351,19 @@ router.post("/login", async (req, res) => {
 // GET /api/providers/:id/bookings - Get bookings relevant to this vendor
 router.get("/:id/bookings", async (req, res) => {
   try {
+    const isDemoVendor = req.params.id === "vdr_demo_01" || req.params.id === "9876500001" || req.params.id === "vendor.demo@helper.com";
+
     if (getStatus()) {
-      const provider = await Provider.findOne({ id: req.params.id }) || await Provider.findById(req.params.id).catch(() => null);
+      let provider = await Provider.findOne({ id: req.params.id }) || await Provider.findById(req.params.id).catch(() => null);
+      if (!provider && isDemoVendor) {
+        provider = {
+          _id: "vdr_demo_01",
+          id: "vdr_demo_01",
+          name: "Ramesh Kumar",
+          shopName: "Ramesh Express Plumbing & Home Care",
+          category: "Plumber"
+        };
+      }
       if (!provider) return res.json({ success: true, count: 0, data: [] });
 
       const catTokens = (provider.category || "")
@@ -362,28 +373,51 @@ router.get("/:id/bookings", async (req, res) => {
         .filter(w => w.length > 2 && !["and", "for", "the", "services"].includes(w));
       const tokenRegexes = catTokens.map(t => new RegExp(t, "i"));
 
-      const vendorBookings = await Booking.find({
-        $or: [
-          { provider: provider._id },
-          { provider: provider.id },
-          { providerId: provider.id },
-          { providerId: String(provider._id) },
-          { assignedProvider: provider.id },
-          { assignedProvider: provider.name },
-          { assignedProvider: provider.shopName },
-          { assignedProviderName: new RegExp(provider.name, "i") },
-          { serviceName: new RegExp(provider.category, "i") },
-          { serviceCategory: new RegExp(provider.category, "i") },
-          ...tokenRegexes.map(r => ({ serviceName: r })),
-          ...tokenRegexes.map(r => ({ serviceCategory: r }))
-        ]
-      }).sort({ createdAt: -1 });
+      const queryConds = [
+        { provider: provider._id },
+        { provider: provider.id },
+        { providerId: provider.id },
+        { providerId: String(provider._id) },
+        { assignedProvider: provider.id },
+        { assignedProvider: provider.name },
+        { assignedProvider: provider.shopName },
+        { assignedProviderName: new RegExp(provider.name, "i") },
+        { serviceName: new RegExp(provider.category, "i") },
+        { serviceCategory: new RegExp(provider.category, "i") },
+        ...tokenRegexes.map(r => ({ serviceName: r })),
+        ...tokenRegexes.map(r => ({ serviceCategory: r }))
+      ];
+
+      // If demo vendor, also include general/unassigned platform bookings so demo vendor sees all new requests
+      if (isDemoVendor) {
+        queryConds.push(
+          { providerId: "vdr_demo_01" },
+          { provider: "vdr_demo_01" },
+          { provider: null },
+          { providerId: null },
+          { providerId: "all_vendors" },
+          { status: "pending" },
+          { status: "new_booking" },
+          { status: "ready_for_worker" }
+        );
+      }
+
+      const vendorBookings = await Booking.find({ $or: queryConds }).sort({ createdAt: -1 });
 
       return res.json({ success: true, count: vendorBookings.length, data: vendorBookings });
     }
 
-    const provider = dbStore.getById("providers", req.params.id);
+    let provider = dbStore.getById("providers", req.params.id);
     const allBookings = dbStore.getAll("bookings") || [];
+    if (!provider && isDemoVendor) {
+      provider = {
+        _id: "vdr_demo_01",
+        id: "vdr_demo_01",
+        name: "Ramesh Kumar",
+        shopName: "Ramesh Express Plumbing & Home Care",
+        category: "Plumber"
+      };
+    }
     if (!provider) return res.json({ success: true, count: 0, data: [] });
 
     const catTokens = (provider.category || "")
@@ -394,6 +428,7 @@ router.get("/:id/bookings", async (req, res) => {
 
     const vendorBookings = allBookings.filter(b => {
       if (b.providerId === provider.id || b.providerId === req.params.id || b.provider === provider.id || b.provider === req.params.id) return true;
+      if (isDemoVendor && (!b.providerId || b.providerId === "vdr_demo_01" || b.status === "pending" || b.status === "new_booking" || b.status === "ready_for_worker")) return true;
       const assigned = String(b.assignedProvider || b.assignedProviderName || "").toLowerCase();
       const srv = String(b.serviceName || b.service || "").toLowerCase();
       const srvCat = String(b.serviceCategory || "").toLowerCase();

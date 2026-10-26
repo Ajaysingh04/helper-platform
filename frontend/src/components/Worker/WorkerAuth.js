@@ -59,7 +59,7 @@ function WorkerAuth() {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/providers`);
+        const res = await fetch(`${API_BASE}/providers`);
         const data = await res.json();
         if (data && Array.isArray(data)) {
           setVendorsList(data);
@@ -90,7 +90,7 @@ function WorkerAuth() {
     setErrorMsg("");
 
     try {
-      const res = await fetch(`${API_BASE}/api/workers/login`, {
+      const res = await fetch(`${API_BASE}/workers/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: loginPhone, password })
@@ -177,7 +177,7 @@ function WorkerAuth() {
         feeTxnId: `TX-ONBOARD-399-${Date.now().toString().slice(-6)}`
       };
 
-      const res = await fetch(`${API_BASE}/api/workers/register`, {
+      const res = await fetch(`${API_BASE}/workers/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -227,7 +227,7 @@ function WorkerAuth() {
   const handleQuickApprove = async () => {
     if (!successInfo?.worker) return;
     try {
-      const res = await fetch(`${API_BASE}/api/workers/${successInfo.worker.workerId || successInfo.worker.id}/approve`, {
+      const res = await fetch(`${API_BASE}/workers/${successInfo.worker.workerId || successInfo.worker.id}/approve`, {
         method: "PUT"
       });
       const data = await res.json();

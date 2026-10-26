@@ -1229,3 +1229,162 @@ body.dark .not-logged-in-card p,
     font-size: 22px;
   }
 }
+
+/* --------------------------------------------------------------------------
+   8. REAL DATE & COUNTDOWN BANNER STYLES
+   -------------------------------------------------------------------------- */
+.pro-countdown-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, rgba(255, 77, 45, 0.08) 0%, rgba(255, 120, 94, 0.04) 100%);
+  border: 1px solid rgba(255, 77, 45, 0.22);
+  flex-wrap: wrap;
+}
+
+body.dark .pro-countdown-banner,
+[data-theme="dark"] .pro-countdown-banner {
+  background: rgba(255, 77, 45, 0.1);
+  border-color: rgba(255, 90, 54, 0.28);
+}
+
+.pro-countdown-banner.is-future {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.09) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+body.dark .pro-countdown-banner.is-future,
+[data-theme="dark"] .pro-countdown-banner.is-future {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.pro-countdown-banner.is-active-now {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.countdown-date-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+
+body.dark .countdown-date-info,
+[data-theme="dark"] .countdown-date-info {
+  color: #e2e8f0;
+}
+
+.countdown-timer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #ffffff;
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+body.dark .countdown-timer-chip,
+[data-theme="dark"] .countdown-timer-chip {
+  background: #1e1b4b;
+  color: #a5b4fc;
+  border-color: rgba(165, 180, 252, 0.25);
+}
+
+.countdown-timer-chip.urgent {
+  background: #fff7ed;
+  color: #ea580c;
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+body.dark .countdown-timer-chip.urgent,
+[data-theme="dark"] .countdown-timer-chip.urgent {
+  background: #431407;
+  color: #fdba74;
+}
+
+.countdown-timer-chip.active-now {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: rgba(5, 150, 105, 0.3);
+}
+
+body.dark .countdown-timer-chip.active-now,
+[data-theme="dark"] .countdown-timer-chip.active-now {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+
+/* Worker Pending Card */
+.pro-worker-unaccepted-box {
+  background: var(--surface-input, rgba(15, 23, 42, 0.03));
+  border: 1px dashed rgba(245, 158, 11, 0.45);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+
+body.dark .pro-worker-unaccepted-box,
+[data-theme="dark"] .pro-worker-unaccepted-box {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.pro-worker-unaccepted-box .pending-vendor-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #b45309;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body.dark .pro-worker-unaccepted-box .pending-vendor-title,
+[data-theme="dark"] .pro-worker-unaccepted-box .pending-vendor-title {
+  color: #fbbf24;
+}
+
+.pro-worker-unaccepted-box .pending-vendor-desc {
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+  line-height: 1.45;
+}
+
+body.dark .pro-worker-unaccepted-box .pending-vendor-desc,
+[data-theme="dark"] .pro-worker-unaccepted-box .pending-vendor-desc {
+  color: #94a3b8;
+}
+
+/* Status Badges Extended */
+.status-badge-pro.pending-vendor {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.status-badge-pro.ready-worker {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+}
+
+.status-badge-pro.worker-confirmed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+

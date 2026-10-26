@@ -953,12 +953,46 @@ function CategoryPage() {
 
     let scheduledTimestamp = Date.now() + 7200000;
     try {
-      if (bookingDate) {
-        let cleanTime = bookingTime || "11:00 AM";
-        if (cleanTime.includes("-")) cleanTime = cleanTime.split("-")[0].trim();
-        const d = new Date(`${bookingDate} ${cleanTime}`).getTime();
-        if (!isNaN(d)) scheduledTimestamp = d;
+      const datesList = getBookingDates();
+      const matchedDt = datesList.find(d => d.fullLabel === bookingDate || d.dayName === bookingDate || d.key === bookingDate);
+      const now = new Date();
+      let y = now.getFullYear();
+      let m = now.getMonth();
+      let d = now.getDate();
+
+      if (matchedDt && matchedDt.key) {
+        const parts = matchedDt.key.split("-");
+        y = parseInt(parts[0], 10);
+        m = parseInt(parts[1], 10) - 1;
+        d = parseInt(parts[2], 10);
+      } else if (bookingDate) {
+        const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        const match = String(bookingDate).match(/(\d{1,2})\s+([A-Za-z]{3})/i) || String(bookingDate).match(/([A-Za-z]{3})\s+(\d{1,2})/i);
+        if (match) {
+          const dVal = /^\d+$/.test(match[1]) ? parseInt(match[1], 10) : parseInt(match[2], 10);
+          const mStr = (/^\d+$/.test(match[1]) ? match[2] : match[1]).toLowerCase();
+          const mIdx = monthNames.indexOf(mStr.slice(0, 3));
+          if (mIdx !== -1) {
+            m = mIdx;
+            d = dVal;
+          }
+        }
       }
+
+      let cleanTime = bookingTime || "11:00 AM";
+      if (cleanTime.includes("-")) cleanTime = cleanTime.split("-")[0].trim();
+      let hours = 11;
+      let minutes = 0;
+      const tMatch = cleanTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+      if (tMatch) {
+        hours = parseInt(tMatch[1], 10);
+        minutes = parseInt(tMatch[2], 10);
+        const meridiem = (tMatch[3] || "").toUpperCase();
+        if (meridiem === "PM" && hours < 12) hours += 12;
+        if (meridiem === "AM" && hours === 12) hours = 0;
+      }
+      const targetDate = new Date(y, m, d, hours, minutes, 0, 0);
+      if (!isNaN(targetDate.getTime())) scheduledTimestamp = targetDate.getTime();
     } catch (e) {}
 
     const newBookingData = {
@@ -981,11 +1015,11 @@ function CategoryPage() {
       scheduledTimestamp,
       problemDescription: customProblemText.trim() || bookingProblem,
       address: enquiryAddress.trim() || enquiryItem.address || enquiryItem.location || "Indore Ahinsha Tower / Local Address",
-      provider: enquiryItem.shopName ? `${enquiryItem.shopName} • ${enquiryItem.name}` : enquiryItem.name,
-      assignedProvider: enquiryItem.name,
-      assignedProviderName: enquiryItem.name,
-      providerId: enquiryItem.id || enquiryItem._id || "vdr_rahul_amritam",
-      status: "assigned",
+      provider: enquiryItem.shopName ? `${enquiryItem.shopName} • ${enquiryItem.name}` : (enquiryItem.name || "Ramesh Express Plumbing & Home Care • Ramesh Kumar"),
+      assignedProvider: enquiryItem.name || "Ramesh Kumar",
+      assignedProviderName: enquiryItem.name || "Ramesh Kumar",
+      providerId: enquiryItem.id || enquiryItem._id || "vdr_demo_01",
+      status: "pending",
       slotConfirmed: false,
       slotOtp,
       startQrCode,

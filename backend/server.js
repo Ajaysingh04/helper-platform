@@ -34,6 +34,18 @@ app.use(cors({
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+// Serve static images (Helper uniform photos, banners & assets)
+app.use("/images", express.static(path.join(__dirname, "public", "images")));
+app.use(express.static(path.join(__dirname, "public")));
+
+// URL Normalization Middleware (rewrite /api/api/* to /api/*)
+app.use((req, res, next) => {
+  if (req.url.startsWith("/api/api/")) {
+    req.url = req.url.replace(/^\/api\/api\//, "/api/");
+  }
+  next();
+});
+
 // Request Logger
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
