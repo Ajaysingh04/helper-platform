@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
-import { broadcastBookingSync, DEMO_WORKER } from "../../utils/bookingWorkflow";
+import { broadcastBookingSync, DEMO_WORKER, getBookingDoorOtp } from "../../utils/bookingWorkflow";
 import QrCameraScannerModal from "./QrCameraScannerModal";
 import "../../css/Admin/Admin.css";
 import "../../css/VendorDashboard.css";
@@ -2337,9 +2337,9 @@ function VendorDashboard() {
                               <p>
                                 Call <strong>{b.customerPhone}</strong> to verify the issue and slot time. Ask customer for the 4-digit confirmation OTP shown on their screen.
                               </p>
-                              {b.slotOtp && (
+                              {getBookingDoorOtp(b) && (
                                 <span style={{ fontSize: "11px", color: "#D97706", fontWeight: 700 }}>
-                                  (Customer Screen OTP: <strong>{b.slotOtp}</strong>)
+                                  (Customer Screen OTP: <strong>{getBookingDoorOtp(b)}</strong>)
                                 </span>
                               )}
                             </div>

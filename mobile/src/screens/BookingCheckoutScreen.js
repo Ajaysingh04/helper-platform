@@ -381,8 +381,10 @@ export default function BookingCheckoutScreen({ route, navigation }) {
       scheduledDate: effectiveDate,
       scheduledTime: effectiveTime,
       totalAmount: bookingDetails.finalPrice,
-      price: bookingDetails.finalPrice,
       doorOtp: bookingDetails.otp,
+      slotOtp: bookingDetails.otp,
+      startOtp: bookingDetails.otp,
+      otp: bookingDetails.otp,
       providerId: pro?.id || pro?._id || 'VND-IND-01',
       assignedProviderName: pro?.name || pro?.shopName || 'Indore Multi-Specialist Hub',
       status: finalStatus,
@@ -476,6 +478,12 @@ export default function BookingCheckoutScreen({ route, navigation }) {
       distance: service?.distance || pro?.distance || '2.4 km away',
       finalPrice: finalPrice,
       otp: bookingOtp,
+      doorOtp: bookingOtp,
+      slotOtp: bookingOtp,
+      startOtp: bookingOtp,
+      security: {
+        startOtpPlainForCustomer: bookingOtp,
+      },
       status: 'pending',
     };
 

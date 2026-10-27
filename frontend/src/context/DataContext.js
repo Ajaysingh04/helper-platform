@@ -1003,10 +1003,15 @@ export const DataProvider = ({ children }) => {
       price: bookingData.price || "₹302",
       totalAmount: parseInt(String(bookingData.price || bookingData.totalAmount || "302").replace(/[^0-9]/g, "")) || 302,
       status: bookingData.status || "Pending",
-      slotConfirmed: bookingData.slotConfirmed || false,
-      slotOtp: bookingData.slotOtp || bookingData.doorOtp || "1234",
+      slotOtp: bookingData.slotOtp || bookingData.doorOtp || bookingData.startOtp || bookingData.otp || "3459",
       startQrCode: bookingData.startQrCode || `QR-${bookingCode}`,
-      doorOtp: bookingData.doorOtp || bookingData.slotOtp || "1234",
+      doorOtp: bookingData.doorOtp || bookingData.slotOtp || bookingData.startOtp || bookingData.otp || "3459",
+      startOtp: bookingData.startOtp || bookingData.slotOtp || bookingData.doorOtp || bookingData.otp || "3459",
+      otp: bookingData.otp || bookingData.slotOtp || bookingData.doorOtp || bookingData.startOtp || "3459",
+      security: {
+        ...(bookingData.security || {}),
+        startOtpPlainForCustomer: bookingData.slotOtp || bookingData.doorOtp || bookingData.startOtp || bookingData.otp || "3459"
+      },
       homeServiceCharge: bookingData.homeServiceCharge || 149,
       hourlyRate: bookingData.hourlyRate || 299,
       scheduledDate: bookingData.scheduledDate || "Today",

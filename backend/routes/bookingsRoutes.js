@@ -209,9 +209,11 @@ router.post("/", async (req, res) => {
       couponDiscount
     });
 
-    // 2. Generate Cryptographically Secure 4-Digit Start OTP
+    // 2. Generate or extract single unified 4-digit start OTP
+    const clientProvidedOtp = req.body.slotOtp || req.body.doorOtp || req.body.startOtp || req.body.otp;
     const { plainOtp, otpHash } = await generateSecureStartOtp();
-    const finalDoorOtp = doorOtp || plainOtp || "1234";
+    const finalStartOtp = String(clientProvidedOtp || plainOtp || "3459").trim();
+    const finalDoorOtp = finalStartOtp;
 
     // 3. Locate Target Provider (if specific provider was selected/booked)
     let targetPro = null;
@@ -287,8 +289,8 @@ router.post("/", async (req, res) => {
 
     const finalCategory = targetPro?.category || serviceCategory;
 
-    const generatedSlotOtp = req.body.slotOtp || Math.floor(1000 + Math.random() * 9000).toString();
-    const generatedStartQrCode = req.body.startQrCode || `QR-HLP-${bookingCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedSlotOtp = finalStartOtp;
+    const generatedStartQrCode = req.body.startQrCode || `QR-HLP-${bookingCode}-${finalStartOtp}`;
 
     const finalSchedDate = scheduledDate || req.body.bookingDate || req.body.date || "Today";
     const finalSchedTime = scheduledTime || req.body.timeSlot || req.body.slotTime || "11:00 AM";
@@ -333,7 +335,10 @@ router.post("/", async (req, res) => {
       distanceKm: req.body.distanceKm || 2.4,
       status: req.body.status || "pending",
       slotConfirmed: false,
-      slotOtp: generatedSlotOtp,
+      slotOtp: finalStartOtp,
+      startOtp: finalStartOtp,
+      doorOtp: finalStartOtp,
+      otp: finalStartOtp,
       startQrCode: generatedStartQrCode,
       homeServiceCharge,
       hourlyRate: providerHourlyRate,
@@ -341,12 +346,11 @@ router.post("/", async (req, res) => {
       providerId: targetPro ? (targetPro.id || targetPro._id) : (nearestPro ? (nearestPro.id || nearestPro._id) : undefined),
       assignedProvider: finalAssignedName,
       assignedProviderName: finalAssignedName,
-      doorOtp: generatedSlotOtp,
       price: `₹${finalPriceNum}`,
       totalAmount: finalPriceNum,
       security: {
         startOtpHash: otpHash,
-        startOtpPlainForCustomer: generatedSlotOtp
+        startOtpPlainForCustomer: finalStartOtp
       },
       isEmergency,
       scheduledDate: finalSchedDate,
@@ -404,8 +408,10 @@ router.post("/", async (req, res) => {
       price: `₹${finalPriceNum}`,
       hourlyRate: providerHourlyRate,
       homeServiceCharge,
-      slotOtp: generatedSlotOtp,
-      doorOtp: generatedSlotOtp,
+      slotOtp: finalStartOtp,
+      startOtp: finalStartOtp,
+      doorOtp: finalStartOtp,
+      otp: finalStartOtp,
       isEmergency,
       scheduledDate: bookingData.scheduledDate,
       scheduledTime: bookingData.scheduledTime,
@@ -459,7 +465,10 @@ router.post("/", async (req, res) => {
       booking: savedBooking,
       data: savedBooking,
       bookingId: savedBooking.bookingCode || savedBooking._id || savedBooking.id,
-      startOtp: plainOtp // Visible to customer on confirmation screen
+      startOtp: finalStartOtp,
+      slotOtp: finalStartOtp,
+      doorOtp: finalStartOtp,
+      otp: finalStartOtp
     });
   } catch (error) {
     console.error("Booking Creation Error:", error);

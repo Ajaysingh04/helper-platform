@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
 import {
   broadcastBookingSync,
+  getBookingDoorOtp,
   DEMO_WORKER,
   calculateDynamicWorkPricing,
   handleDemoWorkerGoToLocation,
@@ -1433,7 +1434,7 @@ function WorkerDashboard() {
                   const isInProgress = status === "in_progress";
                   const isAwaitingPayment = status === "awaiting_payment" || (status === "completed" && b.paymentStatus !== "paid");
                   const isPaid = b.paymentStatus === "paid";
-                  const correctDoorOtp = b.security?.startOtpPlainForCustomer || b.doorOtp || "3459";
+                  const correctDoorOtp = getBookingDoorOtp(b);
 
                   return (
                     <div className="wrk-active-job-card" key={bookingId}>

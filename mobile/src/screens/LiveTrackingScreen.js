@@ -55,7 +55,7 @@ export default function LiveTrackingScreen({ route, navigation }) {
     initialBooking?.assignedProviderName || 'Indore Multi-Specialist Hub (Vijay Nagar)'
   );
   const [startOtp, setStartOtp] = useState(
-    initialBooking?.otp || initialBooking?.doorOtp || '5421'
+    initialBooking?.slotOtp || initialBooking?.doorOtp || initialBooking?.otp || initialBooking?.startOtp || initialBooking?.security?.startOtpPlainForCustomer || '3459'
   );
   const [etaMinutes, setEtaMinutes] = useState(12);
   const [serviceTimeWorked, setServiceTimeWorked] = useState(0);
@@ -175,8 +175,8 @@ export default function LiveTrackingScreen({ route, navigation }) {
               if (found.assignedProviderName) {
                 setHubName(found.assignedProviderName);
               }
-              if (found.doorOtp || found.otp) {
-                setStartOtp(found.doorOtp || found.otp);
+              if (found.slotOtp || found.doorOtp || found.startOtp || found.otp || found.security?.startOtpPlainForCustomer) {
+                setStartOtp(found.slotOtp || found.doorOtp || found.startOtp || found.otp || found.security?.startOtpPlainForCustomer);
               }
               if (found.calculatedAmount || found.totalAmount || found.finalPrice) {
                 setBillAmount(found.calculatedAmount || found.totalAmount || found.finalPrice);

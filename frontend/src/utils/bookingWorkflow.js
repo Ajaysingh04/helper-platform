@@ -409,12 +409,27 @@ export async function handleDemoWorkerArrived(booking) {
 }
 
 /**
+ * Canonical helper to retrieve the exact Door/Service Start OTP
+ * Consistent resolution order with uniform default across all screens
+ */
+export function getBookingDoorOtp(booking) {
+  if (!booking) return "3459";
+  const val =
+    booking.slotOtp ||
+    booking.doorOtp ||
+    booking.startOtp ||
+    booking.otp ||
+    booking.security?.startOtpPlainForCustomer;
+  return val ? String(val).trim() : "3459";
+}
+
+/**
  * Handle Demo Worker: Verify Doorstep OTP & Start Work
  * Starts live countdown and work stopwatch
  */
 export async function handleDemoWorkerVerifyOtp(booking, enteredOtp) {
   const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
-  const expectedOtp = String(booking.otp || booking.doorOtp || "1234");
+  const expectedOtp = getBookingDoorOtp(booking);
   const cleanEntered = String(enteredOtp || "").trim();
 
   // In demo mode accept matching OTP or universal test pins 1234 / 4582 / 3459

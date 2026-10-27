@@ -9,7 +9,7 @@ import { initialOffers } from "../data/offersData";
 import { getServicemanImage } from "../data/categoryImages";
 import LiveTrackingModal from "./LiveTrackingModal";
 import { API_BASE } from "../apiConfig";
-import { broadcastBookingSync } from "../utils/bookingWorkflow";
+import { broadcastBookingSync, getBookingDoorOtp } from "../utils/bookingWorkflow";
 
 // Service-Specific Dynamic Problem Options
 export const getServiceProblemChips = (service) => {
@@ -553,9 +553,17 @@ function Home() {
 
       if (json.success && (json.data || json.booking)) {
         const bData = json.data || json.booking;
+        const resolvedOtp = bData?.slotOtp || bData?.doorOtp || bData?.security?.startOtpPlainForCustomer || json.startOtp || json.slotOtp || "3459";
         const fullBooking = {
           ...bData,
-          startOtp: json.startOtp || "3459",
+          startOtp: resolvedOtp,
+          slotOtp: resolvedOtp,
+          doorOtp: resolvedOtp,
+          otp: resolvedOtp,
+          security: {
+            ...(bData?.security || {}),
+            startOtpPlainForCustomer: resolvedOtp
+          },
           serviceName: selectedService.name,
           bookingDate: selectedBookingDate,
           timeSlot: selectedTimeSlot,
@@ -610,6 +618,10 @@ function Home() {
         startOtp: "3459",
         slotOtp: "3459",
         doorOtp: "3459",
+        otp: "3459",
+        security: {
+          startOtpPlainForCustomer: "3459"
+        },
         bookingDate: selectedBookingDate,
         scheduledDate: selectedBookingDate,
         timeSlot: selectedTimeSlot,
@@ -1617,7 +1629,7 @@ function Home() {
                         <span>YOUR SERVICE START OTP</span>
                       </div>
                       <div className="otp-code-display">
-                        {activeLiveBooking?.startOtp || activeLiveBooking?.slotOtp || "3459"}
+                        {getBookingDoorOtp(activeLiveBooking)}
                       </div>
                       <p className="otp-card-instruction">
                         Share this 4-digit code with the technician upon doorstep arrival to begin service.
@@ -1946,7 +1958,7 @@ function Home() {
         >
           <span className="live-tracker-pulse-dot" />
           <span className="live-tracker-info-text">
-            Live Dispatch: {activeLiveBooking.bookingId || "Active"} (OTP: {activeLiveBooking.startOtp || "3459"})
+            Live Dispatch: {activeLiveBooking.bookingId || "Active"} (OTP: {getBookingDoorOtp(activeLiveBooking)})
           </span>
           <span className="live-tracker-btn-text">Track 📡</span>
         </div>

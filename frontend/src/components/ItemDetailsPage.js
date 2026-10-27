@@ -4,6 +4,7 @@ import { realData, categoryItemsRegistry } from "./CategoryPage";
 import { getServicemanImage } from "../data/categoryImages";
 import { AuthContext } from "../context/AuthContext";
 import { DataContext } from "../context/DataContext";
+import { getBookingDoorOtp, broadcastBookingSync } from "../utils/bookingWorkflow";
 import "../css/ItemDetailsPage.css";
 
 function ItemDetailsPage() {
@@ -103,9 +104,17 @@ function ItemDetailsPage() {
         slotOtp,
         startOtp: slotOtp,
         doorOtp: slotOtp,
+        otp: slotOtp,
+        security: {
+          startOtpPlainForCustomer: slotOtp
+        },
         notes: notesInput,
         date: "Just now"
       };
+
+      try {
+        broadcastBookingSync(bookingCode, newB);
+      } catch (e) {}
 
       if (dataContext?.addBooking) {
         dataContext.addBooking(newB);
@@ -374,7 +383,7 @@ function ItemDetailsPage() {
                       🔑 Service Start OTP
                     </div>
                     <div style={{ fontSize: "32px", fontWeight: 900, letterSpacing: "5px", color: "#0F172A", margin: "4px 0" }}>
-                      {createdBooking?.slotOtp || "3459"}
+                      {getBookingDoorOtp(createdBooking)}
                     </div>
                     <div style={{ fontSize: "11.5px", color: "#64748B" }}>
                       Share this OTP with technician at your doorstep

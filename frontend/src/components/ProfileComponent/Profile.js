@@ -5,6 +5,7 @@ import EditProfile from "./EditProfile";
 import { LocationContext } from "../../context/LocationContext";
 import { AuthContext } from "../../context/AuthContext";
 import { DataContext } from "../../context/DataContext";
+import { getBookingDoorOtp } from "../../utils/bookingWorkflow";
 
 function Profile({ isOpen, onClose, isPage }) {
   const navigate = useNavigate();
@@ -171,7 +172,7 @@ function Profile({ isOpen, onClose, isPage }) {
     }
 
     const b = currentActiveBooking;
-    const otp = b.slotOtp || b.startOtp || b.doorOtp || "3459";
+    const otp = getBookingDoorOtp(b);
     const bookingCode = b.bookingCode || b.bookingId || b.id || "HLP-BOOKING";
     const serviceTitle = b.serviceName || b.service || "Home Service";
     const providerName = b.assignedProviderName || b.assignedProvider || b.provider || "Technician Dispatched";

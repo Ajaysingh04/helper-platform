@@ -8,7 +8,7 @@ import { getServicemanImagesForCategory, getServicemanImage } from "../data/cate
 import "../css/CategoryPage.css";
 import "../css/Home.css";
 import { API_BASE } from "../apiConfig";
-import { broadcastBookingSync } from "../utils/bookingWorkflow";
+import { broadcastBookingSync, getBookingDoorOtp } from "../utils/bookingWorkflow";
 
 // Service-Specific Dynamic Problem Options for Category Directory
 export const getCategoryProblemChips = (category, item) => {
@@ -1023,8 +1023,13 @@ function CategoryPage() {
       status: "pending",
       slotConfirmed: false,
       slotOtp,
-      startQrCode,
+      startOtp: slotOtp,
       doorOtp: slotOtp,
+      otp: slotOtp,
+      security: {
+        startOtpPlainForCustomer: slotOtp
+      },
+      startQrCode,
       date: "Just now"
     };
 
@@ -2071,7 +2076,7 @@ function CategoryPage() {
                           <span>YOUR 4-DIGIT SLOT OTP</span>
                         </div>
                         <div className="otp-code-display">
-                          {confirmedBookingInfo?.slotOtp || "8544"}
+                          {getBookingDoorOtp(confirmedBookingInfo)}
                         </div>
                         <p className="otp-card-instruction">
                           Share this OTP with <strong>{enquiryItem.name}</strong> over the phone call to lock your appointment!
@@ -2165,7 +2170,7 @@ function CategoryPage() {
                           </svg>
                           <div className="qr-laser-scanner" />
                         </div>
-                        <span className="qr-code-val">{confirmedBookingInfo?.startQrCode || `START-${confirmedBookingInfo?.slotOtp || "8544"}`}</span>
+                        <span className="qr-code-val">{confirmedBookingInfo?.startQrCode || `START-${getBookingDoorOtp(confirmedBookingInfo)}`}</span>
                       </div>
                     </div>
                   </div>

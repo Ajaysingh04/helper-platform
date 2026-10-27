@@ -7,6 +7,7 @@ import { API_BASE, SOCKET_URL } from "../apiConfig";
 import LiveTrackingModal from "./LiveTrackingModal";
 import {
   calculateScheduleDetails,
+  getBookingDoorOtp,
   handleDemoVendorAccept,
   handleDemoWorkerAccept,
   handleDemoWorkerGoToLocation,
@@ -257,7 +258,7 @@ function MyBookings() {
 
   // Quick Simulation Action: Demo Worker - Enter OTP & Start Work
   const handleSimulateVerifyOtp = async (b) => {
-    const otpToUse = b.slotOtp || b.doorOtp || b.startOtp || "3459";
+    const otpToUse = getBookingDoorOtp(b);
     try {
       await handleDemoWorkerVerifyOtp(b, otpToUse);
       showToast("🔑 Demo Worker verified Door OTP! Countdown & live stopwatch active.");
@@ -595,7 +596,7 @@ function MyBookings() {
               const bookingId = b.bookingId || b.id || b._id || b.bookingCode || "HLP-00000";
               const rawStatus = (b.status || "pending").toLowerCase();
               const workerStatus = (b.workerStatus || "").toLowerCase();
-              const otp = b.slotOtp || b.doorOtp || b.startOtp || "3459";
+              const otp = getBookingDoorOtp(b);
 
               const isCancelled = rawStatus === "cancelled";
               const isPaid = b.paymentStatus === "paid";

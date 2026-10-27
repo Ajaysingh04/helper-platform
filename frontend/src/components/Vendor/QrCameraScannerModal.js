@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { getBookingDoorOtp } from "../../utils/bookingWorkflow";
 import "../../css/QrCameraScanner.css";
 
 function QrCameraScannerModal({ isOpen, booking, onClose, onScanSuccess }) {
@@ -12,7 +13,7 @@ function QrCameraScannerModal({ isOpen, booking, onClose, onScanSuccess }) {
   const [scanDetected, setScanDetected] = useState(false);
   const [manualToken, setManualToken] = useState("");
 
-  const targetCode = booking?.startQrCode || `START-${booking?.slotOtp || "8544"}`;
+  const targetCode = booking?.startQrCode || `START-${getBookingDoorOtp(booking)}`;
 
   // Audio Beep Sound via Web Audio API
   const playSuccessBeep = () => {

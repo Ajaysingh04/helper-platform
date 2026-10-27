@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../apiConfig";
-import { calculateScheduleDetails } from "../utils/bookingWorkflow";
+import { calculateScheduleDetails, getBookingDoorOtp } from "../utils/bookingWorkflow";
 import "../css/LiveTrackingModal.css";
 
 function LiveTrackingModal({ booking, onClose }) {
@@ -32,7 +32,7 @@ function LiveTrackingModal({ booking, onClose }) {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  const startOtp = currentBooking?.security?.startOtpPlainForCustomer || currentBooking?.doorOtp || currentBooking?.slotOtp || "4826";
+  const startOtp = getBookingDoorOtp(currentBooking);
   const status = (currentBooking?.status || "accepted").toLowerCase();
   const workerStatus = (currentBooking?.workerStatus || status).toLowerCase();
 

@@ -326,7 +326,7 @@ export default function MyBookingsScreen({ navigation }) {
                     </Text>
                   </View>
                   <View style={[styles.otpBadge, { backgroundColor: primaryColor || colors.primary }]}>
-                    <Text style={styles.otpNumber}>{item.otp}</Text>
+                    <Text style={styles.otpNumber}>{item.slotOtp || item.doorOtp || item.otp || item.startOtp || item.security?.startOtpPlainForCustomer || '3459'}</Text>
                   </View>
                 </View>
               )}
