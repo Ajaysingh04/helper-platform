@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
+import { broadcastBookingSync, DEMO_WORKER } from "../../utils/bookingWorkflow";
 import "../../css/Admin/Admin.css";
 import "../../css/WorkerDashboard.css";
 
@@ -213,6 +214,46 @@ function WorkerDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker]);
 
+  // Real-time cross-tab listener for incoming jobs from Demo Vendor
+  useEffect(() => {
+    const handleJobUpdate = () => {
+      const wid = worker?.workerId || worker?.id || "WRK-101";
+      fetchWorkerJobs(wid);
+    };
+
+    const handleNewOffer = (e) => {
+      if (e?.detail) {
+        showToast(`🔔 NEW JOB OFFER: ${e.detail.serviceName || e.detail.service} from Demo Vendor!`);
+      }
+      handleJobUpdate();
+    };
+
+    window.addEventListener("worker_new_offer", handleNewOffer);
+    window.addEventListener("booking_workflow_updated", handleJobUpdate);
+    window.addEventListener("booking_updated", handleJobUpdate);
+    window.addEventListener("storage", handleJobUpdate);
+
+    let syncCh = null;
+    try {
+      if (window.BroadcastChannel) {
+        syncCh = new window.BroadcastChannel("helper_booking_sync");
+        syncCh.onmessage = (ev) => {
+          if (ev.data && ev.data.type === "BOOKING_WORKFLOW_UPDATE") {
+            handleJobUpdate();
+          }
+        };
+      }
+    } catch (e) {}
+
+    return () => {
+      window.removeEventListener("worker_new_offer", handleNewOffer);
+      window.removeEventListener("booking_workflow_updated", handleJobUpdate);
+      window.removeEventListener("booking_updated", handleJobUpdate);
+      window.removeEventListener("storage", handleJobUpdate);
+      if (syncCh) syncCh.close();
+    };
+  }, [worker]);
+
   // Fetch updated worker profile
   const fetchWorkerProfile = async (id) => {
     try {
@@ -245,6 +286,7 @@ function WorkerDashboard() {
   };
 
   const fetchFallbackJobs = async (id) => {
+    let combined = [];
     try {
       const res = await fetch(`${API_BASE}/bookings`);
       const data = await res.json();
@@ -258,48 +300,73 @@ function WorkerDashboard() {
           b.workerStatus === "assigned" ||
           b.status === "assigned"
       );
-      if (workerJobs.length > 0) {
-        setJobs(workerJobs);
-        checkActiveJobStopwatch(workerJobs);
-      } else {
-        // Fallback demo active jobs
-        setJobs([
-          {
-            _id: "demo_job_1",
-            bookingCode: "HLP-78219",
-            serviceName: "Bathroom Pipe Leakage & Basin Fix",
-            customerName: "Vikas Malhotra",
-            customerPhone: "+91 98765 43210",
-            customerAddress: "Flat 402, Green Glen Heights, Sector 62, Noida",
-            scheduledDate: "Today",
-            scheduledTime: "11:30 AM",
-            price: 499,
-            workerStatus: "assigned",
-            status: "assigned",
-            doorOtp: "3459",
-            problemDescription: "Under-sink pipe leaking and low pressure in main tap."
-          },
-          {
-            _id: "demo_job_2",
-            bookingCode: "HLP-65120",
-            serviceName: "Kitchen Mixer Tap Installation",
-            customerName: "Sunita Roy",
-            customerPhone: "+91 98112 00998",
-            customerAddress: "House 12, Block B, Preet Vihar, Delhi",
-            scheduledDate: "Today",
-            scheduledTime: "03:00 PM",
-            price: 350,
-            workerStatus: "completed",
-            status: "completed",
-            workerRating: 5.0,
-            workerReview: "Prompt arrival and clean work! Extremely polite.",
-            completionPhotos: ["https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500"],
-            workerEarningsAmount: 315,
-            vendorEarningsAmount: 35
-          }
-        ]);
-      }
+      combined = [...workerJobs];
     } catch (e) {}
+
+    // Check localStorage helper_user_bookings to pick up bookings dispatched by Demo Vendor
+    try {
+      const localBookings = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+      localBookings.forEach((b) => {
+        const bId = b.bookingId || b.id || b._id || b.bookingCode;
+        const exists = combined.some(
+          (j) => (j.bookingId || j.id || j._id || j.bookingCode) === bId
+        );
+        const isForWorker =
+          b.status === "ready_for_worker" ||
+          b.workerStatus === "assigned" ||
+          b.workerStatus === "accepted" ||
+          b.status === "slot_confirmed" ||
+          b.assignedWorker?.workerId === id ||
+          b.assignedWorker?.id === id ||
+          b.assignedWorkerName === "Sunil Verma";
+
+        if (!exists && isForWorker) {
+          combined.unshift(b);
+        }
+      });
+    } catch (e) {}
+
+    if (combined.length > 0) {
+      setJobs(combined);
+      checkActiveJobStopwatch(combined);
+    } else {
+      // Fallback demo active jobs
+      setJobs([
+        {
+          _id: "demo_job_1",
+          bookingCode: "HLP-78219",
+          serviceName: "Bathroom Pipe Leakage & Basin Fix",
+          customerName: "Vikas Malhotra",
+          customerPhone: "+91 98765 43210",
+          customerAddress: "Flat 402, Green Glen Heights, Sector 62, Noida",
+          scheduledDate: "Today",
+          scheduledTime: "11:30 AM",
+          price: 499,
+          workerStatus: "assigned",
+          status: "assigned",
+          doorOtp: "3459",
+          problemDescription: "Under-sink pipe leaking and low pressure in main tap."
+        },
+        {
+          _id: "demo_job_2",
+          bookingCode: "HLP-65120",
+          serviceName: "Kitchen Mixer Tap Installation",
+          customerName: "Sunita Roy",
+          customerPhone: "+91 98112 00998",
+          customerAddress: "House 12, Block B, Preet Vihar, Delhi",
+          scheduledDate: "Today",
+          scheduledTime: "03:00 PM",
+          price: 350,
+          workerStatus: "completed",
+          status: "completed",
+          workerRating: 5.0,
+          workerReview: "Prompt arrival and clean work! Extremely polite.",
+          completionPhotos: ["https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500"],
+          workerEarningsAmount: 315,
+          vendorEarningsAmount: 35
+        }
+      ]);
+    }
   };
 
   const checkActiveJobStopwatch = (jobList) => {
@@ -358,20 +425,44 @@ function WorkerDashboard() {
 
   // Stage 1: Accept Job
   const handleAcceptJob = async (bookingId) => {
+    const primaryWorker = {
+      id: worker?.workerId || worker?.id || DEMO_WORKER.id,
+      workerId: worker?.workerId || worker?.id || DEMO_WORKER.workerId,
+      name: worker?.name || DEMO_WORKER.name,
+      phone: worker?.phone || DEMO_WORKER.phone,
+      role: worker?.role || DEMO_WORKER.role,
+      rating: worker?.rating || 4.95,
+      totalJobs: 148,
+      avatar: DEMO_WORKER.avatar
+    };
+
+    const patch = {
+      workerStatus: "accepted",
+      status: "slot_confirmed",
+      slotConfirmed: true,
+      workerAcceptedAt: new Date().toISOString(),
+      assignedWorker: primaryWorker,
+      assignedWorkerName: primaryWorker.name,
+      assignedWorkerPhone: primaryWorker.phone
+    };
+
+    broadcastBookingSync(bookingId, patch);
+
     try {
       await fetch(`${API_BASE}/bookings/${bookingId}/worker-accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          workerId: worker?.workerId || worker?.id || "WRK-101",
-          workerName: worker?.name || "Sunil Verma",
-          workerPhone: worker?.phone || "+91 98765 00101"
+          workerId: primaryWorker.workerId,
+          workerName: primaryWorker.name,
+          workerPhone: primaryWorker.phone
         })
       });
       showToast("🎉 Job accepted! Your contact number, name and arrival schedule are now visible to customer.");
-      updateJobStateLocally(bookingId, { workerStatus: "accepted", status: "slot_confirmed", slotConfirmed: true });
+      updateJobStateLocally(bookingId, patch);
     } catch (e) {
-      updateJobStateLocally(bookingId, { workerStatus: "accepted", status: "slot_confirmed", slotConfirmed: true });
+      showToast("🎉 Job accepted! Customer can now view your contact details and schedule.");
+      updateJobStateLocally(bookingId, patch);
     }
   };
 

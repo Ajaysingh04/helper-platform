@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
+import { broadcastBookingSync, DEMO_WORKER } from "../../utils/bookingWorkflow";
 import QrCameraScannerModal from "./QrCameraScannerModal";
 import "../../css/Admin/Admin.css";
 import "../../css/VendorDashboard.css";
@@ -509,9 +510,31 @@ function VendorDashboard() {
     };
     window.addEventListener("new_booking_created", handleNewBooking);
     window.addEventListener("vendor_notification_received", handleNewBooking);
+    window.addEventListener("storage", handleNewBooking);
+
+    let syncCh = null;
+    try {
+      if (window.BroadcastChannel) {
+        syncCh = new window.BroadcastChannel("helper_booking_sync");
+        syncCh.onmessage = (ev) => {
+          if (ev.data && ev.data.type === "BOOKING_WORKFLOW_UPDATE") {
+            const b = ev.data.patch;
+            const bId = ev.data.bookingId;
+            if (b && (b.status === "pending" || b.status === "assigned" || b.status === "pending_vendor")) {
+              setIncomingOffer({ ...b, bookingId: bId, id: bId, expiresAt: Date.now() + 60000 });
+              setOfferCountdown(60);
+            }
+            if (vendor?.id || vendor?._id) fetchBookings(vendor.id || vendor._id);
+          }
+        };
+      }
+    } catch (e) {}
+
     return () => {
       window.removeEventListener("new_booking_created", handleNewBooking);
       window.removeEventListener("vendor_notification_received", handleNewBooking);
+      window.removeEventListener("storage", handleNewBooking);
+      if (syncCh) syncCh.close();
     };
   }, [vendor]);
 
@@ -1241,22 +1264,35 @@ function VendorDashboard() {
       role: "Senior Technician"
     };
 
-    // Optimistic update
-    setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
-      ...b,
+    const patch = {
       status: "ready_for_worker",
       workerStatus: "assigned",
+      vendorAccepted: true,
+      vendorAcceptedAt: new Date().toISOString(),
       assignedProvider: vName,
       assignedProviderName: vendor?.name || "Ramesh Kumar",
       assignedWorker: primaryWorker,
       assignedWorkerName: primaryWorker.name,
-      assignedWorkerPhone: primaryWorker.phone
+      assignedWorkerPhone: primaryWorker.phone,
+      assignedWorkers: [primaryWorker]
+    };
+
+    // Optimistic update
+    setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
+      ...b,
+      ...patch
     } : b));
 
     if (incomingOffer && (incomingOffer.bookingId === key || incomingOffer.id === key)) {
       setIncomingOffer(null);
     }
     showToast(`🎉 Order #${key} Accepted & Ready! Dispatched to worker ${primaryWorker.name}. 🚀`);
+
+    // Synchronize to Demo User (MyBookings) and Demo Worker (WorkerDashboard) across all tabs
+    broadcastBookingSync(key, patch);
+    try {
+      window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: { bookingId: key, ...booking, ...patch } }));
+    } catch (e) {}
 
     // Socket notification
     if (socketRef.current) {

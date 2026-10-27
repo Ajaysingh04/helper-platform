@@ -3,6 +3,7 @@ import { popularCategories } from "../data/popularCategoriesData";
 import { initialOffers } from "../data/offersData";
 import { initialHeroBanners, DEFAULT_HERO_IMAGE } from "../data/heroBannersData";
 import { API_BASE } from "../apiConfig";
+import { broadcastBookingSync } from "../utils/bookingWorkflow";
 
 export const DataContext = createContext();
 
@@ -1044,6 +1045,7 @@ export const DataProvider = ({ children }) => {
     } catch (e) {}
 
     // Dispatch real-time booking event so Service Man Panel and Admin receive it instantly
+    broadcastBookingSync(item.bookingId, item);
     window.dispatchEvent(new CustomEvent("new_booking_created", { detail: item }));
     window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: item }));
 

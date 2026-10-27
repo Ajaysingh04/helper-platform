@@ -567,6 +567,7 @@ router.post("/:id/accept", async (req, res) => {
         workerId: assignedWorkerObj.workerId
       });
       io.emit("booking:updated", updateData);
+      io.emit("booking:status_changed", updateData);
     }
 
     res.json({
@@ -1182,6 +1183,8 @@ router.post("/:id/worker-accept", async (req, res) => {
 
       io.to(`booking_${bId}`).emit("worker:status_update", statusPayload);
       io.to(`booking_${bCode}`).emit("worker:status_update", statusPayload);
+      io.emit("worker:status_update", statusPayload);
+      io.emit("booking:status_changed", statusPayload);
       io.emit("booking:updated", { ...booking, ...statusPayload });
       console.log(`📡 [WORKER ACCEPTED] Emitted for booking ${bCode}: ${activeWorker.name} (${activeWorker.phone})`);
     }

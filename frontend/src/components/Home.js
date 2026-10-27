@@ -9,6 +9,7 @@ import { initialOffers } from "../data/offersData";
 import { getServicemanImage } from "../data/categoryImages";
 import LiveTrackingModal from "./LiveTrackingModal";
 import { API_BASE } from "../apiConfig";
+import { broadcastBookingSync } from "../utils/bookingWorkflow";
 
 // Service-Specific Dynamic Problem Options
 export const getServiceProblemChips = (service) => {
@@ -590,6 +591,7 @@ function Home() {
         try {
           const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
           localStorage.setItem("helper_user_bookings", JSON.stringify([fullBooking, ...existing]));
+          broadcastBookingSync(fullBooking.bookingId || fullBooking._id, fullBooking);
         } catch (e) {}
 
         setEnquirySuccess(true);
@@ -609,7 +611,9 @@ function Home() {
         slotOtp: "3459",
         doorOtp: "3459",
         bookingDate: selectedBookingDate,
+        scheduledDate: selectedBookingDate,
         timeSlot: selectedTimeSlot,
+        scheduledTime: selectedTimeSlot,
         problem: selectedProblem,
         assignedProvider: selectedProvider ? {
           name: selectedProvider.name,
@@ -640,6 +644,7 @@ function Home() {
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
         localStorage.setItem("helper_user_bookings", JSON.stringify([fallbackBooking, ...existing]));
+        broadcastBookingSync(fallbackBooking.bookingId || fallbackBooking._id, fallbackBooking);
       } catch (e) {}
       setEnquirySuccess(true);
       setActiveLiveBooking(fallbackBooking);

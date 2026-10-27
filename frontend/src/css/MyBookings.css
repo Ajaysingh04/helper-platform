@@ -1383,8 +1383,625 @@ body.dark .pro-worker-unaccepted-box .pending-vendor-desc,
 }
 
 .status-badge-pro.worker-confirmed {
-  background: rgba(16, 185, 129, 0.12);
+  background: rgba(16, 185, 129, 0.14);
   color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   3-PARTY DISPATCH WORKFLOW PIPELINE STEPPER
+   -------------------------------------------------------------------------- */
+.pro-pipeline-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 14px;
+  padding: 12px 18px;
+  margin: 12px 0 16px 0;
+  box-sizing: border-box;
+}
+
+body.dark .pro-pipeline-stepper,
+[data-theme="dark"] .pro-pipeline-stepper {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(51, 65, 85, 0.7);
+}
+
+.stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.stepper-step .step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: #64748b;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+body.dark .stepper-step .step-circle,
+[data-theme="dark"] .stepper-step .step-circle {
+  background: #334155;
+  color: #94a3b8;
+}
+
+.stepper-step.completed .step-circle {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.stepper-step.active-pulse .step-circle {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  animation: pulseAmber 1.8s infinite;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+}
+
+.step-label-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-num {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+
+.step-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  line-height: 1.2;
+}
+
+body.dark .step-title,
+[data-theme="dark"] .step-title {
+  color: #f1f5f9;
+}
+
+.step-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+body.dark .step-subtitle,
+[data-theme="dark"] .step-subtitle {
+  color: #94a3b8;
+}
+
+.stepper-connector {
+  flex: 1;
+  height: 3px;
+  background: #e2e8f0;
+  margin: 0 10px;
+  border-radius: 999px;
+  transition: background 0.3s ease;
+}
+
+body.dark .stepper-connector,
+[data-theme="dark"] .stepper-connector {
+  background: #334155;
+}
+
+.stepper-connector.completed {
+  background: linear-gradient(90deg, #10b981, #059669);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.stepper-connector.active {
+  background: linear-gradient(90deg, #10b981, #f59e0b);
+}
+
+/* --------------------------------------------------------------------------
+   TECHNICIAN CONFIRMED CARD WITH GLOW & ANIMATION
+   -------------------------------------------------------------------------- */
+.booking-pro-card.worker-active-glow {
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 12px 36px rgba(16, 185, 129, 0.12);
+}
+
+body.dark .booking-pro-card.worker-active-glow,
+[data-theme="dark"] .booking-pro-card.worker-active-glow {
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 14px 40px rgba(16, 185, 129, 0.15);
+}
+
+.pro-technician-card.worker-confirmed-glow {
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.7) 0%, rgba(240, 253, 250, 0.5) 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-top: 14px;
+  box-shadow: 0 8px 28px rgba(16, 185, 129, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+body.dark .pro-technician-card.worker-confirmed-glow,
+[data-theme="dark"] .pro-technician-card.worker-confirmed-glow {
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.25) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+}
+
+.tech-main-profile-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.tech-avatar-circle-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.tech-avatar-circle-wrap .tech-avatar-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+  border: 2px solid #ffffff;
+}
+
+body.dark .tech-avatar-circle-wrap .tech-avatar-circle,
+[data-theme="dark"] .tech-avatar-circle-wrap .tech-avatar-circle {
+  border-color: #064e3b;
+}
+
+.tech-online-pulse-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: pulseGreenGlow 1.5s infinite;
+}
+
+body.dark .tech-online-pulse-dot,
+[data-theme="dark"] .tech-online-pulse-dot {
+  border-color: #0f172a;
+}
+
+.tech-details-info {
+  flex: 1;
+}
+
+.tech-name-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.tech-name-line strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+
+body.dark .tech-name-line strong,
+[data-theme="dark"] .tech-name-line strong {
+  color: #f8fafc;
+}
+
+.tech-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(22, 163, 74, 0.3);
+}
+
+body.dark .tech-verified-badge,
+[data-theme="dark"] .tech-verified-badge {
+  background: rgba(22, 163, 74, 0.2);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.tech-meta-role-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #047857;
+  font-weight: 700;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+body.dark .tech-meta-role-line,
+[data-theme="dark"] .tech-meta-role-line {
+  color: #6ee7b7;
+}
+
+.tech-contact-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted, #475569);
+  flex-wrap: wrap;
+}
+
+body.dark .tech-contact-line,
+[data-theme="dark"] .tech-contact-line {
+  color: #94a3b8;
+}
+
+.tech-phone-text {
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.02em;
+}
+
+body.dark .tech-phone-text,
+[data-theme="dark"] .tech-phone-text {
+  color: #34d399;
+}
+
+/* Contact Action Buttons */
+.tech-contact-action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-tech-call-direct {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff !important;
+  font-size: 13.5px;
+  font-weight: 800;
+  padding: 10px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-tech-call-direct:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+}
+
+.btn-tech-copy-phone {
+  background: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #059669;
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 9px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+body.dark .btn-tech-copy-phone,
+[data-theme="dark"] .btn-tech-copy-phone {
+  background: #1e293b;
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #34d399;
+}
+
+.btn-tech-copy-phone:hover,
+.btn-tech-copy-phone.copied {
+  background: #10b981;
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   "KITNE GHANTE LAGENGE" DYNAMIC HOURS & DURATION WIDGET
+   -------------------------------------------------------------------------- */
+.pro-hours-calc-widget {
+  background: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+body.dark .pro-hours-calc-widget,
+[data-theme="dark"] .pro-hours-calc-widget {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+.calc-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #047857;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+body.dark .calc-widget-header,
+[data-theme="dark"] .calc-widget-header {
+  color: #6ee7b7;
+}
+
+.calc-icon {
+  font-size: 16px;
+}
+
+.calc-time-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.calc-time-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+body.dark .calc-time-box,
+[data-theme="dark"] .calc-time-box {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.calc-box-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+body.dark .calc-box-label,
+[data-theme="dark"] .calc-box-label {
+  color: #94a3b8;
+}
+
+.calc-box-value {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+body.dark .calc-box-value,
+[data-theme="dark"] .calc-box-value {
+  color: #f8fafc;
+}
+
+.calc-box-value.highlight {
+  color: #0284c7;
+}
+
+body.dark .calc-box-value.highlight,
+[data-theme="dark"] .calc-box-value.highlight {
+  color: #38bdf8;
+}
+
+.calc-box-value.duration {
+  color: #d97706;
+}
+
+body.dark .calc-box-value.duration,
+[data-theme="dark"] .calc-box-value.duration {
+  color: #fbbf24;
+}
+
+.calc-box-value.total {
+  color: #059669;
+}
+
+body.dark .calc-box-value.total,
+[data-theme="dark"] .calc-box-value.total {
+  color: #34d399;
+}
+
+.calc-desc-note {
+  font-size: 11.5px;
+  color: #475569;
+  line-height: 1.4;
+  margin: 6px 0 0;
+}
+
+body.dark .calc-desc-note,
+[data-theme="dark"] .calc-desc-note {
+  color: #94a3b8;
+}
+
+/* --------------------------------------------------------------------------
+   DEMO SIMULATION ACTION BAR
+   -------------------------------------------------------------------------- */
+.demo-simulation-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(245, 158, 11, 0.4);
+}
+
+.demo-sim-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #b45309;
+}
+
+body.dark .demo-sim-title,
+[data-theme="dark"] .demo-sim-title {
+  color: #fbbf24;
+}
+
+.btn-demo-sim {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-demo-sim.vendor {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-demo-sim.worker {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-demo-sim:hover {
+  transform: translateY(-2px);
+}
+
+.demo-sim-hint {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.demo-sim-hint code {
+  background: rgba(15, 23, 42, 0.08);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+body.dark .demo-sim-hint code,
+[data-theme="dark"] .demo-sim-hint code {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+/* --------------------------------------------------------------------------
+   KEYFRAME ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes pulseGreenGlow {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes pulseAmber {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes fadeInPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animated-pop {
+  animation: fadeInPop 0.35s ease-out forwards;
+}
+
+.animated-fade-in {
+  animation: fadeInPop 0.4s ease-out forwards;
+}
+
+/* Mobile Responsiveness for Stepper and Calculation Grid */
+@media (max-width: 768px) {
+  .pro-pipeline-stepper {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .stepper-connector {
+    display: none;
+  }
+
+  .stepper-step {
+    flex: 1 1 45%;
+    margin-bottom: 4px;
+  }
+
+  .calc-time-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tech-contact-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-tech-call-direct,
+  .btn-tech-copy-phone {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
 }
 

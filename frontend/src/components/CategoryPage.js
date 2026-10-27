@@ -8,6 +8,7 @@ import { getServicemanImagesForCategory, getServicemanImage } from "../data/cate
 import "../css/CategoryPage.css";
 import "../css/Home.css";
 import { API_BASE } from "../apiConfig";
+import { broadcastBookingSync } from "../utils/bookingWorkflow";
 
 // Service-Specific Dynamic Problem Options for Category Directory
 export const getCategoryProblemChips = (category, item) => {
@@ -1028,6 +1029,7 @@ function CategoryPage() {
     };
 
     try {
+      broadcastBookingSync(bookingCode, newBookingData);
       if (dataContext?.addBooking) {
         await dataContext.addBooking(newBookingData);
       }

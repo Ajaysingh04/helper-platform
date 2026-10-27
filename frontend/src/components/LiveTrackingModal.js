@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../apiConfig";
+import { calculateScheduleDetails } from "../utils/bookingWorkflow";
 import "../css/LiveTrackingModal.css";
 
 function LiveTrackingModal({ booking, onClose }) {
@@ -260,6 +261,7 @@ function LiveTrackingModal({ booking, onClose }) {
   // Scheduled date & remaining hours
   const schedDate = currentBooking?.scheduledDate || currentBooking?.bookingDate || "Scheduled Date";
   const schedTime = currentBooking?.scheduledTime || currentBooking?.timeSlot || "Scheduled Slot";
+  const scheduleDetails = calculateScheduleDetails(currentBooking);
 
   return (
     <div className="tracking-modal-overlay animate-fade-in">
@@ -279,33 +281,50 @@ function LiveTrackingModal({ booking, onClose }) {
           </button>
         </div>
 
-        {/* Real Date & Scheduled Time Badge */}
+        {/* Real Date & Scheduled Time Badge with Hours Calculation */}
         <div style={{
-          padding: "10px 16px",
-          background: "rgba(99, 102, 241, 0.08)",
-          borderRadius: "12px",
+          padding: "12px 16px",
+          background: "linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%)",
+          borderRadius: "14px",
           marginBottom: "16px",
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
+          flexDirection: "column",
           gap: "8px",
           fontSize: "12.5px",
-          fontWeight: 700,
-          color: "#3730a3",
           border: "1px solid rgba(99, 102, 241, 0.2)"
         }}>
-          <span>📅 {schedDate} • ⏰ {schedTime}</span>
-          <span style={{
-            background: isWorkerAccepted ? "#10b981" : "#f59e0b",
-            color: "#ffffff",
-            padding: "2px 8px",
-            borderRadius: "6px",
-            fontSize: "11px",
-            fontWeight: 800
-          }}>
-            {isWorkerAccepted ? "✓ TECHNICIAN CONFIRMED" : "⏳ AWAITING WORKER ACCEPTANCE"}
-          </span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+            <span style={{ fontWeight: 800, color: "#3730a3" }}>📅 {schedDate} • ⏰ {schedTime}</span>
+            <span style={{
+              background: isWorkerAccepted ? "#10b981" : "#f59e0b",
+              color: "#ffffff",
+              padding: "3px 10px",
+              borderRadius: "20px",
+              fontSize: "11px",
+              fontWeight: 800,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+            }}>
+              {isWorkerAccepted ? "✓ DEMO WORKER CONFIRMED" : "⏳ AWAITING WORKER ACCEPTANCE"}
+            </span>
+          </div>
+
+          {scheduleDetails && (
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "8px",
+              paddingTop: "6px",
+              borderTop: "1px dashed rgba(99, 102, 241, 0.2)",
+              fontSize: "12px",
+              color: "#0f172a"
+            }}>
+              <span>⏱️ <strong>Start Countdown:</strong> <span style={{ color: "#0284c7", fontWeight: 800 }}>{scheduleDetails.countdownTitle}</span></span>
+              <span>⏳ <strong>Est. Service Time:</strong> <span style={{ color: "#d97706", fontWeight: 800 }}>~{scheduleDetails.estimatedDurationText}</span></span>
+              <span>🕒 <strong>Total:</strong> <span style={{ color: "#059669", fontWeight: 800 }}>~{scheduleDetails.estimatedServiceHours} Hours</span></span>
+            </div>
+          )}
         </div>
 
         {/* Status Stepper */}
