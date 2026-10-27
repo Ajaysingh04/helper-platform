@@ -524,6 +524,7 @@ function VendorDashboard() {
       window.removeEventListener("storage", handleNewBooking);
       if (syncCh) syncCh.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendor]);
 
   // Fetch Bookings

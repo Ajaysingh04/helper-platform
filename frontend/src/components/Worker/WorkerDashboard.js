@@ -270,6 +270,7 @@ function WorkerDashboard() {
       window.removeEventListener("storage", handleJobUpdate);
       if (syncCh) syncCh.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker]);
 
   // Fetch updated worker profile
