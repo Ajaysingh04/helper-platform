@@ -1852,4 +1852,134 @@ button[style*="Punch In"]:active,
   transform: translateY(0) scale(0.97);
 }
 
+/* ==========================================================================
+   FLOATING SIDE COUNTDOWN / STOPWATCH WIDGET (WORK IN PROGRESS)
+   ========================================================================== */
+.wrk-floating-side-timer {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  border: 2px solid #3B82F6;
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 24px rgba(59, 130, 246, 0.35);
+  color: #FFFFFF;
+  min-width: 290px;
+  max-width: 340px;
+  animation: wrkFloatSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  backdrop-filter: blur(12px);
+  transition: all 0.25s ease;
+}
+
+@keyframes wrkFloatSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.wrk-floating-side-timer.minimized {
+  min-width: auto;
+  padding: 10px 16px;
+  border-radius: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wrk-side-timer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.wrk-side-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60A5FA;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.wrk-side-timer-clock {
+  font-family: "Space Grotesk", "Consolas", monospace;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #38BDF8;
+  text-align: center;
+  margin: 6px 0;
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.45);
+}
+
+.wrk-side-timer-meta {
+  font-size: 12px;
+  color: #94A3B8;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+}
+
+.wrk-side-timer-btn-complete {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.wrk-side-timer-btn-complete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+}
+
+/* ==========================================================================
+   CUSTOMER REVIEW & FEEDBACK MODAL (WORKER -> CUSTOMER)
+   ========================================================================== */
+.wrk-tag-pill {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--wrk-text-muted);
+  transition: all 0.2s ease;
+}
+
+.wrk-tag-pill.active {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #F59E0B;
+  color: #F59E0B;
+  font-weight: 700;
+}
+
+
 

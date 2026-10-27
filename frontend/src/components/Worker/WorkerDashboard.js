@@ -10,7 +10,8 @@ import {
   handleDemoWorkerGoToLocation,
   handleDemoWorkerArrived,
   handleDemoWorkerVerifyOtp,
-  handleDemoWorkerCompleteWork
+  handleDemoWorkerCompleteWork,
+  handleDemoWorkerSubmitCustomerFeedback
 } from "../../utils/bookingWorkflow";
 import "../../css/Admin/Admin.css";
 import "../../css/WorkerDashboard.css";
@@ -55,6 +56,14 @@ function WorkerDashboard() {
   const [completionPhotoUrl, setCompletionPhotoUrl] = useState("");
   const [, setIsScanningActive] = useState(false);
   const [, setScanningBookingId] = useState(null);
+
+  // Customer Rating & Feedback Modal State (Worker -> Customer)
+  const [customerFeedbackBooking, setCustomerFeedbackBooking] = useState(null);
+  const [customerRating, setCustomerRating] = useState(5);
+  const [customerHoverRating, setCustomerHoverRating] = useState(5);
+  const [customerReview, setCustomerReview] = useState("");
+  const [customerFeedbackTags, setCustomerFeedbackTags] = useState([]);
+  const [sideTimerMinimized, setSideTimerMinimized] = useState(false);
 
   // In-App Chat Modal State
   const [activeChatBooking, setActiveChatBooking] = useState(null);
@@ -475,14 +484,18 @@ function WorkerDashboard() {
     }
   };
 
-  // Stage 2: Go to Location (Start Traveling)
+  // Stage 2: Go to Location (Start Traveling & Open Google Maps)
   const handleStartTraveling = async (bookingId) => {
     const b = jobs.find((j) => (j.bookingId || j.id || j._id) === bookingId) || {};
     try {
       await handleDemoWorkerGoToLocation(b);
     } catch (e) {}
 
-    showToast("📍 On the way! Traveling to customer location.");
+    // Open Google Maps navigation route in a new tab
+    const dest = encodeURIComponent(b.customerAddress || b.address || "Sector 62, Noida");
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}`, "_blank");
+
+    showToast("📍 Map Route opened! Traveling to customer location.");
     updateJobStateLocally(bookingId, { workerStatus: "traveling" });
 
     try {
@@ -503,15 +516,29 @@ function WorkerDashboard() {
     } catch (e) {}
   };
 
-  // Stage 3: I am Arrived At Doorstep
+  // Stage 3: I am Arrived At Doorstep & Notify Customer
   const handleArrived = async (bookingId) => {
     const b = jobs.find((j) => (j.bookingId || j.id || j._id) === bookingId) || {};
     try {
       await handleDemoWorkerArrived(b);
     } catch (e) {}
 
-    showToast("🏁 Arrived at customer doorstep! Please enter the 4-digit Service Start OTP.");
+    showToast("🏁 Arrived at customer doorstep! Please call customer or ask for 4-digit Service Start OTP.");
     updateJobStateLocally(bookingId, { workerStatus: "arrived" });
+
+    // Send instant arrival notification to customer
+    try {
+      window.dispatchEvent(
+        new CustomEvent("worker_arrived_notification", {
+          detail: {
+            bookingId,
+            workerName: worker?.name || "Sunil Sharma",
+            phone: worker?.phone || "9876500101",
+            message: "Technician Sunil Sharma has arrived at your doorstep! Please share the 4-digit Service Start OTP with technician."
+          }
+        })
+      );
+    } catch (e) {}
 
     try {
       await fetch(`${API_BASE}/bookings/${bookingId}/worker-arrived`, {
@@ -571,6 +598,7 @@ function WorkerDashboard() {
       workCompletedAt: Date.now(),
       finalCalculatedAmount: totalBill,
       totalAmount: totalBill,
+      finalTotalAmount: totalBill,
       price: `₹${totalBill}`,
       workerEarningsAmount: workerEarnings,
       vendorEarningsAmount: vendorProfit,
@@ -597,7 +625,7 @@ function WorkerDashboard() {
     broadcastBookingSync(bookingId, patchData);
     updateJobStateLocally(bookingId, patchData);
 
-    showToast(`✅ Work Complete! Service QR generated. Waiting for customer to scan and pay ₹${totalBill}.`);
+    showToast(`✅ Work Complete! Helper Payment QR generated with ₹${totalBill}. Waiting for customer to scan and pay.`);
 
     if (worker) {
       const updatedWorker = {
@@ -659,6 +687,11 @@ function WorkerDashboard() {
     updateJobStateLocally(bookingId, patchData);
     showToast(`🎉 Payment of ₹${bill} verified! Your 90% payout (₹${workerEarnings}) added to your balance.`);
 
+    const foundBooking = jobs.find((j) => (j.bookingId || j.id || j._id) === bookingId);
+    if (foundBooking) {
+      setCustomerFeedbackBooking({ ...foundBooking, ...patchData });
+    }
+
     try {
       await fetch(`${API_BASE}/bookings/${bookingId}/pay`, {
         method: "POST",
@@ -669,6 +702,29 @@ function WorkerDashboard() {
         })
       });
     } catch (e) {}
+  };
+
+  // Stage 7: Submit Worker Review for Customer
+  const handleSubmitCustomerFeedback = async (e) => {
+    if (e) e.preventDefault();
+    if (!customerFeedbackBooking) return;
+    const bId = customerFeedbackBooking.bookingId || customerFeedbackBooking.id || customerFeedbackBooking._id || customerFeedbackBooking.bookingCode;
+    try {
+      const patch = await handleDemoWorkerSubmitCustomerFeedback(customerFeedbackBooking, {
+        rating: customerRating,
+        comment: customerReview || "Very polite and helpful customer. Prompt payment!",
+        tags: customerFeedbackTags.length > 0 ? customerFeedbackTags : ["Polite Customer", "Prompt Payment", "Accurate Address"]
+      });
+      updateJobStateLocally(bId, patch);
+      showToast("⭐ Customer review submitted successfully!");
+      setCustomerFeedbackBooking(null);
+      setCustomerReview("");
+      setCustomerRating(5);
+      setCustomerFeedbackTags([]);
+    } catch (err) {
+      showToast("Review submitted!");
+      setCustomerFeedbackBooking(null);
+    }
   };
 
   const updateJobStateLocally = (bookingId, patch) => {
@@ -1569,11 +1625,30 @@ function WorkerDashboard() {
 
                         {isArrived && (
                           <div className="wrk-stopwatch-box" style={{ background: "linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)", border: "2px solid #F59E0B" }}>
-                            <span style={{ fontSize: "13px", fontWeight: 800, color: "#B45309" }}>
-                              🔑 ZERO-FRAUD START OTP REQUIRED
-                            </span>
-                            <p style={{ margin: 0, fontSize: "13px", color: "#78350F" }}>
-                              Customer se unki screen par dikh raha 4-digit Service Start OTP maangein:
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                              <span style={{ fontSize: "13px", fontWeight: 800, color: "#B45309" }}>
+                                🔔 AT DOORSTEP • CUSTOMER VERIFICATION
+                              </span>
+                              <a
+                                href={`tel:${(b.customerPhone || "9876543210").replace(/[^0-9+]/g, "")}`}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  background: "#10B981",
+                                  color: "#ffffff",
+                                  padding: "6px 14px",
+                                  borderRadius: "10px",
+                                  textDecoration: "none",
+                                  fontWeight: 800,
+                                  fontSize: "12.5px"
+                                }}
+                              >
+                                📞 Call Customer ({b.customerPhone || "Call"})
+                              </a>
+                            </div>
+                            <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#78350F" }}>
+                              Ghar pahuch kar customer ko call karein ya doorbell bajayein, aur unki screen par dikh raha 4-digit Service Start OTP maangein:
                             </p>
 
                             <div className="wrk-otp-input-wrap">
@@ -1802,7 +1877,7 @@ function WorkerDashboard() {
                           </div>
                         )}
 
-                        {/* Paid State Confirmation */}
+                        {/* Paid State Confirmation & Mutual Customer Review */}
                         {b.paymentStatus === "paid" && (
                           <div style={{
                             background: "linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.12) 100%)",
@@ -1819,6 +1894,51 @@ function WorkerDashboard() {
                             <p style={{ margin: 0, fontSize: "13px", color: "#047857" }}>
                               Your 90% net take-home earnings of <strong>₹{b.workerEarningsAmount || Math.round((b.totalAmount || 499) * 0.90)}</strong> have been credited to your worker wallet.
                             </p>
+
+                            {/* Mutual Review: Worker -> Customer */}
+                            {b.customerRating ? (
+                              <div style={{
+                                marginTop: "12px",
+                                background: "rgba(255, 255, 255, 0.7)",
+                                padding: "10px 14px",
+                                borderRadius: "10px",
+                                textAlign: "left",
+                                fontSize: "12.5px"
+                              }}>
+                                <span style={{ color: "#D97706", fontWeight: 800 }}>
+                                  {"★".repeat(b.customerRating)} You rated customer: {b.customerRating}/5
+                                </span>
+                                {b.customerReview && (
+                                  <p style={{ margin: "4px 0 0", color: "#065F46" }}>
+                                    "{b.customerReview}"
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setCustomerFeedbackBooking(b)}
+                                style={{
+                                  marginTop: "12px",
+                                  width: "100%",
+                                  padding: "10px 16px",
+                                  borderRadius: "10px",
+                                  background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+                                  color: "#FFFFFF",
+                                  border: "none",
+                                  fontWeight: 800,
+                                  fontSize: "13px",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "6px",
+                                  boxShadow: "0 4px 12px rgba(245, 158, 11, 0.3)"
+                                }}
+                              >
+                                <span>⭐ Rate Customer Experience (ग्राहक को रेटिंग दें)</span>
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2453,10 +2573,194 @@ function WorkerDashboard() {
                   placeholder="e.g. Festival / Family Function / Health" 
                 />
               </div>
-
               <div className="modal-actions-group">
                 <button type="button" className="btn-modal-cancel" onClick={() => setShowLeaveModal(false)}>Cancel</button>
                 <button type="submit" className="btn-primary-glow" style={{ flex: 1 }}>Submit Leave Application 🏖️</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================================================
+         FLOATING SIDE COUNTDOWN / STOPWATCH WIDGET (WORK IN PROGRESS)
+         "demo worker otp daleha uske screen me chota sa side countdown chalu ho jayega"
+         ========================================================================== */}
+      {(() => {
+        const inProgressJob = jobs.find(
+          (j) => j.workerStatus === "in_progress" || j.status === "in_progress"
+        );
+        if (!inProgressJob && !stopwatchRunning) return null;
+
+        const currentJob = inProgressJob || jobs[0] || {};
+        const bId = currentJob.bookingId || currentJob.id || currentJob._id || currentJob.bookingCode;
+        const currentCalc = calculateDynamicWorkPricing(currentJob, stopwatchSeconds > 0 ? stopwatchSeconds : 120);
+
+        if (sideTimerMinimized) {
+          return (
+            <div
+              className="wrk-floating-side-timer minimized"
+              onClick={() => setSideTimerMinimized(false)}
+              title="Click to expand Work Timer"
+            >
+              <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#10B981", boxShadow: "0 0 10px #10B981" }} />
+              <span style={{ fontFamily: "Space Grotesk, monospace", fontWeight: 800, fontSize: "15px", color: "#38BDF8" }}>
+                ⏱️ {formatTimer(stopwatchSeconds)}
+              </span>
+              <span style={{ fontSize: "11px", color: "#94A3B8" }}>• Expand</span>
+            </div>
+          );
+        }
+
+        return (
+          <aside className="wrk-floating-side-timer" aria-label="Live Work Countdown Widget">
+            <div className="wrk-side-timer-header">
+              <div className="wrk-side-timer-badge">
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10B981", animation: "wrk-ping 1.4s infinite" }} />
+                <span>Live Work Countdown</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSideTimerMinimized(true)}
+                style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: "16px", padding: "0 4px" }}
+                title="Minimize timer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="wrk-side-timer-clock">
+              {formatTimer(stopwatchSeconds)}
+            </div>
+
+            <div className="wrk-side-timer-meta">
+              <div>
+                <strong style={{ display: "block", color: "#F1F5F9" }}>{currentJob.customerName || "Customer"}</strong>
+                <span style={{ fontSize: "11px" }}>{currentJob.serviceName || "Active Service"}</span>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "11px", color: "#94A3B8", display: "block" }}>Your 90% Net:</span>
+                <strong style={{ color: "#10B981", fontSize: "14px" }}>₹{currentCalc.payoutSplit?.workerEarnings || 400}</strong>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="wrk-side-timer-btn-complete"
+              onClick={() => {
+                setActiveTab("active_jobs");
+                handleCompleteJob(bId, currentJob.price);
+              }}
+            >
+              <span>✅ Complete Work & Generate QR</span>
+            </button>
+          </aside>
+        );
+      })()}
+
+      {/* ==========================================================================
+         CUSTOMER RATING & FEEDBACK MODAL (WORKER -> CUSTOMER)
+         "demo user aur demo worker dono ek dosre ko feed back de sakenge"
+         ========================================================================== */}
+      {customerFeedbackBooking && (
+        <div className="admin-modal-overlay" onClick={() => setCustomerFeedbackBooking(null)}>
+          <div className="admin-modal-box animate-scale-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
+            <button className="admin-modal-close" onClick={() => setCustomerFeedbackBooking(null)}>✕</button>
+
+            <div className="modal-title-row">
+              <span style={{ fontSize: "32px" }}>⭐</span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "18px" }}>Rate Customer Experience</h3>
+                <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--text-muted)" }}>
+                  Share your experience with <strong>{customerFeedbackBooking.customerName || "Customer"}</strong>
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitCustomerFeedback} className="admin-modal-form" style={{ marginTop: "16px" }}>
+              {/* Star Rating Selector */}
+              <div style={{ textAlign: "center", marginBottom: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "center", gap: "8px", margin: "8px 0" }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      type="button"
+                      key={star}
+                      onClick={() => setCustomerRating(star)}
+                      onMouseEnter={() => setCustomerHoverRating(star)}
+                      onMouseLeave={() => setCustomerHoverRating(customerRating)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        fontSize: "32px",
+                        cursor: "pointer",
+                        color: star <= (customerHoverRating || customerRating) ? "#F59E0B" : "rgba(255,255,255,0.2)",
+                        transition: "transform 0.15s ease",
+                        padding: "2px"
+                      }}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: "#F59E0B" }}>
+                  {customerRating === 5 && "Outstanding Customer! 🌟"}
+                  {customerRating === 4 && "Very Good Experience 👍"}
+                  {customerRating === 3 && "Average Experience 😐"}
+                  {customerRating === 2 && "Could Be Better 👎"}
+                  {customerRating === 1 && "Poor Experience ⚠️"}
+                </span>
+              </div>
+
+              {/* Quick Experience Badges */}
+              <div className="admin-form-group">
+                <label style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Quick Experience Tags</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "6px" }}>
+                  {[
+                    "Polite & Respectful",
+                    "Prompt Payment",
+                    "Accurate Location",
+                    "Safe Work Environment",
+                    "Offered Refreshments",
+                    "Smooth OTP Handover"
+                  ].map((tag) => {
+                    const isSelected = customerFeedbackTags.includes(tag);
+                    return (
+                      <button
+                        type="button"
+                        key={tag}
+                        className={`wrk-tag-pill ${isSelected ? "active" : ""}`}
+                        onClick={() => {
+                          setCustomerFeedbackTags((prev) =>
+                            isSelected ? prev.filter((t) => t !== tag) : [...prev, tag]
+                          );
+                        }}
+                      >
+                        {isSelected ? "✓ " : "+ "}{tag}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Review Comments */}
+              <div className="admin-form-group" style={{ marginTop: "12px" }}>
+                <label>Review Notes (Optional)</label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Great customer! Met at the doorstep, handed over OTP promptly, and cleared the payment via Helper QR immediately."
+                  value={customerReview}
+                  onChange={(e) => setCustomerReview(e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "10px" }}
+                />
+              </div>
+
+              <div className="modal-actions-group" style={{ marginTop: "18px" }}>
+                <button type="button" className="btn-modal-cancel" onClick={() => setCustomerFeedbackBooking(null)}>
+                  Skip
+                </button>
+                <button type="submit" className="btn-primary-glow" style={{ flex: 1 }}>
+                  Submit Rating & Review ⭐
+                </button>
               </div>
             </form>
           </div>

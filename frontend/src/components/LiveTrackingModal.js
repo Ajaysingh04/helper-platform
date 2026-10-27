@@ -340,8 +340,48 @@ function LiveTrackingModal({ booking, onClose }) {
           ))}
         </div>
 
+        {/* Instant Notification: Specialist Arrived at Doorstep */}
+        {workerStatus === "arrived" && (
+          <div style={{
+            background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+            color: "#FFFFFF",
+            padding: "16px 20px",
+            borderRadius: "16px",
+            marginBottom: "18px",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            boxShadow: "0 8px 24px rgba(16, 185, 129, 0.35)",
+            border: "2px solid #34D399"
+          }}>
+            <span style={{ fontSize: "32px" }}>🔔</span>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#FFFFFF" }}>
+                Technician Arrived at Your Doorstep!
+              </h4>
+              <p style={{ margin: "3px 0 0", fontSize: "13px", color: "rgba(255,255,255,0.92)" }}>
+                Specialist <strong>{proName}</strong> has reached your home. Please verify and share the 4-digit Start OTP: <strong style={{ background: "#FFFFFF", color: "#065F46", padding: "2px 8px", borderRadius: "6px", marginLeft: "4px", fontSize: "14px" }}>{startOtp}</strong>
+              </p>
+            </div>
+            <a href={`tel:${proPhone.replace(/[^0-9+]/g, "")}`} style={{
+              background: "#FFFFFF",
+              color: "#065F46",
+              padding: "8px 14px",
+              borderRadius: "10px",
+              fontWeight: 800,
+              fontSize: "13px",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px"
+            }}>
+              📞 Call
+            </a>
+          </div>
+        )}
+
         {/* Live Radar & ETA Banner (Visible during travel / arrival) */}
-        {(status !== "in_progress" && status !== "completed" && workerStatus !== "in_progress" && workerStatus !== "completed") && (
+        {(status !== "in_progress" && status !== "completed" && status !== "awaiting_payment" && workerStatus !== "in_progress" && workerStatus !== "completed" && workerStatus !== "awaiting_payment") && (
           <div className="tracking-eta-card">
             <div className="eta-radar-left">
               <div className="radar-ping-animation">
@@ -418,7 +458,7 @@ function LiveTrackingModal({ booking, onClose }) {
         </div>
 
         {/* Security Start OTP Box (Visible until work starts) */}
-        {(status !== "in_progress" && status !== "completed" && workerStatus !== "in_progress" && workerStatus !== "completed") && (
+        {(status !== "in_progress" && status !== "completed" && status !== "awaiting_payment" && workerStatus !== "in_progress" && workerStatus !== "completed" && workerStatus !== "awaiting_payment") && (
           <div className="tracking-otp-security-card">
             <div className="otp-top-row">
               <div className="otp-title-group">
@@ -491,7 +531,7 @@ function LiveTrackingModal({ booking, onClose }) {
         {/* =====================================================================
            COMPLETED WORK: INVOICE, DYNAMIC QR CODE & PAYMENT
            ===================================================================== */}
-        {(status === "completed" || workerStatus === "completed") && (
+        {(status === "completed" || workerStatus === "completed" || status === "awaiting_payment" || workerStatus === "awaiting_payment") && (
           <div style={{
             background: "var(--surface-card, #1E293B)",
             border: "1.5px solid var(--border-color, #334155)",

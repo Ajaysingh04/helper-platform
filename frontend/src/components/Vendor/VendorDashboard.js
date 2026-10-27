@@ -2329,21 +2329,19 @@ function VendorDashboard() {
                       {/* Dynamic Stage Actions */}
                       <div className="booking-operations-box">
                         
-                        {/* STAGE 1: CALL & OTP CONFIRMATION */}
-                        {isAssigned && (
-                          <div className="stage-slot-confirmation">
-                            <div className="slot-instructions">
-                              <h5>📞 Step 1: Call Customer & Confirm Requested Slot</h5>
-                              <p>
-                                Call <strong>{b.customerPhone}</strong> to verify the issue and slot time. Ask customer for the 4-digit confirmation OTP shown on their screen.
+                        {/* DEMO VENDOR ACTION: ACCEPT BOOKING ONLY (NO OTP, NO COUNTDOWN) */}
+                        {!b.vendorAccepted && b.status !== "ready_for_worker" && b.status !== "in_progress" && b.status !== "completed" && b.status !== "work_completed" ? (
+                          <div className="stage-slot-confirmation" style={{ background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.04) 100%)", border: "1.5px solid rgba(16, 185, 129, 0.35)", borderRadius: "14px", padding: "18px" }}>
+                            <div className="slot-instructions" style={{ marginBottom: "12px" }}>
+                              <h5 style={{ margin: "0 0 6px", color: "#065F46", fontSize: "15px", fontWeight: 800 }}>
+                                ⚡ New Customer Booking Received
+                              </h5>
+                              <p style={{ margin: 0, fontSize: "13px", color: "#475569" }}>
+                                Customer <strong>{b.customerName || "Customer"}</strong> ({b.customerPhone}) ne <strong>{b.serviceName || b.service}</strong> book ki hai. 
+                                Booking accept karte hi request field technician (Demo Worker: Sunil Verma) ke pass dispatch ho jayegi.
                               </p>
-                              {getBookingDoorOtp(b) && (
-                                <span style={{ fontSize: "11px", color: "#D97706", fontWeight: 700 }}>
-                                  (Customer Screen OTP: <strong>{getBookingDoorOtp(b)}</strong>)
-                                </span>
-                              )}
                             </div>
-                            <div className="slot-action-inline" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                            <div className="slot-action-inline" style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
                               <button
                                 type="button"
                                 onClick={() => handleAcceptBooking(b)}
@@ -2352,230 +2350,68 @@ function VendorDashboard() {
                                   background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
                                   color: "#FFF",
                                   border: "none",
-                                  padding: "10px 18px",
-                                  borderRadius: "10px",
+                                  padding: "12px 26px",
+                                  borderRadius: "12px",
                                   fontWeight: 800,
-                                  fontSize: "13.5px",
+                                  fontSize: "14px",
                                   cursor: "pointer",
                                   boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)",
-                                  display: "flex",
+                                  display: "inline-flex",
                                   alignItems: "center",
-                                  gap: "6px"
+                                  gap: "8px"
                                 }}
                               >
                                 <span>✓</span>
-                                <span>Accept Order (स्वीकार करें)</span>
-                              </button>
-                              <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: 700 }}>OR</span>
-                              <input
-                                type="text"
-                                maxLength="4"
-                                placeholder="Customer 4-digit OTP"
-                                value={slotOtpInputs[key] || ""}
-                                onChange={(e) => setSlotOtpInputs({ ...slotOtpInputs, [key]: e.target.value })}
-                                className="input-slot-otp"
-                                style={{ maxWidth: "160px" }}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleConfirmSlotOtp(b)}
-                                disabled={confirmingSlotId === key}
-                                className="btn-lock-slot"
-                              >
-                                {confirmingSlotId === key ? "Confirming..." : "Confirm & Lock Slot 🔒"}
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* STAGE 2: SLOT LOCKED & REAL-TIME COUNTDOWN */}
-                        {isSlotConfirmed && (
-                          <div className="stage-slot-locked-box">
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "8px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: "#38BDF8", animation: "pulse 1.5s infinite" }}></span>
-                                <span style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", color: "#38BDF8", fontWeight: 800 }}>
-                                  🔒 Slot Confirmed — Live T-Minus Countdown
-                                </span>
-                              </div>
-                              <span style={{ fontSize: "12px", background: "rgba(255,255,255,0.1)", padding: "4px 10px", borderRadius: "6px", color: "#CBD5E1" }}>
-                                📅 {b.scheduledDate || "Today"} • {b.scheduledTime || "Requested Slot"}
-                              </span>
-                            </div>
-
-                            {/* 4 Digital Countdown Blocks */}
-                            <div className="countdown-digits-grid">
-                              <div className="countdown-digit-card">
-                                <div className="digit-val">{cdObj.days || "00"}</div>
-                                <div className="digit-sub">DAYS</div>
-                              </div>
-                              <span className="digit-colon">:</span>
-                              <div className="countdown-digit-card">
-                                <div className="digit-val">{cdObj.hours || "00"}</div>
-                                <div className="digit-sub">HOURS</div>
-                              </div>
-                              <span className="digit-colon">:</span>
-                              <div className="countdown-digit-card">
-                                <div className="digit-val">{cdObj.mins || "00"}</div>
-                                <div className="digit-sub">MINS</div>
-                              </div>
-                              <span className="digit-colon">:</span>
-                              <div className="countdown-digit-card active-tick">
-                                <div className="digit-val" style={{ color: "#38BDF8" }}>{cdObj.secs || "00"}</div>
-                                <div className="digit-sub">SECS</div>
-                              </div>
-                            </div>
-
-                            {cdObj.isArrived ? (
-                              <div style={{ background: "rgba(239, 68, 68, 0.2)", border: "1px solid #EF4444", borderRadius: "10px", padding: "10px", textAlign: "center", color: "#FCA5A5", fontWeight: 700, fontSize: "13px", marginBottom: "14px" }}>
-                                🚨 Appointment time has arrived! Reach customer doorstep and ask for Work Start QR code.
-                              </div>
-                            ) : (
-                              <div style={{ textAlign: "center", fontSize: "12px", color: "#94A3B8", marginBottom: "14px" }}>
-                                ⏱️ Live T-Minus timer ticking second-by-second until scheduled appointment time.
-                              </div>
-                            )}
-
-                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  handleArrivedDoorstep(b);
-                                  setActiveScanningBooking(b);
-                                }}
-                                className="btn-doorstep-arrived"
-                                style={{
-                                  flex: 1, minWidth: "220px", padding: "12px 20px", fontSize: "14px", fontWeight: 800,
-                                  background: "linear-gradient(135deg, #0284C7 0%, #0369A1 100%)",
-                                  borderRadius: "10px", border: "none", color: "#FFFFFF", cursor: "pointer",
-                                  boxShadow: "0 4px 14px rgba(2, 132, 199, 0.4)"
-                                }}
-                              >
-                                📍 I Have Reached Customer Doorstep ➔ Open QR Scanner 📷
+                                <span>Accept Booking &amp; Dispatch to Worker (ऑर्डर स्वीकार करें)</span>
                               </button>
                               <a
                                 href={`tel:${b.customerPhone || "+919876500002"}`}
                                 className="quick-contact-btn quick-call-btn"
-                                style={{ padding: "12px 18px", borderRadius: "10px", display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none", fontWeight: 700 }}
+                                style={{ padding: "11px 18px", borderRadius: "10px", display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none", fontWeight: 700 }}
                               >
                                 📞 Call Customer
                               </a>
                             </div>
                           </div>
-                        )}
-
-                        {/* STAGE 3: DOORSTEP QR VERIFICATION */}
-                        {isArrived && (
-                          <div className="stage-qr-verify-box">
-                            <div style={{ flex: 1, minWidth: "220px" }}>
-                              <h5 style={{ margin: "0 0 4px 0", color: "#1E3A8A", fontSize: "14px", fontWeight: 800 }}>
-                                📲 Step 3: Scan Customer's Work QR Code
-                              </h5>
-                              <p style={{ margin: 0, fontSize: "12px", color: "#3B82F6" }}>
-                                Click below to open camera and scan customer's screen QR code:
-                              </p>
-                              {b.startQrCode && (
-                                <span style={{ fontSize: "11px", color: "#1D4ED8", fontWeight: 700 }}>
-                                  (Customer Screen Token: <strong>{b.startQrCode}</strong>)
-                                </span>
-                              )}
-                            </div>
-
-                            <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", width: "100%", marginTop: "6px" }}>
-                              {/* Primary: Open Live Camera QR Scanner */}
-                              <button
-                                type="button"
-                                onClick={() => setActiveScanningBooking(b)}
-                                className="btn-verify-qr-start"
-                                style={{
-                                  display: "inline-flex", alignItems: "center", gap: "8px",
-                                  background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-                                  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4)",
-                                  padding: "11px 22px", fontSize: "14px"
-                                }}
-                              >
-                                <span>📷</span>
-                                <span>Open Camera QR Scanner ⚡</span>
-                              </button>
-
-                              {/* Secondary: Manual Token Fallback */}
-                              <div style={{ display: "flex", gap: "6px", alignItems: "center", flex: 1, minWidth: "220px" }}>
-                                <input
-                                  type="text"
-                                  placeholder={b.startQrCode || "START-XXXX"}
-                                  value={qrInputs[key] || ""}
-                                  onChange={(e) => setQrInputs({ ...qrInputs, [key]: e.target.value.toUpperCase() })}
-                                  className="input-qr-token"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleScanQrAndStart(b, qrInputs[key])}
-                                  disabled={startingJobId === key}
-                                  className="btn-verify-qr-start"
-                                  style={{ whiteSpace: "nowrap", padding: "10px 16px" }}
-                                >
-                                  {startingJobId === key ? "Starting..." : "Verify Token ➔"}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* STAGE 4: LIVE WORK STOPWATCH & DYNAMIC BILLING METER */}
-                        {isInProgress && (
-                          <div className="stage-live-stopwatch-box">
-                            <div className="vendor-stopwatch-header">
+                        ) : (
+                          /* VENDOR DISPATCHED MANAGEMENT STATUS CARD */
+                          <div className="vendor-dispatched-box" style={{
+                            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 95, 70, 0.04) 100%)",
+                            border: "1.5px solid rgba(16, 185, 129, 0.3)",
+                            borderRadius: "14px",
+                            padding: "16px 20px"
+                          }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                               <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <span style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: "#34D399", animation: "pulse 1.5s infinite" }}></span>
-                                  <span style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", color: "#94A3B8", fontWeight: 800 }}>
-                                    Live Work Timer in Progress
-                                  </span>
-                                </div>
-                                <div className="vendor-stopwatch-val">
-                                  {stopwatchText}
-                                </div>
+                                <span style={{ fontSize: "13.5px", fontWeight: 800, color: "#065F46", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                  <span>✓</span> Order Accepted by Vendor &amp; Dispatched to Demo Worker (Sunil Verma)
+                                </span>
+                                <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#64748B" }}>
+                                  Technician Sunil Verma will navigate to customer location, verify doorstep OTP, and execute the service.
+                                </p>
                               </div>
-                              <div className="vendor-running-meter">
-                                <div>
-                                  <div style={{ fontSize: "10px", color: "#94A3B8", textTransform: "uppercase" }}>Base Visit</div>
-                                  <div style={{ fontWeight: 800, color: "#FFFFFF" }}>₹{homeServiceCharge}</div>
-                                </div>
-                                <div>
-                                  <div style={{ fontSize: "10px", color: "#94A3B8", textTransform: "uppercase" }}>Hourly Rate</div>
-                                  <div style={{ fontWeight: 800, color: "#38BDF8" }}>₹{hourlyRate}/hr</div>
-                                </div>
-                                <div>
-                                  <div style={{ fontSize: "10px", color: "#94A3B8", textTransform: "uppercase" }}>Current Bill</div>
-                                  <div style={{ fontSize: "16px", fontWeight: 900, color: "#34D399" }}>₹{currentRunningTotal}</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="vendor-stopwatch-actions">
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "180px" }}>
-                                <label style={{ fontSize: "12px", color: "#CBD5E1", whiteSpace: "nowrap" }}>Parts / Materials ₹</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  placeholder="0 (optional)"
-                                  value={materialInputs[key] || ""}
-                                  onChange={(e) => setMaterialInputs({ ...materialInputs, [key]: e.target.value })}
-                                  style={{
-                                    width: "100px", padding: "6px 10px", borderRadius: "6px",
-                                    border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.1)",
-                                    color: "#FFFFFF", fontSize: "13px"
-                                  }}
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleStopWorkAndBill(b)}
-                                disabled={stoppingJobId === key}
-                                className="btn-stop-timer"
-                              >
-                                {stoppingJobId === key ? "Calculating Bill..." : "⏹️ Work Done — Stop Timer & Bill"}
-                              </button>
+                              <span className="worker-live-status-pill" style={{
+                                background: (b.workerStatus === "in_progress" || b.status === "in_progress") ? "#3B82F6" : 
+                                            (b.workerStatus === "awaiting_payment" || b.status === "awaiting_payment") ? "#F59E0B" : 
+                                            (b.workerStatus === "completed" || b.status === "completed") ? "#10B981" : 
+                                            (b.workerStatus === "arrived") ? "#8B5CF6" : 
+                                            (b.workerStatus === "traveling") ? "#0EA5E9" : 
+                                            (b.workerStatus === "accepted") ? "#10B981" : "#F59E0B",
+                                color: "#FFF",
+                                padding: "6px 14px",
+                                borderRadius: "20px",
+                                fontSize: "12px",
+                                fontWeight: 800,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                              }}>
+                                {(b.workerStatus === "in_progress" || b.status === "in_progress") ? "⏱️ Work In Progress by Sunil Verma" :
+                                 (b.workerStatus === "awaiting_payment" || b.status === "awaiting_payment") ? "📷 Service Complete • QR Payment Due" :
+                                 (b.workerStatus === "completed" || b.status === "completed") ? "🎉 Order Completed" :
+                                 (b.workerStatus === "arrived") ? "🏁 Worker Arrived at Doorstep (OTP Pending)" :
+                                 (b.workerStatus === "traveling") ? "🛵 Worker En Route to Customer" :
+                                 (b.workerStatus === "accepted") ? "✓ Worker Sunil Verma Accepted" :
+                                 "⏳ Awaiting Worker Acceptance"}
+                              </span>
                             </div>
                           </div>
                         )}

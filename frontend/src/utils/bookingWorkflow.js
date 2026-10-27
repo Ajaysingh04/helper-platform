@@ -555,3 +555,20 @@ export async function handleDemoUserSubmitFeedback(booking, feedback = {}) {
   broadcastBookingSync(key, patch);
   return patch;
 }
+
+/**
+ * Handle Demo Worker: Submit Rating & Feedback for Customer
+ */
+export async function handleDemoWorkerSubmitCustomerFeedback(booking, feedback = {}) {
+  const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
+  const patch = {
+    customerRating: feedback.rating || 5,
+    customerReview: feedback.comment || "Polite and cooperative customer! Smooth OTP & payment experience.",
+    customerFeedbackTags: feedback.tags || ["Cooperative", "Prompt Payment", "Accurate Location"],
+    customerFeedbackSubmittedAt: new Date().toISOString(),
+  };
+
+  broadcastBookingSync(key, patch);
+  return patch;
+}
+
