@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
-import { broadcastBookingSync, DEMO_WORKER, getBookingDoorOtp } from "../../utils/bookingWorkflow";
-import QrCameraScannerModal from "./QrCameraScannerModal";
+import { broadcastBookingSync, DEMO_WORKER } from "../../utils/bookingWorkflow";
 import "../../css/Admin/Admin.css";
 import "../../css/VendorDashboard.css";
 
@@ -100,18 +99,7 @@ function VendorDashboard() {
   const [incomingOffer, setIncomingOffer] = useState(null);
   const [offerCountdown, setOfferCountdown] = useState(60);
 
-  // Telemetry: Slot Confirmation, Doorstep QR, and Dynamic Stopwatch states
-  const [slotOtpInputs, setSlotOtpInputs] = useState({});
-  const [qrInputs, setQrInputs] = useState({});
-  const [materialInputs, setMaterialInputs] = useState({});
-  const [liveCountdowns, setLiveCountdowns] = useState({});
-  const [liveStopwatches, setLiveStopwatches] = useState({});
-  const [liveRunningCosts, setLiveRunningCosts] = useState({});
-  const [confirmingSlotId, setConfirmingSlotId] = useState(null);
-  const [startingJobId, setStartingJobId] = useState(null);
-  const [stoppingJobId, setStoppingJobId] = useState(null);
   const [, setCompletingJobId] = useState(null);
-  const [activeScanningBooking, setActiveScanningBooking] = useState(null);
 
   // Wallet State
   const [wallet, setWallet] = useState({
@@ -1120,135 +1108,7 @@ function VendorDashboard() {
   // OPERATIONAL WORKFLOW: CALL & SLOT CONFIRMATION, QR START, STOPWATCH, BILLING
   // =========================================================================
 
-  // Robust Target Timestamp & Countdown Calculator
-  const parseTargetCountdown = (b) => {
-    if (!b) return { days: "00", hours: "00", mins: "00", secs: "00", totalHours: 0, isArrived: false, text: "00:00:00" };
-    const now = Date.now();
-    let target = b.scheduledTimestamp;
 
-    if (!target || isNaN(target)) {
-      const sDate = String(b.scheduledDate || "").trim();
-      const sTime = String(b.scheduledTime || "11:00 AM").trim();
-      const curr = new Date();
-      let y = curr.getFullYear();
-      let m = curr.getMonth();
-      let d = curr.getDate();
-
-      if (sDate.toLowerCase().includes("tomorrow")) {
-        d += 1;
-      } else if (sDate.includes("-")) {
-        const parts = sDate.split("-");
-        if (parts.length === 3) {
-          y = parseInt(parts[0], 10);
-          m = parseInt(parts[1], 10) - 1;
-          d = parseInt(parts[2], 10);
-        }
-      } else {
-        const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-        const matchDM = sDate.match(/(\d{1,2})\s+([A-Za-z]{3})/i) || sDate.match(/([A-Za-z]{3})\s+(\d{1,2})/i);
-        if (matchDM) {
-          const dVal = /^\d+$/.test(matchDM[1]) ? parseInt(matchDM[1], 10) : parseInt(matchDM[2], 10);
-          const mStr = (/^\d+$/.test(matchDM[1]) ? matchDM[2] : matchDM[1]).toLowerCase();
-          const mIdx = monthNames.indexOf(mStr.slice(0, 3));
-          if (mIdx !== -1) {
-            m = mIdx;
-            d = dVal;
-            const testD = new Date(y, m, d, 23, 59, 59);
-            if (testD.getTime() < now - 24 * 3600 * 1000) {
-              y += 1;
-            }
-          }
-        }
-      }
-
-      let hours = 11;
-      let minutes = 0;
-      const match = sTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
-      if (match) {
-        hours = parseInt(match[1], 10);
-        minutes = parseInt(match[2], 10);
-        const meridiem = (match[3] || "").toUpperCase();
-        if (meridiem === "PM" && hours < 12) hours += 12;
-        if (meridiem === "AM" && hours === 12) hours = 0;
-      }
-
-      const parsedDate = new Date(y, m, d, hours, minutes, 0, 0);
-      target = parsedDate.getTime();
-    }
-
-    const diff = (target && !isNaN(target)) ? (target - now) : 0;
-
-    if (diff <= 0) {
-      return {
-        days: "00",
-        hours: "00",
-        mins: "00",
-        secs: "00",
-        totalHours: 0,
-        isArrived: true,
-        text: "00:00:00"
-      };
-    }
-
-    const totalHours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const mins = Math.floor((diff / (1000 * 60)) % 60);
-    const secs = Math.floor((diff / 1000) % 60);
-
-    return {
-      days: String(days).padStart(2, "0"),
-      hours: String(hours).padStart(2, "0"),
-      mins: String(mins).padStart(2, "0"),
-      secs: String(secs).padStart(2, "0"),
-      totalHours,
-      isArrived: false,
-      text: `${days > 0 ? `${days}d ` : ""}${String(hours).padStart(2, "0")}h ${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`
-    };
-  };
-
-  // Live Countdown & Work Stopwatch Timer for all vendor bookings
-  useEffect(() => {
-    if (!bookings.length) return;
-
-    const timer = setInterval(() => {
-      const now = Date.now();
-      const updatedCountdowns = {};
-      const updatedStopwatches = {};
-      const updatedCosts = {};
-
-      bookings.forEach(b => {
-        const key = b.bookingId || b.id || b._id;
-
-        // 1. Countdown for confirmed slots
-        if (b.status === "slot_confirmed" || b.slotConfirmed) {
-          updatedCountdowns[key] = parseTargetCountdown(b);
-        }
-
-        // 2. Stopwatch for in-progress jobs
-        if (b.status === "in_progress" || b.status === "In Progress") {
-          const start = b.workStartedAt ? new Date(b.workStartedAt).getTime() : (now - 60000);
-          const elapsed = Math.max(0, Math.floor((now - start) / 1000));
-          const h = Math.floor(elapsed / 3600);
-          const m = Math.floor((elapsed % 3600) / 60);
-          const s = elapsed % 60;
-          updatedStopwatches[key] = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-
-          const base = b.homeServiceCharge || 149;
-          const rate = b.hourlyRate || 299;
-          const hoursFrac = Math.max(1, Math.round((elapsed / 3600) * 10) / 10);
-          const currentBill = base + Math.round(hoursFrac * rate);
-          updatedCosts[key] = currentBill;
-        }
-      });
-
-      setLiveCountdowns(updatedCountdowns);
-      setLiveStopwatches(updatedStopwatches);
-      setLiveRunningCosts(updatedCosts);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [bookings]);
 
   // Accept incoming job offer and ready for worker
   const handleAcceptBooking = async (booking) => {
@@ -1314,127 +1174,6 @@ function VendorDashboard() {
       });
     } catch (e) {
       console.warn("Backend accept booking error:", e);
-    }
-  };
-
-  // 1. Confirm Slot OTP after calling customer
-  const handleConfirmSlotOtp = async (booking) => {
-    const key = booking.bookingId || booking.id || booking._id;
-    const otp = slotOtpInputs[key];
-    if (!otp || otp.length < 4) {
-      alert("Please enter the 4-digit Slot OTP given by customer over phone.");
-      return;
-    }
-
-    setConfirmingSlotId(key);
-    try {
-      const res = await fetch(`${API_BASE}/bookings/${key}/confirm-slot-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ otp })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
-          ...b,
-          slotConfirmed: true,
-          status: "slot_confirmed"
-        } : b));
-        showToast(`🎉 Slot confirmed for ${booking.scheduledDate} at ${booking.scheduledTime}! Countdown running.`);
-      } else {
-        alert(data.message || "Invalid OTP. Please check with customer.");
-      }
-    } catch (err) {
-      setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
-        ...b,
-        slotConfirmed: true,
-        status: "slot_confirmed"
-      } : b));
-      showToast(`Appointment confirmed for ${booking.scheduledDate} at ${booking.scheduledTime}!`);
-    } finally {
-      setConfirmingSlotId(null);
-    }
-  };
-
-  // 2. Mark Doorstep Arrived
-  const handleArrivedDoorstep = (booking) => {
-    const key = booking.bookingId || booking.id || booking._id;
-    setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
-      ...b,
-      status: "arrived"
-    } : b));
-    showToast(`📍 Reached customer doorstep. Ask customer to show work start QR code.`);
-  };
-
-  // 3. Scan Customer QR Code to Start Work & Stopwatch
-  const handleScanQrAndStart = async (booking, scannedOverrideCode) => {
-    const key = booking.bookingId || booking.id || booking._id;
-    const qrCode = scannedOverrideCode || qrInputs[key] || booking.startQrCode;
-    setStartingJobId(key);
-
-    try {
-      const res = await fetch(`${API_BASE}/bookings/${key}/scan-qr-start`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qrCode })
-      });
-      const data = await res.json();
-      const startTime = data.workStartedAt || new Date().toISOString();
-
-      setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
-        ...b,
-        status: "in_progress",
-        workStartedAt: startTime
-      } : b));
-      showToast(`⚡ Doorstep QR Verified! Work stopwatch started in real time.`);
-    } catch (err) {
-      setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
-        ...b,
-        status: "in_progress",
-        workStartedAt: new Date().toISOString()
-      } : b));
-      showToast(`Work stopwatch started in real time.`);
-    } finally {
-      setStartingJobId(null);
-      setActiveScanningBooking(null);
-    }
-  };
-
-  // 4. Stop Work Stopwatch & Generate Dynamic Hourly Bill
-  const handleStopWorkAndBill = async (booking) => {
-    const key = booking.bookingId || booking.id || booking._id;
-    setStoppingJobId(key);
-
-    try {
-      const materialCost = parseInt(materialInputs[key]) || 0;
-      const res = await fetch(`${API_BASE}/bookings/${key}/stop-work`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ materialCost })
-      });
-      const data = await res.json();
-      const breakdown = data.invoice || {
-        homeServiceCharge: booking.homeServiceCharge || 149,
-        hourlyRate: booking.hourlyRate || 299,
-        hoursWorked: 1.2,
-        durationFormatted: "1h 12m",
-        laborCharge: Math.round(1.2 * (booking.hourlyRate || 299)),
-        materialCost,
-        totalPayable: (booking.homeServiceCharge || 149) + Math.round(1.2 * (booking.hourlyRate || 299)) + materialCost
-      };
-
-      setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
-        ...b,
-        status: "work_completed",
-        billBreakdown: breakdown,
-        totalAmount: breakdown.totalPayable,
-        workDurationFormatted: breakdown.durationFormatted
-      } : b));
-      showToast(`🛑 Work finished in ${breakdown.durationFormatted}! Total Bill: ₹${breakdown.totalPayable}`);
-    } catch (err) {
-      showToast(`Work finished. Bill generated.`);
-    } finally {
-      setStoppingJobId(null);
     }
   };
 
@@ -2115,7 +1854,7 @@ function VendorDashboard() {
               <div>
                 <h3>Customer Service Orders in {vendor.category}</h3>
                 <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>
-                  Start jobs securely using the customer's 4-digit door OTP
+                  Review incoming customer booking requests and dispatch to field technicians
                 </span>
               </div>
               <button
@@ -2161,9 +1900,6 @@ function VendorDashboard() {
                   const orderAmount = b.finalCalculatedAmount || b.totalAmount || b.amount || 448;
                   const hourlyRate = b.hourlyRate || 299;
                   const homeServiceCharge = b.homeServiceCharge || 149;
-                  const cdObj = (typeof liveCountdowns[key] === "object" && liveCountdowns[key]) ? liveCountdowns[key] : parseTargetCountdown(b);
-                  const stopwatchText = liveStopwatches[key] || "00:00:00";
-                  const currentRunningTotal = liveRunningCosts[key] || (homeServiceCharge + hourlyRate);
 
                   return (
                     <div className="vendor-booking-card" key={key} style={{
@@ -2207,30 +1943,22 @@ function VendorDashboard() {
                             marginLeft: "auto",
                             background: isCompleted ? "rgba(16, 185, 129, 0.12)" :
                                         isWorkCompleted ? "rgba(16, 185, 129, 0.16)" :
-                                        isInProgress ? "rgba(255, 77, 45, 0.15)" :
-                                        isArrived ? "rgba(147, 51, 234, 0.12)" :
-                                        isSlotConfirmed ? "rgba(59, 130, 246, 0.12)" :
+                                        (b.vendorAccepted || b.status === "ready_for_worker") ? "rgba(59, 130, 246, 0.12)" :
                                         "rgba(234, 179, 8, 0.12)",
                             color: isCompleted ? "#059669" :
                                    isWorkCompleted ? "#059669" :
-                                   isInProgress ? "#FF4D2D" :
-                                   isArrived ? "#7C3AED" :
-                                   isSlotConfirmed ? "#2563EB" :
+                                   (b.vendorAccepted || b.status === "ready_for_worker") ? "#2563EB" :
                                    "#D97706",
                             border: `1px solid ${
                               isCompleted || isWorkCompleted ? "rgba(16, 185, 129, 0.3)" :
-                              isInProgress ? "rgba(255, 77, 45, 0.3)" :
-                              isArrived ? "rgba(147, 51, 234, 0.3)" :
-                              isSlotConfirmed ? "rgba(59, 130, 246, 0.3)" :
+                              (b.vendorAccepted || b.status === "ready_for_worker") ? "rgba(59, 130, 246, 0.3)" :
                               "rgba(234, 179, 8, 0.3)"
                             }`
                           }}>
                             {isCompleted ? "✓ Finished & Paid" :
                              isWorkCompleted ? "📋 Payment Due" :
-                             isInProgress ? "⚡ Live Stopwatch Active" :
-                             isArrived ? "📍 At Doorstep" :
-                             isSlotConfirmed ? "🔒 Slot Confirmed" :
-                             "📞 Call & Confirm Slot"}
+                             (b.vendorAccepted || b.status === "ready_for_worker") ? "✓ Dispatched to Worker" :
+                             "⚡ New Order Pending"}
                           </span>
                         </div>
 
@@ -2254,7 +1982,7 @@ function VendorDashboard() {
                               <span>📞</span> <span>Call Customer</span>
                             </a>
                             <a
-                              href={`https://wa.me/${String(b.customerPhone || "9876500002").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello ${b.customerName || "Customer"}, I am your Helper verified plumber regarding order #${b.bookingId || key} for ${b.scheduledDate || "today"} at ${b.scheduledTime || "your slot"}.`)}`}
+                              href={`https://wa.me/${String(b.customerPhone || "9876500002").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello ${b.customerName || "Customer"}, I am your Helper verified vendor regarding order #${b.bookingId || key} for ${b.scheduledDate || "today"} at ${b.scheduledTime || "your slot"}.`)}`}
                               target="_blank"
                               rel="noreferrer"
                               className="quick-contact-btn quick-wa-btn"
@@ -2302,26 +2030,26 @@ function VendorDashboard() {
                           </div>
                         </div>
 
-                        {/* 4-Stage Stepper Bar */}
+                        {/* 4-Stage Stepper Bar for Vendor */}
                         <div className="vendor-stage-stepper">
-                          <div className={`stepper-step ${isAssigned ? "active" : "done"}`}>
-                            <div className="step-num">{isAssigned ? "1" : "✓"}</div>
-                            <div className="step-label">1. Call & OTP</div>
+                          <div className={`stepper-step ${(!b.vendorAccepted && b.status !== "ready_for_worker") ? "active" : "done"}`}>
+                            <div className="step-num">{(!b.vendorAccepted && b.status !== "ready_for_worker") ? "1" : "✓"}</div>
+                            <div className="step-label">1. Order Received</div>
                           </div>
-                          <div className={`stepper-line ${!isAssigned ? "filled" : ""}`}></div>
-                          <div className={`stepper-step ${isSlotConfirmed ? "active" : (isArrived || isInProgress || isWorkCompleted || isCompleted) ? "done" : ""}`}>
-                            <div className="step-num">{(isArrived || isInProgress || isWorkCompleted || isCompleted) ? "✓" : "2"}</div>
-                            <div className="step-label">2. Slot Locked</div>
+                          <div className={`stepper-line ${(b.vendorAccepted || b.status === "ready_for_worker") ? "filled" : ""}`}></div>
+                          <div className={`stepper-step ${(b.vendorAccepted || b.status === "ready_for_worker") && !isCompleted ? "active" : isCompleted ? "done" : ""}`}>
+                            <div className="step-num">{isCompleted ? "✓" : "2"}</div>
+                            <div className="step-label">2. Vendor Accepted</div>
                           </div>
-                          <div className={`stepper-line ${(isArrived || isInProgress || isWorkCompleted || isCompleted) ? "filled" : ""}`}></div>
-                          <div className={`stepper-step ${isArrived ? "active" : (isInProgress || isWorkCompleted || isCompleted) ? "done" : ""}`}>
-                            <div className="step-num">{(isInProgress || isWorkCompleted || isCompleted) ? "✓" : "3"}</div>
-                            <div className="step-label">3. Doorstep QR</div>
+                          <div className={`stepper-line ${(b.workerStatus === "in_progress" || isCompleted) ? "filled" : ""}`}></div>
+                          <div className={`stepper-step ${(b.workerStatus === "in_progress" || b.workerStatus === "traveling" || b.workerStatus === "arrived") ? "active" : isCompleted ? "done" : ""}`}>
+                            <div className="step-num">{isCompleted ? "✓" : "3"}</div>
+                            <div className="step-label">3. Worker Execution</div>
                           </div>
-                          <div className={`stepper-line ${(isInProgress || isWorkCompleted || isCompleted) ? "filled" : ""}`}></div>
-                          <div className={`stepper-step ${(isInProgress || isWorkCompleted) ? "active" : isCompleted ? "done" : ""}`}>
+                          <div className={`stepper-line ${isCompleted ? "filled" : ""}`}></div>
+                          <div className={`stepper-step ${isCompleted ? "active done" : ""}`}>
                             <div className="step-num">{isCompleted ? "✓" : "4"}</div>
-                            <div className="step-label">4. Stopwatch & Bill</div>
+                            <div className="step-label">4. Paid & Completed</div>
                           </div>
                         </div>
                       </div>
@@ -3421,17 +3149,7 @@ function VendorDashboard() {
         </div>
       </main>
 
-      {/* Interactive Camera QR Scanner Modal */}
-      <QrCameraScannerModal
-        isOpen={Boolean(activeScanningBooking)}
-        booking={activeScanningBooking}
-        onClose={() => setActiveScanningBooking(null)}
-        onScanSuccess={(scannedCode) => {
-          if (activeScanningBooking) {
-            handleScanQrAndStart(activeScanningBooking, scannedCode);
-          }
-        }}
-      />
+
 
       {/* Quick 1-Hour Service Charge Edit Modal */}
       {showRateModal && (
