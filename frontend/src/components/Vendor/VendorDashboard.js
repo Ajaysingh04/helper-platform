@@ -3342,7 +3342,7 @@ function VendorDashboard() {
                 onClick={() => handleAcceptBooking(incomingOffer)}
                 style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "#FFF", fontWeight: 800, fontSize: "14px", cursor: "pointer", boxShadow: "0 4px 15px rgba(16, 185, 129, 0.4)" }}
               >
-                ✓ Accept Job ({offerCountdown}s) 🚀
+                ✓ Accept Booking &amp; Dispatch to Worker 🚀
               </button>
             </div>
           </div>

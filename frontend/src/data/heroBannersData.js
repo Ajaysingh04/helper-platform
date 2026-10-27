@@ -1,5 +1,5 @@
-// Initial Hero Banners for Helper Platform - Curated Attractive 1920x1080 Photography
-export const DEFAULT_HERO_IMAGE = "/images/banner_all_experts_clean.png";
+// Initial Hero Banners for Helper Platform - Optimized High-Speed 1920x1080 Photography
+export const DEFAULT_HERO_IMAGE = "/images/banner_all_experts_clean.jpg";
 
 export const initialHeroBanners = [
   {
@@ -9,8 +9,8 @@ export const initialHeroBanners = [
     subtitle: "Over 100+ on-demand home, technical, medical & emergency services delivered in 15 mins by police-verified professionals.",
     badge: "🛡️ 50,000+ POLICE-VERIFIED SPECIALISTS",
     city: "📍 INDORE & SURROUNDING REGIONS",
-    image: "/images/banner_all_experts_clean.png",
-    mobileImage: "/images/banner_all_experts_clean.png",
+    image: "/images/banner_all_experts_clean.jpg",
+    mobileImage: "/images/banner_all_experts_clean.jpg",
     active: true,
     ctaText: "Find Your Expert ➔",
     ctaLink: "/services",
@@ -27,8 +27,8 @@ export const initialHeroBanners = [
     subtitle: "Short circuit repair, wiring, switchboard fixing, inverter & fan installation by background-screened professionals.",
     badge: "⚡ 100% VERIFIED ELECTRICIANS",
     city: "📍 INSTANT DISPATCH",
-    image: "/images/banner_electrician.png",
-    mobileImage: "/images/banner_electrician.png",
+    image: "/images/banner_electrician.jpg",
+    mobileImage: "/images/banner_electrician.jpg",
     active: true,
     ctaText: "Book Electrician ➔",
     ctaLink: "/category/electricians",
@@ -45,8 +45,8 @@ export const initialHeroBanners = [
     subtitle: "Leak repairs, tap fittings, pipe drainage & sanitary installations. Transparent upfront pricing.",
     badge: "🚰 CERTIFIED MASTER PLUMBERS",
     city: "📍 AT YOUR DOORSTEP",
-    image: "/images/banner_plumber.png",
-    mobileImage: "/images/banner_plumber.png",
+    image: "/images/banner_plumber.jpg",
+    mobileImage: "/images/banner_plumber.jpg",
     active: true,
     ctaText: "Explore Plumbers ➔",
     ctaLink: "/category/plumbers",
@@ -63,8 +63,8 @@ export const initialHeroBanners = [
     subtitle: "Premium dust-free painting, waterproof coatings & carpentry by top-rated certified specialists.",
     badge: "🎨 ARCHITECTURAL GRADE WORKMANSHIP",
     city: "📍 15 MIN ARRIVAL",
-    image: "/images/banner_painter.png",
-    mobileImage: "/images/banner_painter.png",
+    image: "/images/banner_painter.jpg",
+    mobileImage: "/images/banner_painter.jpg",
     active: true,
     ctaText: "Explore Painters ➔",
     ctaLink: "/category/painters",
@@ -81,8 +81,8 @@ export const initialHeroBanners = [
     subtitle: "Your everyday service team for instant home repairs, cleaning, maintenance, and wellness.",
     badge: "⭐ TRUSTED BY 25,000+ HOMES",
     city: "📍 INDORE & SURROUNDING REGIONS",
-    image: "/images/banner_team.png",
-    mobileImage: "/images/banner_team.png",
+    image: "/images/banner_team.jpg",
+    mobileImage: "/images/banner_team.jpg",
     active: true,
     ctaText: "Book Service Now ➔",
     ctaLink: "/services",
@@ -99,8 +99,8 @@ export const initialHeroBanners = [
     subtitle: "Trained and verified technicians ready at your doorstep across Indore & nearby regions.",
     badge: "✨ 5-STAR QUALITY PROMISE",
     city: "📍 INDORE & REGION",
-    image: "/images/banner_gemini_clean.png",
-    mobileImage: "/images/banner_gemini_clean.png",
+    image: "/images/banner_gemini_clean.jpg",
+    mobileImage: "/images/banner_gemini_clean.jpg",
     active: true,
     ctaText: "Explore Services ➔",
     ctaLink: "/services",
@@ -115,37 +115,37 @@ export const initialHeroBanners = [
 export const HERO_IMAGE_PRESETS = [
   {
     name: "All Verified Experts Collage (Official)",
-    url: "/images/banner_all_experts_clean.png",
+    url: "/images/banner_all_experts_clean.jpg",
     badge: "Official Banner",
     desc: "14+ multi-industry professionals with city skyline & aircraft backdrop"
   },
   {
     name: "Trusted Electricians Pro (Official)",
-    url: "/images/banner_electrician.png",
+    url: "/images/banner_electrician.jpg",
     badge: "Official Banner",
     desc: "Background verified electrician with multimeter and electrical board"
   },
   {
     name: "Expert Plumber Pro (Official)",
-    url: "/images/banner_plumber.png",
+    url: "/images/banner_plumber.jpg",
     badge: "Official Banner",
     desc: "Certified master plumber with pipeline and bathroom repair setup"
   },
   {
     name: "Professional Painter Specialist (Official)",
-    url: "/images/banner_painter.png",
+    url: "/images/banner_painter.jpg",
     badge: "Official Banner",
     desc: "Master painter in overalls with paint roller and wall color palettes"
   },
   {
     name: "Helper Everyday Service Team (Official)",
-    url: "/images/banner_team.png",
+    url: "/images/banner_team.jpg",
     badge: "Official Banner",
     desc: "Complete crew of home service technicians and cleaning professionals"
   },
   {
     name: "Home Pro Services Multi-Banner (Official)",
-    url: "/images/banner_gemini_clean.png",
+    url: "/images/banner_gemini_clean.jpg",
     badge: "Official Banner",
     desc: "Modern home services hero banner with branded equipment"
   },

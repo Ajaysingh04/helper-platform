@@ -579,20 +579,23 @@ export const DataProvider = ({ children }) => {
 
   const [heroBanners, setHeroBanners] = useState(() => {
     try {
-      const saved = localStorage.getItem("helper_hero_banners_v9");
+      const saved = localStorage.getItem("helper_hero_banners_v10");
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length >= 1) {
-          // Keep user modifications, only replace broken legacy paths with DEFAULT_HERO_IMAGE
           const sanitized = parsed.map(b => {
-            const isBroken = !b.image ||
-              b.image.includes("homepage_") ||
-              b.image.includes("pinterest_clean") ||
-              b.image.includes("helper_full_banner");
+            let img = b.image || DEFAULT_HERO_IMAGE;
+            if (img.includes(".png") && (img.includes("banner_") || img.includes("Gemini_"))) {
+              img = img.replace(".png", ".jpg");
+            }
+            let mImg = b.mobileImage || img;
+            if (mImg.includes(".png") && (mImg.includes("banner_") || mImg.includes("Gemini_"))) {
+              mImg = mImg.replace(".png", ".jpg");
+            }
             return {
               ...b,
-              image: isBroken ? DEFAULT_HERO_IMAGE : b.image,
-              mobileImage: isBroken ? DEFAULT_HERO_IMAGE : (b.mobileImage || b.image),
+              image: img,
+              mobileImage: mImg,
               active: b.active !== false
             };
           });
@@ -601,7 +604,7 @@ export const DataProvider = ({ children }) => {
       }
     } catch (e) {}
     try {
-      localStorage.setItem("helper_hero_banners_v9", JSON.stringify(initialHeroBanners));
+      localStorage.setItem("helper_hero_banners_v10", JSON.stringify(initialHeroBanners));
     } catch (e) {}
     return initialHeroBanners.map(b => ({ ...b, active: true }));
   });

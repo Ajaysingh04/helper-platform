@@ -359,18 +359,53 @@ export default function VendorPartnerScreen({ navigation }) {
       .catch(() => {});
   }, []);
 
-  // Poll backend for customer bookings placed on website or mobile app
+  // Poll backend for customer bookings placed on website or mobile app AND track assigned worker progress
   useEffect(() => {
     let poller;
     const fetchLatestBookings = () => {
-      if (!isLoggedIn || !isDutyOn || acceptedOrder) return;
+      if (!isLoggedIn || !isDutyOn) return;
+
+      // If active order is being executed by assigned worker, track live progress
+      if (acceptedOrder) {
+        axios
+          .get('http://localhost:5000/api/bookings')
+          .then((res) => {
+            if (res.data?.data && res.data.data.length > 0) {
+              const currentId = acceptedOrder.id || acceptedOrder.bookingCode;
+              const found = res.data.data.find(b => (b.bookingCode === currentId || b.id === currentId || b._id === currentId));
+              if (found) {
+                if (found.status === 'completed' || found.status === 'work_completed') {
+                  if (jobStage !== 'completed') {
+                    const payout = acceptedOrder?.payout || 499;
+                    const helperFee = Math.round(payout * 0.10);
+                    const vendorShare = payout - helperFee;
+                    setJobStage('completed');
+                    setWalletBalance((prev) => prev + vendorShare);
+                    setTodayEarnings((prev) => prev + vendorShare);
+                    setCompletedJobsToday((prev) => prev + 1);
+                  }
+                } else if (found.status === 'in_progress' || found.workerStatus === 'in_progress') {
+                  setJobStage('in_progress');
+                } else if (found.status === 'arrived' || found.workerStatus === 'arrived') {
+                  setJobStage('reached');
+                } else if (found.status === 'on_the_way' || found.workerStatus === 'traveling') {
+                  setJobStage('on_the_way');
+                }
+              }
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+
+      // No accepted order yet, scan for incoming bookings from customer
       axios
         .get('http://localhost:5000/api/bookings')
         .then((res) => {
           if (res.data?.data && res.data.data.length > 0) {
             const pendingBookings = res.data.data.filter(b => 
-              (b.status === 'pending' || b.status === 'requested' || b.status === 'broadcast') &&
-              b.status !== 'completed' && b.status !== 'cancelled' && b.status !== 'assigned' && b.status !== 'slot_confirmed'
+              (b.status === 'pending' || b.status === 'confirmed' || b.status === 'requested' || b.status === 'broadcast') &&
+              b.status !== 'completed' && b.status !== 'cancelled' && b.status !== 'assigned' && b.status !== 'slot_confirmed' && b.status !== 'in_progress'
             );
             const latest = pendingBookings[0] || null;
             if (latest && (!incomingOrder || incomingOrder.id !== (latest.bookingCode || latest.id))) {
@@ -398,11 +433,11 @@ export default function VendorPartnerScreen({ navigation }) {
     };
 
     fetchLatestBookings();
-    if (isLoggedIn && isDutyOn && !acceptedOrder) {
+    if (isLoggedIn && isDutyOn) {
       poller = setInterval(fetchLatestBookings, 2500);
     }
     return () => clearInterval(poller);
-  }, [isLoggedIn, isDutyOn, acceptedOrder, incomingOrder]);
+  }, [isLoggedIn, isDutyOn, acceptedOrder, incomingOrder, jobStage]);
 
   const handleVendorLogin = async () => {
     if (!loginPhone.trim() || !loginPassword.trim()) {
@@ -861,15 +896,16 @@ export default function VendorPartnerScreen({ navigation }) {
       assignedWorkerEmail: `${(chosenWorker.name || 'technician').toLowerCase().replace(/[^a-z0-9]/g, '.')}@worker.helper.com`,
     };
 
+    setAssignedWorker(chosenWorker);
     setAcceptedOrder(orderToAccept);
     setIncomingOrder(null);
     setShowChooseWorkerModal(false);
     setActiveTab('active');
-    setJobStage('on_the_way');
+    setJobStage('dispatched');
 
     Alert.alert(
       'Worker Assigned Successfully! 🚀',
-      `Assigned Specialist: ${chosenWorker.name}\nPhone: ${chosenWorker.phone}\nExperience: ${chosenWorker.experience || '5 Yrs Exp'}\n\nCustomer is now notified and can see ${chosenWorker.name}'s details!`
+      `Assigned Specialist: ${chosenWorker.name}\nPhone: ${chosenWorker.phone}\nExperience: ${chosenWorker.experience || '5 Yrs Exp'}\n\nCustomer is notified. Technician ${chosenWorker.name} will reach doorstep, verify Start OTP, and execute the service.`
     );
   };
 
@@ -1496,8 +1532,8 @@ export default function VendorPartnerScreen({ navigation }) {
                     <Text style={styles.incomingHeaderPing}>🚨</Text>
                     <Text style={styles.incomingHeaderTitle}>NEW BOOKING IN INDORE</Text>
                   </View>
-                  <View style={styles.timerPill}>
-                    <Text style={styles.timerPillText}>⏱️ {countdown}s</Text>
+                  <View style={[styles.timerPill, { backgroundColor: 'rgba(16, 185, 129, 0.18)', borderColor: 'rgba(16, 185, 129, 0.4)' }]}>
+                    <Text style={[styles.timerPillText, { color: '#10B981', fontWeight: '800' }]}>⚡ Ready to Dispatch</Text>
                   </View>
                 </View>
 
@@ -1603,7 +1639,7 @@ export default function VendorPartnerScreen({ navigation }) {
                       activeOpacity={0.85}
                       onPress={handleAcceptOrder}
                     >
-                      <Text style={styles.acceptOrderBtnText}>ACCEPT BOOKING ({countdown}s) ➔</Text>
+                      <Text style={styles.acceptOrderBtnText}>✓ ACCEPT BOOKING & CHOOSE WORKER ➔</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1683,6 +1719,7 @@ export default function VendorPartnerScreen({ navigation }) {
                   </View>
                   <View style={styles.jobStagePill}>
                     <Text style={styles.jobStagePillText}>
+                      {jobStage === 'dispatched' && '🚀 DISPATCHED'}
                       {jobStage === 'on_the_way' && '🚗 EN ROUTE'}
                       {jobStage === 'reached' && '📍 AT DOORSTEP'}
                       {jobStage === 'in_progress' && '⚡ IN PROGRESS'}
@@ -1696,8 +1733,8 @@ export default function VendorPartnerScreen({ navigation }) {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.customerNameHeading}>{acceptedOrder.customerName}</Text>
                     <Text style={styles.customerFullAddress} numberOfLines={2}>{acceptedOrder.address}</Text>
-                    <Text style={styles.dispatchedWorkerLabel}>
-                      Assigned: {assignedWorker.name} ({assignedWorker.phone})
+                    <Text style={{ color: '#10B981', fontSize: 12.5, fontWeight: '700', marginTop: 4 }}>
+                      Payout: ₹{acceptedOrder.payout} (90% Settlement: ₹{Math.round(acceptedOrder.payout * 0.9)})
                     </Text>
                   </View>
 
@@ -1717,103 +1754,133 @@ export default function VendorPartnerScreen({ navigation }) {
                   </View>
                 </View>
 
-                {/* STAGE 1: ON THE WAY */}
-                {jobStage === 'on_the_way' && (
-                  <View style={styles.stageSection}>
-                    <Text style={styles.stageDescription}>
-                      🚗 Technician is en route to customer location. Confirm upon arrival:
+                {/* Assigned Specialist Card */}
+                <View style={[styles.customerCard, { marginTop: 10, borderColor: 'rgba(56, 189, 248, 0.3)', backgroundColor: 'rgba(56, 189, 248, 0.05)' }]}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 14 }}>🧰</Text>
+                      <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800' }}>
+                        ASSIGNED FIELD SPECIALIST (DEMO WORKER)
+                      </Text>
+                    </View>
+                    <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800', marginTop: 4 }}>
+                      {assignedWorker?.name || 'Sunil Verma'}
                     </Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 2 }}>
+                      {assignedWorker?.specialty || assignedWorker?.category || 'Senior Technician'} • {assignedWorker?.experience || '6+ Yrs Exp'}
+                    </Text>
+                  </View>
+                  <View style={styles.contactIconGroup}>
                     <TouchableOpacity
-                      style={[styles.primaryActionBtn, { backgroundColor: '#10B981' }]}
-                      onPress={() => setJobStage('reached')}
+                      style={[styles.circleActionBtn, { borderColor: '#38BDF8' }]}
+                      onPress={() => Alert.alert('Call Specialist', `Calling ${assignedWorker?.phone || '+91 98765 00101'}...`)}
                     >
-                      <Text style={styles.primaryActionBtnText}>I Have Reached Customer Doorstep 📍</Text>
+                      <Text style={{ fontSize: 18 }}>📞</Text>
                     </TouchableOpacity>
                   </View>
-                )}
+                </View>
 
-                {/* STAGE 2: START OTP VERIFICATION */}
-                {jobStage === 'reached' && (
-                  <View style={styles.stageSection}>
-                    <View style={styles.otpCard}>
-                      <Text style={styles.otpCardTitle}>🔐 ENTER 4-DIGIT CUSTOMER START OTP</Text>
-                      <Text style={styles.otpCardSub}>
-                        Ask customer for their 4-digit start OTP from their app to begin service inspection.
+                {/* Vendor Zero-OTP Guidance Banner */}
+                <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', borderRadius: 14, padding: 14, marginTop: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 15 }}>🛡️</Text>
+                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '800' }}>
+                      ZERO-OTP FOR VENDOR • SPECIALIST EXECUTION
+                    </Text>
+                  </View>
+                  <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 6, lineHeight: 18 }}>
+                    Specialist <Text style={{ color: '#F1F5F9', fontWeight: '700' }}>{assignedWorker?.name || 'Sunil Verma'}</Text> will arrive at customer's doorstep, verify the customer's 4-digit start OTP, and perform the service with live countdown timer. Vendor does not need to enter or ask for OTP.
+                  </Text>
+                </View>
+
+                {/* 4-Stage Stepper for Vendor */}
+                <View style={{ marginTop: 14, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+                  <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '800', letterSpacing: 0.5, marginBottom: 8 }}>
+                    DISPATCH & FULFILLMENT STATUS
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ alignItems: 'center', flex: 1 }}>
+                      <Text style={{ color: '#10B981', fontSize: 14 }}>✓</Text>
+                      <Text style={{ color: '#10B981', fontSize: 10.5, fontWeight: '700', textAlign: 'center' }}>1. Received</Text>
+                    </View>
+                    <View style={{ height: 2, flex: 1, backgroundColor: '#10B981' }} />
+                    <View style={{ alignItems: 'center', flex: 1 }}>
+                      <Text style={{ color: '#10B981', fontSize: 14 }}>✓</Text>
+                      <Text style={{ color: '#10B981', fontSize: 10.5, fontWeight: '700', textAlign: 'center' }}>2. Accepted</Text>
+                    </View>
+                    <View style={{ height: 2, flex: 1, backgroundColor: jobStage === 'completed' ? '#10B981' : '#38BDF8' }} />
+                    <View style={{ alignItems: 'center', flex: 1 }}>
+                      <Text style={{ color: jobStage === 'completed' ? '#10B981' : '#38BDF8', fontSize: 14 }}>
+                        {jobStage === 'completed' ? '✓' : '⚡'}
                       </Text>
-                      <TextInput
-                        style={styles.otpInput}
-                        placeholder="e.g. 5421"
-                        placeholderTextColor="#64748B"
-                        keyboardType="numeric"
-                        maxLength={4}
-                        value={inputOtp}
-                        onChangeText={setInputOtp}
-                      />
-                      <TouchableOpacity
-                        style={[styles.primaryActionBtn, { backgroundColor: '#10B981', marginTop: 10 }]}
-                        onPress={handleVerifyOtp}
-                      >
-                        <Text style={styles.primaryActionBtnText}>Verify OTP & Start Service ➔</Text>
-                      </TouchableOpacity>
+                      <Text style={{ color: jobStage === 'completed' ? '#10B981' : '#38BDF8', fontSize: 10.5, fontWeight: '700', textAlign: 'center' }}>3. Field Work</Text>
+                    </View>
+                    <View style={{ height: 2, flex: 1, backgroundColor: jobStage === 'completed' ? '#10B981' : '#334155' }} />
+                    <View style={{ alignItems: 'center', flex: 1 }}>
+                      <Text style={{ color: jobStage === 'completed' ? '#10B981' : '#64748B', fontSize: 14 }}>
+                        {jobStage === 'completed' ? '✓' : '4'}
+                      </Text>
+                      <Text style={{ color: jobStage === 'completed' ? '#10B981' : '#64748B', fontSize: 10.5, fontWeight: '700', textAlign: 'center' }}>4. Settled</Text>
                     </View>
                   </View>
-                )}
+                </View>
 
-                {/* STAGE 3: WORK IN PROGRESS */}
-                {jobStage === 'in_progress' && (
-                  <View style={styles.stageSection}>
-                    <View style={styles.inProgressCard}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={styles.inProgressTitle}>⚡ WORK IN PROGRESS</Text>
-                        <View style={styles.timerBadge}>
-                          <Text style={styles.timerBadgeText}>⏱️ {formatStopwatch(stopwatchSeconds)}</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.inProgressSub}>
-                        Customer OTP verified. Tap below once the job is completed.
+                {/* Stage Status Display */}
+                {jobStage !== 'completed' ? (
+                  <View style={{ marginTop: 14 }}>
+                    <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#334155' }}>
+                      <Text style={{ color: '#38BDF8', fontSize: 13, fontWeight: '800' }}>
+                        {jobStage === 'dispatched' && '🚗 Specialist Dispatched to Location'}
+                        {jobStage === 'on_the_way' && '🚗 Specialist En Route to Customer'}
+                        {jobStage === 'reached' && '📍 Specialist Arrived at Customer Doorstep'}
+                        {jobStage === 'in_progress' && '⚡ Work in Progress with Specialist (OTP Verified)'}
                       </Text>
-                      <View style={{ marginVertical: 10 }}>
-                        <Text style={styles.taskLine}>☑️ Power Jet Foam Indoor Wash</Text>
-                        <Text style={styles.taskLine}>☑️ Outdoor Coil High Pressure Spray</Text>
-                        <Text style={styles.taskLine}>☑️ Gas Pressure & Cooling Test</Text>
-                      </View>
-                      <TouchableOpacity
-                        style={[styles.primaryActionBtn, { backgroundColor: '#10B981' }]}
-                        onPress={handleCompleteJob}
-                      >
-                        <Text style={styles.primaryActionBtnText}>Finish Job & Collect ₹{acceptedOrder.payout} ➔</Text>
-                      </TouchableOpacity>
+                      <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>
+                        {jobStage === 'in_progress'
+                          ? 'Technician is actively servicing at customer location. Work countdown is live on technician app.'
+                          : 'Monitoring live updates from technician. Payout will credit automatically upon job completion.'}
+                      </Text>
                     </View>
+
+                    <TouchableOpacity
+                      style={[styles.primaryActionBtn, { backgroundColor: '#10B981', marginTop: 12 }]}
+                      onPress={handleCompleteJob}
+                    >
+                      <Text style={styles.primaryActionBtnText}>Complete & Collect Payment ➔</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.nextJobOutlineBtn, { marginTop: 8 }]}
+                      onPress={() => setActiveTab('radar')}
+                    >
+                      <Text style={styles.nextJobOutlineText}>Scan More Bookings on Radar ➔</Text>
+                    </TouchableOpacity>
                   </View>
-                )}
-
-                {/* STAGE 4: COMPLETED */}
-                {jobStage === 'completed' && (
-                  <View style={styles.stageSection}>
-                    <View style={styles.completedCard}>
-                      <Text style={{ fontSize: 44, textAlign: 'center' }}>🎉</Text>
-                      <Text style={styles.completedTitle}>Job Completed Successfully!</Text>
-                      <Text style={styles.completedSub}>
-                        ₹{acceptedOrder.payout} has been credited to your Partner Wallet balance.
-                      </Text>
-                      <TouchableOpacity
-                        style={[styles.primaryActionBtn, { backgroundColor: '#10B981', marginTop: 12 }]}
-                        onPress={() => setShowQrModal(true)}
-                      >
-                        <Text style={styles.primaryActionBtnText}>Show Customer Payment QR 📱</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.nextJobOutlineBtn}
-                        onPress={() => {
-                          setAcceptedOrder(null);
-                          setOtpVerified(false);
-                          setInputOtp('');
-                          setActiveTab('radar');
-                        }}
-                      >
-                        <Text style={styles.nextJobOutlineText}>Ready for Next Booking ➔</Text>
-                      </TouchableOpacity>
-                    </View>
+                ) : (
+                  /* COMPLETED SUMMARY */
+                  <View style={[styles.completedCard, { marginTop: 14 }]}>
+                    <Text style={{ fontSize: 44, textAlign: 'center' }}>🎉</Text>
+                    <Text style={styles.completedTitle}>Job Completed Successfully!</Text>
+                    <Text style={styles.completedSub}>
+                      Customer Bill: ₹{acceptedOrder.payout} • 90% Net Settlement: ₹{Math.round(acceptedOrder.payout * 0.9)} credited to Partner Wallet.
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.primaryActionBtn, { backgroundColor: '#10B981', marginTop: 12 }]}
+                      onPress={() => setShowQrModal(true)}
+                    >
+                      <Text style={styles.primaryActionBtnText}>Show Customer Payment QR 📱</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.nextJobOutlineBtn, { marginTop: 8 }]}
+                      onPress={() => {
+                        setAcceptedOrder(null);
+                        setOtpVerified(false);
+                        setInputOtp('');
+                        setActiveTab('radar');
+                      }}
+                    >
+                      <Text style={styles.nextJobOutlineText}>Ready for Next Booking ➔</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>

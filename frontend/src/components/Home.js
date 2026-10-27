@@ -285,8 +285,8 @@ function Home() {
   const defaultHeroSlides = [
     {
       id: "slide-experts",
-      image: "/images/banner_all_experts_clean.png",
-      mobileImage: "/images/banner_all_experts_clean.png",
+      image: "/images/banner_all_experts_clean.jpg",
+      mobileImage: "/images/banner_all_experts_clean.jpg",
       title: "All Verified Experts.",
       highlight: "One Trusted Platform.",
       subtitle: "Over 100+ on-demand home, technical, medical & emergency services delivered in 15 mins by police-verified professionals.",
@@ -299,8 +299,8 @@ function Home() {
     },
     {
       id: "slide-electrician",
-      image: "/images/banner_electrician.png",
-      mobileImage: "/images/banner_electrician.png",
+      image: "/images/banner_electrician.jpg",
+      mobileImage: "/images/banner_electrician.jpg",
       title: "Certified Electricians & Diagnostics.",
       highlight: "Instant 15-Min Response.",
       subtitle: "Short circuit repair, wiring, switchboards, inverter & fan repairs by background-screened pros.",
@@ -313,8 +313,8 @@ function Home() {
     },
     {
       id: "slide-plumber",
-      image: "/images/banner_plumber.png",
-      mobileImage: "/images/banner_plumber.png",
+      image: "/images/banner_plumber.jpg",
+      mobileImage: "/images/banner_plumber.jpg",
       title: "Expert Plumbing & Sparkle Deep Clean.",
       highlight: "Spotless Clean Guaranteed.",
       subtitle: "Leak repairs, tap fittings, pipe drainage & hospital-grade deep sanitization. Trusted by 25,000+ homes.",
@@ -327,8 +327,8 @@ function Home() {
     },
     {
       id: "slide-painter",
-      image: "/images/banner_painter.png",
-      mobileImage: "/images/banner_painter.png",
+      image: "/images/banner_painter.jpg",
+      mobileImage: "/images/banner_painter.jpg",
       title: "Luxury Home Painting & Renovation.",
       highlight: "Flawless Finish On Time.",
       subtitle: "Premium dust-free painting, waterproof coatings & carpentry by top-rated certified specialists.",
@@ -341,8 +341,8 @@ function Home() {
     },
     {
       id: "slide-team",
-      image: "/images/banner_team.png",
-      mobileImage: "/images/banner_team.png",
+      image: "/images/banner_team.jpg",
+      mobileImage: "/images/banner_team.jpg",
       title: "Everything Your Home Needs.",
       highlight: "Delivered In 15 Mins.",
       subtitle: "Book verified electricians, plumbers, cleaning experts & painters with guaranteed upfront rates.",
@@ -375,6 +375,14 @@ function Home() {
     return typeof window !== "undefined" ? window.innerWidth <= 1024 : false;
   });
 
+  const getOptimizedHeroSrc = (src) => {
+    if (!src) return "/images/banner_all_experts_clean.jpg";
+    if (src.includes(".png") && (src.includes("banner_") || src.includes("Gemini_"))) {
+      return src.replace(".png", ".jpg");
+    }
+    return src;
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobileScreen(window.innerWidth <= 1024);
@@ -382,6 +390,18 @@ function Home() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Preload all hero banner images into browser cache immediately for 0ms transitions
+  useEffect(() => {
+    if (!safeHeroSlides || safeHeroSlides.length === 0) return;
+    safeHeroSlides.forEach((s) => {
+      const url = getOptimizedHeroSrc(s.image);
+      if (url && typeof window !== "undefined") {
+        const img = new Image();
+        img.src = url;
+      }
+    });
+  }, [safeHeroSlides]);
 
   const touchStartXRef = useRef(0);
   const touchEndXRef = useRef(0);
@@ -826,33 +846,41 @@ function Home() {
       >
         <div className="helper-hero-slider">
           {/* Full-Width Auto-Slider with Responsive Picture Elements */}
-          {safeHeroSlides.map((slide, idx) => (
-            <div 
-              key={slide.id || idx} 
-              className={`hero-slide-item ${idx === heroIndex ? "active" : ""}`}
-            >
-              <picture className="hero-slide-picture">
-                {slide.mobileImage && (
-                  <source media="(max-width: 768px)" srcSet={slide.mobileImage} />
-                )}
-                <img 
-                  src={slide.image || "/images/banner_all_experts_clean.png"} 
-                  alt={slide.title || `Home Banner ${idx + 1}`}
-                  className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
-                  style={{
-                    objectPosition: heroSettings.imagePosition || "center top"
-                  }}
-                  loading={idx === 0 ? "eager" : "lazy"}
-                  referrerPolicy="no-referrer"
-                  crossOrigin="anonymous"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/images/banner_all_experts_clean.png";
-                  }}
-                />
-              </picture>
-            </div>
-          ))}
+          {safeHeroSlides.map((slide, idx) => {
+            const resolvedImg = getOptimizedHeroSrc(slide.image);
+            const resolvedMobile = getOptimizedHeroSrc(slide.mobileImage || slide.image);
+            return (
+              <div 
+                key={slide.id || idx} 
+                className={`hero-slide-item ${idx === heroIndex ? "active" : ""}`}
+              >
+                <picture className="hero-slide-picture">
+                  {resolvedMobile && (
+                    <source media="(max-width: 768px)" srcSet={resolvedMobile} />
+                  )}
+                  <img 
+                    src={resolvedImg} 
+                    alt={slide.title || `Home Banner ${idx + 1}`}
+                    className={`hero-slide-img ${idx === heroIndex ? "kenburns-active" : ""}`}
+                    style={{
+                      objectPosition: heroSettings.imagePosition || "center top"
+                    }}
+                    loading="eager"
+                    decoding="async"
+                    onError={(e) => {
+                      const t = e.currentTarget;
+                      t.onerror = null;
+                      if (!t.src.includes("banner_all_experts")) {
+                        t.src = "/images/banner_all_experts_clean.jpg";
+                      } else {
+                        t.src = "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1920";
+                      }
+                    }}
+                  />
+                </picture>
+              </div>
+            );
+          })}
 
           {/* Animated Ambient Sparkles / Light Dust Motes (Floating Clean Air Glow) */}
           <div className="hero-ambient-particles">
