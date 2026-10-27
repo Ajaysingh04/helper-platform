@@ -2,7 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
-import { broadcastBookingSync, DEMO_WORKER } from "../../utils/bookingWorkflow";
+import {
+  broadcastBookingSync,
+  DEMO_WORKER,
+  calculateDynamicWorkPricing,
+  handleDemoWorkerGoToLocation,
+  handleDemoWorkerArrived,
+  handleDemoWorkerVerifyOtp,
+  handleDemoWorkerCompleteWork
+} from "../../utils/bookingWorkflow";
 import "../../css/Admin/Admin.css";
 import "../../css/WorkerDashboard.css";
 
@@ -466,17 +474,22 @@ function WorkerDashboard() {
     }
   };
 
-  // Stage 2: Start Traveling
+  // Stage 2: Go to Location (Start Traveling)
   const handleStartTraveling = async (bookingId) => {
+    const b = jobs.find((j) => (j.bookingId || j.id || j._id) === bookingId) || {};
+    try {
+      await handleDemoWorkerGoToLocation(b);
+    } catch (e) {}
+
+    showToast("📍 On the way! Traveling to customer location.");
+    updateJobStateLocally(bookingId, { workerStatus: "traveling" });
+
     try {
       await fetch(`${API_BASE}/bookings/${bookingId}/worker-traveling`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workerId: worker?.workerId || worker?.id, etaMinutes: 15 })
       });
-      showToast("Traveling status shared with customer & vendor live radar! 🛵");
-      updateJobStateLocally(bookingId, { workerStatus: "traveling" });
-
       if (socketRef.current) {
         socketRef.current.emit("worker:update_location", {
           workerId: worker?.workerId || worker?.id,
@@ -486,70 +499,124 @@ function WorkerDashboard() {
           etaMinutes: 15
         });
       }
-    } catch (e) {
-      updateJobStateLocally(bookingId, { workerStatus: "traveling" });
-    }
+    } catch (e) {}
   };
 
-  // Stage 3: Arrived At Doorstep
+  // Stage 3: I am Arrived At Doorstep
   const handleArrived = async (bookingId) => {
+    const b = jobs.find((j) => (j.bookingId || j.id || j._id) === bookingId) || {};
+    try {
+      await handleDemoWorkerArrived(b);
+    } catch (e) {}
+
+    showToast("🏁 Arrived at customer doorstep! Please enter the 4-digit Service Start OTP.");
+    updateJobStateLocally(bookingId, { workerStatus: "arrived" });
+
     try {
       await fetch(`${API_BASE}/bookings/${bookingId}/worker-arrived`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workerId: worker?.workerId || worker?.id })
       });
-      showToast("Arrived at doorstep! Ask customer for the 4-digit Door OTP.");
-      updateJobStateLocally(bookingId, { workerStatus: "arrived" });
-    } catch (e) {
-      updateJobStateLocally(bookingId, { workerStatus: "arrived" });
-    }
+    } catch (e) {}
   };
 
-  // Stage 4: Verify Door OTP & Start Job
+  // Stage 4: Verify Door OTP & Start Work Countdown
   const handleStartJobWithOtp = async (bookingId, correctOtp) => {
     if (!doorOtpInput || doorOtpInput.length < 4) {
-      alert("Please enter the 4-digit Door OTP shared by the customer.");
+      alert("Please enter the 4-digit Service Start OTP from the customer.");
+      return;
+    }
+
+    const b = jobs.find((j) => (j.bookingId || j.id || j._id) === bookingId) || {};
+    try {
+      await handleDemoWorkerVerifyOtp(b, doorOtpInput);
+      setStopwatchRunning(true);
+      setStopwatchSeconds(0);
+      showToast("🔑 OTP Verified! Work countdown and stopwatch started.");
+      updateJobStateLocally(bookingId, { workerStatus: "in_progress", status: "in_progress", workStartedAt: Date.now() });
+      setDoorOtpInput("");
+    } catch (err) {
+      alert(err.message || "Invalid OTP. Please enter the 4-digit OTP shown on customer screen.");
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/bookings/${bookingId}/worker-start`, {
+      await fetch(`${API_BASE}/bookings/${bookingId}/worker-start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workerId: worker?.workerId || worker?.id, otp: doorOtpInput })
       });
-      const data = await res.json();
-      if (data.success) {
-        setStopwatchRunning(true);
-        setStopwatchSeconds(0);
-        showToast("Door OTP verified! Job started and service stopwatch running.");
-        updateJobStateLocally(bookingId, { workerStatus: "in_progress", status: "in_progress" });
-        setDoorOtpInput("");
-      } else {
-        alert(data.message || "Invalid Door OTP. Please re-check with customer.");
-      }
-    } catch (e) {
-      if (doorOtpInput === correctOtp || doorOtpInput === "1234" || doorOtpInput === "3459") {
-        setStopwatchRunning(true);
-        setStopwatchSeconds(0);
-        showToast("Door OTP verified! Job started.");
-        updateJobStateLocally(bookingId, { workerStatus: "in_progress", status: "in_progress" });
-        setDoorOtpInput("");
-      } else {
-        alert("Invalid Door OTP. Please re-check with customer.");
-      }
-    }
+    } catch (e) {}
   };
 
-  // Stage 5: Complete Job & 90/10 Split
+  // Stage 5: Complete Job & Generate Worker Completion QR (Dynamic pricing by time, 90% Worker split)
   const handleCompleteJob = async (bookingId, basePrice) => {
+    const b = jobs.find((j) => (j.bookingId || j.id || j._id) === bookingId) || {};
     const matCost = parseInt(materialInput) || 0;
-    const itemName = materialItemName.trim() || (matCost > 0 ? "Replacement Spare Parts" : "General Plumbing Spares");
+    const itemName = materialItemName.trim() || (matCost > 0 ? "Replacement Spare Parts" : "General Service Spares");
     const photo = completionPhotoUrl || "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500";
 
+    const elapsed = stopwatchSeconds > 0 ? stopwatchSeconds : 120;
+    const calc = calculateDynamicWorkPricing(b, elapsed);
+    const totalBill = calc.totalAmount + matCost;
+    const workerEarnings = Math.round(totalBill * 0.90);
+    const vendorProfit = Math.round(totalBill * 0.05);
+    const adminProfit = totalBill - workerEarnings - vendorProfit;
+
+    const patchData = {
+      status: "awaiting_payment",
+      workerStatus: "awaiting_payment",
+      workCompletedAt: Date.now(),
+      finalCalculatedAmount: totalBill,
+      totalAmount: totalBill,
+      price: `₹${totalBill}`,
+      workerEarningsAmount: workerEarnings,
+      vendorEarningsAmount: vendorProfit,
+      adminEarningsAmount: adminProfit,
+      payoutSplit: {
+        totalAmount: totalBill,
+        workerEarnings,
+        vendorProfit,
+        adminProfit,
+        workerPercentage: 90,
+        vendorPercentage: 5,
+        adminPercentage: 5
+      },
+      materialsCost: matCost,
+      materialCharge: matCost,
+      replacedItemName: itemName,
+      completionNotes: completionNotes || "Service successfully fulfilled.",
+      completionPhotos: [photo],
+      qrGenerated: true,
+      qrGeneratedAt: new Date().toISOString()
+    };
+
+    setStopwatchRunning(false);
+    broadcastBookingSync(bookingId, patchData);
+    updateJobStateLocally(bookingId, patchData);
+
+    showToast(`✅ Work Complete! Service QR generated. Waiting for customer to scan and pay ₹${totalBill}.`);
+
+    if (worker) {
+      const updatedWorker = {
+        ...worker,
+        earnings: {
+          ...worker.earnings,
+          totalEarnings: (worker.earnings?.totalEarnings || 0) + workerEarnings,
+          pendingPayout: (worker.earnings?.pendingPayout || 0) + workerEarnings
+        },
+        performance: {
+          ...worker.performance,
+          completedJobsCount: (worker.performance?.completedJobsCount || 0) + 1
+        }
+      };
+      setWorker(updatedWorker);
+      localStorage.setItem("helper_worker", JSON.stringify(updatedWorker));
+    }
+
     try {
-      const res = await fetch(`${API_BASE}/bookings/${bookingId}/worker-complete`, {
+      await fetch(`${API_BASE}/bookings/${bookingId}/worker-complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -562,84 +629,45 @@ function WorkerDashboard() {
           completionNotes: completionNotes || "Service successfully fulfilled."
         })
       });
-      const data = await res.json();
-      setStopwatchRunning(false);
+    } catch (e) {}
 
-      const totalBill = data?.bill?.finalAmount || ((basePrice || 448) + matCost);
-      const worker90 = data?.bill?.workerEarnings || Math.round(totalBill * 0.9);
-      const vendor10 = data?.bill?.vendorEarnings || (totalBill - worker90);
-
-      showToast(`🎉 Repair Complete! Total Bill: ₹${totalBill}. Customer QR is now active.`);
-      updateJobStateLocally(bookingId, {
-        workerStatus: "completed",
-        status: "completed",
-        paymentStatus: "payment_due",
-        materialsCost: matCost,
-        materialCharge: matCost,
-        replacedItemName: itemName,
-        totalAmount: totalBill,
-        finalCalculatedAmount: totalBill,
-        price: `₹${totalBill}`,
-        workerEarningsAmount: worker90,
-        vendorEarningsAmount: vendor10,
-        completionPhotos: [photo]
-      });
-
-      // Automatically open the payment scanner view
-      setIsScanningActive(true);
-      setScanningBookingId(bookingId);
-
-      if (worker) {
-        const updatedWorker = {
-          ...worker,
-          earnings: {
-            ...worker.earnings,
-            totalEarnings: (worker.earnings?.totalEarnings || 0) + worker90,
-            pendingPayout: (worker.earnings?.pendingPayout || 0) + worker90
-          },
-          performance: {
-            ...worker.performance,
-            completedJobsCount: (worker.performance?.completedJobsCount || 0) + 1
-          }
-        };
-        setWorker(updatedWorker);
-        localStorage.setItem("helper_worker", JSON.stringify(updatedWorker));
-      }
-
-      setMaterialInput("");
-      setMaterialItemName("");
-      setCompletionNotes("");
-      setCompletionPhotoUrl("");
-    } catch (e) {
-      setStopwatchRunning(false);
-      showToast("Job Completed! Awaiting customer payment.");
-      updateJobStateLocally(bookingId, { workerStatus: "completed", status: "completed", paymentStatus: "payment_due" });
-      setIsScanningActive(true);
-      setScanningBookingId(bookingId);
-    }
+    setMaterialInput("");
+    setMaterialItemName("");
+    setCompletionNotes("");
+    setCompletionPhotoUrl("");
   };
 
-  // Stage 6: Scan Customer QR or Verify Cash Payment
+  // Stage 6: Confirm Payment Received (Worker gets 90%)
   const handleConfirmPayment = async (bookingId, totalBill) => {
+    const bill = Number(totalBill) || 499;
+    const workerEarnings = Math.round(bill * 0.90);
+    const vendorProfit = Math.round(bill * 0.05);
+    const adminProfit = bill - workerEarnings - vendorProfit;
+
+    const patchData = {
+      paymentStatus: "paid",
+      status: "completed",
+      workerStatus: "completed",
+      paidAt: new Date().toISOString(),
+      workerEarningsAmount: workerEarnings,
+      vendorEarningsAmount: vendorProfit,
+      adminEarningsAmount: adminProfit
+    };
+
+    broadcastBookingSync(bookingId, patchData);
+    updateJobStateLocally(bookingId, patchData);
+    showToast(`🎉 Payment of ₹${bill} verified! Your 90% payout (₹${workerEarnings}) added to your balance.`);
+
     try {
       await fetch(`${API_BASE}/bookings/${bookingId}/pay`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           paymentMethod: "upi_qr",
-          paidAmount: totalBill
+          paidAmount: bill
         })
       });
-      showToast(`🎉 Payment of ₹${totalBill} verified! Net 90% credited to your balance.`);
-      updateJobStateLocally(bookingId, { paymentStatus: "paid", status: "completed" });
-      setIsScanningActive(false);
-      setScanningBookingId(null);
-    } catch (e) {
-      showToast(`🎉 Payment of ₹${totalBill} verified!`);
-      updateJobStateLocally(bookingId, { paymentStatus: "paid", status: "completed" });
-      setIsScanningActive(false);
-      setScanningBookingId(null);
-    }
+    } catch (e) {}
   };
 
   const updateJobStateLocally = (bookingId, patch) => {
@@ -1398,11 +1426,13 @@ function WorkerDashboard() {
                 activeJobsList.map((b) => {
                   const bookingId = b._id || b.id || b.bookingCode;
                   const status = (b.workerStatus || b.status || "assigned").toLowerCase();
-                  const isAssigned = status === "assigned";
+                  const isAssigned = status === "assigned" || status === "vendor_accepted" || status === "dispatched";
                   const isAccepted = status === "accepted";
-                  const isTraveling = status === "traveling";
+                  const isTraveling = status === "traveling" || status === "on_the_way";
                   const isArrived = status === "arrived";
                   const isInProgress = status === "in_progress";
+                  const isAwaitingPayment = status === "awaiting_payment" || (status === "completed" && b.paymentStatus !== "paid");
+                  const isPaid = b.paymentStatus === "paid";
                   const correctDoorOtp = b.security?.startOtpPlainForCustomer || b.doorOtp || "3459";
 
                   return (
@@ -1425,29 +1455,29 @@ function WorkerDashboard() {
                           <div className="wrk-step-circle">{!isAssigned ? "✓" : "1"}</div>
                           <span className="wrk-step-label">Accept</span>
                         </div>
-                        <div className={`wrk-step-bar-line ${isTraveling || isArrived || isInProgress ? "filled" : ""}`} />
+                        <div className={`wrk-step-bar-line ${isTraveling || isArrived || isInProgress || isAwaitingPayment || isPaid ? "filled" : ""}`} />
 
-                        <div className={`wrk-step-node ${isTraveling ? "active" : (isArrived || isInProgress) ? "completed" : ""}`}>
-                          <div className="wrk-step-circle">{(isArrived || isInProgress) ? "✓" : "2"}</div>
-                          <span className="wrk-step-label">Travel</span>
+                        <div className={`wrk-step-node ${isTraveling ? "active" : (isArrived || isInProgress || isAwaitingPayment || isPaid) ? "completed" : ""}`}>
+                          <div className="wrk-step-circle">{(isArrived || isInProgress || isAwaitingPayment || isPaid) ? "✓" : "2"}</div>
+                          <span className="wrk-step-label">Location</span>
                         </div>
-                        <div className={`wrk-step-bar-line ${isArrived || isInProgress ? "filled" : ""}`} />
+                        <div className={`wrk-step-bar-line ${isArrived || isInProgress || isAwaitingPayment || isPaid ? "filled" : ""}`} />
 
-                        <div className={`wrk-step-node ${isArrived ? "active" : isInProgress ? "completed" : ""}`}>
-                          <div className="wrk-step-circle">{isInProgress ? "✓" : "3"}</div>
-                          <span className="wrk-step-label">Arrive</span>
+                        <div className={`wrk-step-node ${isArrived ? "active" : (isInProgress || isAwaitingPayment || isPaid) ? "completed" : ""}`}>
+                          <div className="wrk-step-circle">{(isInProgress || isAwaitingPayment || isPaid) ? "✓" : "3"}</div>
+                          <span className="wrk-step-label">Arrived</span>
                         </div>
-                        <div className={`wrk-step-bar-line ${isInProgress ? "filled" : ""}`} />
+                        <div className={`wrk-step-bar-line ${isInProgress || isAwaitingPayment || isPaid ? "filled" : ""}`} />
 
-                        <div className={`wrk-step-node ${isInProgress ? "active" : ""}`}>
-                          <div className="wrk-step-circle">{isInProgress ? "⚡" : "4"}</div>
-                          <span className="wrk-step-label">Door OTP</span>
+                        <div className={`wrk-step-node ${isInProgress ? "active" : (isAwaitingPayment || isPaid) ? "completed" : ""}`}>
+                          <div className="wrk-step-circle">{(isAwaitingPayment || isPaid) ? "✓" : (isInProgress ? "⏱️" : "4")}</div>
+                          <span className="wrk-step-label">Work Timer</span>
                         </div>
-                        <div className="wrk-step-bar-line" />
+                        <div className={`wrk-step-bar-line ${isAwaitingPayment || isPaid ? "filled" : ""}`} />
 
-                        <div className="wrk-step-node">
-                          <div className="wrk-step-circle">5</div>
-                          <span className="wrk-step-label">Complete</span>
+                        <div className={`wrk-step-node ${isAwaitingPayment ? "active" : isPaid ? "completed" : ""}`}>
+                          <div className="wrk-step-circle">{isPaid ? "✓" : isAwaitingPayment ? "QR" : "5"}</div>
+                          <span className="wrk-step-label">Scan QR</span>
                         </div>
                       </div>
 
@@ -1518,10 +1548,10 @@ function WorkerDashboard() {
                           <button 
                             type="button" 
                             className="wrk-btn-stage-action"
-                            style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)", boxShadow: "0 4px 14px rgba(245, 158, 11, 0.35)" }}
+                            style={{ background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)", boxShadow: "0 4px 14px rgba(37, 99, 235, 0.35)" }}
                             onClick={() => handleStartTraveling(bookingId)}
                           >
-                            <span>🛵 I am Traveling To Customer</span>
+                            <span>📍 Go to Location</span>
                           </button>
                         )}
 
@@ -1532,17 +1562,17 @@ function WorkerDashboard() {
                             style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)", boxShadow: "0 4px 14px rgba(139, 92, 246, 0.35)" }}
                             onClick={() => handleArrived(bookingId)}
                           >
-                            <span>📍 I Have Arrived at Doorstep</span>
+                            <span>🏁 I am Arrived</span>
                           </button>
                         )}
 
                         {isArrived && (
-                          <div className="wrk-stopwatch-box">
-                            <span style={{ fontSize: "13px", fontWeight: 800, color: "#D97706" }}>
-                              🛡️ MANDATORY ZERO-FRAUD PROTOCOL
+                          <div className="wrk-stopwatch-box" style={{ background: "linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)", border: "2px solid #F59E0B" }}>
+                            <span style={{ fontSize: "13px", fontWeight: 800, color: "#B45309" }}>
+                              🔑 ZERO-FRAUD START OTP REQUIRED
                             </span>
-                            <p style={{ margin: 0, fontSize: "13px", color: "var(--wrk-text-muted)" }}>
-                              Ask customer for the 4-digit Door OTP displayed on their Helper tracking screen:
+                            <p style={{ margin: 0, fontSize: "13px", color: "#78350F" }}>
+                              Customer se unki screen par dikh raha 4-digit Service Start OTP maangein:
                             </p>
 
                             <div className="wrk-otp-input-wrap">
@@ -1560,32 +1590,45 @@ function WorkerDashboard() {
                                 style={{ width: "auto", padding: "10px 20px" }}
                                 onClick={() => handleStartJobWithOtp(bookingId, correctDoorOtp)}
                               >
-                                Verify & Start ⚡
+                                Verify OTP & Start Work ⚡
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDoorOtpInput(correctDoorOtp)}
+                                style={{ padding: "8px 12px", borderRadius: "8px", border: "1px dashed #B45309", background: "rgba(245, 158, 11, 0.15)", color: "#B45309", fontSize: "12px", cursor: "pointer", fontWeight: 700 }}
+                              >
+                                Quick Fill ({correctDoorOtp})
                               </button>
                             </div>
-                            <span style={{ fontSize: "11px", color: "var(--wrk-text-muted)" }}>
-                              Demo Hint: Correct OTP for this booking is <strong>{correctDoorOtp}</strong>
+                            <span style={{ fontSize: "11px", color: "#92400E" }}>
+                              Customer screen par 4-digit OTP active hai: <strong>{correctDoorOtp}</strong>
                             </span>
                           </div>
                         )}
 
                         {isInProgress && (
                           <div className="wrk-completion-form">
-                            <div className="wrk-stopwatch-box">
-                              <span style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 800, color: "var(--wrk-primary)" }}>
-                                ⏱️ LIVE SERVICE STOPWATCH RUNNING
-                              </span>
-                              <div className="wrk-stopwatch-display">
+                            <div className="wrk-stopwatch-box" style={{ background: "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)", border: "2px solid #3B82F6" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 800, color: "#1D4ED8" }}>
+                                  ⏱️ LIVE SERVICE COUNTDOWN & STOPWATCH
+                                </span>
+                                <span style={{ background: "#2563EB", color: "#fff", padding: "3px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: 700 }}>
+                                  ACTIVE WORK
+                                </span>
+                              </div>
+                              <div className="wrk-stopwatch-display" style={{ color: "#1E3A8A", fontSize: "36px", fontWeight: 900, margin: "8px 0" }}>
                                 {formatTimer(stopwatchSeconds)}
                               </div>
-                              <span style={{ fontSize: "12px", color: "var(--wrk-text-muted)" }}>
-                                Visiting Fee: ₹{b.homeServiceCharge || 149} • Hourly Rate: ₹{b.hourlyRate || 299}/hr
-                              </span>
+                              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#3B82F6" }}>
+                                <span>Estimated Slot: 1 - 2 Hours</span>
+                                <span>Hourly Rate: ₹{b.hourlyRate || 299}/hr</span>
+                              </div>
                             </div>
 
                             <div className="wrk-input-row">
                               <div className="wrk-input-group">
-                                <label>Replaced Item / Spare Parts Name</label>
+                                <label>Replaced Item / Spare Parts Name (Optional)</label>
                                 <input 
                                   type="text" 
                                   placeholder="e.g. Brass Angle Valve & Teflon Tape"
@@ -1594,52 +1637,50 @@ function WorkerDashboard() {
                                 />
                               </div>
                               <div className="wrk-input-group">
-                                <label>Replaced Item / Spare Parts Cost (₹)</label>
+                                <label>Spare Parts Cost (₹) (Optional)</label>
                                 <input 
                                   type="number" 
                                   min="0" 
-                                  placeholder="e.g. 180 (0 if none replaced)"
+                                  placeholder="0 if no parts replaced"
                                   value={materialInput}
                                   onChange={(e) => setMaterialInput(e.target.value)}
                                 />
                               </div>
                             </div>
 
-                            {/* Real Mathematical Bill Preview */}
+                            {/* Mathematical Bill Preview - Worker ONLY sees their 90% payout! */}
                             {(() => {
                               const visiting = Number(b.homeServiceCharge || 149);
                               const labor = Number(b.hourlyRate || 299);
                               const parts = parseInt(materialInput) || 0;
                               const previewTotal = visiting + labor + parts;
-                              const workerShare = Math.round(previewTotal * 0.9);
-                              const vendorShare = previewTotal - workerShare;
+                              const workerShare = Math.round(previewTotal * 0.90);
 
                               return (
                                 <div style={{
                                   background: "rgba(16, 185, 129, 0.08)",
-                                  border: "1px dashed rgba(16, 185, 129, 0.4)",
+                                  border: "1px solid rgba(16, 185, 129, 0.4)",
                                   borderRadius: "12px",
                                   padding: "14px 16px",
                                   fontSize: "13px"
                                 }}>
                                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                                    <span style={{ color: "var(--wrk-text-muted)" }}>Visiting Fee + Labor (1 hr):</span>
-                                    <strong>₹{visiting} + ₹{labor}</strong>
+                                    <span style={{ color: "var(--wrk-text-muted)" }}>Estimated Customer Bill:</span>
+                                    <strong>₹{previewTotal}</strong>
                                   </div>
                                   {parts > 0 && (
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", color: "#2563EB" }}>
-                                      <span>Spare Part ({materialItemName || "Items"}):</span>
+                                      <span>Spare Parts ({materialItemName || "Items"}):</span>
                                       <strong>+₹{parts}</strong>
                                     </div>
                                   )}
-                                  <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(0,0,0,0.1)", paddingTop: "6px", fontWeight: 800, fontSize: "14px" }}>
-                                    <span>Total Customer Bill:</span>
-                                    <span style={{ color: "#FF4D2D" }}>₹{previewTotal}</span>
+                                  <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(0,0,0,0.1)", paddingTop: "8px", marginTop: "6px" }}>
+                                    <span style={{ fontSize: "14px", fontWeight: 800, color: "#065F46" }}>Your 90% Net Take-home Payout:</span>
+                                    <span style={{ fontSize: "16px", fontWeight: 900, color: "#10B981" }}>₹{workerShare}</span>
                                   </div>
-                                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px", fontSize: "12px", color: "#10B981", fontWeight: 700 }}>
-                                    <span>Your 90% Net Take-home: ₹{workerShare}</span>
-                                    <span style={{ color: "#64748B" }}>Vendor 10%: ₹{vendorShare}</span>
-                                  </div>
+                                  <p style={{ margin: "4px 0 0", fontSize: "11px", color: "var(--wrk-text-muted)" }}>
+                                    * 90% of total payment directly credited to your worker wallet upon completion.
+                                  </p>
                                 </div>
                               );
                             })()}
@@ -1657,88 +1698,126 @@ function WorkerDashboard() {
                             <button 
                               type="button" 
                               className="wrk-btn-stage-action"
+                              style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)", marginTop: "12px" }}
                               onClick={() => handleCompleteJob(bookingId, b.price)}
                             >
-                              <span>✓ Finish Repair & Activate Customer Payment QR</span>
+                              <span>✅ Complete Work & Generate Customer QR</span>
                             </button>
                           </div>
                         )}
 
-                        {/* Stage 6: Worker Payment Scanner & Verification */}
-                        {(status === "completed" || b.workerStatus === "completed") && b.paymentStatus !== "paid" && (
+                        {/* Stage: Worker Completion QR Generated - Waiting for Customer Scan & Pay */}
+                        {(b.workerStatus === "awaiting_payment" || b.status === "awaiting_payment" || (b.status === "completed" && b.paymentStatus !== "paid")) && (
                           <div style={{
                             background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
                             borderRadius: "18px",
-                            padding: "22px",
+                            padding: "24px 20px",
                             color: "#FFFFFF",
                             marginTop: "16px",
-                            textAlign: "center"
+                            textAlign: "center",
+                            border: "2px solid rgba(16, 185, 129, 0.5)",
+                            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)"
                           }}>
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.2)", color: "#F59E0B", padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: 800, marginBottom: "12px" }}>
-                              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#F59E0B", animation: "pulseDot 1.2s infinite" }} />
-                              <span>STEP 6: AWAITING PAYMENT • SCAN CUSTOMER QR</span>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(16, 185, 129, 0.2)", color: "#10B981", padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 800, marginBottom: "14px" }}>
+                              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10B981", animation: "pulseDot 1.2s infinite" }} />
+                              <span>WORK COMPLETED • SERVICE QR GENERATED</span>
                             </div>
 
-                            <h4 style={{ margin: "4px 0", fontSize: "17px" }}>
-                              Collect Payment: ₹{b.finalCalculatedAmount || b.totalAmount || 448}
+                            <h4 style={{ margin: "0 0 6px", fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>
+                              Customer ko ye QR Scan karne ko kahein
                             </h4>
-                            <p style={{ margin: "2px 0 16px", fontSize: "12.5px", color: "#94A3B8" }}>
-                              Customer ki screen par QR code show ho gaya hai. Aap scan karke payment verify karein.
+                            <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#94A3B8" }}>
+                              Demo User apne screen ke <strong>"📷 Scan Worker QR"</strong> option se scan karke pay karega
                             </p>
 
-                            {/* Interactive Camera Scanner Viewfinder */}
+                            {/* Dynamic Worker Completion QR Code */}
                             <div style={{
-                              width: "220px",
-                              height: "170px",
+                              width: "210px",
+                              height: "210px",
                               margin: "0 auto 16px",
+                              background: "#FFFFFF",
                               borderRadius: "16px",
-                              border: "2px solid rgba(16, 185, 129, 0.6)",
-                              position: "relative",
-                              overflow: "hidden",
-                              background: "rgba(0, 0, 0, 0.4)",
+                              padding: "12px",
+                              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center"
                             }}>
-                              {/* Scanner Reticle Corners */}
-                              <div style={{ position: "absolute", top: "10px", left: "10px", width: "20px", height: "20px", borderTop: "3px solid #10B981", borderLeft: "3px solid #10B981" }} />
-                              <div style={{ position: "absolute", top: "10px", right: "10px", width: "20px", height: "20px", borderTop: "3px solid #10B981", borderRight: "3px solid #10B981" }} />
-                              <div style={{ position: "absolute", bottom: "10px", left: "10px", width: "20px", height: "20px", borderBottom: "3px solid #10B981", borderLeft: "3px solid #10B981" }} />
-                              <div style={{ position: "absolute", bottom: "10px", right: "10px", width: "20px", height: "20px", borderBottom: "3px solid #10B981", borderRight: "3px solid #10B981" }} />
-
-                              {/* Animated Laser Scanning Line */}
-                              <div style={{
-                                position: "absolute",
-                                width: "100%",
-                                height: "2px",
-                                background: "linear-gradient(90deg, transparent, #10B981, transparent)",
-                                boxShadow: "0 0 10px #10B981",
-                                animation: "adminSlideIn 1.5s infinite alternate ease-in-out"
-                              }} />
-
-                              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)", zIndex: 1 }}>
-                                📷 Scanner Active
-                              </span>
+                              <img 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=186x186&data=${encodeURIComponent(`HELPER_WORK:${bookingId}:${b.finalCalculatedAmount || b.totalAmount || 499}:${Date.now()}`)}`}
+                                alt="Worker Completion QR"
+                                style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "8px" }}
+                              />
                             </div>
 
+                            {/* Worker-Only Payout Display */}
+                            {(() => {
+                              const totalBill = b.finalCalculatedAmount || b.totalAmount || 499;
+                              const workerPayout = b.workerEarningsAmount || Math.round(totalBill * 0.90);
+                              return (
+                                <div style={{
+                                  background: "rgba(255, 255, 255, 0.06)",
+                                  borderRadius: "12px",
+                                  padding: "12px 16px",
+                                  marginBottom: "16px",
+                                  textAlign: "left"
+                                }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px", color: "#CBD5E1" }}>
+                                    <span>Total Service Amount:</span>
+                                    <strong>₹{totalBill}</strong>
+                                  </div>
+                                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "15px", color: "#10B981", fontWeight: 800, borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "8px" }}>
+                                    <span>Your 90% Take-home Earnings:</span>
+                                    <span>₹{workerPayout}</span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* Realtime Waiting Indicator */}
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "12.5px", color: "#FBBF24", marginBottom: "14px" }}>
+                              <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#FBBF24" }} />
+                              <span>Waiting for Customer to Scan & Pay...</span>
+                            </div>
+
+                            {/* Fast Simulation Trigger for Testing */}
                             <button
                               type="button"
-                              onClick={() => handleConfirmPayment(bookingId, b.finalCalculatedAmount || b.totalAmount || 448)}
+                              onClick={() => handleConfirmPayment(bookingId, b.finalCalculatedAmount || b.totalAmount || 499)}
                               style={{
                                 width: "100%",
-                                padding: "13px",
-                                borderRadius: "12px",
-                                background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-                                color: "#FFFFFF",
-                                border: "none",
-                                fontSize: "14px",
-                                fontWeight: 800,
-                                cursor: "pointer",
-                                boxShadow: "0 4px 16px rgba(16, 185, 129, 0.4)"
+                                padding: "12px",
+                                borderRadius: "10px",
+                                background: "rgba(16, 185, 129, 0.15)",
+                                color: "#10B981",
+                                border: "1px dashed #10B981",
+                                fontSize: "13px",
+                                fontWeight: 700,
+                                cursor: "pointer"
                               }}
                             >
-                              📷 Scan Customer QR / Confirm ₹{b.finalCalculatedAmount || b.totalAmount || 448} Received
+                              ⚡ Simulate Customer Instant Pay (Demo Sync)
                             </button>
+                          </div>
+                        )}
+
+                        {/* Paid State Confirmation */}
+                        {b.paymentStatus === "paid" && (
+                          <div style={{
+                            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.12) 100%)",
+                            border: "1.5px solid #10B981",
+                            borderRadius: "14px",
+                            padding: "16px",
+                            textAlign: "center",
+                            marginTop: "16px"
+                          }}>
+                            <span style={{ fontSize: "28px" }}>🎉</span>
+                            <h4 style={{ margin: "6px 0 2px", color: "#065F46", fontSize: "16px", fontWeight: 800 }}>
+                              Payment Received Successfully!
+                            </h4>
+                            <p style={{ margin: 0, fontSize: "13px", color: "#047857" }}>
+                              Your 90% net take-home earnings of <strong>₹{b.workerEarningsAmount || Math.round((b.totalAmount || 499) * 0.90)}</strong> have been credited to your worker wallet.
+                            </p>
                           </div>
                         )}
                       </div>

@@ -15,13 +15,20 @@ class MainApplication : Application(), ReactApplication {
       packageList =
         PackageList(this).packages.apply {
           // Packages that cannot be autolinked yet can be added manually here, for example:
-          // add(MyReactNativePackage())
+          add(BellSoundPackage())
         },
+      useDevSupport = BuildConfig.DEBUG,
     )
   }
 
   override fun onCreate() {
     super.onCreate()
+    if (BuildConfig.DEBUG) {
+      android.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        .edit()
+        .putString("debug_http_host", "192.168.1.9:8081")
+        .apply()
+    }
     loadReactNative(this)
   }
 }

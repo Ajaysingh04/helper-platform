@@ -9,6 +9,13 @@ import {
   calculateScheduleDetails,
   handleDemoVendorAccept,
   handleDemoWorkerAccept,
+  handleDemoWorkerGoToLocation,
+  handleDemoWorkerArrived,
+  handleDemoWorkerVerifyOtp,
+  handleDemoWorkerCompleteWork,
+  handleDemoUserPayBooking,
+  handleDemoUserSubmitFeedback,
+  calculateDynamicWorkPricing,
   DEMO_VENDOR,
   DEMO_WORKER
 } from "../utils/bookingWorkflow";
@@ -26,6 +33,18 @@ function MyBookings() {
   const [searchTerm, setSearchTerm] = useState("");
   const [toastMsg, setToastMsg] = useState("");
   const [nowTime, setNowTime] = useState(Date.now());
+
+  // Interactive Scanner & Payment Modal
+  const [scannerModalBooking, setScannerModalBooking] = useState(null);
+  const [scannerStep, setScannerStep] = useState("scan"); // "scan" | "scanned_bill" | "pay_qr"
+  const [scannedBillDetails, setScannedBillDetails] = useState(null);
+  const [payingNow, setPayingNow] = useState(false);
+
+  // Optional Feedback Modal State
+  const [feedbackBooking, setFeedbackBooking] = useState(null);
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [selectedTags, setSelectedTags] = useState(["Punctual ⏱️", "Expert Fix 🔧"]);
+  const [feedbackComment, setFeedbackComment] = useState("");
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -198,6 +217,162 @@ function MyBookings() {
     } catch (e) {
       showToast("Action triggered: Demo Worker Accepted.");
     }
+  };
+
+  // Quick Simulation Action: Demo Worker - Go to Location
+  const handleSimulateGoToLocation = async (b) => {
+    try {
+      await handleDemoWorkerGoToLocation(b);
+      showToast("📍 Demo Worker clicked 'Go to Location' (Traveling status live)!");
+      const targetId = String(b.bookingId || b.id || b._id || b.bookingCode);
+      setLocalCustomerBookings((prev) =>
+        prev.map((item) => {
+          const itemId = String(item.bookingId || item.id || item._id || item.bookingCode);
+          if (itemId === targetId) {
+            return { ...item, workerStatus: "traveling" };
+          }
+          return item;
+        })
+      );
+    } catch (e) {}
+  };
+
+  // Quick Simulation Action: Demo Worker - I am Arrived
+  const handleSimulateArrived = async (b) => {
+    try {
+      await handleDemoWorkerArrived(b);
+      showToast("🏁 Demo Worker clicked 'I am Arrived'! Door OTP verification active.");
+      const targetId = String(b.bookingId || b.id || b._id || b.bookingCode);
+      setLocalCustomerBookings((prev) =>
+        prev.map((item) => {
+          const itemId = String(item.bookingId || item.id || item._id || item.bookingCode);
+          if (itemId === targetId) {
+            return { ...item, workerStatus: "arrived" };
+          }
+          return item;
+        })
+      );
+    } catch (e) {}
+  };
+
+  // Quick Simulation Action: Demo Worker - Enter OTP & Start Work
+  const handleSimulateVerifyOtp = async (b) => {
+    const otpToUse = b.slotOtp || b.doorOtp || b.startOtp || "3459";
+    try {
+      await handleDemoWorkerVerifyOtp(b, otpToUse);
+      showToast("🔑 Demo Worker verified Door OTP! Countdown & live stopwatch active.");
+      const targetId = String(b.bookingId || b.id || b._id || b.bookingCode);
+      setLocalCustomerBookings((prev) =>
+        prev.map((item) => {
+          const itemId = String(item.bookingId || item.id || item._id || item.bookingCode);
+          if (itemId === targetId) {
+            return { ...item, status: "in_progress", workerStatus: "in_progress" };
+          }
+          return item;
+        })
+      );
+    } catch (e) {}
+  };
+
+  // Quick Simulation Action: Demo Worker - Complete Work & Generate QR
+  const handleSimulateCompleteWork = async (b) => {
+    try {
+      const calc = await handleDemoWorkerCompleteWork(b, 120);
+      showToast(`✅ Demo Worker Completed Work! Dynamic bill calculated: ₹${calc.finalTotalAmount}. Worker QR active.`);
+      const targetId = String(b.bookingId || b.id || b._id || b.bookingCode);
+      setLocalCustomerBookings((prev) =>
+        prev.map((item) => {
+          const itemId = String(item.bookingId || item.id || item._id || item.bookingCode);
+          if (itemId === targetId) {
+            return {
+              ...item,
+              status: "awaiting_payment",
+              workerStatus: "awaiting_payment",
+              finalTotalAmount: calc.finalTotalAmount,
+              price: `₹${calc.finalTotalAmount}`
+            };
+          }
+          return item;
+        })
+      );
+    } catch (e) {}
+  };
+
+  // Interactive Scanner Modal Open
+  const handleOpenScanner = (b) => {
+    const calc = calculateDynamicWorkPricing(b, 120);
+    setScannedBillDetails(calc);
+    setScannerStep("scan");
+    setScannerModalBooking(b);
+  };
+
+  // Trigger Scanning of Worker QR
+  const handleScanWorkerQr = () => {
+    setScannerStep("scanned_bill");
+  };
+
+  // Proceed to Helper UPI Payment QR
+  const handleProceedToHelperPay = () => {
+    setScannerStep("pay_qr");
+  };
+
+  // Pay and complete booking (distributing 90% Worker / 5% Vendor / 5% Admin)
+  const handleCompletePaymentNow = async () => {
+    if (!scannerModalBooking) return;
+    setPayingNow(true);
+    try {
+      const paidPatch = await handleDemoUserPayBooking(scannerModalBooking, "Helper UPI QR");
+      setPayingNow(false);
+      showToast(`🎉 Payment of ₹${scannedBillDetails?.totalAmount || 499} successful!`);
+      const bObj = { ...scannerModalBooking, ...paidPatch };
+      setScannerModalBooking(null);
+
+      const targetId = String(bObj.bookingId || bObj.id || bObj._id || bObj.bookingCode);
+      setLocalCustomerBookings((prev) =>
+        prev.map((item) => {
+          const itemId = String(item.bookingId || item.id || item._id || item.bookingCode);
+          if (itemId === targetId) {
+            return { ...item, ...paidPatch };
+          }
+          return item;
+        })
+      );
+
+      // Open Optional Feedback Modal for Demo Worker
+      setFeedbackBooking(bObj);
+    } catch (e) {
+      setPayingNow(false);
+      showToast("Payment completed!");
+      setScannerModalBooking(null);
+    }
+  };
+
+  // Optional Feedback Submit
+  const handleSubmitFeedback = async () => {
+    if (!feedbackBooking) return;
+    try {
+      await handleDemoUserSubmitFeedback(feedbackBooking, {
+        rating: feedbackRating,
+        tags: selectedTags,
+        comment: feedbackComment || "Punctual and expert work! Very satisfied."
+      });
+      showToast("⭐ Thank you! Feedback submitted for Demo Worker.");
+    } catch (e) {}
+    setFeedbackBooking(null);
+    setFeedbackComment("");
+  };
+
+  // Skip Feedback (Customer decides whether to give feedback or not)
+  const handleSkipFeedback = () => {
+    showToast("Feedback skipped. Thank you for choosing Helper!");
+    setFeedbackBooking(null);
+    setFeedbackComment("");
+  };
+
+  const toggleFeedbackTag = (tag) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   };
 
   // Copy Technician Phone
@@ -423,7 +598,9 @@ function MyBookings() {
               const otp = b.slotOtp || b.doorOtp || b.startOtp || "3459";
 
               const isCancelled = rawStatus === "cancelled";
-              const isFinished = rawStatus === "completed" || rawStatus === "work_completed" || workerStatus === "completed";
+              const isPaid = b.paymentStatus === "paid";
+              const isAwaitingPayment = rawStatus === "awaiting_payment" || workerStatus === "awaiting_payment" || (rawStatus === "completed" && !isPaid);
+              const isFinished = (rawStatus === "completed" || rawStatus === "work_completed") && isPaid;
               const isActive = !isFinished && !isCancelled;
 
               // Worker Acceptance Check
@@ -432,9 +609,11 @@ function MyBookings() {
                 workerStatus === "traveling" ||
                 workerStatus === "arrived" ||
                 workerStatus === "in_progress" ||
+                workerStatus === "awaiting_payment" ||
                 workerStatus === "completed" ||
                 rawStatus === "slot_confirmed" ||
                 rawStatus === "in_progress" ||
+                rawStatus === "awaiting_payment" ||
                 rawStatus === "completed";
 
               // Vendor Acceptance Check
@@ -479,11 +658,25 @@ function MyBookings() {
                     <div className="pro-card-status-wrap">
                       {isCancelled ? (
                         <span className="status-badge-pro cancelled">✕ Cancelled</span>
-                      ) : isFinished ? (
-                        <span className="status-badge-pro completed">✓ Service Completed</span>
-                      ) : rawStatus === "in_progress" ? (
+                      ) : isPaid ? (
+                        <span className="status-badge-pro completed" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10B981" }}>
+                          ✓ Service Paid &amp; Completed
+                        </span>
+                      ) : isAwaitingPayment ? (
+                        <span className="status-badge-pro animated-pop" style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "#FFFFFF", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4)" }}>
+                          📷 Scan Worker QR &amp; Pay Bill
+                        </span>
+                      ) : rawStatus === "in_progress" || workerStatus === "in_progress" ? (
                         <span className="status-badge-pro in-progress">
                           <span className="pulse-dot-green" /> Work in Progress
+                        </span>
+                      ) : workerStatus === "arrived" ? (
+                        <span className="status-badge-pro" style={{ background: "rgba(245, 158, 11, 0.15)", color: "#D97706" }}>
+                          <span className="pulse-dot-orange" /> 📍 Worker Arrived • Enter OTP
+                        </span>
+                      ) : workerStatus === "traveling" ? (
+                        <span className="status-badge-pro" style={{ background: "rgba(139, 92, 246, 0.15)", color: "#7C3AED" }}>
+                          <span className="pulse-dot-orange" /> 🛵 Worker on the Way
                         </span>
                       ) : isWorkerAccepted ? (
                         <span className="status-badge-pro worker-confirmed animated-pop">
@@ -501,7 +694,7 @@ function MyBookings() {
                     </div>
                   </div>
 
-                  {/* 4-Stage Interactive Visual Pipeline Stepper */}
+                  {/* 5-Stage Interactive Visual Pipeline Stepper */}
                   <div className="pro-pipeline-stepper">
                     <div className="stepper-step completed">
                       <span className="step-circle">✓</span>
@@ -519,7 +712,7 @@ function MyBookings() {
                       <div className="step-label-group">
                         <span className="step-num">Step 2</span>
                         <span className="step-title">Demo Vendor</span>
-                        <span className="step-subtitle">{isVendorAccepted ? "Accepted & Sent" : "Awaiting Review"}</span>
+                        <span className="step-subtitle">{isVendorAccepted ? "Accepted" : "Reviewing"}</span>
                       </div>
                     </div>
 
@@ -530,18 +723,29 @@ function MyBookings() {
                       <div className="step-label-group">
                         <span className="step-num">Step 3</span>
                         <span className="step-title">Demo Worker</span>
-                        <span className="step-subtitle">{isWorkerAccepted ? "Confirmed & Locked" : isVendorAccepted ? "Awaiting Acceptance" : "Worker Queue"}</span>
+                        <span className="step-subtitle">{isWorkerAccepted ? "Confirmed" : "Pending"}</span>
                       </div>
                     </div>
 
-                    <div className={`stepper-connector ${rawStatus === "in_progress" || isFinished ? "completed" : isWorkerAccepted ? "active" : "pending"}`} />
+                    <div className={`stepper-connector ${workerStatus === "arrived" || rawStatus === "in_progress" || isAwaitingPayment || isPaid ? "completed" : isWorkerAccepted ? "active" : "pending"}`} />
 
-                    <div className={`stepper-step ${isFinished ? "completed" : rawStatus === "in_progress" ? "active-pulse" : "pending"}`}>
-                      <span className="step-circle">{isFinished ? "✓" : "⚡"}</span>
+                    <div className={`stepper-step ${isAwaitingPayment || isPaid ? "completed" : (rawStatus === "in_progress" || workerStatus === "arrived") ? "active-pulse" : "pending"}`}>
+                      <span className="step-circle">{(isAwaitingPayment || isPaid) ? "✓" : "⚡"}</span>
                       <div className="step-label-group">
                         <span className="step-num">Step 4</span>
                         <span className="step-title">Service & OTP</span>
-                        <span className="step-subtitle">{isFinished ? "Fulfilled" : rawStatus === "in_progress" ? "Working" : "Start Code Ready"}</span>
+                        <span className="step-subtitle">{isAwaitingPayment || isPaid ? "Completed" : rawStatus === "in_progress" ? "Working" : "Location / OTP"}</span>
+                      </div>
+                    </div>
+
+                    <div className={`stepper-connector ${isPaid ? "completed" : isAwaitingPayment ? "active" : "pending"}`} />
+
+                    <div className={`stepper-step ${isPaid ? "completed" : isAwaitingPayment ? "active-pulse" : "pending"}`}>
+                      <span className="step-circle">{isPaid ? "✓" : "💳"}</span>
+                      <div className="step-label-group">
+                        <span className="step-num">Step 5</span>
+                        <span className="step-title">Scan QR & Pay</span>
+                        <span className="step-subtitle">{isPaid ? "Paid & Feedback" : isAwaitingPayment ? "Scan Now" : "Payment"}</span>
                       </div>
                     </div>
                   </div>
@@ -559,6 +763,46 @@ function MyBookings() {
                       </span>
                     )}
                   </div>
+
+                  {/* Awaiting Payment Hero Callout (Worker QR Generated) */}
+                  {isAwaitingPayment && (
+                    <div style={{
+                      background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
+                      borderRadius: "16px",
+                      padding: "16px 20px",
+                      color: "#FFFFFF",
+                      margin: "14px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "16px",
+                      flexWrap: "wrap",
+                      border: "2px solid #10B981",
+                      boxShadow: "0 10px 25px rgba(16, 185, 129, 0.25)"
+                    }}>
+                      <div>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#10B981", fontWeight: 800, fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
+                          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10B981", animation: "pulseDot 1.2s infinite" }} />
+                          <span>WORK COMPLETE • TECHNICIAN QR READY</span>
+                        </div>
+                        <h4 style={{ margin: "2px 0", fontSize: "16px", color: "#FFFFFF" }}>
+                          Sunil Verma has completed your service!
+                        </h4>
+                        <p style={{ margin: 0, fontSize: "13px", color: "#94A3B8" }}>
+                          Scan worker's QR to view timing-based calculated bill and pay via Helper Secure UPI.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenScanner(b)}
+                        className="btn-scan-trigger-pill"
+                        style={{ width: "auto", padding: "12px 24px" }}
+                      >
+                        <span>📷 Scan Worker QR &amp; Pay Bill</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* 2-Column Split Body */}
                   <div className="pro-card-main-split">
@@ -688,28 +932,81 @@ function MyBookings() {
                             )}
                           </p>
 
-                          {/* Interactive Demo Simulation Controls */}
+                          {/* 5-Step Demo Simulation Controls */}
                           <div className="demo-simulation-action-bar">
-                            <span className="demo-sim-title">⚡ Quick Demo Test Actions:</span>
-                            {!isVendorAccepted ? (
-                              <button
-                                type="button"
-                                onClick={() => handleSimulateVendorAccept(b)}
-                                className="btn-demo-sim vendor"
-                              >
-                                ⚡ Simulate Vendor Accept ({DEMO_VENDOR.name})
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleSimulateWorkerAccept(b)}
-                                className="btn-demo-sim worker"
-                              >
-                                👨‍🔧 Simulate Worker Accept ({DEMO_WORKER.name})
-                              </button>
-                            )}
+                            <span className="demo-sim-title">⚡ Interactive Demo Step-by-Step Flow:</span>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "6px" }}>
+                              {!isVendorAccepted && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSimulateVendorAccept(b)}
+                                  className="btn-demo-sim vendor"
+                                >
+                                  ⚡ Step 2: Vendor Accept ({DEMO_VENDOR.name})
+                                </button>
+                              )}
+                              {isVendorAccepted && !isWorkerAccepted && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSimulateWorkerAccept(b)}
+                                  className="btn-demo-sim worker"
+                                >
+                                  👨‍🔧 Step 3: Worker Accept ({DEMO_WORKER.name})
+                                </button>
+                              )}
+                              {isWorkerAccepted && workerStatus === "accepted" && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSimulateGoToLocation(b)}
+                                  className="btn-demo-sim worker"
+                                  style={{ background: "#2563EB", color: "#fff" }}
+                                >
+                                  📍 Step 4a: Worker Go to Location
+                                </button>
+                              )}
+                              {workerStatus === "traveling" && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSimulateArrived(b)}
+                                  className="btn-demo-sim worker"
+                                  style={{ background: "#7C3AED", color: "#fff" }}
+                                >
+                                  🏁 Step 4b: Worker Arrived
+                                </button>
+                              )}
+                              {workerStatus === "arrived" && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSimulateVerifyOtp(b)}
+                                  className="btn-demo-sim worker"
+                                  style={{ background: "#D97706", color: "#fff" }}
+                                >
+                                  🔑 Step 4c: Worker Enter Door OTP ({otp})
+                                </button>
+                              )}
+                              {(rawStatus === "in_progress" || workerStatus === "in_progress") && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSimulateCompleteWork(b)}
+                                  className="btn-demo-sim worker"
+                                  style={{ background: "#059669", color: "#fff" }}
+                                >
+                                  ✅ Step 4d: Worker Complete &amp; Generate QR
+                                </button>
+                              )}
+                              {isAwaitingPayment && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenScanner(b)}
+                                  className="btn-demo-sim vendor"
+                                  style={{ background: "#10B981", color: "#fff" }}
+                                >
+                                  📷 Step 5: Demo User Scan QR &amp; Pay
+                                </button>
+                              )}
+                            </div>
                             <span className="demo-sim-hint">
-                              (Or open <code>/vendor/dashboard</code> or <code>/worker/dashboard</code> to accept live across tabs)
+                              (Real-time synchronized across User, Vendor, and Worker tabs!)
                             </span>
                           </div>
                         </div>
@@ -719,7 +1016,7 @@ function MyBookings() {
                     {/* RIGHT COLUMN: Service Start OTP & Action Hub */}
                     <div className="pro-split-right-col">
                       {/* Highlighted OTP Box */}
-                      {!isFinished && !isCancelled ? (
+                      {!isFinished && !isCancelled && !isAwaitingPayment ? (
                         <div className="pro-otp-vault-card">
                           <div className="otp-vault-header">
                             <div className="otp-vault-badge">
@@ -746,16 +1043,73 @@ function MyBookings() {
                             💡 <strong>Doorstep Verification:</strong> Share this 4-digit code with {isWorkerAccepted ? <strong>{workerName}</strong> : <strong>the technician</strong>} upon arrival to begin work.
                           </p>
                         </div>
+                      ) : isAwaitingPayment ? (
+                        <div className="pro-otp-vault-card" style={{ borderColor: "#10B981" }}>
+                          <div className="otp-vault-header">
+                            <div className="otp-vault-badge" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10B981" }}>
+                              <span>📷</span>
+                              <span>PAYMENT DUE</span>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "center", padding: "10px 0" }}>
+                            <div style={{ fontSize: "28px", fontWeight: 900, color: "#10B981" }}>
+                              {priceDisplay}
+                            </div>
+                            <p style={{ margin: "4px 0 12px", fontSize: "12.5px", color: "var(--text-muted, #64748B)" }}>
+                              Calculated based on actual work timing
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenScanner(b)}
+                              className="btn-scan-trigger-pill"
+                            >
+                              📷 Scan Worker QR &amp; Pay
+                            </button>
+                          </div>
+                        </div>
                       ) : (
                         <div className="pro-archived-status-box">
                           <span className="archived-icon">{isCancelled ? "✕" : "✓"}</span>
                           <h4>{isCancelled ? "Order Cancelled" : "Service Completed"}</h4>
                           <p>{isCancelled ? "This appointment was cancelled." : "Completed with verified digital invoice."}</p>
+                          {isPaid && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFeedbackBooking(b);
+                                setFeedbackRating(b.workerRating || 5);
+                              }}
+                              style={{
+                                marginTop: "10px",
+                                padding: "8px 16px",
+                                borderRadius: "8px",
+                                border: "1px solid #10B981",
+                                background: "rgba(16, 185, 129, 0.12)",
+                                color: "#059669",
+                                fontSize: "12.5px",
+                                fontWeight: 700,
+                                cursor: "pointer"
+                              }}
+                            >
+                              ⭐ {b.workerRating ? `Rating: ${b.workerRating}★ (Update)` : "Give Worker Feedback"}
+                            </button>
+                          )}
                         </div>
                       )}
 
                       {/* Actions */}
                       <div className="pro-card-action-buttons">
+                        {isAwaitingPayment && (
+                          <button
+                            type="button"
+                            className="btn-scan-trigger-pill"
+                            style={{ marginBottom: "8px" }}
+                            onClick={() => handleOpenScanner(b)}
+                          >
+                            <span>📷 Scan Worker QR &amp; Pay Bill</span>
+                          </button>
+                        )}
+
                         {isActive && (
                           <button
                             type="button"
@@ -784,7 +1138,7 @@ function MyBookings() {
                             </a>
                           )}
 
-                          {isActive && rawStatus !== "in_progress" && (
+                          {isActive && rawStatus !== "in_progress" && !isAwaitingPayment && (
                             <button
                               type="button"
                               className="btn-action-cancel-order"
@@ -810,6 +1164,285 @@ function MyBookings() {
           booking={selectedBookingForTracking}
           onClose={() => setSelectedBookingForTracking(null)}
         />
+      )}
+
+      {/* Interactive QR Scanner & Helper UPI Pay Modal */}
+      {scannerModalBooking && (
+        <div className="scanner-modal-backdrop" onClick={() => setScannerModalBooking(null)}>
+          <div className="scanner-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="scanner-modal-header">
+              <div className="scanner-modal-title">
+                <span>📷</span>
+                <span>
+                  {scannerStep === "scan"
+                    ? "Scan Worker Completion QR"
+                    : scannerStep === "scanned_bill"
+                    ? "Service Duration & Invoice"
+                    : "Helper Official UPI Pay"}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="scanner-modal-close"
+                onClick={() => setScannerModalBooking(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: "20px" }}>
+              {scannerStep === "scan" && (
+                <div style={{ textAlign: "center" }}>
+                  <p style={{ margin: "0 0 12px", fontSize: "13.5px", color: "var(--text-muted, #64748b)" }}>
+                    Apne phone camera se <strong>Demo Worker (Sunil Verma)</strong> ki screen par dikh raha Service QR scan karein:
+                  </p>
+
+                  <div className="scanner-viewfinder-box">
+                    <div className="scanner-reticle-corner tl" />
+                    <div className="scanner-reticle-corner tr" />
+                    <div className="scanner-reticle-corner bl" />
+                    <div className="scanner-reticle-corner br" />
+                    <div className="scanner-laser-line" />
+                    <div style={{ textAlign: "center", color: "rgba(255,255,255,0.75)", fontSize: "12px", zIndex: 1 }}>
+                      <span style={{ fontSize: "28px", display: "block", marginBottom: "6px" }}>⚡</span>
+                      Scanning for Worker QR...
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-scan-trigger-pill"
+                    onClick={handleScanWorkerQr}
+                  >
+                    <span>⚡ Simulate Scan Worker Completion QR</span>
+                  </button>
+                </div>
+              )}
+
+              {scannerStep === "scanned_bill" && (
+                <div>
+                  <div style={{ textAlign: "center", marginBottom: "16px" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(16, 185, 129, 0.15)", color: "#10B981", padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: 800 }}>
+                      ✓ WORKER QR VERIFIED • TIMING LOGGED
+                    </span>
+                    <h3 style={{ margin: "10px 0 2px", fontSize: "28px", color: "var(--text-main, #0F172A)", fontWeight: 900 }}>
+                      ₹{scannedBillDetails?.totalAmount || 499}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: "13px", color: "var(--text-muted, #64748B)" }}>
+                      Work timing ke hisab se dynamically calculate kiya gaya bill
+                    </p>
+                  </div>
+
+                  {/* Pricing Breakdown */}
+                  <div style={{ background: "rgba(0,0,0,0.04)", borderRadius: "14px", padding: "14px 16px", fontSize: "13.5px", marginBottom: "20px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                      <span style={{ color: "#64748B" }}>Visiting &amp; Inspection Fee:</span>
+                      <strong>₹149</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                      <span style={{ color: "#64748B" }}>Labor Charge ({scannedBillDetails?.billedHours || 1.5} hrs logged):</span>
+                      <strong>₹{scannedBillDetails?.basePrice || 350}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(0,0,0,0.15)", paddingTop: "8px", marginTop: "6px", fontWeight: 800, fontSize: "15px" }}>
+                      <span>Total Payable Amount:</span>
+                      <span style={{ color: "#FF4D2D" }}>₹{scannedBillDetails?.totalAmount || 499}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-scan-trigger-pill"
+                    style={{ background: "linear-gradient(135deg, #FF4D2D 0%, #E03E1A 100%)", boxShadow: "0 4px 16px rgba(255, 77, 45, 0.4)" }}
+                    onClick={handleProceedToHelperPay}
+                  >
+                    <span>Generate Helper Payment QR ➔</span>
+                  </button>
+                </div>
+              )}
+
+              {scannerStep === "pay_qr" && (
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255, 77, 45, 0.12)", color: "#FF4D2D", padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: 800, marginBottom: "12px" }}>
+                    <span>🛡️ OFFICIAL HELPER ESCROW PAYMENT QR</span>
+                  </div>
+
+                  <h4 style={{ margin: "0 0 4px", fontSize: "17px", fontWeight: 800 }}>
+                    Scan &amp; Pay via Any UPI App
+                  </h4>
+                  <p style={{ margin: "0 0 14px", fontSize: "13px", color: "var(--text-muted, #64748B)" }}>
+                    UPI ID: <strong>helper.pay@icici</strong> • Amount: <strong>₹{scannedBillDetails?.totalAmount || 499}</strong>
+                  </p>
+
+                  {/* Official Helper UPI Payment QR Code */}
+                  <div style={{
+                    width: "200px",
+                    height: "200px",
+                    margin: "0 auto 16px",
+                    background: "#FFFFFF",
+                    borderRadius: "16px",
+                    padding: "10px",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+                    border: "2px solid #FF4D2D"
+                  }}>
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=helper.pay@icici&pn=HelperPlatform&am=${scannedBillDetails?.totalAmount || 499}&cu=INR`)}`}
+                      alt="Helper Official Payment QR"
+                      style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "8px" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "16px", fontSize: "12px", color: "#64748B" }}>
+                    <span>Supported Apps:</span>
+                    <span style={{ fontWeight: 700, color: "var(--text-main, #0F172A)" }}>Google Pay • PhonePe • Paytm • BHIM</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-scan-trigger-pill"
+                    disabled={payingNow}
+                    onClick={handleCompletePaymentNow}
+                  >
+                    <span>{payingNow ? "Verifying Payment..." : `⚡ Pay Now (₹${scannedBillDetails?.totalAmount || 499}) & Complete`}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Optional Demo Worker Feedback / Review Modal */}
+      {feedbackBooking && (
+        <div className="scanner-modal-backdrop" onClick={handleSkipFeedback}>
+          <div className="scanner-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px" }}>
+            <div className="scanner-modal-header">
+              <div className="scanner-modal-title">
+                <span>⭐</span>
+                <span>Worker Feedback (Optional)</span>
+              </div>
+              <button type="button" className="scanner-modal-close" onClick={handleSkipFeedback}>✕</button>
+            </div>
+
+            <div style={{ padding: "20px", textAlign: "center" }}>
+              <div style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "26px",
+                margin: "0 auto 12px"
+              }}>
+                👨‍🔧
+              </div>
+
+              <h3 style={{ margin: "0 0 4px", fontSize: "18px", fontWeight: 800 }}>
+                {feedbackBooking.assignedWorkerName || DEMO_WORKER.name}
+              </h3>
+              <p style={{ margin: "0 0 16px", fontSize: "13px", color: "var(--text-muted, #64748B)" }}>
+                Aap technician ke kaam ko review de sakte hain ya skip kar sakte hain.
+              </p>
+
+              {/* 5-Star Interactive Selector */}
+              <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "18px" }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setFeedbackRating(star)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      fontSize: "32px",
+                      cursor: "pointer",
+                      color: star <= feedbackRating ? "#F59E0B" : "#CBD5E1",
+                      transition: "transform 0.15s ease",
+                      padding: 0
+                    }}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+
+              {/* Quick Compliment Tags */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center", marginBottom: "16px" }}>
+                {["Punctual ⏱️", "Clean Work 🧹", "Expert Fix 🔧", "Polite 🤝", "Fair Price 💰"].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`feedback-tag-chip ${selectedTags.includes(tag) ? "active" : ""}`}
+                    onClick={() => toggleFeedbackTag(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              {/* Optional Comment */}
+              <textarea
+                rows={3}
+                placeholder="Technician ke baare me koi feedback (optional)..."
+                value={feedbackComment}
+                onChange={(e) => setFeedbackComment(e.target.value)}
+                style={{
+                  width: "100%",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  padding: "10px 14px",
+                  fontSize: "13px",
+                  boxSizing: "border-box",
+                  resize: "none",
+                  marginBottom: "18px",
+                  background: "var(--bg-card, #ffffff)",
+                  color: "var(--text-main, #0F172A)"
+                }}
+              />
+
+              {/* 2 Buttons: Submit Feedback or Skip (Customer Decides!) */}
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={handleSkipFeedback}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(0,0,0,0.15)",
+                    background: "transparent",
+                    color: "var(--text-muted, #64748B)",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    cursor: "pointer"
+                  }}
+                >
+                  Skip Feedback
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmitFeedback}
+                  style={{
+                    flex: 2,
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "none",
+                    background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                    color: "#FFFFFF",
+                    fontSize: "14px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4)"
+                  }}
+                >
+                  Submit Feedback ⭐
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

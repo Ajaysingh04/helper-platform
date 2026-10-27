@@ -85,6 +85,25 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    flavorDimensions "default"
+    productFlavors {
+        customer {
+            dimension "default"
+            applicationId "com.mobile"
+            resValue "string", "app_name", "Helper"
+        }
+        partner {
+            dimension "default"
+            applicationId "com.helper.partner"
+            resValue "string", "app_name", "Helper Partner"
+        }
+        worker {
+            dimension "default"
+            applicationId "com.helper.worker"
+            resValue "string", "app_name", "Helper Crew"
+        }
+    }
     signingConfigs {
         debug {
             storeFile file('debug.keystore')

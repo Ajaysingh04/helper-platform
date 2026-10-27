@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
+import { AppContext } from '../context/AppContext';
 
 const PROS_BY_CATEGORY = {
   'ac-repair-services': [
@@ -272,11 +273,93 @@ const PROS_BY_CATEGORY = {
 const FILTERS = ['All Experts', '⭐ 4.9+ Rated', '⚡ Express (15m)', '💰 Low Price'];
 
 export default function CategoryDetailsScreen({ route, navigation }) {
-  const { category } = route.params || { category: { id: 'ac-repair-services', name: 'Service', icon: '⚡' } };
+  const { category = { id: 'ac-repair-services', name: 'Service', icon: '⚡' } } = route.params || {};
   const [activeFilter, setActiveFilter] = useState('All Experts');
 
-  const categoryId = category.id || 'ac-repair-services';
-  const rawPros = PROS_BY_CATEGORY[categoryId] || PROS_BY_CATEGORY['ac-repair-services'];
+  const { primaryColor, themeColors, isDark: ctxIsDark, themeMode, language } = useContext(AppContext);
+  const isDark = themeColors?.isDark !== undefined ? themeColors.isDark : (ctxIsDark !== undefined ? ctxIsDark : themeMode === 'dark');
+
+  // Dynamic light / dark styling
+  const dyn = {
+    container: { backgroundColor: isDark ? '#070A12' : '#F8FAFC' },
+    header: {
+      backgroundColor: isDark ? '#070A12' : '#FFFFFF',
+      borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+    },
+    backBtn: {
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9',
+    },
+    backIcon: { color: isDark ? '#FFFFFF' : '#0F172A' },
+    headerTitle: { color: isDark ? '#FFFFFF' : '#0F172A' },
+    headerSub: { color: isDark ? '#94A3B8' : '#64748B' },
+    searchBtn: {
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9',
+    },
+    heroBanner: {
+      backgroundColor: isDark ? '#0F1523' : '#FFFFFF',
+      borderColor: isDark ? 'rgba(255, 77, 45, 0.3)' : 'rgba(255, 77, 45, 0.25)',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0 : 0.06,
+      shadowRadius: 8,
+      elevation: isDark ? 0 : 2,
+    },
+    bannerHeadline: { color: isDark ? '#FFFFFF' : '#0F172A' },
+    bannerSubline: { color: isDark ? '#94A3B8' : '#64748B' },
+    heroEmojiCircle: {
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#FFF5F2',
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 77, 45, 0.2)',
+    },
+    filterChip: {
+      backgroundColor: isDark ? '#0F1523' : '#FFFFFF',
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+    },
+    activeFilterChip: {
+      backgroundColor: `${primaryColor || '#FF4D2D'}18`,
+      borderColor: primaryColor || '#FF4D2D',
+    },
+    filterText: { color: isDark ? '#94A3B8' : '#64748B' },
+    activeFilterText: { color: primaryColor || '#FF4D2D', fontWeight: '800' },
+    sectionTitle: { color: isDark ? '#FFFFFF' : '#0F172A' },
+    proCard: {
+      backgroundColor: isDark ? '#0F1523' : '#FFFFFF',
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: isDark ? 0 : 0.06,
+      shadowRadius: 10,
+      elevation: isDark ? 0 : 3,
+    },
+    proName: { color: isDark ? '#FFFFFF' : '#0F172A' },
+    proRole: { color: isDark ? '#CBD5E1' : '#475569' },
+    arrivalStrip: {
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F1F5F9',
+    },
+    skillBadge: {
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+    },
+    skillText: { color: isDark ? '#E2E8F0' : '#334155' },
+    priceActionRow: {
+      borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+    },
+    visitingLabel: { color: isDark ? '#64748B' : '#94A3B8' },
+    bookBtn: { backgroundColor: primaryColor || '#FF4D2D' },
+  };
+
+  // Robust category ID lookup
+  const normalizedId = (category.id || category.slug || category.name || '').toLowerCase();
+  let categoryKey = 'ac-repair-services';
+  if (normalizedId.includes('clean')) categoryKey = 'cleaning';
+  else if (normalizedId.includes('elect') || normalizedId.includes('bijli') || normalizedId.includes('verif')) categoryKey = 'electricians';
+  else if (normalizedId.includes('plumb') || normalizedId.includes('nal')) categoryKey = 'plumbers';
+  else if (normalizedId.includes('paint') || normalizedId.includes('rang')) categoryKey = 'painters';
+  else if (normalizedId.includes('carpent') || normalizedId.includes('wood')) categoryKey = 'carpenters';
+  else if (normalizedId.includes('salon') || normalizedId.includes('beauty') || normalizedId.includes('parlour') || normalizedId.includes('hair')) categoryKey = 'beauty-parlours';
+  else if (normalizedId.includes('appliance') || normalizedId.includes('fridge') || normalizedId.includes('machine')) categoryKey = 'appliance-repair';
+  else if (normalizedId.includes('ac') || normalizedId.includes('air')) categoryKey = 'ac-repair-services';
+  else if (PROS_BY_CATEGORY[category.id]) categoryKey = category.id;
+
+  const rawPros = PROS_BY_CATEGORY[categoryKey] || PROS_BY_CATEGORY['ac-repair-services'];
 
   const filteredPros = rawPros.filter((pro) => {
     if (activeFilter === '⭐ 4.9+ Rated') return pro.rating >= 4.9;
@@ -303,18 +386,22 @@ export default function CategoryDetailsScreen({ route, navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, dyn.container]} edges={['top', 'left', 'right']}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>‹</Text>
+      <View style={[styles.header, dyn.header]}>
+        <TouchableOpacity style={[styles.backBtn, dyn.backBtn]} onPress={() => navigation.goBack()}>
+          <Text style={[styles.backIcon, dyn.backIcon]}>‹</Text>
         </TouchableOpacity>
         <View style={styles.headerMeta}>
-          <Text style={styles.headerTitle}>{category.icon} {category.name}</Text>
-          <Text style={styles.headerSub}>Verified Specialists in Indore</Text>
+          <Text style={[styles.headerTitle, dyn.headerTitle]}>
+            {category.icon ? `${category.icon} ` : ''}{category.name}
+          </Text>
+          <Text style={[styles.headerSub, dyn.headerSub]}>
+            {language === 'hi' ? 'इंदौर में सत्यापित विशेषज्ञ' : 'Verified Specialists in Indore'}
+          </Text>
         </View>
         <TouchableOpacity
-          style={styles.searchSmallBtn}
+          style={[styles.searchSmallBtn, dyn.searchBtn]}
           onPress={() => navigation.navigate('Explore', { initialFilter: category.name })}
         >
           <Text style={{ fontSize: 16 }}>🔍</Text>
@@ -323,18 +410,24 @@ export default function CategoryDetailsScreen({ route, navigation }) {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Category Hero Banner */}
-        <View style={styles.heroBanner}>
+        <View style={[styles.heroBanner, dyn.heroBanner]}>
           <View style={styles.heroLeft}>
-            <View style={styles.expressTag}>
-              <Text style={styles.expressTagText}>⚡ 15-MINUTE EXPRESS ARRIVAL</Text>
+            <View style={[styles.expressTag, { backgroundColor: `${primaryColor || '#FF4D2D'}20` }]}>
+              <Text style={[styles.expressTagText, { color: primaryColor || '#FF4D2D' }]}>
+                {language === 'hi' ? '⚡ 15-मिनट एक्सप्रेस आगमन' : '⚡ 15-MINUTE EXPRESS ARRIVAL'}
+              </Text>
             </View>
-            <Text style={styles.bannerHeadline}>Book Trusted {category.name} Pros</Text>
-            <Text style={styles.bannerSubline}>
-              100% Background-checked • Upfront transparent prices • 30-Day guarantee
+            <Text style={[styles.bannerHeadline, dyn.bannerHeadline]}>
+              {language === 'hi' ? `विश्वसनीय ${category.name} बुक करें` : `Book Trusted ${category.name} Pros`}
+            </Text>
+            <Text style={[styles.bannerSubline, dyn.bannerSubline]}>
+              {language === 'hi'
+                ? '100% बैकग्राउंड-वेरिफाइड • पारदर्शी शुल्क • 30 दिन की वारंटी'
+                : '100% Background-checked • Upfront transparent prices • 30-Day guarantee'}
             </Text>
           </View>
-          <View style={styles.heroEmojiCircle}>
-            <Text style={styles.heroBigEmoji}>{category.icon}</Text>
+          <View style={[styles.heroEmojiCircle, dyn.heroEmojiCircle]}>
+            <Text style={styles.heroBigEmoji}>{category.icon || '⚡'}</Text>
           </View>
         </View>
 
@@ -343,36 +436,49 @@ export default function CategoryDetailsScreen({ route, navigation }) {
           {FILTERS.map((f) => (
             <TouchableOpacity
               key={f}
-              style={[styles.filterChip, activeFilter === f && styles.activeFilterChip]}
+              style={[styles.filterChip, dyn.filterChip, activeFilter === f && [styles.activeFilterChip, dyn.activeFilterChip]]}
               onPress={() => setActiveFilter(f)}
             >
-              <Text style={[styles.filterText, activeFilter === f && styles.activeFilterText]}>
+              <Text style={[styles.filterText, dyn.filterText, activeFilter === f && [styles.activeFilterText, dyn.activeFilterText]]}>
                 {f}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Available Specialists Near You ({filteredPros.length})</Text>
+        <Text style={[styles.sectionTitle, dyn.sectionTitle]}>
+          {language === 'hi'
+            ? `आपके निकट उपलब्ध विशेषज्ञ (${filteredPros.length})`
+            : `Available Specialists Near You (${filteredPros.length})`}
+        </Text>
 
         {filteredPros.map((pro) => (
-          <View key={pro.id} style={styles.proCard}>
+          <View key={pro.id} style={[styles.proCard, dyn.proCard]}>
             {/* Top row with Pro Avatar & Badge */}
             <View style={styles.proTopRow}>
               <View style={styles.avatarWrap}>
-                <Image source={{ uri: pro.image }} style={styles.avatarImg} />
+                <Image
+                  source={
+                    typeof pro.image === 'number'
+                      ? pro.image
+                      : (typeof pro.image === 'string' && pro.image.startsWith('http'))
+                      ? { uri: pro.image }
+                      : { uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400' }
+                  }
+                  style={styles.avatarImg}
+                />
                 <View style={styles.onlineDot} />
               </View>
 
               <View style={styles.proInfoWrap}>
                 <View style={styles.nameBadgeRow}>
-                  <Text style={styles.proName}>{pro.name}</Text>
+                  <Text style={[styles.proName, dyn.proName]}>{pro.name}</Text>
                   <View style={styles.goldBadge}>
                     <Text style={styles.goldBadgeText}>{pro.badge}</Text>
                   </View>
                 </View>
 
-                <Text style={styles.proRole}>{pro.specialty}</Text>
+                <Text style={[styles.proRole, dyn.proRole]}>{pro.specialty}</Text>
 
                 <View style={styles.ratingExpRow}>
                   <View style={styles.ratingPill}>
@@ -388,7 +494,7 @@ export default function CategoryDetailsScreen({ route, navigation }) {
             </View>
 
             {/* Arrival & Verification Strip */}
-            <View style={styles.arrivalStrip}>
+            <View style={[styles.arrivalStrip, dyn.arrivalStrip]}>
               <Text style={styles.arrivalNote}>📍 {pro.arrival}</Text>
               <Text style={styles.verifiedTag}>🛡️ Police & KYC Verified</Text>
             </View>
@@ -396,28 +502,32 @@ export default function CategoryDetailsScreen({ route, navigation }) {
             {/* Skills Chips */}
             <View style={styles.skillsRow}>
               {pro.skills.map((skill, idx) => (
-                <View key={idx} style={styles.skillBadge}>
-                  <Text style={styles.skillText}>{skill}</Text>
+                <View key={idx} style={[styles.skillBadge, dyn.skillBadge]}>
+                  <Text style={[styles.skillText, dyn.skillText]}>{skill}</Text>
                 </View>
               ))}
             </View>
 
             {/* Price & Book Action */}
-            <View style={styles.priceActionRow}>
+            <View style={[styles.priceActionRow, dyn.priceActionRow]}>
               <View>
-                <Text style={styles.visitingLabel}>VISITING & INSPECTION FEE</Text>
+                <Text style={[styles.visitingLabel, dyn.visitingLabel]}>
+                  {language === 'hi' ? 'विज़िटिंग एवं जांच शुल्क' : 'VISITING & INSPECTION FEE'}
+                </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-                  <Text style={styles.proPrice}>₹{pro.price}</Text>
+                  <Text style={[styles.proPrice, { color: primaryColor || '#FF4D2D' }]}>₹{pro.price}</Text>
                   <Text style={styles.proOldPrice}>₹{pro.originalPrice}</Text>
                 </View>
               </View>
 
               <TouchableOpacity
-                style={styles.bookBtn}
+                style={[styles.bookBtn, dyn.bookBtn]}
                 activeOpacity={0.85}
                 onPress={() => handleBook(pro)}
               >
-                <Text style={styles.bookBtnText}>Book Specialist ➔</Text>
+                <Text style={styles.bookBtnText}>
+                  {language === 'hi' ? 'बुक करें ➔' : 'Book Specialist ➔'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

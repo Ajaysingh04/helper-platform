@@ -1,0 +1,20 @@
+{
+  "name": "helper-partner-app",
+  "version": "1.0.0",
+  "description": "Helper Partner App - Dedicated mobile app for vendors, technicians and specialists",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android --mode=partnerDebug",
+    "build:partner": "cd android && gradlew assemblePartnerRelease"
+  },
+  "keywords": [
+    "helper",
+    "partner",
+    "vendor",
+    "service-provider",
+    "urban-company-partner"
+  ],
+  "author": "Helper Team",
+  "license": "UNLICENSED"
+}

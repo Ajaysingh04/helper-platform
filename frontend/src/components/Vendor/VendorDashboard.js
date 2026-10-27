@@ -2611,39 +2611,41 @@ function VendorDashboard() {
                               <span style={{ color: "#FF4D2D" }}>₹{b.finalCalculatedAmount || orderAmount}</span>
                             </div>
 
-                            {/* Revenue Distribution: 10% Admin Royalty / 90% Worker Net */}
-                            <div className="receipt-split-box">
-                              <div style={{ fontSize: "12px", fontWeight: 800, color: "#1E293B", marginBottom: "6px" }}>
-                                💰 Revenue Distribution (10% Admin Cut / 90% Worker Net):
-                              </div>
-                              {(b.assignedWorkerId || "mem_2") === "mem_1" ? (
-                                <div className="receipt-split-item">
-                                  <span>Owner Executed (100% Retained)</span>
-                                  <span style={{ color: "#059669", fontWeight: 800 }}>₹{b.finalCalculatedAmount || orderAmount}</span>
+                            {/* Revenue Distribution: 90% Worker / 5% Vendor Profit / 5% Helper Admin */}
+                            {(() => {
+                              const totalBill = Number(b.finalCalculatedAmount || orderAmount || 499);
+                              const workerShare = b.workerEarningsAmount || Math.round(totalBill * 0.90);
+                              const vendorShare = b.vendorEarningsAmount || Math.round(totalBill * 0.05);
+                              const adminShare = b.adminEarningsAmount || (totalBill - workerShare - vendorShare);
+
+                              return (
+                                <div className="receipt-split-box" style={{ background: "rgba(16, 185, 129, 0.06)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: "12px", padding: "14px" }}>
+                                  <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0F172A", marginBottom: "8px" }}>
+                                    💰 3-Way Split: 90% Worker • 5% Vendor Profit • 5% Platform Admin:
+                                  </div>
+                                  <div className="receipt-split-item" style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                                    <span>👷 Worker Payout (90% - {b.assignedWorkerName || "Sunil Verma"}):</span>
+                                    <strong style={{ color: "#059669" }}>₹{workerShare}</strong>
+                                  </div>
+                                  <div className="receipt-split-item" style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                                    <span>🏪 Your Vendor Net Profit (5%):</span>
+                                    <strong style={{ color: "#2563EB" }}>+₹{vendorShare}</strong>
+                                  </div>
+                                  <div className="receipt-split-item" style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(0,0,0,0.1)", paddingTop: "6px" }}>
+                                    <span>🛡️ Helper Admin Platform Profit (5%):</span>
+                                    <strong style={{ color: "#64748B" }}>₹{adminShare}</strong>
+                                  </div>
                                 </div>
-                              ) : (
-                                <>
-                                  <div className="receipt-split-item">
-                                    <span>10% Shop Admin Royalty</span>
-                                    <span style={{ color: "#D97706", fontWeight: 800 }}>+₹{Math.round((b.finalCalculatedAmount || orderAmount) * 0.10)}</span>
-                                  </div>
-                                  <div className="receipt-split-item">
-                                    <span>90% Worker Net ({teamMembers.find(m => m.id === (b.assignedWorkerId || "mem_2"))?.name || "Worker"})</span>
-                                    <span style={{ color: "#059669", fontWeight: 800 }}>₹{(b.finalCalculatedAmount || orderAmount) - Math.round((b.finalCalculatedAmount || orderAmount) * 0.10)}</span>
-                                  </div>
-                                </>
-                              )}
-                              <div className="worker-zero-notice">
-                                🛡️ Worker Franchise Fee: ₹0 Free (Franchise license paid by Shop Admin)
-                              </div>
-                            </div>
+                              );
+                            })()}
 
                             <button
                               type="button"
                               onClick={() => handleCollectPayment(b)}
                               className="btn-collect-payment"
+                              style={{ marginTop: "12px" }}
                             >
-                              Collect ₹{b.finalCalculatedAmount || orderAmount} & Distribute (10% Admin / 90% Worker) ✅
+                              Collect ₹{b.finalCalculatedAmount || orderAmount} &amp; Confirm Payout (90% Worker / 5% Vendor / 5% Admin) ✅
                             </button>
                           </div>
                         )}
@@ -2653,16 +2655,28 @@ function VendorDashboard() {
                           <div style={{
                             display: "flex", justifyContent: "space-between", alignItems: "center",
                             background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.2)",
-                            padding: "10px 16px", borderRadius: "10px", flexWrap: "wrap", gap: "8px"
+                            padding: "12px 16px", borderRadius: "12px", flexWrap: "wrap", gap: "8px"
                           }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#059669", fontWeight: 800, fontSize: "14px" }}>
-                              <span>✅</span>
-                              <span>
-                                {(b.assignedWorkerId || "mem_2") === "mem_1"
-                                  ? `Order Completed: ₹${orderAmount} credited to Shop Admin Wallet`
-                                  : `Order Completed: 10% (₹${b.adminCommission || Math.round(orderAmount * 0.10)}) Admin • 90% (₹${b.workerPayout || (orderAmount - Math.round(orderAmount * 0.10))}) Worker Net`}
-                              </span>
-                            </div>
+                            {(() => {
+                              const totalBill = Number(b.finalCalculatedAmount || orderAmount || 499);
+                              const workerShare = b.workerEarningsAmount || Math.round(totalBill * 0.90);
+                              const vendorShare = b.vendorEarningsAmount || Math.round(totalBill * 0.05);
+                              const adminShare = b.adminEarningsAmount || (totalBill - workerShare - vendorShare);
+
+                              return (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#059669", fontWeight: 800, fontSize: "14px" }}>
+                                    <span>✅</span>
+                                    <span>Order Completed &amp; Settled (Total: ₹{totalBill})</span>
+                                  </div>
+                                  <div style={{ fontSize: "12.5px", color: "#334155" }}>
+                                    Worker Received: <strong style={{ color: "#059669" }}>₹{workerShare} (90%)</strong> • 
+                                    Your Vendor Profit: <strong style={{ color: "#2563EB" }}>₹{vendorShare} (5%)</strong> • 
+                                    Helper Admin Profit: <strong style={{ color: "#64748B" }}>₹{adminShare} (5%)</strong>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                             {b.workDurationFormatted && (
                               <span style={{ fontSize: "12px", color: "#64748B" }}>
                                 Total time: <strong>{b.workDurationFormatted}</strong>

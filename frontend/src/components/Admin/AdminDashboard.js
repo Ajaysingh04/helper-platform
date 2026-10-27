@@ -138,6 +138,42 @@ function AdminDashboard({ onNavigateTab }) {
         </div>
       </div>
 
+      {/* 3-Way Financial Profit & Payout Split Banner (90% Worker / 5% Vendor / 5% Admin) */}
+      <div style={{
+        background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)",
+        border: "1px solid rgba(16, 185, 129, 0.25)",
+        borderRadius: "16px",
+        padding: "16px 20px",
+        marginBottom: "24px",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: "16px"
+      }}>
+        <div style={{ background: "var(--surface-input, rgba(255, 255, 255, 0.8))", padding: "14px 18px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.06)" }}>
+          <span style={{ fontSize: "12px", color: "var(--text-muted, #64748B)", fontWeight: 700, textTransform: "uppercase" }}>🛡️ Admin Net Profit (5%)</span>
+          <div style={{ fontSize: "22px", fontWeight: 900, color: "var(--text-main, #0F172A)", marginTop: "4px" }}>
+            ₹{Math.round(totalRevenue * 0.05).toLocaleString("en-IN")}
+          </div>
+          <span style={{ fontSize: "11px", color: "#10B981" }}>Platform 5% margin retained</span>
+        </div>
+
+        <div style={{ background: "var(--surface-input, rgba(255, 255, 255, 0.8))", padding: "14px 18px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.06)" }}>
+          <span style={{ fontSize: "12px", color: "var(--text-muted, #64748B)", fontWeight: 700, textTransform: "uppercase" }}>🏪 Vendor Commissions (5%)</span>
+          <div style={{ fontSize: "22px", fontWeight: 900, color: "#2563EB", marginTop: "4px" }}>
+            ₹{Math.round(totalRevenue * 0.05).toLocaleString("en-IN")}
+          </div>
+          <span style={{ fontSize: "11px", color: "#2563EB" }}>Credited to franchise partner wallets</span>
+        </div>
+
+        <div style={{ background: "var(--surface-input, rgba(255, 255, 255, 0.8))", padding: "14px 18px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.06)" }}>
+          <span style={{ fontSize: "12px", color: "var(--text-muted, #64748B)", fontWeight: 700, textTransform: "uppercase" }}>👷 Worker Payouts (90%)</span>
+          <div style={{ fontSize: "22px", fontWeight: 900, color: "#10B981", marginTop: "4px" }}>
+            ₹{Math.round(totalRevenue * 0.90).toLocaleString("en-IN")}
+          </div>
+          <span style={{ fontSize: "11px", color: "#10B981" }}>Direct take-home for technicians</span>
+        </div>
+      </div>
+
       {/* Visual Analytics Chart & Quick Status Grid */}
       <div className="admin-analytics-layout-grid">
         {/* Real Interactive Weekly Service Activity & Revenue Graph */}

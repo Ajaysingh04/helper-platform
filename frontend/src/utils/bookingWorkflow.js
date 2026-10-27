@@ -334,3 +334,209 @@ export async function handleDemoWorkerAccept(booking, customWorker = null) {
 
   return patch;
 }
+
+/**
+ * Dynamic Time-based Pricing & Commission Calculator
+ * 90% Worker Payout, 5% Vendor Profit, 5% Helper Admin Platform Fee
+ */
+export function calculateDynamicWorkPricing(booking, elapsedSeconds = 0) {
+  const basePrice = parseInt(String(booking.price || booking.finalPrice || booking.totalAmount || "399").replace(/[^\d]/g, ""), 10) || 399;
+  const elapsedMinutes = Math.max(1, Math.floor(elapsedSeconds / 60));
+  
+  // Calculate dynamic work duration: use elapsed time or minimum 1.5 hr based on booking
+  let billedHours = Math.max(1.0, parseFloat((elapsedMinutes / 60).toFixed(1)));
+  if (elapsedSeconds < 60) {
+    // If demo run in few seconds, default to 1.5 hours standard job
+    billedHours = 1.5;
+  }
+
+  // Rate per hour calculation: ₹299 base + ₹100 per extra 0.5 hour
+  const hourlyRate = 150;
+  const timeSurcharge = billedHours > 1 ? Math.round((billedHours - 1) * hourlyRate) : 0;
+  const totalAmount = Math.max(299, basePrice + timeSurcharge);
+
+  const workerEarnings = Math.round(totalAmount * 0.90); // 90% to Worker
+  const vendorProfit = Math.round(totalAmount * 0.05);   // 5% to Vendor
+  const adminProfit = totalAmount - workerEarnings - vendorProfit; // 5% to Helper Admin
+
+  return {
+    totalAmount,
+    billedHours,
+    elapsedMinutes,
+    basePrice,
+    timeSurcharge,
+    payoutSplit: {
+      totalAmount,
+      workerEarnings,     // 90%
+      vendorProfit,       // 5%
+      adminProfit,        // 5%
+      workerPercentage: 90,
+      vendorPercentage: 5,
+      adminPercentage: 5,
+    },
+    qrPayload: `helper://pay?bookingId=${booking.bookingId || booking.id || "HLP"}&amount=${totalAmount}&worker=WRK-101&ts=${Date.now()}`,
+    upiLink: `upi://pay?pa=helper.escrow@icici&pn=HelperPlatform&am=${totalAmount}&cu=INR&tn=Booking_${booking.bookingId || "HLP"}`
+  };
+}
+
+/**
+ * Handle Demo Worker: Go to Location (Starts traveling to customer)
+ */
+export async function handleDemoWorkerGoToLocation(booking) {
+  const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
+  const patch = {
+    workerStatus: "traveling",
+    travelStartedAt: new Date().toISOString(),
+    etaMinutes: 15,
+  };
+
+  broadcastBookingSync(key, patch);
+  return patch;
+}
+
+/**
+ * Handle Demo Worker: I am Arrived at Doorstep
+ */
+export async function handleDemoWorkerArrived(booking) {
+  const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
+  const patch = {
+    workerStatus: "arrived",
+    arrivedAt: new Date().toISOString(),
+  };
+
+  broadcastBookingSync(key, patch);
+  return patch;
+}
+
+/**
+ * Handle Demo Worker: Verify Doorstep OTP & Start Work
+ * Starts live countdown and work stopwatch
+ */
+export async function handleDemoWorkerVerifyOtp(booking, enteredOtp) {
+  const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
+  const expectedOtp = String(booking.otp || booking.doorOtp || "1234");
+  const cleanEntered = String(enteredOtp || "").trim();
+
+  // In demo mode accept matching OTP or universal test pins 1234 / 4582 / 3459
+  const isMatch = cleanEntered === expectedOtp || cleanEntered === "1234" || cleanEntered === "4582" || cleanEntered === "3459" || cleanEntered.length === 4;
+
+  if (!isMatch) {
+    throw new Error("Invalid OTP. Please ask customer for the 4-digit Service Start OTP shown on their screen.");
+  }
+
+  const patch = {
+    status: "in_progress",
+    workerStatus: "in_progress",
+    workStartedAt: Date.now(),
+    otpVerified: true,
+  };
+
+  broadcastBookingSync(key, patch);
+  return patch;
+}
+
+/**
+ * Handle Demo Worker: Complete Work & Generate Dynamic Amount QR
+ */
+export async function handleDemoWorkerCompleteWork(booking, elapsedSeconds = 90) {
+  const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
+  const calculation = calculateDynamicWorkPricing(booking, elapsedSeconds);
+
+  const patch = {
+    status: "awaiting_payment",
+    workerStatus: "awaiting_payment",
+    workCompletedAt: Date.now(),
+    finalTotalAmount: calculation.totalAmount,
+    price: `₹${calculation.totalAmount}`,
+    billedHours: calculation.billedHours,
+    payoutSplit: calculation.payoutSplit,
+    qrPayload: calculation.qrPayload,
+    upiLink: calculation.upiLink,
+  };
+
+  broadcastBookingSync(key, patch);
+  return patch;
+}
+
+/**
+ * Handle Demo User: Scan Worker QR & Pay Bill
+ * Completes booking, marks payment verified, and distributes 90/5/5 shares
+ */
+export async function handleDemoUserPayBooking(booking, paymentMethod = "Helper Pay QR") {
+  const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
+  const finalPriceNum = parseInt(String(booking.finalTotalAmount || booking.price || "399").replace(/[^\d]/g, ""), 10) || 399;
+  
+  const workerEarnings = booking.payoutSplit?.workerEarnings || Math.round(finalPriceNum * 0.90);
+  const vendorProfit = booking.payoutSplit?.vendorProfit || Math.round(finalPriceNum * 0.05);
+  const adminProfit = booking.payoutSplit?.adminProfit || Math.round(finalPriceNum * 0.05);
+
+  const patch = {
+    status: "completed",
+    workerStatus: "completed",
+    paymentStatus: "paid",
+    paymentMethod: paymentMethod,
+    paidAt: new Date().toISOString(),
+    payoutSplit: {
+      totalAmount: finalPriceNum,
+      workerEarnings,  // 90%
+      vendorProfit,    // 5%
+      adminProfit,     // 5%
+      workerPercentage: 90,
+      vendorPercentage: 5,
+      adminPercentage: 5,
+    }
+  };
+
+  // 1. Update Vendor Wallet with 5% Profit in localStorage
+  try {
+    const vRaw = localStorage.getItem("helper_vendor");
+    if (vRaw) {
+      const vObj = JSON.parse(vRaw);
+      vObj.walletBalance = (vObj.walletBalance || 0) + vendorProfit;
+      vObj.totalEarned = (vObj.totalEarned || 0) + vendorProfit;
+      localStorage.setItem("helper_vendor", JSON.stringify(vObj));
+    }
+  } catch (e) {}
+
+  // 2. Update Worker Earnings with 90% Payout in localStorage
+  try {
+    const wRaw = localStorage.getItem("helper_worker");
+    if (wRaw) {
+      const wObj = JSON.parse(wRaw);
+      if (!wObj.earnings) wObj.earnings = {};
+      wObj.earnings.currentBalance = (wObj.earnings.currentBalance || 0) + workerEarnings;
+      wObj.earnings.totalEarned = (wObj.earnings.totalEarned || 0) + workerEarnings;
+      localStorage.setItem("helper_worker", JSON.stringify(wObj));
+    }
+  } catch (e) {}
+
+  // 3. Update Admin Platform Ledger
+  try {
+    const ledgerRaw = localStorage.getItem("helper_admin_financials");
+    let ledger = ledgerRaw ? JSON.parse(ledgerRaw) : { totalVolume: 0, adminProfits: 0, vendorProfits: 0, workerPayouts: 0 };
+    ledger.totalVolume += finalPriceNum;
+    ledger.adminProfits += adminProfit;
+    ledger.vendorProfits += vendorProfit;
+    ledger.workerPayouts += workerEarnings;
+    localStorage.setItem("helper_admin_financials", JSON.stringify(ledger));
+  } catch (e) {}
+
+  broadcastBookingSync(key, patch);
+  return patch;
+}
+
+/**
+ * Handle Demo User: Submit Optional Rating & Feedback for Worker
+ */
+export async function handleDemoUserSubmitFeedback(booking, feedback = {}) {
+  const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
+  const patch = {
+    workerRating: feedback.rating || 5,
+    workerReview: feedback.comment || "Outstanding service! Very prompt and skilled technician.",
+    feedbackTags: feedback.tags || ["Punctual", "Expert Technician", "Polite & Clean"],
+    feedbackSubmittedAt: new Date().toISOString(),
+  };
+
+  broadcastBookingSync(key, patch);
+  return patch;
+}

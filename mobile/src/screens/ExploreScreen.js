@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,18 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
+import { AppContext } from '../context/AppContext';
+import client from '../api/client';
 
 const ALL_SERVICES = [
   {
     id: 's1',
-    name: 'AC Jet Foam Deep Cleaning',
+    name: 'AC Jet Foam Servicing',
     category: 'AC Repair',
     price: 499,
     originalPrice: 799,
@@ -27,7 +31,7 @@ const ALL_SERVICES = [
   },
   {
     id: 's2',
-    name: 'Full Home Deep Sanitization',
+    name: 'Deep Home Sanitization & Cleaning',
     category: 'Cleaning',
     price: 899,
     originalPrice: 1499,
@@ -118,11 +122,81 @@ const ALL_SERVICES = [
   },
 ];
 
+const NEAREST_VENDORS = [
+  {
+    id: 'VND-IND-01',
+    name: 'Indore Multi-Specialist Hub',
+    distance: '2.4 km away',
+    time: '12 mins arrival',
+    rating: '4.98',
+    specialty: 'AC Foam Cleaning, Electricals, Plumbing',
+    address: 'Vijay Nagar, Indore',
+    workersCount: 6,
+    badge: 'VERIFIED HUB ✓',
+  },
+  {
+    id: 'VND-IND-02',
+    name: 'Vijay Nagar Appliance & Tech Hub',
+    distance: '3.1 km away',
+    time: '15 mins arrival',
+    rating: '4.92',
+    specialty: 'Refrigerator, Washing Machine & Microwave Repair',
+    address: 'Scheme 54, Vijay Nagar',
+    workersCount: 4,
+    badge: 'TOP RATED ★',
+  },
+  {
+    id: 'VND-IND-03',
+    name: 'Palasia Express Home Solutions',
+    distance: '4.2 km away',
+    time: '20 mins arrival',
+    rating: '4.89',
+    specialty: 'Emergency Plumber & Electrician',
+    address: 'Old Palasia, Indore',
+    workersCount: 5,
+    badge: 'EXPRESS ⚡',
+  },
+];
+
 const FILTERS = ['All', '50% OFF', 'AC Repair', 'Cleaning', 'Repairs', 'Plumbing', 'Painting', 'Beauty', 'Carpentry'];
 
 export default function ExploreScreen({ route, navigation }) {
+  const { primaryColor, heroBanners, themeColors, t, language } = useContext(AppContext);
+  const activeColor = primaryColor || '#FF4D2D';
+  const isDark = themeColors?.isDark !== false;
   const [activeFilter, setActiveFilter] = useState('All');
   const [query, setQuery] = useState('');
+  const [liveServices, setLiveServices] = useState([]);
+  const [liveCategories, setLiveCategories] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const fetchExploreData = async () => {
+    try {
+      const [sRes, cRes] = await Promise.allSettled([
+        client.get('/services'),
+        client.get('/categories'),
+      ]);
+      if (sRes.status === 'fulfilled' && sRes.value.data?.data) {
+        setLiveServices(sRes.value.data.data);
+      }
+      if (cRes.status === 'fulfilled' && cRes.value.data?.data) {
+        setLiveCategories(cRes.value.data.data);
+      }
+    } catch (e) {
+      console.warn('Explore fetch error:', e.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchExploreData();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchExploreData();
+    setRefreshing(false);
+  };
 
   // Handle incoming filter parameters from stories or search
   useEffect(() => {
@@ -131,39 +205,90 @@ export default function ExploreScreen({ route, navigation }) {
     }
   }, [route.params?.initialFilter]);
 
-  const filteredServices = ALL_SERVICES.filter((item) => {
+  // Deduplicate and apply user-uploaded images from heroBanners or liveServices
+  const rawList = (liveServices && liveServices.length > 0)
+    ? liveServices
+    : ALL_SERVICES;
+
+  const seenServiceKeys = new Set();
+  const allAvailableServices = [];
+  for (const item of rawList) {
+    const rawName = (item.name || '').trim();
+    const normalizedKey = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!seenServiceKeys.has(normalizedKey)) {
+      seenServiceKeys.add(normalizedKey);
+      // Check if user uploaded an image in heroBanners for this service
+      const matchedBanner = heroBanners?.find(
+        (b) => (b.title || '').trim().toLowerCase() === rawName.toLowerCase()
+      );
+      const finalImage = matchedBanner?.image || item.image;
+      allAvailableServices.push({ ...item, image: finalImage });
+    }
+  }
+
+  // Dynamic filter list based on categories
+  const filterList = (liveCategories && liveCategories.length > 0)
+    ? ['All', '50% OFF', ...Array.from(new Set(liveCategories.map((c) => c.name))).slice(0, 10)]
+    : FILTERS;
+
+  const filteredServices = allAvailableServices.filter((item) => {
     let matchesFilter = true;
     if (activeFilter === '50% OFF') {
       matchesFilter = item.discount === '50% OFF' || item.price <= 499;
     } else if (activeFilter !== 'All') {
-      matchesFilter = item.category.toLowerCase().includes(activeFilter.toLowerCase()) ||
-                      item.name.toLowerCase().includes(activeFilter.toLowerCase());
+      matchesFilter = (item.category || '').toLowerCase().includes(activeFilter.toLowerCase()) ||
+                      (item.name || '').toLowerCase().includes(activeFilter.toLowerCase());
     }
-    const matchesQuery = item.name.toLowerCase().includes(query.toLowerCase()) ||
-                         item.category.toLowerCase().includes(query.toLowerCase());
+    const matchesQuery = (item.name || '').toLowerCase().includes(query.toLowerCase()) ||
+                         (item.category || '').toLowerCase().includes(query.toLowerCase());
     return matchesFilter && matchesQuery;
   });
 
+  const dyn = {
+    container: { backgroundColor: themeColors?.bg || '#070A12' },
+    header: { backgroundColor: themeColors?.headerBg || '#070A12', borderBottomColor: themeColors?.border || 'rgba(255, 255, 255, 0.08)' },
+    title: { color: themeColors?.text || '#FFFFFF' },
+    sub: { color: themeColors?.textSecondary || '#94A3B8' },
+    searchBox: { backgroundColor: themeColors?.card || '#0F172A', borderColor: themeColors?.border || 'rgba(255, 255, 255, 0.08)' },
+    searchInput: { color: themeColors?.text || '#FFFFFF' },
+    filterChip: { backgroundColor: themeColors?.card || '#0F172A', borderColor: themeColors?.border || 'rgba(255, 255, 255, 0.08)' },
+    filterText: { color: themeColors?.textSecondary || '#94A3B8' },
+    card: { backgroundColor: themeColors?.card || '#0F172A', borderColor: themeColors?.border || 'rgba(255, 255, 255, 0.08)' },
+    text: { color: themeColors?.text || '#FFFFFF' },
+    textSecondary: { color: themeColors?.textSecondary || '#94A3B8' },
+  };
+
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, dyn.container]} edges={['top', 'left', 'right']}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Explore 100+ Services</Text>
-        <Text style={styles.headerSub}>Doorstep delivery in 15-30 minutes across Indore</Text>
+      <View style={[styles.header, dyn.header]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={[styles.headerTitle, dyn.title]}>
+            {language === 'hi' ? 'सेवाएं खोजें' : 'Explore Services'}
+          </Text>
+          <View style={[styles.verifiedHeaderBadge, { backgroundColor: `${activeColor}20`, borderColor: activeColor }]}>
+            <Text style={[styles.verifiedHeaderText, { color: activeColor }]}>
+              {language === 'hi' ? '⚡ 15 मिनट सेवा' : '⚡ 15-Min Pro'}
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.headerSub, dyn.sub]}>
+          {language === 'hi' ? 'इंदौर के सत्यापित कारीगर, पारदर्शी व तय कीमतों पर' : "Indore's top verified doorstep professionals at upfront pricing"}
+        </Text>
 
         {/* Search */}
-        <View style={styles.searchBox}>
+        <View style={[styles.searchBox, dyn.searchBox]}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
-            style={styles.searchInput}
-            placeholder="Search service, pro or appliance..."
-            placeholderTextColor="#64748B"
+            style={[styles.searchInput, dyn.searchInput]}
+            placeholder={language === 'hi' ? 'सेवा, कारीगर या काम खोजें...' : 'Search service, pro or appliance...'}
+            placeholderTextColor={themeColors?.textMuted || '#64748B'}
             value={query}
             onChangeText={setQuery}
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')}>
-              <Text style={{ color: '#94A3B8', fontWeight: '800' }}>✕</Text>
+              <Text style={{ color: themeColors?.textSecondary || '#94A3B8', fontWeight: '800' }}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -172,13 +297,23 @@ export default function ExploreScreen({ route, navigation }) {
       {/* Filter Tabs */}
       <View style={styles.filterScrollWrap}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {FILTERS.map((f) => (
+          {filterList.map((f) => (
             <TouchableOpacity
               key={f}
-              style={[styles.filterChip, activeFilter === f && styles.activeFilterChip]}
+              style={[
+                styles.filterChip,
+                dyn.filterChip,
+                activeFilter === f && [styles.activeFilterChip, { backgroundColor: activeColor, borderColor: activeColor }],
+              ]}
               onPress={() => setActiveFilter(f)}
             >
-              <Text style={[styles.filterText, activeFilter === f && styles.activeFilterText]}>
+              <Text
+                style={[
+                  styles.filterText,
+                  dyn.filterText,
+                  activeFilter === f && { color: '#FFFFFF', fontWeight: '800' },
+                ]}
+              >
                 {f}
               </Text>
             </TouchableOpacity>
@@ -187,46 +322,143 @@ export default function ExploreScreen({ route, navigation }) {
       </View>
 
       {/* Services List */}
-      <ScrollView contentContainerStyle={styles.serviceList} showsVerticalScrollIndicator={false}>
-        <Text style={styles.resultsCount}>Showing {filteredServices.length} verified services in Indore</Text>
+      <ScrollView
+        contentContainerStyle={styles.serviceList}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={activeColor}
+            colors={[activeColor]}
+          />
+        }
+      >
+        <View style={styles.resultHeaderRow}>
+          <Text style={styles.resultsCount}>Showing {filteredServices.length} verified services in Indore</Text>
+          <Text style={styles.realtimeLiveDot}>● Live Catalog</Text>
+        </View>
 
-        {filteredServices.map((service) => (
-          <View key={service.id} style={styles.serviceCard}>
-            <Image source={{ uri: service.image }} style={styles.serviceImage} />
-            
-            <View style={styles.cardDetails}>
-              <View style={styles.tagRow}>
-                <View style={styles.tagBadge}>
-                  <Text style={styles.tagText}>{service.tag}</Text>
-                </View>
-                <View style={styles.ratingBadge}>
-                  <Text style={styles.ratingText}>★ {service.rating}</Text>
-                </View>
-              </View>
+        {/* Nearest Verified Hubs & Vendors */}
+        <View style={{ marginBottom: 18 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingHorizontal: 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 16 }}>🏢</Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 13.5, fontWeight: '800' }}>Nearest Verified Hubs & Vendors</Text>
+            </View>
+            <Text style={{ color: activeColor, fontSize: 10.5, fontWeight: '800' }}>INDORE (10KM)</Text>
+          </View>
 
-              <Text style={styles.serviceName}>{service.name}</Text>
-              <Text style={styles.durationText}>⏱️ {service.duration} • 100% Quality Guaranteed</Text>
-
-              <View style={styles.actionRow}>
-                <View>
-                  <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-                    <Text style={styles.price}>₹{service.price}</Text>
-                    <Text style={styles.originalPrice}>₹{service.originalPrice}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+            {NEAREST_VENDORS.map((v) => (
+              <View
+                key={v.id}
+                style={{
+                  width: 250,
+                  backgroundColor: '#0F172A',
+                  borderRadius: 14,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1, marginRight: 6 }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }} numberOfLines={1}>
+                      {v.name}
+                    </Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 10.5, marginTop: 2 }}>📍 {v.distance} • {v.time}</Text>
                   </View>
-                  <Text style={styles.taxLabel}>Standard visiting included</Text>
+                  <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                    <Text style={{ color: '#F59E0B', fontSize: 10.5, fontWeight: '800' }}>★ {v.rating}</Text>
+                  </View>
                 </View>
+
+                <Text style={{ color: '#64748B', fontSize: 10.5, marginTop: 6 }} numberOfLines={1}>
+                  {v.specialty}
+                </Text>
 
                 <TouchableOpacity
-                  style={styles.bookBtn}
-                  activeOpacity={0.85}
-                  onPress={() => navigation.navigate('BookingCheckout', { service })}
+                  style={{
+                    backgroundColor: `${activeColor}20`,
+                    borderWidth: 1,
+                    borderColor: activeColor,
+                    borderRadius: 8,
+                    paddingVertical: 7,
+                    alignItems: 'center',
+                    marginTop: 10,
+                  }}
+                  onPress={() => {
+                    const matchedService = filteredServices[0] || ALL_SERVICES[0];
+                    navigation.navigate('BookingCheckout', {
+                      service: matchedService,
+                      pro: { name: v.name, price: matchedService.price, hubId: v.id },
+                    });
+                  }}
                 >
-                  <Text style={styles.bookBtnText}>Book ➔</Text>
+                  <Text style={{ color: activeColor, fontSize: 11, fontWeight: '800' }}>
+                    Select Hub & Book Service ➔
+                  </Text>
                 </TouchableOpacity>
               </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {filteredServices.map((service, idx) => {
+          const discountVal = service.discount || (service.originalPrice && service.originalPrice > service.price
+            ? `${Math.round(((service.originalPrice - service.price) / service.originalPrice) * 100)}% OFF`
+            : null);
+
+          return (
+            <View key={service.id || service._id || String(idx)} style={styles.serviceCard}>
+              <View style={styles.serviceImageContainer}>
+                <Image source={{ uri: service.image }} style={styles.serviceImage} resizeMode="cover" />
+                {discountVal ? (
+                  <View style={[styles.imageDiscountPill, { backgroundColor: activeColor }]}>
+                    <Text style={styles.imageDiscountText}>{discountVal}</Text>
+                  </View>
+                ) : null}
+              </View>
+              
+              <View style={styles.cardDetails}>
+                <View style={styles.tagRow}>
+                  <View style={[styles.tagBadge, { borderColor: `${activeColor}40`, backgroundColor: `${activeColor}15`, maxWidth: '75%' }]}>
+                    <Text style={[styles.tagText, { color: activeColor }]} numberOfLines={1}>
+                      {service.tag || service.category || 'Doorstep Pro'}
+                    </Text>
+                  </View>
+                  <View style={styles.ratingBadge}>
+                    <Text style={styles.ratingText}>★ {service.rating || '4.9'}</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.serviceName} numberOfLines={2}>{service.name}</Text>
+                <Text style={styles.durationText}>⏱️ {service.duration || '45 mins'} • 100% Guaranteed</Text>
+
+                <View style={styles.actionRow}>
+                  <View>
+                    <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+                      <Text style={[styles.price, { color: activeColor }]}>₹{service.price}</Text>
+                      {service.originalPrice ? (
+                        <Text style={styles.originalPrice}>₹{service.originalPrice}</Text>
+                      ) : null}
+                    </View>
+                    <Text style={styles.taxLabel}>Standard visiting included</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.bookBtn, { backgroundColor: activeColor }]}
+                    activeOpacity={0.85}
+                    onPress={() => navigation.navigate('BookingCheckout', { service })}
+                  >
+                    <Text style={styles.bookBtnText}>Book ➔</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -306,7 +538,7 @@ const styles = StyleSheet.create({
   },
   serviceList: {
     padding: 16,
-    paddingBottom: 30,
+    paddingBottom: 85,
   },
   resultsCount: {
     fontSize: 11.5,
@@ -401,5 +633,45 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12.5,
     fontWeight: '800',
+  },
+  verifiedHeaderBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  verifiedHeaderText: {
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  resultHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  realtimeLiveDot: {
+    color: '#10B981',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  serviceImageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 145,
+    backgroundColor: '#1E293B',
+  },
+  imageDiscountPill: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  imageDiscountText: {
+    color: '#FFFFFF',
+    fontSize: 9.5,
+    fontWeight: '900',
   },
 });
