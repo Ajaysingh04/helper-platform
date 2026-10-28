@@ -349,12 +349,27 @@ export async function handleDemoVendorAccept(booking, customWorker = null) {
   const workerObj = customWorker || DEMO_WORKER;
   const vendorObj = DEMO_VENDOR;
 
+  const customerFinalName = booking.customerName || booking.name || "Customer";
+  const customerFinalPhone = booking.customerPhone || booking.phone || "+91 98765 43210";
+  const customerFinalAddress = booking.customerAddress || booking.address || booking.fullAddress || "Indore / Local Area";
+  const customerFinalOtp = booking.doorOtp || booking.startOtp || booking.slotOtp || booking.otp || "3459";
+
   const fullAcceptedBooking = {
     ...booking,
     bookingId: key,
     id: key,
     _id: booking._id || key,
     bookingCode: bCode,
+    customerName: customerFinalName,
+    name: customerFinalName,
+    customerPhone: customerFinalPhone,
+    phone: customerFinalPhone,
+    customerAddress: customerFinalAddress,
+    address: customerFinalAddress,
+    doorOtp: customerFinalOtp,
+    startOtp: customerFinalOtp,
+    slotOtp: customerFinalOtp,
+    otp: customerFinalOtp,
     status: "ready_for_worker",
     workerStatus: "assigned",
     vendorAccepted: true,

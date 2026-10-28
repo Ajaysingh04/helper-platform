@@ -1719,16 +1719,18 @@ function WorkerDashboard() {
                         <div className="wrk-customer-meta-row">
                           <div className="wrk-customer-avatar-info">
                             <div className="wrk-cust-avatar">
-                              {b.customerName ? b.customerName.charAt(0).toUpperCase() : "C"}
+                              {b.customerName ? b.customerName.charAt(0).toUpperCase() : (b.name ? b.name.charAt(0).toUpperCase() : "C")}
                             </div>
                             <div className="wrk-cust-text">
-                              <strong>{b.customerName || "Customer"}</strong>
-                              <span>Service: <strong>{b.serviceName || "Specialist Service"}</strong></span>
+                              <strong style={{ fontSize: "15px", color: "var(--wrk-text-main)" }}>
+                                {b.customerName || b.name || "Customer"}
+                              </strong>
+                              <span>Service: <strong>{b.serviceName || b.service || "Specialist Service"}</strong></span>
                             </div>
                           </div>
 
                           <div className="wrk-customer-actions">
-                            <a href={`tel:${b.customerPhone || "9876543210"}`} className="wrk-btn-call" title="Call Customer">
+                            <a href={`tel:${b.customerPhone || b.phone || "9876543210"}`} className="wrk-btn-call" title="Call Customer">
                               <span>📞 Call</span>
                             </a>
                             <button 
@@ -1740,7 +1742,7 @@ function WorkerDashboard() {
                               <span>💬 Chat</span>
                             </button>
                             <a 
-                              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(b.customerAddress || "Sector 62, Noida")}`}
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(b.customerAddress || b.address || b.fullAddress || "Indore, MP")}`}
                               target="_blank" 
                               rel="noreferrer" 
                               className="wrk-btn-nav"
@@ -1756,7 +1758,7 @@ function WorkerDashboard() {
                           <div>
                             <strong>Service Address:</strong>
                             <p style={{ margin: "2px 0 0", color: "var(--wrk-text-muted)" }}>
-                              {b.customerAddress || "House #402, Block B, City Center"}
+                              {b.customerAddress || b.address || b.fullAddress || "House #402, Block B, City Center"}
                             </p>
                             {b.problemDescription && (
                               <p style={{ margin: "6px 0 0", fontSize: "12px", color: "var(--wrk-text-main)", background: "rgba(99, 102, 241, 0.08)", padding: "4px 8px", borderRadius: "6px" }}>

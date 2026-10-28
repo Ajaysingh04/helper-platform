@@ -574,8 +574,17 @@ function Home() {
       if (json.success && (json.data || json.booking)) {
         const bData = json.data || json.booking;
         const resolvedOtp = bData?.slotOtp || bData?.doorOtp || bData?.security?.startOtpPlainForCustomer || json.startOtp || json.slotOtp || "3459";
+        const customerFinalName = enquiryName.trim() || currentUser?.name || bData.customerName || bData.name || "Customer";
+        const customerFinalPhone = enquiryPhone || currentUser?.phone || bData.customerPhone || bData.phone || "+91 98765 43210";
         const fullBooking = {
           ...bData,
+          customerName: customerFinalName,
+          name: customerFinalName,
+          customerPhone: customerFinalPhone,
+          phone: customerFinalPhone,
+          customerAddress: selectedFullAddress,
+          fullAddress: selectedFullAddress,
+          address: selectedFullAddress,
           startOtp: resolvedOtp,
           slotOtp: resolvedOtp,
           doorOtp: resolvedOtp,
@@ -604,8 +613,8 @@ function Home() {
         if (addBooking) {
           addBooking({
             id: fullBooking.bookingId || fullBooking._id,
-            name: enquiryName.trim() || currentUser?.name || "Customer",
-            phone: enquiryPhone,
+            name: customerFinalName,
+            phone: customerFinalPhone,
             service: selectedService.name,
             price: `₹${numericPrice}`,
             address: selectedFullAddress,
@@ -629,12 +638,24 @@ function Home() {
       }
     } catch (err) {
       // Fallback local booking
+      const storedUser = JSON.parse(localStorage.getItem("helper_user") || "{}");
+      const customerFinalName = enquiryName.trim() || currentUser?.name || storedUser.name || "Customer";
+      const customerFinalPhone = enquiryPhone || currentUser?.phone || storedUser.phone || "+91 98765 43210";
       const fallbackBooking = {
         _id: "BK-" + Date.now().toString().slice(-5),
         bookingId: "HLP-" + Math.floor(10000 + Math.random() * 90000),
         status: "searching_provider",
         serviceName: selectedService.name,
+        service: selectedService.name,
+        customerName: customerFinalName,
+        name: customerFinalName,
+        customerPhone: customerFinalPhone,
+        phone: customerFinalPhone,
+        customerAddress: selectedFullAddress,
+        fullAddress: selectedFullAddress,
+        address: selectedFullAddress,
         totalAmount: numericPrice,
+        price: `₹${numericPrice}`,
         startOtp: "3459",
         slotOtp: "3459",
         doorOtp: "3459",
@@ -662,7 +683,7 @@ function Home() {
       if (addBooking) {
         addBooking({
           id: fallbackBooking.bookingId,
-          name: enquiryName.trim() || currentUser?.name || "Customer",
+          name: customerFinalName,
           phone: enquiryPhone,
           service: selectedService.name,
           price: `₹${numericPrice}`,

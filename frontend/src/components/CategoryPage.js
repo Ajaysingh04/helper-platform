@@ -996,12 +996,15 @@ function CategoryPage() {
       if (!isNaN(targetDate.getTime())) scheduledTimestamp = targetDate.getTime();
     } catch (e) {}
 
+    const storedUser = JSON.parse(localStorage.getItem("helper_user") || "{}");
+    const customerFinalName = enquiryName.trim() || storedUser.name || "Customer";
+    const finalCustomerAddress = enquiryAddress.trim() || enquiryItem.address || enquiryItem.location || "Indore Ahinsha Tower / Local Address";
     const newBookingData = {
       id: bookingCode,
       bookingCode,
       bookingId: bookingCode,
-      customerName: enquiryName.trim() || "Customer",
-      name: enquiryName.trim() || "Customer",
+      customerName: customerFinalName,
+      name: customerFinalName,
       customerPhone: enquiryPhone.startsWith("+91") ? enquiryPhone : `+91 ${enquiryPhone}`,
       phone: enquiryPhone.startsWith("+91") ? enquiryPhone : `+91 ${enquiryPhone}`,
       service: enquiryItem.shopName ? `${enquiryItem.shopName} • ${categoryTitle}` : categoryTitle,
@@ -1015,7 +1018,9 @@ function CategoryPage() {
       scheduledTime: bookingTime,
       scheduledTimestamp,
       problemDescription: customProblemText.trim() || bookingProblem,
-      address: enquiryAddress.trim() || enquiryItem.address || enquiryItem.location || "Indore Ahinsha Tower / Local Address",
+      address: finalCustomerAddress,
+      customerAddress: finalCustomerAddress,
+      fullAddress: finalCustomerAddress,
       provider: enquiryItem.shopName ? `${enquiryItem.shopName} • ${enquiryItem.name}` : (enquiryItem.name || "Ramesh Express Plumbing & Home Care • Ramesh Kumar"),
       assignedProvider: enquiryItem.name || "Ramesh Kumar",
       assignedProviderName: enquiryItem.name || "Ramesh Kumar",
