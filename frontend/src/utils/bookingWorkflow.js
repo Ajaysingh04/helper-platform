@@ -280,12 +280,36 @@ export function broadcastBookingSync(bookingId, patchData) {
       if (found) fullOriginal = found;
     } catch (e) {}
 
+    const customerFinalName = patchData?.customerName || fullOriginal?.customerName || patchData?.name || fullOriginal?.name;
+    const customerFinalPhone = patchData?.customerPhone || fullOriginal?.customerPhone || patchData?.phone || fullOriginal?.phone;
+    const customerFinalAddress = patchData?.customerAddress || fullOriginal?.customerAddress || patchData?.address || fullOriginal?.address || patchData?.fullAddress || fullOriginal?.fullAddress;
+    const customerFinalDate = patchData?.scheduledDate || fullOriginal?.scheduledDate || patchData?.bookingDate || fullOriginal?.bookingDate || patchData?.date || fullOriginal?.date || "Today";
+    const customerFinalTime = patchData?.scheduledTime || fullOriginal?.scheduledTime || patchData?.timeSlot || fullOriginal?.timeSlot || patchData?.time || fullOriginal?.time || "11:00 AM";
+    const customerFinalService = patchData?.serviceName || fullOriginal?.serviceName || patchData?.service || fullOriginal?.service;
+    const customerFinalProblem = patchData?.problemDescription || fullOriginal?.problemDescription || patchData?.problem || fullOriginal?.problem;
+
     const fullJobData = {
       ...fullOriginal,
       ...patchData,
       bookingId: key,
       id: key,
-      bookingCode: patchData?.bookingCode || fullOriginal?.bookingCode || key
+      bookingCode: patchData?.bookingCode || fullOriginal?.bookingCode || key,
+      customerName: customerFinalName,
+      name: customerFinalName,
+      customerPhone: customerFinalPhone,
+      phone: customerFinalPhone,
+      customerAddress: customerFinalAddress,
+      address: customerFinalAddress,
+      fullAddress: customerFinalAddress,
+      scheduledDate: customerFinalDate,
+      bookingDate: customerFinalDate,
+      date: customerFinalDate,
+      scheduledTime: customerFinalTime,
+      timeSlot: customerFinalTime,
+      time: customerFinalTime,
+      serviceName: customerFinalService,
+      service: customerFinalService,
+      problemDescription: customerFinalProblem
     };
 
     listW = listW.map((b) => {

@@ -376,6 +376,22 @@ function WorkerDashboard() {
             const formattedItem = {
               ...b,
               bookingCode: b.bookingCode || b.bookingId || b.id || bId,
+              customerName: b.customerName || b.name,
+              name: b.name || b.customerName,
+              customerPhone: b.customerPhone || b.phone,
+              phone: b.phone || b.customerPhone,
+              customerAddress: b.customerAddress || b.address || b.fullAddress,
+              address: b.address || b.customerAddress || b.fullAddress,
+              fullAddress: b.fullAddress || b.customerAddress || b.address,
+              scheduledDate: b.scheduledDate || b.bookingDate || b.date || "Today",
+              bookingDate: b.bookingDate || b.scheduledDate || b.date || "Today",
+              date: b.date || b.scheduledDate || b.bookingDate || "Today",
+              scheduledTime: b.scheduledTime || b.timeSlot || b.time || "11:00 AM",
+              timeSlot: b.timeSlot || b.scheduledTime || b.time || "11:00 AM",
+              time: b.time || b.scheduledTime || b.timeSlot || "11:00 AM",
+              serviceName: b.serviceName || b.service,
+              service: b.service || b.serviceName,
+              problemDescription: b.problemDescription || b.problem || b.notes || "",
               workerStatus: b.workerStatus || (b.status === "completed" ? "completed" : "assigned"),
               status: b.status || "ready_for_worker",
               vendorAccepted: true,
@@ -388,7 +404,25 @@ function WorkerDashboard() {
               return itemKeys.some(k => targetKeys.includes(k));
             });
             if (existingIdx >= 0) {
-              combined[existingIdx] = { ...combined[existingIdx], ...formattedItem };
+              combined[existingIdx] = {
+                ...combined[existingIdx],
+                ...formattedItem,
+                customerName: formattedItem.customerName || combined[existingIdx].customerName,
+                name: formattedItem.name || combined[existingIdx].name,
+                customerPhone: formattedItem.customerPhone || combined[existingIdx].customerPhone,
+                phone: formattedItem.phone || combined[existingIdx].phone,
+                customerAddress: formattedItem.customerAddress || combined[existingIdx].customerAddress,
+                address: formattedItem.address || combined[existingIdx].address,
+                fullAddress: formattedItem.fullAddress || combined[existingIdx].fullAddress,
+                scheduledDate: formattedItem.scheduledDate || combined[existingIdx].scheduledDate,
+                bookingDate: formattedItem.bookingDate || combined[existingIdx].bookingDate,
+                date: formattedItem.date || combined[existingIdx].date,
+                scheduledTime: formattedItem.scheduledTime || combined[existingIdx].scheduledTime,
+                timeSlot: formattedItem.timeSlot || combined[existingIdx].timeSlot,
+                time: formattedItem.time || combined[existingIdx].time,
+                serviceName: formattedItem.serviceName || combined[existingIdx].serviceName,
+                problemDescription: formattedItem.problemDescription || combined[existingIdx].problemDescription
+              };
             } else {
               combined.unshift(formattedItem);
             }
@@ -420,6 +454,22 @@ function WorkerDashboard() {
             const formattedItem = {
               ...b,
               bookingCode: b.bookingCode || b.bookingId || b.id || bId,
+              customerName: b.customerName || b.name,
+              name: b.name || b.customerName,
+              customerPhone: b.customerPhone || b.phone,
+              phone: b.phone || b.customerPhone,
+              customerAddress: b.customerAddress || b.address || b.fullAddress,
+              address: b.address || b.customerAddress || b.fullAddress,
+              fullAddress: b.fullAddress || b.customerAddress || b.address,
+              scheduledDate: b.scheduledDate || b.bookingDate || b.date || "Today",
+              bookingDate: b.bookingDate || b.scheduledDate || b.date || "Today",
+              date: b.date || b.scheduledDate || b.bookingDate || "Today",
+              scheduledTime: b.scheduledTime || b.timeSlot || b.time || "11:00 AM",
+              timeSlot: b.timeSlot || b.scheduledTime || b.time || "11:00 AM",
+              time: b.time || b.scheduledTime || b.timeSlot || "11:00 AM",
+              serviceName: b.serviceName || b.service,
+              service: b.service || b.serviceName,
+              problemDescription: b.problemDescription || b.problem || b.notes || "",
               workerStatus: b.workerStatus || (b.status === "completed" ? "completed" : "assigned"),
               status: (b.status === "completed") ? "completed" : ((b.status === "pending" || !b.status || b.status === "searching_provider") ? "ready_for_worker" : b.status),
               vendorAccepted: true,
@@ -432,8 +482,23 @@ function WorkerDashboard() {
             });
             if (existingIdx >= 0) {
               combined[existingIdx] = {
-                ...formattedItem,
                 ...combined[existingIdx],
+                ...formattedItem,
+                customerName: formattedItem.customerName || combined[existingIdx].customerName,
+                name: formattedItem.name || combined[existingIdx].name,
+                customerPhone: formattedItem.customerPhone || combined[existingIdx].customerPhone,
+                phone: formattedItem.phone || combined[existingIdx].phone,
+                customerAddress: formattedItem.customerAddress || combined[existingIdx].customerAddress,
+                address: formattedItem.address || combined[existingIdx].address,
+                fullAddress: formattedItem.fullAddress || combined[existingIdx].fullAddress,
+                scheduledDate: formattedItem.scheduledDate || combined[existingIdx].scheduledDate,
+                bookingDate: formattedItem.bookingDate || combined[existingIdx].bookingDate,
+                date: formattedItem.date || combined[existingIdx].date,
+                scheduledTime: formattedItem.scheduledTime || combined[existingIdx].scheduledTime,
+                timeSlot: formattedItem.timeSlot || combined[existingIdx].timeSlot,
+                time: formattedItem.time || combined[existingIdx].time,
+                serviceName: formattedItem.serviceName || combined[existingIdx].serviceName,
+                problemDescription: formattedItem.problemDescription || combined[existingIdx].problemDescription,
                 vendorAccepted: true
               };
             } else {
@@ -1773,7 +1838,7 @@ function WorkerDashboard() {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px" }}>
                           <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--wrk-text-main)" }}>
-                            🕒 {b.scheduledDate || "Today"} — <span style={{ color: "#FF4D2D" }}>{b.scheduledTime || "11:00 AM"}</span>
+                            🕒 {b.scheduledDate || b.bookingDate || b.date || "Today"} — <span style={{ color: "#FF4D2D" }}>{b.scheduledTime || b.timeSlot || b.time || "11:00 AM"}</span>
                           </div>
                           {sched && (
                             <span style={{
@@ -1866,11 +1931,11 @@ function WorkerDashboard() {
                           <div>
                             <strong>Service Address:</strong>
                             <p style={{ margin: "2px 0 0", color: "var(--wrk-text-muted)" }}>
-                              {b.customerAddress || b.address || b.fullAddress || "House #402, Block B, City Center"}
+                              {b.customerAddress || b.address || b.fullAddress || "Indore / Local Service Area"}
                             </p>
-                            {b.problemDescription && (
+                            {(b.problemDescription || b.problem || b.notes) && (
                               <p style={{ margin: "6px 0 0", fontSize: "12px", color: "var(--wrk-text-main)", background: "rgba(99, 102, 241, 0.08)", padding: "4px 8px", borderRadius: "6px" }}>
-                                📝 <strong>Issue:</strong> {b.problemDescription}
+                                📝 <strong>Issue:</strong> {b.problemDescription || b.problem || b.notes}
                               </p>
                             )}
                           </div>

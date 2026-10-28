@@ -1981,5 +1981,99 @@ button[style*="Punch In"]:active,
   font-weight: 700;
 }
 
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVE ENHANCEMENTS
+   ========================================================================== */
+@media (max-width: 768px) {
+  .wrk-stepper-track {
+    padding: 12px 14px;
+    gap: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .wrk-stepper-track::-webkit-scrollbar {
+    display: none;
+  }
+  .wrk-step-node {
+    min-width: 60px;
+    gap: 4px;
+  }
+  .wrk-step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+  .wrk-step-label {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .wrk-step-bar-line {
+    min-width: 12px;
+  }
+  .wrk-job-body {
+    padding: 14px;
+    gap: 12px;
+  }
+  .wrk-customer-meta-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .wrk-customer-actions {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+  }
+  .wrk-btn-call, .wrk-btn-chat, .wrk-btn-nav {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 11.5px;
+  }
+  .wrk-job-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .wrk-job-header > div:last-child {
+    align-items: flex-start !important;
+    width: 100%;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+  }
+  .wrk-pagination-bar {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .wrk-side-timer-pill {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrk-step-node {
+    min-width: 52px;
+  }
+  .wrk-step-circle {
+    width: 26px;
+    height: 26px;
+    font-size: 10px;
+  }
+  .wrk-step-label {
+    font-size: 9px;
+  }
+  .wrk-stopwatch-display {
+    font-size: 30px;
+  }
+  .wrk-btn-stage-action {
+    padding: 12px 14px;
+    font-size: 13.5px;
+  }
+}
+
 
 

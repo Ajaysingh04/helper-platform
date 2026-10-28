@@ -570,6 +570,22 @@ function VendorDashboard() {
           return {
             ...sb,
             ...(localMatch || {}),
+            customerName: localMatch?.customerName || localMatch?.name || sb.customerName || sb.name,
+            name: localMatch?.customerName || localMatch?.name || sb.customerName || sb.name,
+            customerPhone: localMatch?.customerPhone || localMatch?.phone || sb.customerPhone || sb.phone,
+            phone: localMatch?.customerPhone || localMatch?.phone || sb.customerPhone || sb.phone,
+            customerAddress: localMatch?.customerAddress || localMatch?.address || localMatch?.fullAddress || sb.customerAddress || sb.address,
+            address: localMatch?.customerAddress || localMatch?.address || localMatch?.fullAddress || sb.customerAddress || sb.address,
+            fullAddress: localMatch?.fullAddress || localMatch?.customerAddress || localMatch?.address || sb.fullAddress || sb.address,
+            scheduledDate: localMatch?.scheduledDate || localMatch?.bookingDate || localMatch?.date || sb.scheduledDate || sb.bookingDate,
+            bookingDate: localMatch?.bookingDate || localMatch?.scheduledDate || localMatch?.date || sb.bookingDate || sb.scheduledDate,
+            date: localMatch?.date || localMatch?.scheduledDate || localMatch?.bookingDate || sb.date,
+            scheduledTime: localMatch?.scheduledTime || localMatch?.timeSlot || localMatch?.time || sb.scheduledTime || sb.timeSlot,
+            timeSlot: localMatch?.timeSlot || localMatch?.scheduledTime || localMatch?.time || sb.timeSlot || sb.scheduledTime,
+            time: localMatch?.time || localMatch?.scheduledTime || localMatch?.timeSlot || sb.time,
+            serviceName: localMatch?.serviceName || localMatch?.service || sb.serviceName || sb.service,
+            service: localMatch?.service || localMatch?.serviceName || sb.service,
+            problemDescription: localMatch?.problemDescription || localMatch?.problem || sb.problemDescription,
             vendorAccepted: true,
             status: localMatch?.status || "ready_for_worker",
             workerStatus: localMatch?.workerStatus || "assigned",
@@ -1184,6 +1200,10 @@ function VendorDashboard() {
     const customerFinalName = booking.customerName || booking.name || "Customer";
     const customerFinalPhone = booking.customerPhone || booking.phone || "+91 98765 43210";
     const customerFinalAddress = booking.customerAddress || booking.address || booking.fullAddress || "Indore / Local Area";
+    const customerFinalDate = booking.scheduledDate || booking.bookingDate || booking.date || "Today";
+    const customerFinalTime = booking.scheduledTime || booking.timeSlot || booking.time || "11:00 AM";
+    const customerFinalService = booking.serviceName || booking.service || "Specialist Service";
+    const customerFinalProblem = booking.problemDescription || booking.problem || booking.problemNotes || "";
     const customerFinalOtp = booking.doorOtp || booking.startOtp || booking.slotOtp || booking.otp || "3459";
 
     const fullAcceptedBooking = {
@@ -1198,6 +1218,16 @@ function VendorDashboard() {
       phone: customerFinalPhone,
       customerAddress: customerFinalAddress,
       address: customerFinalAddress,
+      fullAddress: customerFinalAddress,
+      scheduledDate: customerFinalDate,
+      bookingDate: customerFinalDate,
+      date: customerFinalDate,
+      scheduledTime: customerFinalTime,
+      timeSlot: customerFinalTime,
+      time: customerFinalTime,
+      serviceName: customerFinalService,
+      service: customerFinalService,
+      problemDescription: customerFinalProblem,
       doorOtp: customerFinalOtp,
       startOtp: customerFinalOtp,
       slotOtp: customerFinalOtp,
@@ -1206,6 +1236,7 @@ function VendorDashboard() {
       workerStatus: "assigned",
       vendorAccepted: true,
       vendorAcceptedAt: new Date().toISOString(),
+      timestamp: booking.timestamp || Date.now(),
       assignedProvider: vName,
       assignedProviderName: vendor?.name || "Ramesh Kumar",
       assignedWorker: primaryWorker,
