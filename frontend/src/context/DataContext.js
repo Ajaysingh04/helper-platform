@@ -1070,7 +1070,7 @@ export const DataProvider = ({ children }) => {
       localStorage.setItem("helper_vendor_notifications", JSON.stringify([newNotif, ...vendorNotifs]));
     } catch (e) {}
 
-    // Save directly to helper_user_bookings and helper_bookings (waiting for vendor acceptance)
+    // Save directly to helper_user_bookings, helper_bookings, and helper_worker_jobs
     try {
       const uList = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
       const filteredU = uList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
@@ -1079,11 +1079,16 @@ export const DataProvider = ({ children }) => {
       const bList = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
       const filteredB = bList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
       localStorage.setItem("helper_bookings", JSON.stringify([item, ...filteredB]));
+
+      const wList = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+      const filteredW = wList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
+      localStorage.setItem("helper_worker_jobs", JSON.stringify([item, ...filteredW]));
     } catch (e) {}
 
-    // Dispatch real-time booking event so Vendor Panel receives incoming request instantly
+    // Dispatch real-time booking event so Vendor Panel & Worker Panel receive incoming request instantly
     broadcastBookingSync(item.bookingId, item);
     window.dispatchEvent(new CustomEvent("new_booking_created", { detail: item }));
+    window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: item }));
     window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: item }));
     window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: item.bookingId, patch: item } }));
 

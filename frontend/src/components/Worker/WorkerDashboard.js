@@ -277,6 +277,8 @@ function WorkerDashboard() {
     };
 
     window.addEventListener("worker_new_offer", handleNewOffer);
+    window.addEventListener("new_booking_created", handleNewOffer);
+    window.addEventListener("user_bookings_updated", handleJobUpdate);
     window.addEventListener("booking_workflow_updated", handleJobUpdate);
     window.addEventListener("booking_updated", handleJobUpdate);
     window.addEventListener("storage", handleJobUpdate);
@@ -309,6 +311,8 @@ function WorkerDashboard() {
 
     return () => {
       window.removeEventListener("worker_new_offer", handleNewOffer);
+      window.removeEventListener("new_booking_created", handleNewOffer);
+      window.removeEventListener("user_bookings_updated", handleJobUpdate);
       window.removeEventListener("booking_workflow_updated", handleJobUpdate);
       window.removeEventListener("booking_updated", handleJobUpdate);
       window.removeEventListener("storage", handleJobUpdate);
@@ -452,7 +456,7 @@ function WorkerDashboard() {
 
           const targetKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
           const isLocallyAccepted = targetKeys.some(key => acceptedMap[key]);
-          const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || isLocallyAccepted || !b.status || b.status === "pending" || b.status === "searching_provider";
+          const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || isLocallyAccepted || !b.status || b.status === "pending" || b.status === "searching_provider" || b.workerStatus === "assigned" || b.workerStatus === "unassigned";
 
           if (isVendorApproved) {
             const formattedItem = {
@@ -474,7 +478,7 @@ function WorkerDashboard() {
               serviceName: b.serviceName || b.service,
               service: b.service || b.serviceName,
               problemDescription: b.problemDescription || b.problem || b.notes || "",
-              workerStatus: b.workerStatus || (b.status === "completed" ? "completed" : "assigned"),
+              workerStatus: (b.workerStatus === "completed" || b.status === "completed") ? "completed" : (b.workerStatus && b.workerStatus !== "unassigned" ? b.workerStatus : "assigned"),
               status: (b.status === "completed") ? "completed" : ((b.status === "pending" || !b.status || b.status === "searching_provider") ? "ready_for_worker" : b.status),
               vendorAccepted: true,
               timestamp: b.timestamp || (b.createdAt && !isNaN(new Date(b.createdAt).getTime()) ? new Date(b.createdAt).getTime() : Date.now()),
@@ -1090,7 +1094,7 @@ function WorkerDashboard() {
     const isNotDone = b.workerStatus !== "completed" || b.paymentStatus === "payment_due";
     if (!isNotDone) return false;
     // Newly assigned/dispatched bookings should ALWAYS be visible to Demo Worker
-    const isNewlyAssigned = b.workerStatus === "assigned" || b.status === "ready_for_worker" || b.status === "dispatched" || b.status === "pending" || b.vendorAccepted;
+    const isNewlyAssigned = b.workerStatus === "assigned" || b.workerStatus === "unassigned" || b.status === "ready_for_worker" || b.status === "dispatched" || b.status === "pending" || b.vendorAccepted;
     if (isNewlyAssigned) return true;
     if (!selectedTradeFilter || selectedTradeFilter === "All Services") return true;
     const sName = (b.serviceName || b.service || b.category || "").toLowerCase();
@@ -1826,7 +1830,7 @@ function WorkerDashboard() {
                 paginatedActiveJobs.map((b) => {
                   const bookingId = b._id || b.id || b.bookingCode || b.bookingId;
                   const status = (b.workerStatus || b.status || "assigned").toLowerCase();
-                  const isAssigned = (status === "assigned" || status === "vendor_accepted" || status === "dispatched" || status === "ready_for_worker" || status === "pending" || status === "searching_provider") && b.workerStatus !== "awaiting_payment" && b.workerStatus !== "completed";
+                  const isAssigned = (status === "assigned" || status === "vendor_accepted" || status === "dispatched" || status === "ready_for_worker" || status === "pending" || status === "searching_provider" || status === "unassigned") && b.workerStatus !== "awaiting_payment" && b.workerStatus !== "completed";
                   const isAccepted = status === "accepted";
                   const isTraveling = status === "traveling" || status === "on_the_way";
                   const isArrived = status === "arrived";

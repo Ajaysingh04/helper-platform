@@ -1038,8 +1038,8 @@ function CategoryPage() {
       timestamp: Date.now(),
       createdAt: new Date().toISOString(),
       vendorAccepted: false,
-      status: "pending",
-      workerStatus: "unassigned",
+      status: "ready_for_worker",
+      workerStatus: "assigned",
       assignedWorker: null,
       assignedWorkerName: "",
       assignedWorkerPhone: ""
@@ -1055,7 +1055,10 @@ function CategoryPage() {
         localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
         const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
         localStorage.setItem("helper_bookings", JSON.stringify([newBookingData, ...existingB]));
+        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+        localStorage.setItem("helper_worker_jobs", JSON.stringify([newBookingData, ...existingW]));
         window.dispatchEvent(new CustomEvent("new_booking_created", { detail: newBookingData }));
+        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: newBookingData }));
         window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: newBookingData }));
         window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: bookingCode, patch: newBookingData } }));
       } catch (e) {}
@@ -1068,7 +1071,10 @@ function CategoryPage() {
         localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
         const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
         localStorage.setItem("helper_bookings", JSON.stringify([newBookingData, ...existingB]));
+        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+        localStorage.setItem("helper_worker_jobs", JSON.stringify([newBookingData, ...existingW]));
         window.dispatchEvent(new CustomEvent("new_booking_created", { detail: newBookingData }));
+        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: newBookingData }));
         window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: newBookingData }));
       } catch (e) {}
       showToast(`Booking registered: ${err.message}`);

@@ -280,7 +280,7 @@ export function broadcastBookingSync(bookingId, patchData) {
     localStorage.setItem("helper_bookings", JSON.stringify(listB));
   } catch (e) {}
 
-  // 3. Update helper_worker_jobs ONLY when vendor has confirmed/accepted the booking
+  // 3. Update helper_worker_jobs so Demo Worker always gets booking offers immediately
   try {
     const rawW = localStorage.getItem("helper_worker_jobs");
     let listW = rawW ? JSON.parse(rawW) : [];
@@ -294,62 +294,56 @@ export function broadcastBookingSync(bookingId, patchData) {
       if (found) fullOriginal = found;
     } catch (e) {}
 
-    const isVendorApproved = Boolean(
-      patchData?.vendorAccepted || 
-      fullOriginal?.vendorAccepted || 
-      patchData?.status === "ready_for_worker" || 
-      patchData?.status === "slot_confirmed" || 
-      fullOriginal?.status === "ready_for_worker"
-    );
+    const customerFinalName = patchData?.customerName || fullOriginal?.customerName || patchData?.name || fullOriginal?.name;
+    const customerFinalPhone = patchData?.customerPhone || fullOriginal?.customerPhone || patchData?.phone || fullOriginal?.phone;
+    const customerFinalAddress = patchData?.customerAddress || fullOriginal?.customerAddress || patchData?.address || fullOriginal?.address || patchData?.fullAddress || fullOriginal?.fullAddress;
+    const customerFinalDate = patchData?.scheduledDate || fullOriginal?.scheduledDate || patchData?.bookingDate || fullOriginal?.bookingDate || patchData?.date || fullOriginal?.date || "Today";
+    const customerFinalTime = patchData?.scheduledTime || fullOriginal?.scheduledTime || patchData?.timeSlot || fullOriginal?.timeSlot || patchData?.time || fullOriginal?.time || "11:00 AM";
+    const customerFinalService = patchData?.serviceName || fullOriginal?.serviceName || patchData?.service || fullOriginal?.service;
+    const customerFinalProblem = patchData?.problemDescription || fullOriginal?.problemDescription || patchData?.problem || fullOriginal?.problem;
 
-    if (isVendorApproved) {
-      const customerFinalName = patchData?.customerName || fullOriginal?.customerName || patchData?.name || fullOriginal?.name;
-      const customerFinalPhone = patchData?.customerPhone || fullOriginal?.customerPhone || patchData?.phone || fullOriginal?.phone;
-      const customerFinalAddress = patchData?.customerAddress || fullOriginal?.customerAddress || patchData?.address || fullOriginal?.address || patchData?.fullAddress || fullOriginal?.fullAddress;
-      const customerFinalDate = patchData?.scheduledDate || fullOriginal?.scheduledDate || patchData?.bookingDate || fullOriginal?.bookingDate || patchData?.date || fullOriginal?.date || "Today";
-      const customerFinalTime = patchData?.scheduledTime || fullOriginal?.scheduledTime || patchData?.timeSlot || fullOriginal?.timeSlot || patchData?.time || fullOriginal?.time || "11:00 AM";
-      const customerFinalService = patchData?.serviceName || fullOriginal?.serviceName || patchData?.service || fullOriginal?.service;
-      const customerFinalProblem = patchData?.problemDescription || fullOriginal?.problemDescription || patchData?.problem || fullOriginal?.problem;
+    const fullJobData = {
+      ...fullOriginal,
+      ...patchData,
+      bookingId: key,
+      id: key,
+      bookingCode: patchData?.bookingCode || fullOriginal?.bookingCode || key,
+      customerName: customerFinalName,
+      name: customerFinalName,
+      customerPhone: customerFinalPhone,
+      phone: customerFinalPhone,
+      customerAddress: customerFinalAddress,
+      address: customerFinalAddress,
+      fullAddress: customerFinalAddress,
+      scheduledDate: customerFinalDate,
+      bookingDate: customerFinalDate,
+      date: customerFinalDate,
+      scheduledTime: customerFinalTime,
+      timeSlot: customerFinalTime,
+      time: customerFinalTime,
+      serviceName: customerFinalService,
+      service: customerFinalService,
+      problemDescription: customerFinalProblem,
+      vendorAccepted: Boolean(patchData?.vendorAccepted ?? fullOriginal?.vendorAccepted ?? false),
+      status: patchData?.status || fullOriginal?.status || "ready_for_worker",
+      workerStatus: patchData?.workerStatus || fullOriginal?.workerStatus || "assigned",
+      timestamp: patchData?.timestamp || fullOriginal?.timestamp || Date.now(),
+      createdAt: patchData?.createdAt || fullOriginal?.createdAt || new Date().toISOString()
+    };
 
-      const fullJobData = {
-        ...fullOriginal,
-        ...patchData,
-        bookingId: key,
-        id: key,
-        bookingCode: patchData?.bookingCode || fullOriginal?.bookingCode || key,
-        customerName: customerFinalName,
-        name: customerFinalName,
-        customerPhone: customerFinalPhone,
-        phone: customerFinalPhone,
-        customerAddress: customerFinalAddress,
-        address: customerFinalAddress,
-        fullAddress: customerFinalAddress,
-        scheduledDate: customerFinalDate,
-        bookingDate: customerFinalDate,
-        date: customerFinalDate,
-        scheduledTime: customerFinalTime,
-        timeSlot: customerFinalTime,
-        time: customerFinalTime,
-        serviceName: customerFinalService,
-        service: customerFinalService,
-        problemDescription: customerFinalProblem,
-        vendorAccepted: true,
-        status: patchData?.status || fullOriginal?.status || "ready_for_worker",
-        workerStatus: patchData?.workerStatus || fullOriginal?.workerStatus || "assigned",
-        timestamp: patchData?.timestamp || fullOriginal?.timestamp || Date.now(),
-        createdAt: patchData?.createdAt || fullOriginal?.createdAt || new Date().toISOString()
-      };
-
-      const existingIdxW = listW.findIndex(matchItem);
-      if (existingIdxW >= 0) {
-        const mergedW = { ...listW[existingIdxW], ...fullJobData };
-        listW.splice(existingIdxW, 1);
-        listW.unshift(mergedW);
-      } else {
-        listW.unshift(fullJobData);
-      }
-      localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));
+    const existingIdxW = listW.findIndex(matchItem);
+    if (existingIdxW >= 0) {
+      const mergedW = { ...listW[existingIdxW], ...fullJobData };
+      listW.splice(existingIdxW, 1);
+      listW.unshift(mergedW);
+    } else {
+      listW.unshift(fullJobData);
     }
+    localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));
+
+    try {
+      window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: fullJobData }));
+    } catch (e) {}
   } catch (e) {}
 
   // 3. Post to BroadcastChannel
