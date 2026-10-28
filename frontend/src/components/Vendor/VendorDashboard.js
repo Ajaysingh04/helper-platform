@@ -547,14 +547,24 @@ function VendorDashboard() {
       const serverList = (data.success && Array.isArray(data.data)) ? data.data : [];
 
       // Merge with locally accepted bookings so newly accepted bookings keep vendorAccepted: true & ready_for_worker
+      const userBookings = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
       const localBookings = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
       const workerJobs = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
       const acceptedMap = JSON.parse(localStorage.getItem("helper_accepted_orders") || "{}");
 
+      // Merge all local booking stores without duplicates
+      const allLocal = [...userBookings];
+      localBookings.forEach(lb => {
+        const id = lb.bookingId || lb.id || lb._id || lb.bookingCode;
+        if (!allLocal.some(x => (x.bookingId || x.id || x._id || x.bookingCode) === id)) {
+          allLocal.push(lb);
+        }
+      });
+
       const mergedList = serverList.map(sb => {
         const sKeys = [sb.bookingId, sb.id, sb._id, sb.bookingCode].filter(Boolean).map(String);
         const isLocallyAccepted = sKeys.some(k => acceptedMap[k] || acceptedOrdersMap[k]);
-        const localMatch = localBookings.find(lb => [lb.bookingId, lb.id, lb._id, lb.bookingCode].filter(Boolean).map(String).some(k => sKeys.includes(k))) ||
+        const localMatch = allLocal.find(lb => [lb.bookingId, lb.id, lb._id, lb.bookingCode].filter(Boolean).map(String).some(k => sKeys.includes(k))) ||
                            workerJobs.find(wj => [wj.bookingId, wj.id, wj._id, wj.bookingCode].filter(Boolean).map(String).some(k => sKeys.includes(k)));
         if (isLocallyAccepted || (localMatch && (localMatch.vendorAccepted || localMatch.status === "ready_for_worker" || localMatch.workerStatus))) {
           return {
@@ -570,14 +580,24 @@ function VendorDashboard() {
         return sb;
       });
 
+      // Also append local bookings that might not be on the server yet
+      allLocal.forEach(lb => {
+        const lId = lb.bookingId || lb.id || lb._id || lb.bookingCode;
+        if (lId && !mergedList.some(sb => (sb.bookingId || sb.id || sb._id || sb.bookingCode) === lId)) {
+          mergedList.unshift(lb);
+        }
+      });
+
       if (mergedList.length > 0) {
         setBookings(mergedList);
       } else {
         // Fallback to locally tracked bookings matching this vendor
-        const myLocal = localBookings.filter(b => 
+        const myLocal = allLocal.filter(b => 
           b.providerId === idToFetch || 
           b.provider === idToFetch ||
-          (vendor?.name && String(b.assignedProvider || "").toLowerCase().includes(vendor.name.toLowerCase()))
+          !b.providerId ||
+          (vendor?.name && String(b.assignedProvider || "").toLowerCase().includes(vendor.name.toLowerCase())) ||
+          idToFetch === "vdr_demo_01"
         );
         if (myLocal.length > 0) {
           setBookings(myLocal);

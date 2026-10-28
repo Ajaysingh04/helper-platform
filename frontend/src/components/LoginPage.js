@@ -30,11 +30,24 @@ export const SEEDED_REGISTERED_USERS = [
   { name: "Sneha Gupta", email: "sneha.g@example.com", phone: "9876500004", address: "Indore / Delhi NCR", password: "password123" }
 ];
 
+export const WORKER_TRADE_CATEGORIES = [
+  { id: "All Services", label: "🌟 All Services (Multi-Trade Master - All Bookings)", short: "All Services", emoji: "🌟" },
+  { id: "House Cleaning", label: "🧹 House Cleaning & Deep Clean", short: "House Cleaning", emoji: "🧹" },
+  { id: "Plumber", label: "🔧 Plumber & Pipe Leakage Specialist", short: "Plumber", emoji: "🔧" },
+  { id: "Electrician", label: "💡 Electrician & Appliances Expert", short: "Electrician", emoji: "💡" },
+  { id: "AC Repair", label: "🧊 AC Repair & HVAC Specialist", short: "AC Repair", emoji: "🧊" },
+  { id: "Driver", label: "🚗 Driver / Personal Chauffeur", short: "Driver", emoji: "🚗" },
+  { id: "Wall Painter", label: "🎨 Painter & Wall Renovation", short: "Painter", emoji: "🎨" },
+  { id: "Carpenter", label: "🪚 Carpenter & Furniture Specialist", short: "Carpenter", emoji: "🪚" }
+];
+
 export const DEMO_WORKERS_LIST = [
-  { name: "Sunil Sharma", phone: "9876500101", trade: "Plumber" },
+  { name: "Sunil Verma", phone: "9876500101", trade: "All Services" },
+  { name: "Sunil Verma (Cleaning)", phone: "9876500101", trade: "House Cleaning" },
+  { name: "Sunil Verma (Plumber)", phone: "9876500101", trade: "Plumber" },
   { name: "Amit Verma", phone: "9876500102", trade: "Electrician" },
-  { name: "Manoj Chauffeur", phone: "9876500103", trade: "Driver" },
-  { name: "Imran Khan", phone: "9876500104", trade: "AC Repair" }
+  { name: "Imran Khan", phone: "9876500104", trade: "AC Repair" },
+  { name: "Manoj Chauffeur", phone: "9876500103", trade: "Driver" }
 ];
 
 export const getRegisteredUsers = () => {
@@ -116,9 +129,10 @@ function LoginPage() {
   // 2.5 WORKER (FIELD TECHNICIAN) STATE
   // ==========================================
   const [workerLoginData, setWorkerLoginData] = useState({
-    phone: "",
+    phone: "9876500101",
     password: "worker123"
   });
+  const [selectedWorkerTrade, setSelectedWorkerTrade] = useState("All Services");
   const [workerRegData, setWorkerRegData] = useState({
     name: "",
     phone: "",
@@ -435,15 +449,27 @@ function LoginPage() {
     } catch (err) {
       // Offline fallback / local worker login
       const cleanPh = phoneToUse.replace(/\D/g, "");
+      const isDemo = cleanPh === "9876500101" || cleanPh.endsWith("00101") || cleanPh === "9876500001";
       const demoMatch = DEMO_WORKERS_LIST.find(w => w.phone === cleanPh);
-      if (demoMatch || cleanPh.length >= 10) {
+      if (demoMatch || cleanPh.length >= 10 || isDemo) {
+        const chosenTrade = selectedWorkerTrade || (demoMatch ? demoMatch.trade : "All Services");
         const fallbackWorker = {
-          workerId: "WRK-" + (cleanPh.slice(-4) || "101"),
-          id: "WRK-" + (cleanPh.slice(-4) || "101"),
-          name: demoMatch ? demoMatch.name : `Technician ${cleanPh.slice(-4)}`,
-          phone: cleanPh,
-          category: demoMatch ? demoMatch.trade : "Plumber",
-          vendorName: "Amritam Services Hub (Nearest Vendor)",
+          workerId: isDemo ? "WRK-101" : ("WRK-" + (cleanPh.slice(-4) || "101")),
+          id: isDemo ? "WRK-101" : ("WRK-" + (cleanPh.slice(-4) || "101")),
+          name: isDemo ? "Sunil Verma" : (demoMatch ? demoMatch.name : `Technician ${cleanPh.slice(-4)}`),
+          phone: "+91 98765 00101",
+          category: chosenTrade,
+          role: chosenTrade === "All Services" ? "Multi-Trade Master Specialist" : `${chosenTrade} Specialist`,
+          skills: [
+            "House Cleaning", "Deep Cleaning", "Plumber", "Electrician", "AC Repair",
+            "Cleaner", "Driver", "Wall Painter", "Carpenter", "All Services"
+          ],
+          allowedServices: [
+            "House Cleaning", "Deep Cleaning", "Plumber", "Electrician", "AC Repair",
+            "Cleaner", "Driver", "Wall Painter", "Carpenter", "All Services"
+          ],
+          vendorId: "vdr_demo_01",
+          vendorName: "Ramesh Express Plumbing & Home Care",
           city: "Indore",
           status: "active",
           verificationStatus: "verified",
@@ -452,10 +478,10 @@ function LoginPage() {
         localStorage.setItem("helper_worker", JSON.stringify(fallbackWorker));
         localStorage.setItem("helper_worker_token", "wrk_token_local");
         login({ name: fallbackWorker.name, role: "Worker", email: fallbackWorker.phone });
-        setSuccessMessage(`Welcome back, ${fallbackWorker.name}! Opening Worker Dashboard...`);
+        setSuccessMessage(`Welcome back, ${fallbackWorker.name}! (${chosenTrade}) Opening Worker Dashboard...`);
         setTimeout(() => {
           navigate("/worker/dashboard");
-        }, 700);
+        }, 600);
       } else {
         setErrorMessage(err.message || "Worker login failed. Please check mobile number.");
       }
@@ -1676,25 +1702,89 @@ function LoginPage() {
                     </div>
                   </div>
 
-                  {/* Demo worker quick login pills */}
-                  <div style={{ marginBottom: "16px" }}>
-                    <div style={{ fontSize: "11.5px", color: "#64748B", fontWeight: 700, marginBottom: "6px" }}>
-                      ⚡ QUICK DEMO WORKER PROFILES:
+                  {/* Service Trade Selection & 1-Click Instant Login (User ne jo book kia hai) */}
+                  <div style={{
+                    marginBottom: "16px",
+                    background: "rgba(16, 185, 129, 0.05)",
+                    border: "1.5px solid rgba(16, 185, 129, 0.25)",
+                    borderRadius: "14px",
+                    padding: "14px"
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "11.5px", color: "#065F46", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        ⚡ Select Worker Trade / Service Category
+                      </span>
+                      <span style={{ fontSize: "10.5px", background: "rgba(16, 185, 129, 0.2)", color: "#047857", padding: "2px 8px", borderRadius: "8px", fontWeight: 800 }}>
+                        Demo Mode Active
+                      </span>
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                      {DEMO_WORKERS_LIST.map((w) => (
-                        <button
-                          key={w.phone}
-                          type="button"
-                          className="worker-demo-chip"
-                          onClick={() => {
-                            setWorkerLoginData({ phone: w.phone, password: "worker123" });
-                            setErrorMessage("");
-                          }}
-                        >
-                          👷 {w.name} ({w.trade})
-                        </button>
+
+                    {/* Trade Dropdown */}
+                    <select
+                      value={selectedWorkerTrade}
+                      onChange={(e) => {
+                        setSelectedWorkerTrade(e.target.value);
+                        setWorkerLoginData({ phone: "9876500101", password: "worker123" });
+                        setErrorMessage("");
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        border: "1.5px solid rgba(16, 185, 129, 0.4)",
+                        background: "#FFFFFF",
+                        color: "#0F172A",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        outline: "none",
+                        marginBottom: "10px"
+                      }}
+                    >
+                      {WORKER_TRADE_CATEGORIES.map(cat => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.label}
+                        </option>
                       ))}
+                    </select>
+
+                    <div style={{ fontSize: "11px", color: "#64748B", fontWeight: 700, marginBottom: "8px" }}>
+                      ⚡ 1-Click Instant Login by Service (User ne jo book kia hai click karein):
+                    </div>
+
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {WORKER_TRADE_CATEGORIES.map((cat) => {
+                        const isSelected = selectedWorkerTrade === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedWorkerTrade(cat.id);
+                              setWorkerLoginData({ phone: "9876500101", password: "worker123" });
+                              setErrorMessage("");
+                            }}
+                            style={{
+                              background: isSelected ? "linear-gradient(135deg, #10B981 0%, #059669 100%)" : "#FFFFFF",
+                              color: isSelected ? "#FFFFFF" : "#1E293B",
+                              border: `1.5px solid ${isSelected ? "#10B981" : "rgba(0, 0, 0, 0.12)"}`,
+                              padding: "6px 12px",
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              boxShadow: isSelected ? "0 2px 8px rgba(16, 185, 129, 0.3)" : "none",
+                              transition: "all 0.2s ease"
+                            }}
+                          >
+                            <span>{cat.emoji}</span>
+                            <span>{cat.short}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 

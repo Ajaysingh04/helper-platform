@@ -398,6 +398,35 @@ export async function handleDemoVendorAccept(booking, customWorker = null) {
     localStorage.setItem("helper_worker_jobs", JSON.stringify(wList));
   } catch (e) {}
 
+  // Update helper_bookings in localStorage
+  try {
+    const rawB = localStorage.getItem("helper_bookings");
+    let bList = rawB ? JSON.parse(rawB) : [];
+    const isMatch = (item) => [item.bookingCode, item.bookingId, item.id, item._id].filter(Boolean).map(String).includes(key);
+    let foundB = false;
+    bList = bList.map(item => {
+      if (isMatch(item)) {
+        foundB = true;
+        return { ...item, ...fullAcceptedBooking };
+      }
+      return item;
+    });
+    if (!foundB) bList.unshift(fullAcceptedBooking);
+    localStorage.setItem("helper_bookings", JSON.stringify(bList));
+  } catch (e) {}
+
+  // Update helper_accepted_orders map for instant fast lookup
+  try {
+    const rawMap = localStorage.getItem("helper_accepted_orders");
+    const accMap = rawMap ? JSON.parse(rawMap) : {};
+    accMap[key] = true;
+    accMap[String(bCode)] = true;
+    if (booking._id) accMap[String(booking._id)] = true;
+    if (booking.id) accMap[String(booking.id)] = true;
+    if (booking.bookingId) accMap[String(booking.bookingId)] = true;
+    localStorage.setItem("helper_accepted_orders", JSON.stringify(accMap));
+  } catch (e) {}
+
   // Notify worker dashboard specifically
   try {
     window.dispatchEvent(

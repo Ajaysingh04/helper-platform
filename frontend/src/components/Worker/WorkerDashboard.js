@@ -359,11 +359,41 @@ function WorkerDashboard() {
       } catch (e) {}
     }
 
-    // 3. ALWAYS scan and merge all localStorage booking stores (helper_worker_jobs, helper_user_bookings, helper_bookings)
-    const storageKeys = ["helper_worker_jobs", "helper_user_bookings", "helper_bookings"];
+    // 3. ALWAYS scan and prioritize helper_worker_jobs (100% vendor accepted & dispatched)
     const acceptedMap = JSON.parse(localStorage.getItem("helper_accepted_orders") || "{}");
 
-    storageKeys.forEach((k) => {
+    try {
+      const rawW = localStorage.getItem("helper_worker_jobs");
+      if (rawW) {
+        const listW = JSON.parse(rawW);
+        if (Array.isArray(listW)) {
+          listW.forEach((b) => {
+            if (!b) return;
+            const bId = b.bookingId || b.id || b._id || b.bookingCode;
+            if (!bId) return;
+            const formattedItem = {
+              ...b,
+              bookingCode: b.bookingCode || b.bookingId || b.id || bId,
+              workerStatus: b.workerStatus || "assigned",
+              status: b.status || "ready_for_worker",
+              vendorAccepted: true
+            };
+            const existingIdx = combined.findIndex(
+              (j) => (j.bookingId || j.id || j._id || j.bookingCode) === bId
+            );
+            if (existingIdx >= 0) {
+              combined[existingIdx] = { ...combined[existingIdx], ...formattedItem };
+            } else {
+              combined.unshift(formattedItem);
+            }
+          });
+        }
+      }
+    } catch (e) {}
+
+    // 4. Also scan helper_user_bookings and helper_bookings for orders accepted by vendor
+    const otherStores = ["helper_user_bookings", "helper_bookings"];
+    otherStores.forEach((k) => {
       try {
         const raw = localStorage.getItem(k);
         if (!raw) return;
@@ -375,44 +405,28 @@ function WorkerDashboard() {
           const bId = b.bookingId || b.id || b._id || b.bookingCode;
           if (!bId) return;
 
-          const wName = (b.assignedWorkerName || b.assignedWorker?.name || "").toLowerCase();
           const targetKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
           const isLocallyAccepted = targetKeys.some(key => acceptedMap[key]);
-
-          // Only dispatch to Demo Worker AFTER Demo Vendor has accepted!
           const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || isLocallyAccepted;
-          const isPendingVendor = (b.status === "pending" || b.status === "pending_vendor" || !b.status) && !isVendorApproved;
-          if (isPendingVendor) {
-            return; // Not dispatched to worker yet! Awaiting Demo Vendor acceptance.
-          }
 
-          const isForWorker =
-            isLocallyAccepted ||
-            b.vendorAccepted ||
-            b.status === "ready_for_worker" ||
-            b.workerStatus === "assigned" ||
-            b.workerStatus === "accepted" ||
-            b.workerStatus === "traveling" ||
-            b.workerStatus === "arrived" ||
-            b.workerStatus === "in_progress" ||
-            b.workerStatus === "awaiting_payment" ||
-            b.status === "slot_confirmed" ||
-            b.assignedWorker?.workerId === id ||
-            b.assignedWorker?.id === id ||
-            wName.includes("sunil");
-
-          if (isForWorker) {
+          if (isVendorApproved) {
             const formattedItem = {
               ...b,
               bookingCode: b.bookingCode || b.bookingId || b.id || bId,
               workerStatus: b.workerStatus || "assigned",
-              status: b.status === "pending" ? "ready_for_worker" : (b.status || "ready_for_worker")
+              status: (b.status === "pending" || !b.status) ? "ready_for_worker" : b.status,
+              vendorAccepted: true
             };
             const existingIdx = combined.findIndex(
               (j) => (j.bookingId || j.id || j._id || j.bookingCode) === bId
             );
             if (existingIdx >= 0) {
-              combined[existingIdx] = { ...combined[existingIdx], ...formattedItem };
+              // Preserve existing worker-specific updates (e.g. accepted, traveling)
+              combined[existingIdx] = {
+                ...formattedItem,
+                ...combined[existingIdx],
+                vendorAccepted: true
+              };
             } else {
               combined.unshift(formattedItem);
             }
