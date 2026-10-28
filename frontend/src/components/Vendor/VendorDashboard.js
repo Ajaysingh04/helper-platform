@@ -1231,6 +1231,22 @@ function VendorDashboard() {
       localStorage.setItem("helper_bookings", JSON.stringify(updatedB));
     } catch (e) {}
 
+    // Direct write to helper_user_bookings for instant Customer screen synchronization
+    try {
+      const existingU = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+      let foundU = false;
+      const updatedU = existingU.map(b => {
+        if (isMatch(b)) {
+          foundU = true;
+          return { ...b, ...fullAcceptedBooking };
+        }
+        return b;
+      });
+      if (!foundU) updatedU.unshift(fullAcceptedBooking);
+      localStorage.setItem("helper_user_bookings", JSON.stringify(updatedU));
+      window.dispatchEvent(new CustomEvent("user_bookings_updated", { detail: fullAcceptedBooking }));
+    } catch (e) {}
+
     // Synchronize to Demo User (MyBookings) and Demo Worker (WorkerDashboard) across all tabs
     broadcastBookingSync(bCode, fullAcceptedBooking);
     try {
@@ -2357,14 +2373,6 @@ function VendorDashboard() {
                                 >
                                   📞 Call Customer
                                 </a>
-                                <Link
-                                  to="/worker/login"
-                                  target="_blank"
-                                  className="quick-contact-btn"
-                                  style={{ background: "#2563EB", color: "#FFF", textDecoration: "none", padding: "9px 16px", borderRadius: "10px", fontWeight: 700, fontSize: "12.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                                >
-                                  👷 Open Worker Portal →
-                                </Link>
                               </div>
                             </div>
 

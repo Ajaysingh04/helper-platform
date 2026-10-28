@@ -520,8 +520,7 @@ function MyBookings() {
               </span>
             </div>
             <p className="bookings-subtitle">
-              Real-time 3-stage dispatch: <strong>Demo User</strong> booking goes to <strong>Demo Vendor</strong>, then to <strong>Demo Worker</strong>. 
-              Once the worker confirms, contact details and exact duration calculations unlock instantly!
+              Track your service bookings, technician dispatch status, and doorstep verification OTP in real time.
             </p>
           </div>
 
@@ -620,6 +619,7 @@ function MyBookings() {
               // Vendor Acceptance Check
               const isVendorAccepted =
                 isWorkerAccepted ||
+                Boolean(b.vendorAccepted) ||
                 rawStatus === "ready_for_worker" ||
                 rawStatus === "vendor_accepted" ||
                 rawStatus === "assigned" ||
@@ -647,13 +647,11 @@ function MyBookings() {
                   key={bookingId}
                   className={`booking-pro-card ${isActive ? "card-is-active" : "card-is-archived"} ${isWorkerAccepted ? "worker-active-glow" : ""}`}
                 >
-                  {/* Top Bar: Order ID, Date & Status */}
+                  {/* Top Bar: Order ID & Status */}
                   <div className="pro-card-top-bar">
                     <div className="pro-card-id-group">
-                      <span className="pro-order-chip">BOOKING ID</span>
+                      <span className="pro-order-chip">ORDER</span>
                       <strong className="pro-order-id-code">#{bookingId}</strong>
-                      <span className="pro-date-pill">📅 {schedDate}</span>
-                      <span className="pro-time-pill">⏰ {schedTime}</span>
                     </div>
 
                     <div className="pro-card-status-wrap">
@@ -661,11 +659,11 @@ function MyBookings() {
                         <span className="status-badge-pro cancelled">✕ Cancelled</span>
                       ) : isPaid ? (
                         <span className="status-badge-pro completed" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10B981" }}>
-                          ✓ Service Paid &amp; Completed
+                          ✓ Paid &amp; Completed
                         </span>
                       ) : isAwaitingPayment ? (
                         <span className="status-badge-pro animated-pop" style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "#FFFFFF", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4)" }}>
-                          📷 Scan Worker QR &amp; Pay Bill
+                          📷 Scan QR &amp; Pay Bill
                         </span>
                       ) : rawStatus === "in_progress" || workerStatus === "in_progress" ? (
                         <span className="status-badge-pro in-progress">
@@ -681,15 +679,15 @@ function MyBookings() {
                         </span>
                       ) : isWorkerAccepted ? (
                         <span className="status-badge-pro worker-confirmed animated-pop">
-                          <span className="pulse-dot-green" /> ✓ Demo Worker Confirmed
+                          <span className="pulse-dot-green" /> ✓ Worker Confirmed
                         </span>
                       ) : isVendorAccepted ? (
                         <span className="status-badge-pro ready-worker">
-                          <span className="pulse-dot-orange" /> ⚡ Demo Vendor Accepted • Dispatched to Worker
+                          <span className="pulse-dot-orange" /> ⚡ Dispatched to Worker
                         </span>
                       ) : (
                         <span className="status-badge-pro pending-vendor">
-                          <span className="pulse-dot-orange" /> ⏳ Awaiting Demo Vendor Confirmation
+                          <span className="pulse-dot-orange" /> ⏳ Awaiting Vendor Confirmation
                         </span>
                       )}
                     </div>
@@ -701,8 +699,8 @@ function MyBookings() {
                       <span className="step-circle">✓</span>
                       <div className="step-label-group">
                         <span className="step-num">Step 1</span>
-                        <span className="step-title">Demo User</span>
-                        <span className="step-subtitle">Booked</span>
+                        <span className="step-title">Booked</span>
+                        <span className="step-subtitle">Requested</span>
                       </div>
                     </div>
 
@@ -712,7 +710,7 @@ function MyBookings() {
                       <span className="step-circle">{isVendorAccepted ? "✓" : "⏳"}</span>
                       <div className="step-label-group">
                         <span className="step-num">Step 2</span>
-                        <span className="step-title">Demo Vendor</span>
+                        <span className="step-title">Vendor</span>
                         <span className="step-subtitle">{isVendorAccepted ? "Accepted" : "Reviewing"}</span>
                       </div>
                     </div>
@@ -723,8 +721,8 @@ function MyBookings() {
                       <span className="step-circle">{isWorkerAccepted ? "✓" : isVendorAccepted ? "👨‍🔧" : "3"}</span>
                       <div className="step-label-group">
                         <span className="step-num">Step 3</span>
-                        <span className="step-title">Demo Worker</span>
-                        <span className="step-subtitle">{isWorkerAccepted ? "Confirmed" : "Pending"}</span>
+                        <span className="step-title">Technician</span>
+                        <span className="step-subtitle">{isWorkerAccepted ? "Confirmed" : "Dispatching"}</span>
                       </div>
                     </div>
 
@@ -734,7 +732,7 @@ function MyBookings() {
                       <span className="step-circle">{(isAwaitingPayment || isPaid) ? "✓" : "⚡"}</span>
                       <div className="step-label-group">
                         <span className="step-num">Step 4</span>
-                        <span className="step-title">Service & OTP</span>
+                        <span className="step-title">Service &amp; OTP</span>
                         <span className="step-subtitle">{isAwaitingPayment || isPaid ? "Completed" : rawStatus === "in_progress" ? "Working" : "Location / OTP"}</span>
                       </div>
                     </div>
@@ -745,8 +743,8 @@ function MyBookings() {
                       <span className="step-circle">{isPaid ? "✓" : "💳"}</span>
                       <div className="step-label-group">
                         <span className="step-num">Step 5</span>
-                        <span className="step-title">Scan QR & Pay</span>
-                        <span className="step-subtitle">{isPaid ? "Paid & Feedback" : isAwaitingPayment ? "Scan Now" : "Payment"}</span>
+                        <span className="step-title">Payment</span>
+                        <span className="step-subtitle">{isPaid ? "Paid" : isAwaitingPayment ? "Scan QR" : "Due"}</span>
                       </div>
                     </div>
                   </div>

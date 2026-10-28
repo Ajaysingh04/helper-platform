@@ -671,12 +671,13 @@ body.dark .problem-text,
 /* Technician Mini Profile Card */
 .pro-technician-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
   background: var(--surface-input, #f8fafc);
   border: 1px solid var(--border-color, rgba(226, 232, 240, 0.8));
   border-radius: 14px;
-  padding: 12px 14px;
+  padding: 14px 16px;
 }
 
 body.dark .pro-technician-card,
@@ -1970,38 +1971,180 @@ body.dark .demo-sim-hint code,
   animation: fadeInPop 0.4s ease-out forwards;
 }
 
-/* Mobile Responsiveness for Stepper and Calculation Grid */
+/* Mobile Responsiveness for Stepper, Profile, and Calculation Grid */
 @media (max-width: 768px) {
-  .pro-pipeline-stepper {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 12px;
+  .my-bookings-page-wrapper {
+    padding: 16px 12px 60px;
   }
 
-  .stepper-connector {
+  .bookings-header-row {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .bookings-main-title {
+    font-size: 22px;
+  }
+
+  .btn-book-new-service {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+  }
+
+  .booking-pro-card {
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+
+  .pro-card-top-bar {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    gap: 8px;
+  }
+
+  .pro-order-id-code {
+    font-size: 13.5px;
+  }
+
+  .status-badge-pro {
+    font-size: 10.5px;
+    padding: 4px 10px;
+  }
+
+  /* Sleek, Swipeable Horizontal Timeline Stepper */
+  .pro-pipeline-stepper {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 8px;
+    padding: 10px 12px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+  }
+
+  .pro-pipeline-stepper::-webkit-scrollbar {
     display: none;
   }
 
+  .stepper-connector {
+    display: block;
+    flex: 0 0 16px;
+    min-width: 14px;
+    height: 2px;
+    margin: 0 4px;
+  }
+
   .stepper-step {
-    flex: 1 1 45%;
-    margin-bottom: 4px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  .stepper-step .step-circle {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+
+  .step-num {
+    font-size: 9px;
+  }
+
+  .step-title {
+    font-size: 11px;
+  }
+
+  .step-subtitle {
+    font-size: 9.5px;
+  }
+
+  .pro-countdown-banner {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .countdown-date-info {
+    font-size: 12px;
+  }
+
+  .countdown-timer-chip {
+    font-size: 11px;
+  }
+
+  .pro-technician-card.worker-confirmed-glow {
+    padding: 14px 14px;
+  }
+
+  .tech-main-profile-row {
+    gap: 12px;
+  }
+
+  .tech-avatar-circle-wrap .tech-avatar-circle {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .tech-name-line strong {
+    font-size: 15px;
+  }
+
+  .tech-meta-role-line {
+    font-size: 11.5px;
+  }
+
+  .tech-contact-action-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .btn-tech-call-direct {
+    flex: 2;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .btn-tech-copy-phone {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 11.5px;
+    text-align: center;
+    box-sizing: border-box;
   }
 
   .calc-time-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  .tech-contact-action-row {
-    flex-direction: column;
-    align-items: stretch;
+  .calc-time-box {
+    padding: 10px 12px;
   }
 
-  .btn-tech-call-direct,
-  .btn-tech-copy-phone {
-    justify-content: center;
-    width: 100%;
-    text-align: center;
-    box-sizing: border-box;
+  .otp-vault-digits-row {
+    gap: 8px;
+  }
+
+  .otp-vault-digit {
+    width: 44px;
+    height: 52px;
+    font-size: 24px;
   }
 }
 

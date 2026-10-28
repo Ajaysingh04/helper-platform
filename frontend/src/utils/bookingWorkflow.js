@@ -277,7 +277,9 @@ export function broadcastBookingSync(bookingId, patchData) {
       }
       return b;
     });
-    if (!updatedW && patchData) {
+    // ONLY add to helper_worker_jobs if Demo Vendor has accepted or it is dispatched to worker
+    const isVendorApproved = patchData?.vendorAccepted || patchData?.status === "ready_for_worker" || patchData?.workerStatus;
+    if (!updatedW && patchData && isVendorApproved) {
       listW.unshift({ bookingId: key, id: key, ...patchData });
     }
     localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));

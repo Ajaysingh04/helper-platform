@@ -7,6 +7,7 @@ import {
   getBookingDoorOtp,
   DEMO_WORKER,
   calculateDynamicWorkPricing,
+  calculateScheduleDetails,
   handleDemoWorkerGoToLocation,
   handleDemoWorkerArrived,
   handleDemoWorkerVerifyOtp,
@@ -46,6 +47,20 @@ function WorkerDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dashboardSearch, setDashboardSearch] = useState("");
   const [isDark, setIsDark] = useState(() => localStorage.getItem("theme") === "dark" || document.body.classList.contains("dark"));
+
+  // Real-time ticker and 1-hour navigation lock state
+  const [nowTime, setNowTime] = useState(Date.now());
+  const [unlockedNavMap, setUnlockedNavMap] = useState({});
+
+  useEffect(() => {
+    const timer = setInterval(() => setNowTime(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleUnlockNavigation = (bId) => {
+    setUnlockedNavMap(prev => ({ ...prev, [bId]: true }));
+    showToast("⚡ Fast-Forward Demo: Location Navigation Unlocked!");
+  };
 
   // Live stopwatch and dynamic cost for active job
   const [stopwatchSeconds, setStopwatchSeconds] = useState(0);
@@ -279,7 +294,8 @@ function WorkerDashboard() {
                 if (prev.some(isMatch)) {
                   return prev.map(j => isMatch(j) ? { ...j, ...(patch || {}) } : j);
                 }
-                if (patch) return [patch, ...prev];
+                const isDispatched = patch && (patch.vendorAccepted || patch.status === "ready_for_worker" || patch.workerStatus);
+                if (isDispatched) return [patch, ...prev];
                 return prev;
               });
             }
@@ -363,6 +379,13 @@ function WorkerDashboard() {
           const targetKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
           const isLocallyAccepted = targetKeys.some(key => acceptedMap[key]);
 
+          // Only dispatch to Demo Worker AFTER Demo Vendor has accepted!
+          const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || isLocallyAccepted;
+          const isPendingVendor = (b.status === "pending" || b.status === "pending_vendor" || !b.status) && !isVendorApproved;
+          if (isPendingVendor) {
+            return; // Not dispatched to worker yet! Awaiting Demo Vendor acceptance.
+          }
+
           const isForWorker =
             isLocallyAccepted ||
             b.vendorAccepted ||
@@ -376,8 +399,7 @@ function WorkerDashboard() {
             b.status === "slot_confirmed" ||
             b.assignedWorker?.workerId === id ||
             b.assignedWorker?.id === id ||
-            wName.includes("sunil") ||
-            (k === "helper_worker_jobs");
+            wName.includes("sunil");
 
           if (isForWorker) {
             const formattedItem = {
@@ -1612,6 +1634,10 @@ function WorkerDashboard() {
                   const isPaid = b.paymentStatus === "paid";
                   const correctDoorOtp = getBookingDoorOtp(b);
 
+                  // Calculate schedule countdown & 1-hour navigation availability
+                  const sched = calculateScheduleDetails(b, nowTime);
+                  const isNavLocked = sched ? (sched.diffMs > 3600000 && !unlockedNavMap[bookingId]) : false;
+
                   return (
                     <div className="wrk-active-job-card" key={bookingId}>
                       <div className="wrk-job-header">
@@ -1621,8 +1647,22 @@ function WorkerDashboard() {
                             {status.replace(/_/g, " ")}
                           </span>
                         </div>
-                        <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--wrk-text-muted)" }}>
-                          🕒 Slot: {b.scheduledDate || "Today"} at {b.scheduledTime || "11:30 AM"}
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px" }}>
+                          <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--wrk-text-main)" }}>
+                            🕒 {b.scheduledDate || "Today"} — <span style={{ color: "#FF4D2D" }}>{b.scheduledTime || "11:00 AM"}</span>
+                          </div>
+                          {sched && (
+                            <span style={{
+                              fontSize: "11px",
+                              fontWeight: 800,
+                              padding: "2px 8px",
+                              borderRadius: "10px",
+                              background: sched.isPast ? "rgba(16, 185, 129, 0.15)" : sched.isTomorrow ? "rgba(245, 158, 11, 0.15)" : "rgba(37, 99, 235, 0.12)",
+                              color: sched.isPast ? "#059669" : sched.isTomorrow ? "#D97706" : "#2563EB"
+                            }}>
+                              {sched.arrivalBadgeText || "Scheduled"}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -1722,7 +1762,7 @@ function WorkerDashboard() {
                               fontSize: "12.5px",
                               color: "#065F46"
                             }}>
-                              ⚡ <strong>Demo Vendor Dispatched Order:</strong> Customer ne <strong>{b.serviceName || b.service}</strong> book ki hai. Accept karte hi slot lock ho jayega aur location navigation unlock ho jayegi.
+                              ⚡ <strong>Demo Vendor Dispatched Order:</strong> Customer ne <strong>{b.serviceName || b.service}</strong> book ki hai. Accept karte hi slot lock ho jayega aur appointment schedule establish ho jayega.
                             </div>
                             <button 
                               type="button" 
@@ -1741,15 +1781,97 @@ function WorkerDashboard() {
                           </div>
                         )}
 
+                        {/* STAGE 2: GO TO LOCATION — LOCKED UNTIL 1 HOUR BEFORE SLOT */}
                         {isAccepted && (
-                          <button 
-                            type="button" 
-                            className="wrk-btn-stage-action"
-                            style={{ background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)", boxShadow: "0 4px 14px rgba(37, 99, 235, 0.35)" }}
-                            onClick={() => handleStartTraveling(bookingId)}
-                          >
-                            <span>📍 Go to Location</span>
-                          </button>
+                          <div style={{ marginTop: "12px" }}>
+                            {isNavLocked ? (
+                              <div style={{
+                                background: "rgba(245, 158, 11, 0.08)",
+                                border: "1.5px solid rgba(245, 158, 11, 0.35)",
+                                borderRadius: "14px",
+                                padding: "16px 18px",
+                                marginBottom: "8px"
+                              }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "8px" }}>
+                                  <span style={{ fontSize: "13.5px", fontWeight: 800, color: "#D97706", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                    🔒 Location Navigation Locked
+                                  </span>
+                                  <span style={{ fontSize: "11.5px", background: "rgba(245, 158, 11, 0.2)", color: "#B45309", padding: "3px 10px", borderRadius: "10px", fontWeight: 800 }}>
+                                    ⏰ {sched?.countdownTitle || "Scheduled Ahead"}
+                                  </span>
+                                </div>
+                                <p style={{ margin: "0 0 10px 0", fontSize: "12.5px", color: "#78350F", lineHeight: 1.5 }}>
+                                  Customer ne booking <strong>{b.scheduledDate || "Tomorrow"} ({b.scheduledTime || "Appointment"})</strong> ke liye ki hai. Customer privacy aur safety rule ke mutabiq, doorstep location navigation appointment slot se <strong>1 ghante pahle</strong> automatically unlock hogi.
+                                </p>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", paddingTop: "8px", borderTop: "1px dashed rgba(245, 158, 11, 0.3)" }}>
+                                  <span style={{ fontSize: "11.5px", color: "#92400E" }}>
+                                    ⏱️ Unlocks at 1 hour before {b.scheduledTime || "slot time"}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUnlockNavigation(bookingId)}
+                                    style={{
+                                      background: "rgba(245, 158, 11, 0.18)",
+                                      border: "1px solid #D97706",
+                                      color: "#B45309",
+                                      padding: "6px 14px",
+                                      borderRadius: "8px",
+                                      fontSize: "12px",
+                                      fontWeight: 800,
+                                      cursor: "pointer"
+                                    }}
+                                    title="Fast-forward for demo testing without waiting"
+                                  >
+                                    ⚡ Fast-Test: Unlock 1-Hour Navigation Now
+                                  </button>
+                                </div>
+
+                                <button 
+                                  type="button" 
+                                  disabled
+                                  className="wrk-btn-stage-action"
+                                  style={{
+                                    background: "#94A3B8",
+                                    color: "#FFFFFF",
+                                    cursor: "not-allowed",
+                                    boxShadow: "none",
+                                    marginTop: "12px",
+                                    opacity: 0.75
+                                  }}
+                                >
+                                  <span>🔒 Go to Location (Locked • Unlocks 1 hour before slot)</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <div>
+                                <div style={{
+                                  background: "rgba(37, 99, 235, 0.08)",
+                                  border: "1px solid rgba(37, 99, 235, 0.25)",
+                                  borderRadius: "10px",
+                                  padding: "10px 14px",
+                                  marginBottom: "8px",
+                                  fontSize: "12.5px",
+                                  color: "#1E40AF"
+                                }}>
+                                  🛵 <strong>Slot Time Window Active:</strong> Appointment slot 1 ghante ke daayre me hai! Click below to start traveling to customer doorstep.
+                                </div>
+                                <button 
+                                  type="button" 
+                                  className="wrk-btn-stage-action animate-pulse"
+                                  style={{
+                                    background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
+                                    boxShadow: "0 4px 14px rgba(37, 99, 235, 0.35)",
+                                    fontSize: "14px",
+                                    fontWeight: 800,
+                                    padding: "14px 22px"
+                                  }}
+                                  onClick={() => handleStartTraveling(bookingId)}
+                                >
+                                  <span>📍 Go to Location (Start Traveling &amp; Open GPS) 🛵</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         )}
 
                         {isTraveling && (
