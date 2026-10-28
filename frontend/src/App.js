@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { LocationProvider } from "./context/LocationContext";
 import { AuthProvider } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
@@ -51,9 +51,9 @@ function AppContent() {
         </Routes>
       ) : isWorkerRoute ? (
         <Routes>
-          <Route path="/worker" element={<WorkerAuth />} />
-          <Route path="/worker/auth" element={<WorkerAuth />} />
-          <Route path="/worker/login" element={<WorkerAuth />} />
+          <Route path="/worker" element={<WorkerDashboard />} />
+          <Route path="/worker/auth" element={<Navigate to="/login" replace />} />
+          <Route path="/worker/login" element={<Navigate to="/login" replace />} />
           <Route path="/worker/dashboard" element={<WorkerDashboard />} />
         </Routes>
       ) : (
@@ -70,9 +70,9 @@ function AppContent() {
         <Route path="/vendor/login" element={<VendorAuth defaultTab="login" />} />
         <Route path="/vendor/register" element={<VendorAuth defaultTab="register" />} />
         <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-        <Route path="/worker" element={<WorkerAuth />} />
-        <Route path="/worker/auth" element={<WorkerAuth />} />
-        <Route path="/worker/login" element={<WorkerAuth />} />
+        <Route path="/worker" element={<WorkerDashboard />} />
+        <Route path="/worker/auth" element={<Navigate to="/login" replace />} />
+        <Route path="/worker/login" element={<Navigate to="/login" replace />} />
         <Route path="/worker/dashboard" element={<WorkerDashboard />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />

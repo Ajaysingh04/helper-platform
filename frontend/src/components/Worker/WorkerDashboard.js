@@ -132,13 +132,13 @@ function WorkerDashboard() {
     setTimeout(() => setToastMsg(""), 4500);
   };
 
-  // Load worker data on mount (Requires actual login; redirects to /worker/login if not authenticated)
+  // Load worker data on mount (Requires actual login; redirects to /login if not authenticated)
   useEffect(() => {
     let activeWorker = null;
     const stored = localStorage.getItem("helper_worker");
     if (!stored) {
-      // If not logged in, always open worker login page
-      navigate("/worker/login");
+      // If not logged in, always open main login page
+      navigate("/login");
       return;
     }
 
@@ -146,12 +146,12 @@ function WorkerDashboard() {
       activeWorker = JSON.parse(stored);
     } catch (e) {
       localStorage.removeItem("helper_worker");
-      navigate("/worker/login");
+      navigate("/login");
       return;
     }
 
     if (!activeWorker || (!activeWorker.workerId && !activeWorker.id && !activeWorker.phone)) {
-      navigate("/worker/login");
+      navigate("/login");
       return;
     }
 
@@ -404,6 +404,7 @@ function WorkerDashboard() {
           if (isForWorker) {
             const formattedItem = {
               ...b,
+              bookingCode: b.bookingCode || b.bookingId || b.id || bId,
               workerStatus: b.workerStatus || "assigned",
               status: b.status === "pending" ? "ready_for_worker" : (b.status || "ready_for_worker")
             };
@@ -944,7 +945,7 @@ function WorkerDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("helper_worker");
     localStorage.removeItem("helper_worker_token");
-    navigate("/login?role=worker");
+    navigate("/login");
   };
 
   const activeJobsList = jobs.filter((b) => {
@@ -952,7 +953,8 @@ function WorkerDashboard() {
     if (!isNotDone) return false;
     if (!selectedTradeFilter || selectedTradeFilter === "All Services") return true;
     const sName = (b.serviceName || b.service || b.category || "").toLowerCase();
-    const filterKey = selectedTradeFilter.toLowerCase().replace(/ specialist| & deep cleaning| & sanitary| & hvac/g, "");
+    if (!sName) return true;
+    const filterKey = selectedTradeFilter.toLowerCase().replace(/ specialist| & deep cleaning| & sanitary| & hvac/g, "").trim();
     return sName.includes(filterKey) || filterKey.includes(sName);
   });
   const completedJobsList = jobs.filter((b) => b.workerStatus === "completed" && b.paymentStatus !== "payment_due");
@@ -1295,7 +1297,7 @@ function WorkerDashboard() {
             onClick={() => {
               localStorage.removeItem("helper_worker");
               localStorage.removeItem("helper_worker_token");
-              navigate("/worker/login");
+              navigate("/login");
             }}
           >
             <span>🚪 Logout</span>

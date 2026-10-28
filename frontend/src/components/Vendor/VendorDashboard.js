@@ -1152,7 +1152,7 @@ function VendorDashboard() {
     const bCode = booking.bookingCode || booking.bookingId || booking.id || bId;
     const vId = vendor?.id || vendor?._id || "vdr_demo_01";
     const vName = vendor?.shopName ? `${vendor.shopName} • ${vendor.name}` : (vendor?.name || "Ramesh Express Plumbing & Home Care");
-    const primaryWorker = teamMembers.find(m => !m.isOwner) || {
+    const primaryWorker = {
       id: "WRK-101",
       workerId: "WRK-101",
       name: "Sunil Verma",

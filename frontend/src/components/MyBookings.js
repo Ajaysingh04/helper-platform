@@ -165,28 +165,28 @@ function MyBookings() {
   // Quick Simulation Action: Demo Vendor Accepts
   const handleSimulateVendorAccept = async (b) => {
     try {
-      await handleDemoVendorAccept(b);
+      const full = await handleDemoVendorAccept(b);
       showToast("⚡ Demo Vendor Accepted! Request dispatched to Demo Worker (Sunil Verma).");
       const targetId = String(b.bookingId || b.id || b._id || b.bookingCode);
-      setLocalCustomerBookings((prev) =>
-        prev.map((item) => {
+      setLocalCustomerBookings((prev) => {
+        const updated = prev.map((item) => {
           const itemId = String(item.bookingId || item.id || item._id || item.bookingCode);
           if (itemId === targetId) {
             return {
               ...item,
+              ...full,
               status: "ready_for_worker",
               workerStatus: "assigned",
-              assignedProvider: `${DEMO_VENDOR.shopName} • ${DEMO_VENDOR.name}`,
-              assignedProviderName: DEMO_VENDOR.name,
-              assignedProviderPhone: DEMO_VENDOR.phone,
-              assignedWorker: DEMO_WORKER,
-              assignedWorkerName: DEMO_WORKER.name,
-              assignedWorkerPhone: DEMO_WORKER.phone
+              vendorAccepted: true
             };
           }
           return item;
-        })
-      );
+        });
+        try {
+          localStorage.setItem("helper_user_bookings", JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
     } catch (e) {
       showToast("Action triggered: Demo Vendor Accepted.");
     }

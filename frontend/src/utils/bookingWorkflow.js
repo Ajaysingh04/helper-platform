@@ -2,7 +2,7 @@
 // HELPER PLATFORM - REAL-TIME BOOKING WORKFLOW & SCHEDULE CALCULATOR
 // Seamless 3-Party Dispatch: Demo User -> Demo Vendor -> Demo Worker
 // Real-time synchronization across multi-tabs with broadcast & local storage
-// ============================================================================
+import { API_BASE } from "../apiConfig";
 
 export const DEMO_VENDOR = {
   id: "vdr_demo_01",
@@ -270,17 +270,35 @@ export function broadcastBookingSync(bookingId, patchData) {
     const rawW = localStorage.getItem("helper_worker_jobs");
     let listW = rawW ? JSON.parse(rawW) : [];
     let updatedW = false;
+
+    // Retrieve full booking data from helper_user_bookings or helper_bookings to guarantee 100% complete fields
+    let fullOriginal = {};
+    try {
+      const uList = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+      const bList = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+      const found = uList.find(matchItem) || bList.find(matchItem);
+      if (found) fullOriginal = found;
+    } catch (e) {}
+
+    const fullJobData = {
+      ...fullOriginal,
+      ...patchData,
+      bookingId: key,
+      id: key,
+      bookingCode: patchData?.bookingCode || fullOriginal?.bookingCode || key
+    };
+
     listW = listW.map((b) => {
       if (matchItem(b)) {
         updatedW = true;
-        return { ...b, ...patchData };
+        return { ...b, ...fullJobData };
       }
       return b;
     });
     // ONLY add to helper_worker_jobs if Demo Vendor has accepted or it is dispatched to worker
-    const isVendorApproved = patchData?.vendorAccepted || patchData?.status === "ready_for_worker" || patchData?.workerStatus;
-    if (!updatedW && patchData && isVendorApproved) {
-      listW.unshift({ bookingId: key, id: key, ...patchData });
+    const isVendorApproved = patchData?.vendorAccepted || patchData?.status === "ready_for_worker" || patchData?.workerStatus || fullJobData?.vendorAccepted;
+    if (!updatedW && isVendorApproved) {
+      listW.unshift(fullJobData);
     }
     localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));
   } catch (e) {}
@@ -326,11 +344,17 @@ export function broadcastBookingSync(bookingId, patchData) {
  * Sets status to "ready_for_worker" and dispatches to Demo Worker.
  */
 export async function handleDemoVendorAccept(booking, customWorker = null) {
-  const key = String(booking.bookingId || booking.id || booking._id || booking.bookingCode);
+  const bCode = booking.bookingCode || booking.bookingId || booking.id || booking._id || "HLP-0000";
+  const key = String(bCode);
   const workerObj = customWorker || DEMO_WORKER;
   const vendorObj = DEMO_VENDOR;
 
-  const patch = {
+  const fullAcceptedBooking = {
+    ...booking,
+    bookingId: key,
+    id: key,
+    _id: booking._id || key,
+    bookingCode: bCode,
     status: "ready_for_worker",
     workerStatus: "assigned",
     vendorAccepted: true,
@@ -345,18 +369,61 @@ export async function handleDemoVendorAccept(booking, customWorker = null) {
     assignedWorkers: [workerObj]
   };
 
-  broadcastBookingSync(key, patch);
+  broadcastBookingSync(key, fullAcceptedBooking);
+
+  // Directly update helper_user_bookings in localStorage
+  try {
+    const rawU = localStorage.getItem("helper_user_bookings");
+    let uList = rawU ? JSON.parse(rawU) : [];
+    const isMatch = (item) => [item.bookingCode, item.bookingId, item.id, item._id].filter(Boolean).map(String).includes(key);
+    let found = false;
+    uList = uList.map(item => {
+      if (isMatch(item)) {
+        found = true;
+        return { ...item, ...fullAcceptedBooking };
+      }
+      return item;
+    });
+    if (!found) uList.unshift(fullAcceptedBooking);
+    localStorage.setItem("helper_user_bookings", JSON.stringify(uList));
+  } catch (e) {}
+
+  // Directly update helper_worker_jobs in localStorage
+  try {
+    const rawW = localStorage.getItem("helper_worker_jobs");
+    let wList = rawW ? JSON.parse(rawW) : [];
+    const isMatch = (item) => [item.bookingCode, item.bookingId, item.id, item._id].filter(Boolean).map(String).includes(key);
+    wList = wList.filter(item => !isMatch(item));
+    wList.unshift(fullAcceptedBooking);
+    localStorage.setItem("helper_worker_jobs", JSON.stringify(wList));
+  } catch (e) {}
 
   // Notify worker dashboard specifically
   try {
     window.dispatchEvent(
       new CustomEvent("worker_new_offer", {
-        detail: { ...booking, ...patch }
+        detail: fullAcceptedBooking
       })
     );
   } catch (e) {}
 
-  return patch;
+  // Backend notify
+  try {
+    const targetId = booking._id || bCode || key;
+    await fetch(`${API_BASE}/bookings/${targetId}/accept`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        providerId: vendorObj.id,
+        providerName: vendorObj.name,
+        workerId: workerObj.workerId || workerObj.id || "WRK-101",
+        workerName: workerObj.name,
+        workerPhone: workerObj.phone
+      })
+    });
+  } catch (e) {}
+
+  return fullAcceptedBooking;
 }
 
 /**
