@@ -39,6 +39,7 @@ function WorkerDashboard() {
   const navigate = useNavigate();
   const [worker, setWorker] = useState(null);
   const [activeTab, setActiveTab] = useState("active_jobs"); // active_jobs | map_radar | history | earnings | attendance | profile
+  const [selectedTradeFilter, setSelectedTradeFilter] = useState("All Services");
   const [jobs, setJobs] = useState([]);
   const [, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState("");
@@ -116,48 +117,29 @@ function WorkerDashboard() {
     setTimeout(() => setToastMsg(""), 4500);
   };
 
-  // Load worker data on mount
+  // Load worker data on mount (Requires actual login; redirects to /worker/login if not authenticated)
   useEffect(() => {
     let activeWorker = null;
     const stored = localStorage.getItem("helper_worker");
     if (!stored) {
-      // Default to Master Plumber Sunil Sharma for instant dashboard viewing
-      activeWorker = {
-        workerId: "WRK-101",
-        id: "WRK-101",
-        name: "Sunil Sharma",
-        phone: "9876500101",
-        category: "Plumber",
-        vendorName: "Amritam Services Hub",
-        status: "active",
-        verificationStatus: "verified",
-        rating: 4.95,
-        totalJobs: 148,
-        earnings: { currentBalance: 3450, totalEarned: 28900, upiId: "sunil.pro@okaxis" },
-        availability: { isOnline: true, isEmergencyAvailable: true }
-      };
-      localStorage.setItem("helper_worker", JSON.stringify(activeWorker));
-      localStorage.setItem("helper_worker_token", "wrk_demo_token_101");
-    } else {
-      try {
-        activeWorker = JSON.parse(stored);
-      } catch (e) {
-        activeWorker = {
-          workerId: "WRK-101",
-          id: "WRK-101",
-          name: "Sunil Sharma",
-          phone: "9876500101",
-          category: "Plumber",
-          vendorName: "Amritam Services Hub",
-          status: "active",
-          verificationStatus: "verified",
-          rating: 4.95,
-          totalJobs: 148,
-          earnings: { currentBalance: 3450, totalEarned: 28900, upiId: "sunil.pro@okaxis" },
-          availability: { isOnline: true, isEmergencyAvailable: true }
-        };
-      }
+      // If not logged in, always open worker login page
+      navigate("/worker/login");
+      return;
     }
+
+    try {
+      activeWorker = JSON.parse(stored);
+    } catch (e) {
+      localStorage.removeItem("helper_worker");
+      navigate("/worker/login");
+      return;
+    }
+
+    if (!activeWorker || (!activeWorker.workerId && !activeWorker.id && !activeWorker.phone)) {
+      navigate("/worker/login");
+      return;
+    }
+
     setWorker(activeWorker);
     setWithdrawUpi(activeWorker.earnings?.upiId || `${activeWorker.phone?.slice(-10)}@upi`);
     fetchWorkerProfile(activeWorker.workerId || activeWorker.id || "WRK-101");
@@ -207,9 +189,29 @@ function WorkerDashboard() {
         s.emit("worker:register", { workerId });
       });
 
-      // New Job assigned alert
+      // New Job assigned alert (Instant Hit Update)
       s.on("worker:new_job_alert", (data) => {
-        showToast(`⚡ New Job Assigned: ${data.serviceName}!`);
+        if (!data) return;
+        showToast(`⚡ New Job Assigned: ${data.serviceName || "Service"}!`);
+        const bKey = data.bookingId || data.bookingCode;
+        if (bKey) {
+          const newJobItem = {
+            ...data,
+            bookingId: bKey,
+            bookingCode: data.bookingCode || bKey,
+            id: bKey,
+            _id: bKey,
+            status: "ready_for_worker",
+            workerStatus: "assigned"
+          };
+          setJobs(prev => {
+            const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(String(bKey));
+            if (prev.some(isMatch)) {
+              return prev.map(j => isMatch(j) ? { ...j, ...newJobItem } : j);
+            }
+            return [newJobItem, ...prev];
+          });
+        }
         fetchWorkerJobs(workerId);
       });
 
@@ -232,7 +234,7 @@ function WorkerDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker]);
 
-  // Real-time cross-tab listener for incoming jobs from Demo Vendor
+  // Real-time cross-tab listener for incoming jobs from Demo Vendor (Instant Hit Update)
   useEffect(() => {
     const handleJobUpdate = () => {
       const wid = worker?.workerId || worker?.id || "WRK-101";
@@ -242,6 +244,17 @@ function WorkerDashboard() {
     const handleNewOffer = (e) => {
       if (e?.detail) {
         showToast(`🔔 NEW JOB OFFER: ${e.detail.serviceName || e.detail.service} from Demo Vendor!`);
+        const item = e.detail;
+        const bKey = item.bookingId || item.id || item._id || item.bookingCode;
+        if (bKey) {
+          setJobs(prev => {
+            const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(String(bKey));
+            if (prev.some(isMatch)) {
+              return prev.map(j => isMatch(j) ? { ...j, ...item } : j);
+            }
+            return [item, ...prev];
+          });
+        }
       }
       handleJobUpdate();
     };
@@ -257,7 +270,19 @@ function WorkerDashboard() {
         syncCh = new window.BroadcastChannel("helper_booking_sync");
         syncCh.onmessage = (ev) => {
           if (ev.data && ev.data.type === "BOOKING_WORKFLOW_UPDATE") {
-            handleJobUpdate();
+            const patch = ev.data.patch;
+            const bId = ev.data.bookingId;
+            if (patch || bId) {
+              setJobs(prev => {
+                const targetKey = String(bId || patch?.bookingId || patch?.bookingCode || "");
+                const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(targetKey);
+                if (prev.some(isMatch)) {
+                  return prev.map(j => isMatch(j) ? { ...j, ...(patch || {}) } : j);
+                }
+                if (patch) return [patch, ...prev];
+                return prev;
+              });
+            }
           }
         };
       }
@@ -288,62 +313,90 @@ function WorkerDashboard() {
   // Fetch worker jobs
   const fetchWorkerJobs = async (id) => {
     setLoading(true);
+    let combined = [];
+
+    // 1. Fetch from server /workers/:id/jobs API
     try {
       const res = await fetch(`${API_BASE}/workers/${id}/jobs`);
       const data = await res.json();
       if (data.success && Array.isArray(data.jobs) && data.jobs.length > 0) {
-        setJobs(data.jobs);
-        checkActiveJobStopwatch(data.jobs);
-      } else {
-        fetchFallbackJobs(id);
+        combined = [...data.jobs];
       }
-    } catch (e) {
-      fetchFallbackJobs(id);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchFallbackJobs = async (id) => {
-    let combined = [];
-    try {
-      const res = await fetch(`${API_BASE}/bookings`);
-      const data = await res.json();
-      const all = Array.isArray(data.data) ? data.data : (Array.isArray(data.bookings) ? data.bookings : []);
-      const workerJobs = all.filter(
-        (b) =>
-          b.assignedWorker?.workerId === id ||
-          b.assignedWorker?.id === id ||
-          (b.assignedWorkers || []).some((w) => w.workerId === id) ||
-          b.status === "ready_for_worker" ||
-          b.workerStatus === "assigned" ||
-          b.status === "assigned"
-      );
-      combined = [...workerJobs];
     } catch (e) {}
 
-    // Check localStorage helper_user_bookings to pick up bookings dispatched by Demo Vendor
-    try {
-      const localBookings = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
-      localBookings.forEach((b) => {
-        const bId = b.bookingId || b.id || b._id || b.bookingCode;
-        const exists = combined.some(
-          (j) => (j.bookingId || j.id || j._id || j.bookingCode) === bId
+    // 2. Fetch from /bookings API if combined is empty
+    if (combined.length === 0) {
+      try {
+        const res = await fetch(`${API_BASE}/bookings`);
+        const data = await res.json();
+        const all = Array.isArray(data.data) ? data.data : (Array.isArray(data.bookings) ? data.bookings : []);
+        const workerJobs = all.filter(
+          (b) =>
+            b.assignedWorker?.workerId === id ||
+            b.assignedWorker?.id === id ||
+            (b.assignedWorkers || []).some((w) => w.workerId === id) ||
+            b.status === "ready_for_worker" ||
+            b.workerStatus === "assigned" ||
+            b.status === "assigned"
         );
-        const isForWorker =
-          b.status === "ready_for_worker" ||
-          b.workerStatus === "assigned" ||
-          b.workerStatus === "accepted" ||
-          b.status === "slot_confirmed" ||
-          b.assignedWorker?.workerId === id ||
-          b.assignedWorker?.id === id ||
-          b.assignedWorkerName === "Sunil Verma";
+        combined = [...workerJobs];
+      } catch (e) {}
+    }
 
-        if (!exists && isForWorker) {
-          combined.unshift(b);
-        }
-      });
-    } catch (e) {}
+    // 3. ALWAYS scan and merge all localStorage booking stores (helper_worker_jobs, helper_user_bookings, helper_bookings)
+    const storageKeys = ["helper_worker_jobs", "helper_user_bookings", "helper_bookings"];
+    const acceptedMap = JSON.parse(localStorage.getItem("helper_accepted_orders") || "{}");
+
+    storageKeys.forEach((k) => {
+      try {
+        const raw = localStorage.getItem(k);
+        if (!raw) return;
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return;
+
+        list.forEach((b) => {
+          if (!b) return;
+          const bId = b.bookingId || b.id || b._id || b.bookingCode;
+          if (!bId) return;
+
+          const wName = (b.assignedWorkerName || b.assignedWorker?.name || "").toLowerCase();
+          const targetKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
+          const isLocallyAccepted = targetKeys.some(key => acceptedMap[key]);
+
+          const isForWorker =
+            isLocallyAccepted ||
+            b.vendorAccepted ||
+            b.status === "ready_for_worker" ||
+            b.workerStatus === "assigned" ||
+            b.workerStatus === "accepted" ||
+            b.workerStatus === "traveling" ||
+            b.workerStatus === "arrived" ||
+            b.workerStatus === "in_progress" ||
+            b.workerStatus === "awaiting_payment" ||
+            b.status === "slot_confirmed" ||
+            b.assignedWorker?.workerId === id ||
+            b.assignedWorker?.id === id ||
+            wName.includes("sunil") ||
+            (k === "helper_worker_jobs");
+
+          if (isForWorker) {
+            const formattedItem = {
+              ...b,
+              workerStatus: b.workerStatus || "assigned",
+              status: b.status === "pending" ? "ready_for_worker" : (b.status || "ready_for_worker")
+            };
+            const existingIdx = combined.findIndex(
+              (j) => (j.bookingId || j.id || j._id || j.bookingCode) === bId
+            );
+            if (existingIdx >= 0) {
+              combined[existingIdx] = { ...combined[existingIdx], ...formattedItem };
+            } else {
+              combined.unshift(formattedItem);
+            }
+          }
+        });
+      } catch (err) {}
+    });
 
     if (combined.length > 0) {
       setJobs(combined);
@@ -368,24 +421,22 @@ function WorkerDashboard() {
         },
         {
           _id: "demo_job_2",
-          bookingCode: "HLP-65120",
-          serviceName: "Kitchen Mixer Tap Installation",
-          customerName: "Sunita Roy",
-          customerPhone: "+91 98112 00998",
-          customerAddress: "House 12, Block B, Preet Vihar, Delhi",
+          bookingCode: "HLP-91044",
+          serviceName: "Kitchen RO Water Purifier Servicing",
+          customerName: "Ananya Deshmukh",
+          customerPhone: "+91 98112 55443",
+          customerAddress: "Villa 12, Palm Meadows, Indirapuram, Ghaziabad",
           scheduledDate: "Today",
-          scheduledTime: "03:00 PM",
-          price: 350,
-          workerStatus: "completed",
-          status: "completed",
-          workerRating: 5.0,
-          workerReview: "Prompt arrival and clean work! Extremely polite.",
-          completionPhotos: ["https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500"],
-          workerEarningsAmount: 315,
-          vendorEarningsAmount: 35
+          scheduledTime: "02:00 PM",
+          price: 699,
+          workerStatus: "assigned",
+          status: "assigned",
+          doorOtp: "7821",
+          problemDescription: "Filter membrane replacement & TDS level calibration."
         }
       ]);
     }
+    setLoading(false);
   };
 
   const checkActiveJobStopwatch = (jobList) => {
@@ -729,9 +780,23 @@ function WorkerDashboard() {
   };
 
   const updateJobStateLocally = (bookingId, patch) => {
+    const key = String(bookingId);
     setJobs((prev) =>
-      prev.map((b) => ((b.bookingId || b.id || b._id) === bookingId ? { ...b, ...patch } : b))
+      prev.map((b) => (String(b.bookingId || b.id || b._id || b.bookingCode) === key ? { ...b, ...patch } : b))
     );
+
+    const syncStores = ["helper_worker_jobs", "helper_bookings", "helper_user_bookings"];
+    syncStores.forEach((sk) => {
+      try {
+        const raw = localStorage.getItem(sk);
+        if (raw) {
+          const list = JSON.parse(raw).map((b) =>
+            String(b.bookingId || b.id || b._id || b.bookingCode) === key ? { ...b, ...patch } : b
+          );
+          localStorage.setItem(sk, JSON.stringify(list));
+        }
+      } catch (e) {}
+    });
   };
 
   // Instant UPI Withdrawal
@@ -860,7 +925,14 @@ function WorkerDashboard() {
     navigate("/login?role=worker");
   };
 
-  const activeJobsList = jobs.filter((b) => b.workerStatus !== "completed" || b.paymentStatus === "payment_due");
+  const activeJobsList = jobs.filter((b) => {
+    const isNotDone = b.workerStatus !== "completed" || b.paymentStatus === "payment_due";
+    if (!isNotDone) return false;
+    if (!selectedTradeFilter || selectedTradeFilter === "All Services") return true;
+    const sName = (b.serviceName || b.service || b.category || "").toLowerCase();
+    const filterKey = selectedTradeFilter.toLowerCase().replace(/ specialist| & deep cleaning| & sanitary| & hvac/g, "");
+    return sName.includes(filterKey) || filterKey.includes(sName);
+  });
   const completedJobsList = jobs.filter((b) => b.workerStatus === "completed" && b.paymentStatus !== "payment_due");
 
   const totalEarned = worker?.earnings?.totalEarnings || 42600;
@@ -1467,6 +1539,53 @@ function WorkerDashboard() {
                 </span>
               </div>
 
+              {/* Multi-Service Trade Filter Bar */}
+              <div style={{
+                display: "flex",
+                gap: "8px",
+                flexWrap: "wrap",
+                padding: "12px 16px",
+                background: "rgba(15, 23, 42, 0.04)",
+                borderRadius: "14px",
+                margin: "12px 0 16px 0",
+                alignItems: "center",
+                border: "1px solid rgba(0, 0, 0, 0.06)"
+              }}>
+                <span style={{ fontSize: "12.5px", fontWeight: 800, color: "var(--wrk-text-muted)", marginRight: "4px" }}>
+                  ⚡ Service Filter:
+                </span>
+                {[
+                  { id: "All Services", label: "🌟 All Services" },
+                  { id: "House Cleaning", label: "🧹 House Cleaning" },
+                  { id: "Plumber", label: "🔧 Plumber" },
+                  { id: "Electrician", label: "💡 Electrician" },
+                  { id: "AC Repair", label: "🧊 AC Repair" },
+                  { id: "Driver", label: "🚗 Driver" },
+                  { id: "Wall Painter", label: "🎨 Painter" },
+                  { id: "Carpenter", label: "🪚 Carpenter" }
+                ].map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedTradeFilter(cat.id)}
+                    style={{
+                      background: selectedTradeFilter === cat.id ? "linear-gradient(135deg, #10B981 0%, #059669 100%)" : "rgba(255, 255, 255, 0.9)",
+                      color: selectedTradeFilter === cat.id ? "#FFFFFF" : "#1E293B",
+                      border: `1.5px solid ${selectedTradeFilter === cat.id ? "#10B981" : "rgba(0, 0, 0, 0.12)"}`,
+                      padding: "6px 14px",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      boxShadow: selectedTradeFilter === cat.id ? "0 2px 8px rgba(16, 185, 129, 0.3)" : "none",
+                      transition: "all 0.2s ease"
+                    }}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
               {activeJobsList.length === 0 ? (
                 <div className="admin-empty-state">
                   <span style={{ fontSize: "52px" }}>🎉</span>
@@ -1593,13 +1712,33 @@ function WorkerDashboard() {
 
                         {/* Stage Execution */}
                         {isAssigned && (
-                          <button 
-                            type="button" 
-                            className="wrk-btn-stage-action"
-                            onClick={() => handleAcceptJob(bookingId)}
-                          >
-                            <span>✓ Accept Job Assignment</span>
-                          </button>
+                          <div style={{ marginTop: "12px" }}>
+                            <div style={{
+                              background: "rgba(16, 185, 129, 0.08)",
+                              border: "1px dashed #10B981",
+                              borderRadius: "10px",
+                              padding: "10px 14px",
+                              marginBottom: "10px",
+                              fontSize: "12.5px",
+                              color: "#065F46"
+                            }}>
+                              ⚡ <strong>Demo Vendor Dispatched Order:</strong> Customer ne <strong>{b.serviceName || b.service}</strong> book ki hai. Accept karte hi slot lock ho jayega aur location navigation unlock ho jayegi.
+                            </div>
+                            <button 
+                              type="button" 
+                              className="wrk-btn-stage-action"
+                              style={{
+                                background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                                boxShadow: "0 4px 16px rgba(16, 185, 129, 0.4)",
+                                fontSize: "14px",
+                                fontWeight: 800,
+                                padding: "14px 22px"
+                              }}
+                              onClick={() => handleAcceptJob(bookingId)}
+                            >
+                              <span>✓ Accept Service Request &amp; Lock Slot (ऑर्डर स्वीकार करें) 🚀</span>
+                            </button>
+                          </div>
                         )}
 
                         {isAccepted && (

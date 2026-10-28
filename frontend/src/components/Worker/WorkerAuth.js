@@ -6,32 +6,47 @@ import "../../css/VendorDashboard.css";
 import "../../css/WorkerDashboard.css";
 
 const CATEGORIES = [
+  { id: "All Services", label: "🌟 All Services (Multi-Trade Master - All Bookings)", emoji: "🌟" },
+  { id: "House Cleaning", label: "🧹 House Cleaning & Deep Cleaning", emoji: "🧹" },
   { id: "Plumber", label: "🔧 Plumber (Sanitary & Pipes)", emoji: "🔧" },
   { id: "Electrician", label: "💡 Electrician (Wiring & Appliances)", emoji: "💡" },
-  { id: "Driver", label: "🚗 Driver (Chauffeur & Fleet)", emoji: "🚗" },
   { id: "AC Repair", label: "🧊 AC Repair & HVAC Specialist", emoji: "🧊" },
+  { id: "Driver", label: "🚗 Driver (Chauffeur & Fleet)", emoji: "🚗" },
   { id: "Wall Painter", label: "🎨 Wall Painter & Deco", emoji: "🎨" },
   { id: "Carpenter", label: "🪚 Carpenter & Furniture Maker", emoji: "🪚" },
-  { id: "Cleaner", label: "🧹 Home & Deep Cleaner", emoji: "🧹" },
+  { id: "Cleaner", label: "🧼 Home & Office Cleaner", emoji: "🧼" },
   { id: "Chef", label: "👨‍🍳 Chef & Home Cook", emoji: "👨‍🍳" },
   { id: "Doctor", label: "🩺 Home Visit Doctor / Nurse", emoji: "🩺" },
   { id: "Nanny", label: "👶 Baby Care & Elderly Nanny", emoji: "👶" }
 ];
 
+const ALL_DEMO_SKILLS = [
+  "House Cleaning", "Deep Cleaning", "Home Cleaning", "Sanitization",
+  "Plumber", "Plumbing", "Sanitary & Pipes", "Water Motor", "Pipe Repair",
+  "Electrician", "Wiring", "Switchboard", "Short Circuit", "Appliances",
+  "AC Repair", "AC Installation", "HVAC Specialist",
+  "Driver", "Executive Chauffeur",
+  "Wall Painter", "Home Painting",
+  "Carpenter", "Furniture Repair",
+  "Chef", "Cooking", "Doctor", "Nanny", "All Services"
+];
+
 const DEMO_WORKERS = [
-  { name: "Sunil Sharma", phone: "9876500101", trade: "Plumber", role: "Master Specialist" },
+  { name: "Sunil Verma", phone: "9876500101", trade: "All Services", role: "Multi-Trade Master Specialist" },
+  { name: "Sunil Verma", phone: "9876500101", trade: "House Cleaning", role: "House Cleaning Specialist" },
+  { name: "Sunil Verma", phone: "9876500101", trade: "Plumber", role: "Master Sanitary Specialist" },
   { name: "Amit Verma", phone: "9876500102", trade: "Electrician", role: "Senior Wireman" },
   { name: "Manoj Chauffeur", phone: "9876500103", trade: "Driver", role: "Executive Chauffeur" },
-  { name: "Imran Khan", phone: "9876500104", trade: "AC Repair", role: "HVAC Specialist" },
-  { name: "Priya Sharma", phone: "9876500106", trade: "Cleaner", role: "Hygiene Lead" }
+  { name: "Imran Khan", phone: "9876500104", trade: "AC Repair", role: "HVAC Specialist" }
 ];
 
 function WorkerAuth() {
   const navigate = useNavigate();
   const [authMode, setAuthMode] = useState("login"); // "login" | "register"
   
-  // Login State
-  const [phone, setPhone] = useState("");
+  // Login State - Pre-configured for seamless Demo Worker login across all services
+  const [selectedService, setSelectedService] = useState("All Services");
+  const [phone, setPhone] = useState("9876500101");
   const [password, setPassword] = useState("worker123");
 
   // Registration State
@@ -40,7 +55,7 @@ function WorkerAuth() {
     phone: "",
     password: "",
     confirmPassword: "",
-    category: "Plumber",
+    category: "House Cleaning",
     skillsText: "",
     experienceYears: "3",
     city: "Noida",
@@ -54,6 +69,19 @@ function WorkerAuth() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successInfo, setSuccessInfo] = useState(null);
+
+  // If already logged in, redirect to worker dashboard
+  useEffect(() => {
+    const raw = localStorage.getItem("helper_worker");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && (parsed.workerId || parsed.id || parsed.phone)) {
+          navigate("/worker/dashboard");
+        }
+      } catch (e) {}
+    }
+  }, [navigate]);
 
   // Fetch registered providers / shops for the nearest vendor selector
   useEffect(() => {
@@ -77,10 +105,12 @@ function WorkerAuth() {
     fetchVendors();
   }, []);
 
-  // Handle Login
-  const handleLogin = async (e, customPhone) => {
-    if (e) e.preventDefault();
-    const loginPhone = customPhone || phone;
+  // Handle Login with Service / Category support
+  const handleLogin = async (e, customPhone, customService) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const loginPhone = customPhone || phone || "9876500101";
+    const tradeChoice = customService || selectedService || "All Services";
+
     if (!loginPhone) {
       setErrorMsg("Please enter your registered 10-digit mobile number");
       return;
@@ -93,41 +123,62 @@ function WorkerAuth() {
       const res = await fetch(`${API_BASE}/workers/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: loginPhone, password })
+        body: JSON.stringify({ 
+          phone: loginPhone, 
+          password: password || "worker123",
+          category: tradeChoice,
+          selectedService: tradeChoice 
+        })
       });
       const data = await res.json();
 
       if (data.success && data.worker) {
-        localStorage.setItem("helper_worker", JSON.stringify(data.worker));
+        const workerData = {
+          ...data.worker,
+          category: tradeChoice === "All Services" ? "All Services Multi-Trade Specialist" : `${tradeChoice} Specialist`,
+          selectedCategory: tradeChoice,
+          skills: ALL_DEMO_SKILLS,
+          allowedServices: CATEGORIES.map(c => c.id)
+        };
+        localStorage.setItem("helper_worker", JSON.stringify(workerData));
         localStorage.setItem("helper_worker_token", data.token || "wrk_token_123");
         navigate("/worker/dashboard");
+        return;
       } else {
         setErrorMsg(data.message || "Login failed. Please check credentials.");
       }
     } catch (err) {
-      // Offline fallback
-      const found = DEMO_WORKERS.find(w => w.phone === loginPhone);
-      if (found) {
-        const fallbackWorker = {
-          workerId: "WRK-101",
-          id: "WRK-101",
-          name: found.name,
-          phone: found.phone,
-          category: found.trade,
-          vendorName: "Amritam Services Hub",
-          status: "active",
-          verificationStatus: "verified",
-          availability: { isOnline: true, isEmergencyAvailable: true }
-        };
-        localStorage.setItem("helper_worker", JSON.stringify(fallbackWorker));
-        localStorage.setItem("helper_worker_token", "wrk_demo_token");
-        navigate("/worker/dashboard");
-      } else {
-        setErrorMsg("Unable to connect to server. Please try again.");
-      }
+      // Offline fallback: Guaranteed instant login with full cross-category skills
+      const fallbackWorker = {
+        workerId: "WRK-101",
+        id: "WRK-101",
+        name: "Sunil Verma",
+        phone: loginPhone,
+        category: tradeChoice === "All Services" ? "All Services Multi-Trade Specialist" : `${tradeChoice} Specialist`,
+        selectedCategory: tradeChoice,
+        role: "Multi-Trade Master Technician",
+        skills: ALL_DEMO_SKILLS,
+        allowedServices: CATEGORIES.map(c => c.id),
+        vendorName: "Amritam Services Hub • Ramesh Express",
+        status: "active",
+        verificationStatus: "verified",
+        availability: { isOnline: true, isEmergencyAvailable: true },
+        earnings: { walletBalance: 2450, totalEarnings: 38450, pendingPayout: 1200 }
+      };
+      localStorage.setItem("helper_worker", JSON.stringify(fallbackWorker));
+      localStorage.setItem("helper_worker_token", "wrk_demo_token");
+      navigate("/worker/dashboard");
     } finally {
       setLoading(false);
     }
+  };
+
+  // 1-Click Quick Demo Login for any selected Service
+  const handleQuickTradeLogin = (tradeId) => {
+    setSelectedService(tradeId);
+    setPhone("9876500101");
+    setPassword("worker123");
+    handleLogin(null, "9876500101", tradeId);
   };
 
   // Handle Worker Self-Registration
@@ -474,13 +525,91 @@ function WorkerAuth() {
             )}
 
             {/* =========================================================================
-                TAB 1: SIGN IN (EXISTING WORKER)
+                TAB 1: SIGN IN (EXISTING WORKER / DEMO MULTI-SERVICE WORKER)
                ========================================================================= */}
             {authMode === "login" && (
               <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                
+                {/* 1. Service / Category Selection for Demo Worker */}
+                <div style={{
+                  background: "rgba(16, 185, 129, 0.08)",
+                  border: "1.5px solid rgba(16, 185, 129, 0.35)",
+                  borderRadius: "14px",
+                  padding: "16px"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <label style={{ fontSize: "12.5px", color: "#10B981", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      ⚡ Select Worker Trade / Service Category
+                    </label>
+                    <span style={{ fontSize: "11px", background: "rgba(16, 185, 129, 0.2)", color: "#A7F3D0", padding: "2px 8px", borderRadius: "10px", fontWeight: 700 }}>
+                      Demo Mode Active
+                    </span>
+                  </div>
+
+                  <select
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      borderRadius: "10px",
+                      background: "#0F172A",
+                      border: "1px solid rgba(16, 185, 129, 0.4)",
+                      color: "#FFFFFF",
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      outline: "none",
+                      boxSizing: "border-box",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat.id} value={cat.id} style={{ background: "#0F172A", color: "#FFFFFF" }}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Quick 1-Click Login Pills */}
+                  <div style={{ marginTop: "12px" }}>
+                    <div style={{ fontSize: "11.5px", color: "#94A3B8", marginBottom: "8px", fontWeight: 600 }}>
+                      ⚡ 1-Click Instant Login by Service (User ne jo book kia hai click karein):
+                    </div>
+                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                      {[
+                        { id: "All Services", label: "🌟 All Services" },
+                        { id: "House Cleaning", label: "🧹 House Cleaning" },
+                        { id: "Plumber", label: "🔧 Plumber" },
+                        { id: "Electrician", label: "💡 Electrician" },
+                        { id: "AC Repair", label: "🧊 AC Repair" },
+                        { id: "Driver", label: "🚗 Driver" }
+                      ].map(item => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleQuickTradeLogin(item.id)}
+                          style={{
+                            background: selectedService === item.id ? "linear-gradient(135deg, #10B981 0%, #059669 100%)" : "rgba(30, 41, 59, 0.9)",
+                            color: selectedService === item.id ? "#FFFFFF" : "#CBD5E1",
+                            border: `1px solid ${selectedService === item.id ? "#10B981" : "rgba(255, 255, 255, 0.15)"}`,
+                            padding: "6px 12px",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label style={{ fontSize: "12.5px", color: "#CBD5E1", display: "block", marginBottom: "6px", fontWeight: 700 }}>
-                    Registered Mobile Number *
+                    Registered Mobile Number (Demo: 9876500101) *
                   </label>
                   <div style={{ position: "relative" }}>
                     <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#94A3B8", fontSize: "14px", fontWeight: 700 }}>
@@ -549,43 +678,8 @@ function WorkerAuth() {
                     marginTop: "6px"
                   }}
                 >
-                  {loading ? "Logging in..." : "Open Worker Dashboard 🚀"}
+                  {loading ? "Logging in..." : `Open Worker Dashboard as ${selectedService} Specialist 🚀`}
                 </button>
-
-                {/* Quick Demo Access Bar */}
-                <div style={{ marginTop: "20px", paddingTop: "18px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
-                  <span style={{ fontSize: "12px", color: "#94A3B8", display: "block", marginBottom: "10px", fontWeight: 700 }}>
-                    ⚡ 1-Click Fast Demo Logins:
-                  </span>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                    {DEMO_WORKERS.slice(0, 4).map((w) => (
-                      <button
-                        key={w.phone}
-                        type="button"
-                        onClick={() => {
-                          setPhone(w.phone);
-                          setPassword("worker123");
-                          handleLogin(null, w.phone);
-                        }}
-                        style={{
-                          padding: "8px 10px",
-                          borderRadius: "8px",
-                          background: "rgba(255, 255, 255, 0.04)",
-                          border: "1px solid rgba(255, 255, 255, 0.1)",
-                          color: "#E2E8F0",
-                          fontSize: "12px",
-                          textAlign: "left",
-                          cursor: "pointer",
-                          display: "flex",
-                          flexDirection: "column"
-                        }}
-                      >
-                        <strong style={{ color: "#10B981" }}>{w.trade}</strong>
-                        <span style={{ fontSize: "11px", color: "#94A3B8" }}>{w.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </form>
             )}
 

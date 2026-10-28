@@ -497,12 +497,29 @@ router.post("/:id/accept", async (req, res) => {
       experience: "6 Years Exp"
     };
 
+    const bookingParam = req.params.id;
     if (getStatus()) {
-      booking = await Booking.findById(req.params.id) || await Booking.findOne({ bookingCode: req.params.id }) || await Booking.findOne({ id: req.params.id });
+      if (mongoose.Types.ObjectId.isValid(bookingParam)) {
+        booking = await Booking.findById(bookingParam);
+      }
+      if (!booking) {
+        booking = await Booking.findOne({
+          $or: [
+            { bookingCode: bookingParam },
+            { bookingId: bookingParam },
+            { id: bookingParam }
+          ]
+        });
+      }
       if (booking) {
         booking.status = "ready_for_worker";
         booking.workerStatus = "assigned";
-        if (providerId) booking.provider = providerId;
+        booking.vendorAccepted = true;
+        booking.vendorAcceptedAt = new Date();
+        if (providerId) {
+          booking.provider = providerId;
+          booking.providerId = providerId;
+        }
         if (providerName) {
           booking.assignedProvider = providerName;
           booking.assignedProviderName = providerName;
@@ -516,12 +533,16 @@ router.post("/:id/accept", async (req, res) => {
     }
 
     if (!booking) {
-      booking = dbStore.getById("bookings", req.params.id);
+      const allB = dbStore.getAll("bookings") || [];
+      booking = dbStore.getById("bookings", bookingParam) || 
+        allB.find(b => b.bookingCode === bookingParam || b.id === bookingParam || b.bookingId === bookingParam);
       if (booking) {
         if (providerId) provider = dbStore.getById("providers", providerId);
         const updates = {
           status: "ready_for_worker",
           workerStatus: "assigned",
+          vendorAccepted: true,
+          vendorAcceptedAt: new Date().toISOString(),
           assignedWorker: assignedWorkerObj,
           assignedWorkerName: assignedWorkerObj.name,
           assignedWorkerPhone: assignedWorkerObj.phone,
@@ -530,7 +551,7 @@ router.post("/:id/accept", async (req, res) => {
           ...(providerName ? { assignedProvider: providerName, assignedProviderName: providerName } : 
              (provider ? { assignedProvider: provider.shopName ? `${provider.shopName} • ${provider.name}` : provider.name, assignedProviderName: provider.name } : {}))
         };
-        booking = dbStore.update("bookings", req.params.id, updates);
+        booking = dbStore.update("bookings", booking.id || booking._id || bookingParam, updates);
       }
     }
 

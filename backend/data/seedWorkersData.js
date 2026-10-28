@@ -1,18 +1,18 @@
-const seedWorkers = [
-  // 1. Plumber Worker
+  // 1. Multi-Trade Master Worker (Handles House Cleaning, Plumbing, Electrical, AC Repair & All Services)
   {
     id: "wrk_101",
     workerId: "WRK-101",
     vendorId: "vdr_rahul_amritam",
     vendorName: "Amritam Services Hub",
-    name: "Sunil Sharma",
+    name: "Sunil Verma",
     phone: "9876500101",
-    email: "sunil.plumber@helper.in",
+    email: "sunil.verma@helper.in",
     password: "worker123",
     avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300",
     address: "B-42, Shanti Nagar, Sector 18",
-    category: "Plumber",
-    skills: ["Pipe Leakage", "Tap Repair", "Basin Installation", "Tank Cleaning", "Drainage Unclog"],
+    category: "All Services Multi-Trade Specialist",
+    skills: ["House Cleaning", "Deep Cleaning", "Plumber", "Electrician", "AC Repair", "Cleaner", "Wall Painter", "Carpenter", "Driver", "Appliance Repair", "Pipe Leakage", "Tap Repair"],
+    allowedServices: ["House Cleaning", "Plumber", "Electrician", "AC Repair", "Cleaner", "Wall Painter", "Carpenter", "Driver", "Chef", "Doctor", "Nanny"],
     experienceYears: 6,
     status: "active",
     verificationStatus: "verified",

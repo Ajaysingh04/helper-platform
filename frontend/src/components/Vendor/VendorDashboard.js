@@ -172,6 +172,15 @@ function VendorDashboard() {
   const [payoutUpiInput, setPayoutUpiInput] = useState("");
   const [processingPayout, setProcessingPayout] = useState(false);
 
+  // Instant Accepted Orders Map for 0ms Guaranteed UI State Transition
+  const [acceptedOrdersMap, setAcceptedOrdersMap] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("helper_accepted_orders") || "{}");
+    } catch (e) {
+      return {};
+    }
+  });
+
   // KYC & Document Verification State
   const [kycForm, setKycForm] = useState({
     age: "30",
@@ -527,7 +536,7 @@ function VendorDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendor]);
 
-  // Fetch Bookings
+  // Fetch Bookings with local accepted state preservation
   const fetchBookings = async (vendorId) => {
     setLoadingBookings(true);
     try {
@@ -535,11 +544,36 @@ function VendorDashboard() {
       if (!idToFetch) return;
       const res = await fetch(`${API_BASE}/providers/${idToFetch}/bookings`);
       const data = await res.json();
-      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-        setBookings(data.data);
+      const serverList = (data.success && Array.isArray(data.data)) ? data.data : [];
+
+      // Merge with locally accepted bookings so newly accepted bookings keep vendorAccepted: true & ready_for_worker
+      const localBookings = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+      const workerJobs = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+      const acceptedMap = JSON.parse(localStorage.getItem("helper_accepted_orders") || "{}");
+
+      const mergedList = serverList.map(sb => {
+        const sKeys = [sb.bookingId, sb.id, sb._id, sb.bookingCode].filter(Boolean).map(String);
+        const isLocallyAccepted = sKeys.some(k => acceptedMap[k] || acceptedOrdersMap[k]);
+        const localMatch = localBookings.find(lb => [lb.bookingId, lb.id, lb._id, lb.bookingCode].filter(Boolean).map(String).some(k => sKeys.includes(k))) ||
+                           workerJobs.find(wj => [wj.bookingId, wj.id, wj._id, wj.bookingCode].filter(Boolean).map(String).some(k => sKeys.includes(k)));
+        if (isLocallyAccepted || (localMatch && (localMatch.vendorAccepted || localMatch.status === "ready_for_worker" || localMatch.workerStatus))) {
+          return {
+            ...sb,
+            ...(localMatch || {}),
+            vendorAccepted: true,
+            status: localMatch?.status || "ready_for_worker",
+            workerStatus: localMatch?.workerStatus || "assigned",
+            assignedWorker: localMatch?.assignedWorker || sb.assignedWorker,
+            assignedWorkerName: localMatch?.assignedWorkerName || sb.assignedWorkerName
+          };
+        }
+        return sb;
+      });
+
+      if (mergedList.length > 0) {
+        setBookings(mergedList);
       } else {
         // Fallback to locally tracked bookings matching this vendor
-        const localBookings = JSON.parse(localStorage.getItem("helper_bookings")) || [];
         const myLocal = localBookings.filter(b => 
           b.providerId === idToFetch || 
           b.provider === idToFetch ||
@@ -1111,10 +1145,11 @@ function VendorDashboard() {
 
 
 
-  // Accept incoming job offer and ready for worker
+  // Accept incoming job offer and ready for worker (Instant Hit Update with Animation)
   const handleAcceptBooking = async (booking) => {
     if (!booking) return;
-    const key = booking.bookingId || booking.id || booking._id;
+    const bId = booking.bookingId || booking.id || booking._id || booking.bookingCode;
+    const bCode = booking.bookingCode || booking.bookingId || booking.id || bId;
     const vId = vendor?.id || vendor?._id || "vdr_demo_01";
     const vName = vendor?.shopName ? `${vendor.shopName} • ${vendor.name}` : (vendor?.name || "Ramesh Express Plumbing & Home Care");
     const primaryWorker = teamMembers.find(m => !m.isOwner) || {
@@ -1122,10 +1157,16 @@ function VendorDashboard() {
       workerId: "WRK-101",
       name: "Sunil Verma",
       phone: "+91 98765 00101",
-      role: "Senior Technician"
+      role: "Senior Master Multi-Trade Specialist",
+      category: booking.serviceName || booking.service || "All Services"
     };
 
-    const patch = {
+    const fullAcceptedBooking = {
+      ...booking,
+      bookingId: bId,
+      id: bId,
+      _id: booking._id || bId,
+      bookingCode: bCode,
       status: "ready_for_worker",
       workerStatus: "assigned",
       vendorAccepted: true,
@@ -1138,31 +1179,87 @@ function VendorDashboard() {
       assignedWorkers: [primaryWorker]
     };
 
-    // Optimistic update
-    setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === key ? {
-      ...b,
-      ...patch
-    } : b));
+    const isMatch = (item) => {
+      if (!item) return false;
+      const targetKeys = [bId, bCode, booking.bookingId, booking.id, booking._id, booking.bookingCode].filter(Boolean).map(String);
+      const itemKeys = [item.bookingId, item.id, item._id, item.bookingCode].filter(Boolean).map(String);
+      return itemKeys.some(k => targetKeys.includes(k));
+    };
 
-    if (incomingOffer && (incomingOffer.bookingId === key || incomingOffer.id === key)) {
+    // 1. Guaranteed Instant Hit State Transition (0ms)
+    const updatedAcceptedMap = {
+      ...acceptedOrdersMap,
+      [String(bId)]: true,
+      [String(bCode)]: true,
+      [String(booking._id)]: true,
+      [String(booking.id)]: true,
+      [String(booking.bookingId)]: true,
+      [String(booking.bookingCode)]: true
+    };
+    setAcceptedOrdersMap(updatedAcceptedMap);
+    try {
+      localStorage.setItem("helper_accepted_orders", JSON.stringify(updatedAcceptedMap));
+    } catch(e) {}
+
+    // 2. Instant optimistic state update
+    setBookings(prev => prev.map(b => isMatch(b) ? { ...b, ...fullAcceptedBooking } : b));
+
+    if (incomingOffer && isMatch(incomingOffer)) {
       setIncomingOffer(null);
     }
-    showToast(`🎉 Order #${key} Accepted & Ready! Dispatched to worker ${primaryWorker.name}. 🚀`);
+    showToast(`🎉 Order #${bCode} Accepted! Dispatched to Field Technician ${primaryWorker.name}. 🚀`);
 
-    // Synchronize to Demo User (MyBookings) and Demo Worker (WorkerDashboard) across all tabs
-    broadcastBookingSync(key, patch);
+    // Direct write to helper_worker_jobs for 100% reliable worker pickup
     try {
-      window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: { bookingId: key, ...booking, ...patch } }));
+      const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+      const filteredW = existingW.filter(j => !isMatch(j));
+      localStorage.setItem("helper_worker_jobs", JSON.stringify([fullAcceptedBooking, ...filteredW]));
     } catch (e) {}
 
-    // Socket notification
+    // Direct write to helper_bookings
+    try {
+      const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+      let foundB = false;
+      const updatedB = existingB.map(b => {
+        if (isMatch(b)) {
+          foundB = true;
+          return { ...b, ...fullAcceptedBooking };
+        }
+        return b;
+      });
+      if (!foundB) updatedB.unshift(fullAcceptedBooking);
+      localStorage.setItem("helper_bookings", JSON.stringify(updatedB));
+    } catch (e) {}
+
+    // Synchronize to Demo User (MyBookings) and Demo Worker (WorkerDashboard) across all tabs
+    broadcastBookingSync(bCode, fullAcceptedBooking);
+    try {
+      window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: fullAcceptedBooking }));
+      window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: bCode, patch: fullAcceptedBooking } }));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {}
+
+    // Socket notification to Demo Worker & Platform
     if (socketRef.current) {
-      socketRef.current.emit("job:accept", { bookingId: key, providerId: vId, workerId: primaryWorker.workerId || primaryWorker.id });
+      socketRef.current.emit("job:accept", { bookingId: bCode, providerId: vId, workerId: primaryWorker.workerId || primaryWorker.id });
+      socketRef.current.emit("worker:new_job_alert", {
+        bookingId: bCode,
+        bookingCode: bCode,
+        serviceName: fullAcceptedBooking.serviceName || fullAcceptedBooking.service,
+        customerName: fullAcceptedBooking.customerName,
+        customerPhone: fullAcceptedBooking.customerPhone,
+        customerAddress: fullAcceptedBooking.customerAddress || fullAcceptedBooking.address,
+        scheduledDate: fullAcceptedBooking.scheduledDate,
+        scheduledTime: fullAcceptedBooking.scheduledTime,
+        amount: fullAcceptedBooking.totalAmount || fullAcceptedBooking.price,
+        workerId: primaryWorker.workerId || primaryWorker.id || "WRK-101"
+      });
     }
 
     // Backend call
     try {
-      await fetch(`${API_BASE}/bookings/${key}/accept`, {
+      const targetId = booking._id || bCode || bId;
+      await fetch(`${API_BASE}/bookings/${targetId}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1819,10 +1916,10 @@ function VendorDashboard() {
                           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                             <span style={{
                               padding: "4px 10px", borderRadius: "100px", fontSize: "11px", fontWeight: 800,
-                              background: isInProgress ? "rgba(255, 77, 45, 0.15)" : isCompleted ? "rgba(16, 185, 129, 0.15)" : "rgba(59, 130, 246, 0.15)",
-                              color: isInProgress ? "#FF4D2D" : isCompleted ? "#10B981" : "#3B82F6"
+                              background: isInProgress ? "rgba(255, 77, 45, 0.15)" : (b.vendorAccepted || b.status === "ready_for_worker" || isCompleted) ? "rgba(16, 185, 129, 0.15)" : "rgba(59, 130, 246, 0.15)",
+                              color: isInProgress ? "#FF4D2D" : (b.vendorAccepted || b.status === "ready_for_worker" || isCompleted) ? "#10B981" : "#3B82F6"
                             }}>
-                              {b.status || "Pending"}
+                              {(b.vendorAccepted || b.status === "ready_for_worker") ? "✓ Booking Accepted" : (b.status || "Pending")}
                             </span>
                             <span style={{ fontWeight: 800, color: "#10B981", fontSize: "15px" }}>
                               ₹{b.finalCalculatedAmount || b.totalAmount || b.amount || 448}
@@ -1892,6 +1989,25 @@ function VendorDashboard() {
               <div className="vendor-bookings-list">
                 {filteredBookings.map(b => {
                   const key = b.bookingId || b.id || b._id;
+                  const bCode = b.bookingCode || b.bookingId || b.id || key;
+                  const isAccepted = Boolean(
+                    acceptedOrdersMap[key] || 
+                    acceptedOrdersMap[b.bookingCode] || 
+                    acceptedOrdersMap[b.bookingId] || 
+                    acceptedOrdersMap[b._id] || 
+                    acceptedOrdersMap[b.id] || 
+                    acceptedOrdersMap[bCode] ||
+                    b.vendorAccepted || 
+                    b.status === "ready_for_worker" || 
+                    b.workerStatus === "assigned" || 
+                    b.workerStatus === "accepted" || 
+                    b.workerStatus === "traveling" || 
+                    b.workerStatus === "arrived" || 
+                    b.workerStatus === "in_progress" || 
+                    b.status === "in_progress" || 
+                    b.status === "work_completed" || 
+                    b.status === "completed"
+                  );
                   const isAssigned = b.status === "assigned" || (!b.slotConfirmed && b.status !== "slot_confirmed" && b.status !== "arrived" && b.status !== "in_progress" && b.status !== "In Progress" && b.status !== "work_completed" && b.status !== "completed" && b.status !== "Completed");
                   const isSlotConfirmed = b.status === "slot_confirmed" || (b.slotConfirmed && b.status !== "arrived" && b.status !== "in_progress" && b.status !== "In Progress" && b.status !== "work_completed" && b.status !== "completed" && b.status !== "Completed");
                   const isArrived = b.status === "arrived";
@@ -1904,25 +2020,27 @@ function VendorDashboard() {
 
                   return (
                     <div className="vendor-booking-card" key={key} style={{
-                      borderColor: isInProgress ? "#FF4D2D" : isWorkCompleted ? "#10B981" : isSlotConfirmed ? "#3B82F6" : "#E2E8F0"
+                      borderColor: isCompleted ? "#10B981" : isWorkCompleted ? "#10B981" : isAccepted ? "#10B981" : isInProgress ? "#FF4D2D" : isSlotConfirmed ? "#3B82F6" : "#E2E8F0",
+                      boxShadow: isAccepted && !isCompleted ? "0 4px 24px rgba(16, 185, 129, 0.16)" : undefined,
+                      transition: "all 0.3s ease"
                     }}>
                       <div className="booking-details-group">
                         <div className="booking-service-title-row">
                           <div style={{
                             width: "48px", height: "48px", borderRadius: "14px",
-                            background: isInProgress ? "rgba(255, 77, 45, 0.15)" : "rgba(255, 77, 45, 0.08)",
-                            color: "#FF4D2D",
+                            background: isAccepted ? "rgba(16, 185, 129, 0.15)" : isInProgress ? "rgba(255, 77, 45, 0.15)" : "rgba(255, 77, 45, 0.08)",
+                            color: isAccepted ? "#10B981" : "#FF4D2D",
                             display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px"
                           }}>
-                            {getCategoryEmoji(vendor.category)}
+                            {getCategoryEmoji(b.serviceName || b.service || vendor.category)}
                           </div>
                           <div>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                               <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>
                                 {b.serviceName || `${vendor.category} Service Consultation`}
                               </h4>
-                              <span style={{ fontSize: "11px", color: "#64748B", background: "#F1F5F9", padding: "2px 8px", borderRadius: "6px" }}>
-                                #{b.bookingId || key}
+                              <span style={{ fontSize: "11px", color: "#64748B", background: "#F1F5F9", padding: "2px 8px", borderRadius: "6px", fontWeight: 700 }}>
+                                #{bCode}
                               </span>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px", flexWrap: "wrap" }}>
@@ -1944,21 +2062,27 @@ function VendorDashboard() {
                             marginLeft: "auto",
                             background: isCompleted ? "rgba(16, 185, 129, 0.12)" :
                                         isWorkCompleted ? "rgba(16, 185, 129, 0.16)" :
-                                        (b.vendorAccepted || b.status === "ready_for_worker") ? "rgba(59, 130, 246, 0.12)" :
+                                        isAccepted ? "rgba(16, 185, 129, 0.15)" :
                                         "rgba(234, 179, 8, 0.12)",
                             color: isCompleted ? "#059669" :
                                    isWorkCompleted ? "#059669" :
-                                   (b.vendorAccepted || b.status === "ready_for_worker") ? "#2563EB" :
+                                   isAccepted ? "#059669" :
                                    "#D97706",
-                            border: `1px solid ${
-                              isCompleted || isWorkCompleted ? "rgba(16, 185, 129, 0.3)" :
-                              (b.vendorAccepted || b.status === "ready_for_worker") ? "rgba(59, 130, 246, 0.3)" :
+                            border: `1.5px solid ${
+                              isCompleted || isWorkCompleted || isAccepted ? "rgba(16, 185, 129, 0.4)" :
                               "rgba(234, 179, 8, 0.3)"
-                            }`
+                            }`,
+                            fontWeight: 800,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px"
                           }}>
+                            {isAccepted && !isCompleted && !isWorkCompleted && (
+                              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
+                            )}
                             {isCompleted ? "✓ Finished & Paid" :
                              isWorkCompleted ? "📋 Payment Due" :
-                             (b.vendorAccepted || b.status === "ready_for_worker") ? "✓ Dispatched to Worker" :
+                             isAccepted ? "✓ Booking Accepted & Dispatched" :
                              "⚡ New Order Pending"}
                           </span>
                         </div>
@@ -1983,7 +2107,7 @@ function VendorDashboard() {
                               <span>📞</span> <span>Call Customer</span>
                             </a>
                             <a
-                              href={`https://wa.me/${String(b.customerPhone || "9876500002").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello ${b.customerName || "Customer"}, I am your Helper verified vendor regarding order #${b.bookingId || key} for ${b.scheduledDate || "today"} at ${b.scheduledTime || "your slot"}.`)}`}
+                              href={`https://wa.me/${String(b.customerPhone || "9876500002").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello ${b.customerName || "Customer"}, I am your Helper verified vendor regarding order #${bCode} for ${b.scheduledDate || "today"} at ${b.scheduledTime || "your slot"}.`)}`}
                               target="_blank"
                               rel="noreferrer"
                               className="quick-contact-btn quick-wa-btn"
@@ -2007,7 +2131,7 @@ function VendorDashboard() {
                               className="select-worker-assign"
                               value={b.assignedWorkerId || "mem_2"}
                               onChange={(e) => handleAssignWorker(key, e.target.value)}
-                              disabled={isCompleted}
+                              disabled={isCompleted || isAccepted}
                             >
                               {teamMembers.map(mem => (
                                 <option key={mem.id} value={mem.id}>
@@ -2033,14 +2157,14 @@ function VendorDashboard() {
 
                         {/* 4-Stage Stepper Bar for Vendor */}
                         <div className="vendor-stage-stepper">
-                          <div className={`stepper-step ${(!b.vendorAccepted && b.status !== "ready_for_worker") ? "active" : "done"}`}>
-                            <div className="step-num">{(!b.vendorAccepted && b.status !== "ready_for_worker") ? "1" : "✓"}</div>
+                          <div className={`stepper-step ${!isAccepted ? "active" : "done"}`}>
+                            <div className="step-num">{!isAccepted ? "1" : "✓"}</div>
                             <div className="step-label">1. Order Received</div>
                           </div>
-                          <div className={`stepper-line ${(b.vendorAccepted || b.status === "ready_for_worker") ? "filled" : ""}`}></div>
-                          <div className={`stepper-step ${(b.vendorAccepted || b.status === "ready_for_worker") && !isCompleted ? "active" : isCompleted ? "done" : ""}`}>
+                          <div className={`stepper-line ${isAccepted ? "filled" : ""}`}></div>
+                          <div className={`stepper-step ${isAccepted && !isCompleted ? "active" : isCompleted ? "done" : ""}`}>
                             <div className="step-num">{isCompleted ? "✓" : "2"}</div>
-                            <div className="step-label">2. Vendor Accepted</div>
+                            <div className="step-label">2. Booking Accepted</div>
                           </div>
                           <div className={`stepper-line ${(b.workerStatus === "in_progress" || isCompleted) ? "filled" : ""}`}></div>
                           <div className={`stepper-step ${(b.workerStatus === "in_progress" || b.workerStatus === "traveling" || b.workerStatus === "arrived") ? "active" : isCompleted ? "done" : ""}`}>
@@ -2059,7 +2183,7 @@ function VendorDashboard() {
                       <div className="booking-operations-box">
                         
                         {/* DEMO VENDOR ACTION: ACCEPT BOOKING ONLY (NO OTP, NO COUNTDOWN) */}
-                        {!b.vendorAccepted && b.status !== "ready_for_worker" && b.status !== "in_progress" && b.status !== "completed" && b.status !== "work_completed" ? (
+                        {!isAccepted ? (
                           <div className="stage-slot-confirmation" style={{ background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.04) 100%)", border: "1.5px solid rgba(16, 185, 129, 0.35)", borderRadius: "14px", padding: "18px" }}>
                             <div className="slot-instructions" style={{ marginBottom: "12px" }}>
                               <h5 style={{ margin: "0 0 6px", color: "#065F46", fontSize: "15px", fontWeight: 800 }}>
@@ -2103,43 +2227,152 @@ function VendorDashboard() {
                             </div>
                           </div>
                         ) : (
-                          /* VENDOR DISPATCHED MANAGEMENT STATUS CARD */
-                          <div className="vendor-dispatched-box" style={{
-                            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 95, 70, 0.04) 100%)",
-                            border: "1.5px solid rgba(16, 185, 129, 0.3)",
-                            borderRadius: "14px",
-                            padding: "16px 20px"
+                          /* ULTRA-PROFESSIONAL ANIMATED BOOKING ACCEPTED CARD */
+                          <div className="vendor-accepted-banner animate-fade-in" style={{
+                            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 95, 70, 0.05) 100%)",
+                            border: "2px solid #10B981",
+                            borderRadius: "16px",
+                            padding: "20px 24px",
+                            boxShadow: "0 8px 30px rgba(16, 185, 129, 0.18)",
+                            position: "relative",
+                            overflow: "hidden"
                           }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
-                              <div>
-                                <span style={{ fontSize: "13.5px", fontWeight: 800, color: "#065F46", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                  <span>✓</span> Order Accepted by Vendor &amp; Dispatched to Demo Worker (Sunil Verma)
-                                </span>
-                                <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#64748B" }}>
-                                  Technician Sunil Verma will navigate to customer location, verify doorstep OTP, and execute the service.
-                                </p>
+                            {/* Header: Animated Badge & Celebration */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginBottom: "14px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div style={{
+                                  width: "42px",
+                                  height: "42px",
+                                  borderRadius: "12px",
+                                  background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                                  color: "#FFF",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: "22px",
+                                  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4)",
+                                  fontWeight: 800
+                                }}>
+                                  ✓
+                                </div>
+                                <div>
+                                  <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#065F46", letterSpacing: "0.2px" }}>
+                                    Booking Accepted &amp; Dispatched to Field Worker! 🎉
+                                  </h4>
+                                  <span style={{ fontSize: "12.5px", color: "#475569" }}>
+                                    Order #{bCode} ({b.serviceName || b.service}) is assigned to Master Technician Sunil Verma.
+                                  </span>
+                                </div>
                               </div>
+
                               <span className="worker-live-status-pill" style={{
                                 background: (b.workerStatus === "in_progress" || b.status === "in_progress") ? "#3B82F6" : 
                                             (b.workerStatus === "awaiting_payment" || b.status === "awaiting_payment") ? "#F59E0B" : 
                                             (b.workerStatus === "completed" || b.status === "completed") ? "#10B981" : 
                                             (b.workerStatus === "arrived") ? "#8B5CF6" : 
                                             (b.workerStatus === "traveling") ? "#0EA5E9" : 
-                                            (b.workerStatus === "accepted") ? "#10B981" : "#F59E0B",
+                                            (b.workerStatus === "accepted") ? "#10B981" : "#10B981",
                                 color: "#FFF",
-                                padding: "6px 14px",
-                                borderRadius: "20px",
-                                fontSize: "12px",
+                                padding: "7px 16px",
+                                borderRadius: "30px",
+                                fontSize: "12.5px",
                                 fontWeight: 800,
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                                boxShadow: "0 3px 12px rgba(16, 185, 129, 0.3)",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "8px"
                               }}>
+                                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#FFF", display: "inline-block" }} />
                                 {(b.workerStatus === "in_progress" || b.status === "in_progress") ? "⏱️ Work In Progress by Sunil Verma" :
                                  (b.workerStatus === "awaiting_payment" || b.status === "awaiting_payment") ? "📷 Service Complete • QR Payment Due" :
                                  (b.workerStatus === "completed" || b.status === "completed") ? "🎉 Order Completed" :
-                                 (b.workerStatus === "arrived") ? "🏁 Worker Arrived at Doorstep (OTP Pending)" :
+                                 (b.workerStatus === "arrived") ? "🏁 Worker Arrived at Doorstep" :
                                  (b.workerStatus === "traveling") ? "🛵 Worker En Route to Customer" :
                                  (b.workerStatus === "accepted") ? "✓ Worker Sunil Verma Accepted" :
-                                 "⏳ Awaiting Worker Acceptance"}
+                                 "📡 Dispatched • Alert Sent to Worker Mobile"}
+                              </span>
+                            </div>
+
+                            {/* Field Technician Dispatch Card (Inner Glass Box) */}
+                            <div style={{
+                              background: "rgba(255, 255, 255, 0.9)",
+                              borderRadius: "14px",
+                              padding: "14px 18px",
+                              border: "1px solid rgba(16, 185, 129, 0.3)",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: "14px",
+                              marginBottom: "12px"
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div style={{
+                                  width: "44px",
+                                  height: "44px",
+                                  borderRadius: "12px",
+                                  background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                                  color: "#FFF",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: "22px"
+                                }}>
+                                  👷
+                                </div>
+                                <div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <strong style={{ fontSize: "14.5px", color: "#0F172A" }}>Sunil Verma</strong>
+                                    <span style={{ fontSize: "11px", background: "#ECFDF5", color: "#059669", padding: "2px 8px", borderRadius: "10px", fontWeight: 700 }}>
+                                      ⭐ 4.95 Rating • Multi-Trade Specialist
+                                    </span>
+                                  </div>
+                                  <span style={{ fontSize: "12px", color: "#64748B" }}>
+                                    📱 +91 98765 00101 • Net Technician Share: <strong>₹{orderAmount - Math.round(orderAmount * 0.10)} (90%)</strong>
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                                <a
+                                  href="tel:+919876500101"
+                                  className="quick-contact-btn"
+                                  style={{ background: "#065F46", color: "#FFF", textDecoration: "none", padding: "9px 16px", borderRadius: "10px", fontWeight: 700, fontSize: "12.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                                >
+                                  📞 Call Worker Sunil
+                                </a>
+                                <a
+                                  href={`https://wa.me/919876500101?text=${encodeURIComponent(`Hello Sunil Verma, new service order #${bCode} for ${b.serviceName || b.service} has been dispatched to you. Customer: ${b.customerName} (${b.customerPhone}), Location: ${b.customerAddress || b.address}. Please accept and proceed.`)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="quick-contact-btn quick-wa-btn"
+                                  style={{ padding: "9px 16px", borderRadius: "10px", fontWeight: 700, fontSize: "12.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                                >
+                                  💬 WhatsApp Worker
+                                </a>
+                                <a
+                                  href={`tel:${b.customerPhone || "+919876500002"}`}
+                                  className="quick-contact-btn quick-call-btn"
+                                  style={{ padding: "9px 16px", borderRadius: "10px", fontWeight: 700, fontSize: "12.5px", display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none" }}
+                                >
+                                  📞 Call Customer
+                                </a>
+                                <Link
+                                  to="/worker/login"
+                                  target="_blank"
+                                  className="quick-contact-btn"
+                                  style={{ background: "#2563EB", color: "#FFF", textDecoration: "none", padding: "9px 16px", borderRadius: "10px", fontWeight: 700, fontSize: "12.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                                >
+                                  👷 Open Worker Portal →
+                                </Link>
+                              </div>
+                            </div>
+
+                            {/* Live Radar Dispatch Telemetry Note */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "#065F46" }}>
+                              <span>📡</span>
+                              <span>
+                                <strong>Live Dispatch Active:</strong> Technician Sunil Verma has received the dispatch alert and can accept order #{bCode} across any trade category. Doorstep OTP will unlock upon arrival.
                               </span>
                             </div>
                           </div>

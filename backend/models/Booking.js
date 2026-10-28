@@ -88,6 +88,9 @@ const BookingSchema = new mongoose.Schema(
       type: String,
       enum: [
         "pending",
+        "pending_vendor",
+        "ready_for_worker",
+        "vendor_accepted",
         "requested",
         "searching_provider",
         "assigned",
@@ -110,6 +113,9 @@ const BookingSchema = new mongoose.Schema(
       default: "pending",
       index: true
     },
+
+    vendorAccepted: { type: Boolean, default: false },
+    vendorAcceptedAt: { type: Date },
 
     // Problem Notes
     problemDescription: { type: String, default: "" },

@@ -51,7 +51,8 @@ function AppContent() {
         </Routes>
       ) : isWorkerRoute ? (
         <Routes>
-          <Route path="/worker" element={<WorkerDashboard />} />
+          <Route path="/worker" element={<WorkerAuth />} />
+          <Route path="/worker/auth" element={<WorkerAuth />} />
           <Route path="/worker/login" element={<WorkerAuth />} />
           <Route path="/worker/dashboard" element={<WorkerDashboard />} />
         </Routes>
@@ -69,7 +70,8 @@ function AppContent() {
         <Route path="/vendor/login" element={<VendorAuth defaultTab="login" />} />
         <Route path="/vendor/register" element={<VendorAuth defaultTab="register" />} />
         <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-        <Route path="/worker" element={<WorkerDashboard />} />
+        <Route path="/worker" element={<WorkerAuth />} />
+        <Route path="/worker/auth" element={<WorkerAuth />} />
         <Route path="/worker/login" element={<WorkerAuth />} />
         <Route path="/worker/dashboard" element={<WorkerDashboard />} />
         <Route path="/about" element={<About />} />

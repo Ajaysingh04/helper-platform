@@ -22,8 +22,32 @@ export const DEMO_WORKER = {
   workerId: "WRK-101",
   name: "Sunil Verma",
   phone: "+91 98765 00101",
-  category: "Plumber",
-  role: "Senior Master Technician",
+  category: "All Services Multi-Trade Specialist",
+  skills: [
+    "House Cleaning",
+    "Deep Cleaning",
+    "Plumber",
+    "Electrician",
+    "AC Repair",
+    "Cleaner",
+    "Wall Painter",
+    "Carpenter",
+    "Driver"
+  ],
+  allowedServices: [
+    "House Cleaning",
+    "Plumber",
+    "Electrician",
+    "AC Repair",
+    "Cleaner",
+    "Wall Painter",
+    "Carpenter",
+    "Driver",
+    "Chef",
+    "Doctor",
+    "Nanny"
+  ],
+  role: "Senior Master Multi-Trade Specialist",
   rating: 4.95,
   totalJobs: 148,
   experience: "6+ Years Experience",
@@ -198,14 +222,20 @@ export function broadcastBookingSync(bookingId, patchData) {
   if (!bookingId) return;
   const key = String(bookingId);
 
+  const matchItem = (b) => {
+    if (!b) return false;
+    const bKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
+    const targetKeys = [key, patchData?.bookingId, patchData?.id, patchData?.bookingCode, patchData?._id].filter(Boolean).map(String);
+    return bKeys.some(k => targetKeys.includes(k));
+  };
+
   // 1. Update helper_user_bookings
   try {
     const raw = localStorage.getItem("helper_user_bookings");
     let list = raw ? JSON.parse(raw) : [];
     let updated = false;
     list = list.map((b) => {
-      const bKey = String(b.bookingId || b.id || b._id || b.bookingCode || "");
-      if (bKey === key) {
+      if (matchItem(b)) {
         updated = true;
         return { ...b, ...patchData };
       }
@@ -221,12 +251,36 @@ export function broadcastBookingSync(bookingId, patchData) {
   try {
     const rawB = localStorage.getItem("helper_bookings");
     let listB = rawB ? JSON.parse(rawB) : [];
+    let updatedB = false;
     listB = listB.map((b) => {
-      const bKey = String(b.bookingId || b.id || b._id || b.bookingCode || "");
-      if (bKey === key) return { ...b, ...patchData };
+      if (matchItem(b)) {
+        updatedB = true;
+        return { ...b, ...patchData };
+      }
       return b;
     });
+    if (!updatedB && patchData) {
+      listB.unshift({ bookingId: key, id: key, ...patchData });
+    }
     localStorage.setItem("helper_bookings", JSON.stringify(listB));
+  } catch (e) {}
+
+  // 3. Update helper_worker_jobs for immediate Demo Worker pickup
+  try {
+    const rawW = localStorage.getItem("helper_worker_jobs");
+    let listW = rawW ? JSON.parse(rawW) : [];
+    let updatedW = false;
+    listW = listW.map((b) => {
+      if (matchItem(b)) {
+        updatedW = true;
+        return { ...b, ...patchData };
+      }
+      return b;
+    });
+    if (!updatedW && patchData) {
+      listW.unshift({ bookingId: key, id: key, ...patchData });
+    }
+    localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));
   } catch (e) {}
 
   // 3. Post to BroadcastChannel
