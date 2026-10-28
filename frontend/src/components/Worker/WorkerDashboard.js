@@ -361,7 +361,7 @@ function WorkerDashboard() {
       } catch (e) {}
     }
 
-    // 3. ALWAYS scan and prioritize helper_worker_jobs (100% vendor accepted & dispatched)
+    // 3. ALWAYS scan and prioritize helper_worker_jobs (vendor accepted & dispatched)
     const acceptedMap = JSON.parse(localStorage.getItem("helper_accepted_orders") || "{}");
 
     try {
@@ -376,13 +376,17 @@ function WorkerDashboard() {
             const formattedItem = {
               ...b,
               bookingCode: b.bookingCode || b.bookingId || b.id || bId,
-              workerStatus: b.workerStatus || "assigned",
+              workerStatus: b.workerStatus || (b.status === "completed" ? "completed" : "assigned"),
               status: b.status || "ready_for_worker",
-              vendorAccepted: true
+              vendorAccepted: true,
+              timestamp: b.timestamp || (b.createdAt && !isNaN(new Date(b.createdAt).getTime()) ? new Date(b.createdAt).getTime() : Date.now()),
+              createdAt: b.createdAt || new Date().toISOString()
             };
-            const existingIdx = combined.findIndex(
-              (j) => (j.bookingId || j.id || j._id || j.bookingCode) === bId
-            );
+            const targetKeys = [bId, b.bookingCode, b.id, b._id].filter(Boolean).map(String);
+            const existingIdx = combined.findIndex((j) => {
+              const itemKeys = [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String);
+              return itemKeys.some(k => targetKeys.includes(k));
+            });
             if (existingIdx >= 0) {
               combined[existingIdx] = { ...combined[existingIdx], ...formattedItem };
             } else {
@@ -393,7 +397,7 @@ function WorkerDashboard() {
       }
     } catch (e) {}
 
-    // 4. Also scan helper_user_bookings and helper_bookings for orders accepted by vendor
+    // 4. ALWAYS scan helper_user_bookings and helper_bookings so new bookings reach Demo Worker unconditionally!
     const otherStores = ["helper_user_bookings", "helper_bookings"];
     otherStores.forEach((k) => {
       try {
@@ -406,24 +410,27 @@ function WorkerDashboard() {
           if (!b) return;
           const bId = b.bookingId || b.id || b._id || b.bookingCode;
           if (!bId) return;
+          if (b.status === "cancelled" || b.workerStatus === "cancelled") return;
 
           const targetKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
           const isLocallyAccepted = targetKeys.some(key => acceptedMap[key]);
-          const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || isLocallyAccepted;
+          const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || isLocallyAccepted || !b.status || b.status === "pending" || b.status === "searching_provider";
 
           if (isVendorApproved) {
             const formattedItem = {
               ...b,
               bookingCode: b.bookingCode || b.bookingId || b.id || bId,
-              workerStatus: b.workerStatus || "assigned",
-              status: (b.status === "pending" || !b.status) ? "ready_for_worker" : b.status,
-              vendorAccepted: true
+              workerStatus: b.workerStatus || (b.status === "completed" ? "completed" : "assigned"),
+              status: (b.status === "completed") ? "completed" : ((b.status === "pending" || !b.status || b.status === "searching_provider") ? "ready_for_worker" : b.status),
+              vendorAccepted: true,
+              timestamp: b.timestamp || (b.createdAt && !isNaN(new Date(b.createdAt).getTime()) ? new Date(b.createdAt).getTime() : Date.now()),
+              createdAt: b.createdAt || new Date().toISOString()
             };
-            const existingIdx = combined.findIndex(
-              (j) => (j.bookingId || j.id || j._id || j.bookingCode) === bId
-            );
+            const existingIdx = combined.findIndex((j) => {
+              const itemKeys = [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String);
+              return itemKeys.some(key => targetKeys.includes(key));
+            });
             if (existingIdx >= 0) {
-              // Preserve existing worker-specific updates (e.g. accepted, traveling)
               combined[existingIdx] = {
                 ...formattedItem,
                 ...combined[existingIdx],
@@ -774,11 +781,49 @@ function WorkerDashboard() {
       adminEarningsAmount: adminProfit
     };
 
+    const targetKeys = [bookingId].filter(Boolean).map(String);
+    const isTarget = (b) => {
+      if (!b) return false;
+      const itemKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
+      return itemKeys.some((k) => targetKeys.includes(k));
+    };
+
+    // 1. Immediately update jobs state so the QR card is removed from activeJobsList immediately!
+    setJobs((prev) => prev.map((b) => (isTarget(b) ? { ...b, ...patchData } : b)));
+
+    // 2. Immediately credit worker wallet
+    setWorker((prev) => {
+      if (!prev) return prev;
+      const curWallet = prev.earnings?.pendingPayout || 0;
+      const curTotal = prev.earnings?.totalEarnings || 0;
+      const updated = {
+        ...prev,
+        earnings: {
+          ...prev.earnings,
+          pendingPayout: curWallet + workerEarnings,
+          totalEarnings: curTotal + workerEarnings
+        }
+      };
+      try {
+        localStorage.setItem("helper_worker", JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    // 3. Save to completed jobs store so Job History count and tab updates immediately
+    try {
+      const existingDone = JSON.parse(localStorage.getItem("helper_completed_jobs") || "[]");
+      const matched = jobs.find(isTarget);
+      const doneItem = { ...(matched || {}), ...patchData };
+      localStorage.setItem("helper_completed_jobs", JSON.stringify([doneItem, ...existingDone.filter(j => !isTarget(j))]));
+    } catch (e) {}
+
+    // 4. Update sync stores and broadcast
     broadcastBookingSync(bookingId, patchData);
     updateJobStateLocally(bookingId, patchData);
-    showToast(`🎉 Payment of ₹${bill} verified! Your 90% payout (₹${workerEarnings}) added to your balance.`);
+    showToast(`🎉 Payment of ₹${bill} verified! ₹${workerEarnings} (90%) added to your wallet. Order completed!`);
 
-    const foundBooking = jobs.find((j) => (j.bookingId || j.id || j._id) === bookingId);
+    const foundBooking = jobs.find(isTarget);
     if (foundBooking) {
       setCustomerFeedbackBooking({ ...foundBooking, ...patchData });
     }
@@ -819,9 +864,15 @@ function WorkerDashboard() {
   };
 
   const updateJobStateLocally = (bookingId, patch) => {
-    const key = String(bookingId);
+    const targetKeys = [bookingId, patch?.bookingId, patch?.id, patch?._id, patch?.bookingCode].filter(Boolean).map(String);
+    const isTarget = (b) => {
+      if (!b) return false;
+      const itemKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
+      return itemKeys.some((k) => targetKeys.includes(k));
+    };
+
     setJobs((prev) =>
-      prev.map((b) => (String(b.bookingId || b.id || b._id || b.bookingCode) === key ? { ...b, ...patch } : b))
+      prev.map((b) => (isTarget(b) ? { ...b, ...patch } : b))
     );
 
     const syncStores = ["helper_worker_jobs", "helper_bookings", "helper_user_bookings"];
@@ -830,7 +881,7 @@ function WorkerDashboard() {
         const raw = localStorage.getItem(sk);
         if (raw) {
           const list = JSON.parse(raw).map((b) =>
-            String(b.bookingId || b.id || b._id || b.bookingCode) === key ? { ...b, ...patch } : b
+            isTarget(b) ? { ...b, ...patch } : b
           );
           localStorage.setItem(sk, JSON.stringify(list));
         }
@@ -997,10 +1048,14 @@ function WorkerDashboard() {
 
       // 2. Newest updated/accepted/created timestamp on top
       const parseTime = (item) => {
-        const d = item.vendorAcceptedAt || item.updatedAt || item.createdAt || item.date;
+        if (!item) return 0;
+        if (typeof item.timestamp === "number" && item.timestamp > 0) return item.timestamp;
+        if (typeof item._timestamp === "number" && item._timestamp > 0) return item._timestamp;
+        const d = item.vendorAcceptedAt || item.updatedAt || item.createdAt || (item.date !== "Just now" && item.date !== "Today" ? item.date : null);
         if (d && !isNaN(new Date(d).getTime())) return new Date(d).getTime();
         if (item.scheduledTimestamp) return item.scheduledTimestamp;
-        const num = String(item.bookingCode || item.bookingId || item.id || "").replace(/\D/g, "");
+        if (item.date === "Just now") return Date.now();
+        const num = String(item.bookingCode || item.bookingId || item.id || item._id || "").replace(/\D/g, "");
         return parseInt(num, 10) || 0;
       };
 
@@ -1692,14 +1747,14 @@ function WorkerDashboard() {
                 </div>
               ) : (
                 paginatedActiveJobs.map((b) => {
-                  const bookingId = b._id || b.id || b.bookingCode;
+                  const bookingId = b._id || b.id || b.bookingCode || b.bookingId;
                   const status = (b.workerStatus || b.status || "assigned").toLowerCase();
-                  const isAssigned = status === "assigned" || status === "vendor_accepted" || status === "dispatched";
+                  const isAssigned = (status === "assigned" || status === "vendor_accepted" || status === "dispatched") && b.workerStatus !== "awaiting_payment" && b.workerStatus !== "completed";
                   const isAccepted = status === "accepted";
                   const isTraveling = status === "traveling" || status === "on_the_way";
                   const isArrived = status === "arrived";
                   const isInProgress = status === "in_progress";
-                  const isAwaitingPayment = status === "awaiting_payment" || (status === "completed" && b.paymentStatus !== "paid");
+                  const isAwaitingPayment = (status === "awaiting_payment" || b.workerStatus === "awaiting_payment") && !isAssigned && !isAccepted && !isTraveling && !isArrived && !isInProgress && b.paymentStatus !== "paid";
                   const isPaid = b.paymentStatus === "paid";
                   const correctDoorOtp = getBookingDoorOtp(b);
 
@@ -2116,7 +2171,7 @@ function WorkerDashboard() {
                         )}
 
                         {/* Stage: Worker Completion QR Generated - Waiting for Customer Scan & Pay */}
-                        {(b.workerStatus === "awaiting_payment" || b.status === "awaiting_payment" || (b.status === "completed" && b.paymentStatus !== "paid")) && (
+                        {isAwaitingPayment && (
                           <div style={{
                             background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
                             borderRadius: "18px",

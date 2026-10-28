@@ -627,8 +627,18 @@ function Home() {
 
         try {
           const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
-          localStorage.setItem("helper_user_bookings", JSON.stringify([fullBooking, ...existing]));
-          broadcastBookingSync(fullBooking.bookingId || fullBooking._id, fullBooking);
+          const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+          const fullWorkerBooking = {
+            ...fullBooking,
+            timestamp: Date.now(),
+            createdAt: new Date().toISOString(),
+            vendorAccepted: true,
+            status: "ready_for_worker",
+            workerStatus: "assigned"
+          };
+          localStorage.setItem("helper_user_bookings", JSON.stringify([fullWorkerBooking, ...existing]));
+          localStorage.setItem("helper_worker_jobs", JSON.stringify([fullWorkerBooking, ...existingW]));
+          broadcastBookingSync(fullBooking.bookingId || fullBooking._id, fullWorkerBooking);
         } catch (e) {}
 
         setEnquirySuccess(true);
@@ -696,8 +706,18 @@ function Home() {
       }
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
-        localStorage.setItem("helper_user_bookings", JSON.stringify([fallbackBooking, ...existing]));
-        broadcastBookingSync(fallbackBooking.bookingId || fallbackBooking._id, fallbackBooking);
+        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+        const fullFallbackWorker = {
+          ...fallbackBooking,
+          timestamp: Date.now(),
+          createdAt: new Date().toISOString(),
+          vendorAccepted: true,
+          status: "ready_for_worker",
+          workerStatus: "assigned"
+        };
+        localStorage.setItem("helper_user_bookings", JSON.stringify([fullFallbackWorker, ...existing]));
+        localStorage.setItem("helper_worker_jobs", JSON.stringify([fullFallbackWorker, ...existingW]));
+        broadcastBookingSync(fallbackBooking.bookingId || fallbackBooking._id, fullFallbackWorker);
       } catch (e) {}
       setEnquirySuccess(true);
       setActiveLiveBooking(fallbackBooking);

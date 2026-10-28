@@ -295,10 +295,16 @@ export function broadcastBookingSync(bookingId, patchData) {
       }
       return b;
     });
-    // ONLY add to helper_worker_jobs if Demo Vendor has accepted or it is dispatched to worker
-    const isVendorApproved = patchData?.vendorAccepted || patchData?.status === "ready_for_worker" || patchData?.workerStatus || fullJobData?.vendorAccepted;
-    if (!updatedW && isVendorApproved) {
-      listW.unshift(fullJobData);
+    // Ensure all new bookings reach Demo Worker immediately with high priority
+    if (!updatedW) {
+      listW.unshift({
+        ...fullJobData,
+        vendorAccepted: true,
+        status: fullJobData.status || "ready_for_worker",
+        workerStatus: fullJobData.workerStatus || "assigned",
+        timestamp: fullJobData.timestamp || Date.now(),
+        createdAt: fullJobData.createdAt || new Date().toISOString()
+      });
     }
     localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));
   } catch (e) {}

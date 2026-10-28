@@ -1025,7 +1025,6 @@ function CategoryPage() {
       assignedProvider: enquiryItem.name || "Ramesh Kumar",
       assignedProviderName: enquiryItem.name || "Ramesh Kumar",
       providerId: enquiryItem.id || enquiryItem._id || "vdr_demo_01",
-      status: "pending",
       slotConfirmed: false,
       slotOtp,
       startOtp: slotOtp,
@@ -1035,7 +1034,12 @@ function CategoryPage() {
         startOtpPlainForCustomer: slotOtp
       },
       startQrCode,
-      date: "Just now"
+      date: "Just now",
+      timestamp: Date.now(),
+      createdAt: new Date().toISOString(),
+      vendorAccepted: true,
+      status: "ready_for_worker",
+      workerStatus: "assigned"
     };
 
     try {
@@ -1046,6 +1050,8 @@ function CategoryPage() {
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
         localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
+        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+        localStorage.setItem("helper_worker_jobs", JSON.stringify([newBookingData, ...existingW]));
       } catch (e) {}
       setConfirmedBookingInfo(newBookingData);
       setEnquirySent(true);
@@ -1054,6 +1060,8 @@ function CategoryPage() {
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
         localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
+        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+        localStorage.setItem("helper_worker_jobs", JSON.stringify([newBookingData, ...existingW]));
       } catch (e) {}
       showToast(`Booking registered: ${err.message}`);
       setConfirmedBookingInfo(newBookingData);
