@@ -655,14 +655,19 @@ function Home() {
             problem: selectedProblem,
             timestamp: Date.now(),
             createdAt: new Date().toISOString(),
-            vendorAccepted: true,
-            status: "ready_for_worker",
-            workerStatus: "assigned"
+            vendorAccepted: false,
+            status: "pending",
+            workerStatus: "unassigned",
+            assignedWorker: null,
+            assignedWorkerName: "",
+            assignedWorkerPhone: ""
           };
           localStorage.setItem("helper_user_bookings", JSON.stringify([fullWorkerBooking, ...existing]));
-          localStorage.setItem("helper_worker_jobs", JSON.stringify([fullWorkerBooking, ...existingW]));
+          const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+          localStorage.setItem("helper_bookings", JSON.stringify([fullWorkerBooking, ...existingB]));
           broadcastBookingSync(fullBooking.bookingId || fullBooking._id, fullWorkerBooking);
-          window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: fullWorkerBooking }));
+          window.dispatchEvent(new CustomEvent("new_booking_created", { detail: fullWorkerBooking }));
+          window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: fullWorkerBooking }));
           window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: fullBooking.bookingId || fullBooking._id, patch: fullWorkerBooking } }));
         } catch (e) {}
 
@@ -754,14 +759,19 @@ function Home() {
           problem: selectedProblem,
           timestamp: Date.now(),
           createdAt: new Date().toISOString(),
-          vendorAccepted: true,
-          status: "ready_for_worker",
-          workerStatus: "assigned"
+          vendorAccepted: false,
+          status: "pending",
+          workerStatus: "unassigned",
+          assignedWorker: null,
+          assignedWorkerName: "",
+          assignedWorkerPhone: ""
         };
         localStorage.setItem("helper_user_bookings", JSON.stringify([fullFallbackWorker, ...existing]));
-        localStorage.setItem("helper_worker_jobs", JSON.stringify([fullFallbackWorker, ...existingW]));
+        const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+        localStorage.setItem("helper_bookings", JSON.stringify([fullFallbackWorker, ...existingB]));
         broadcastBookingSync(fallbackBooking.bookingId || fallbackBooking._id, fullFallbackWorker);
-        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: fullFallbackWorker }));
+        window.dispatchEvent(new CustomEvent("new_booking_created", { detail: fullFallbackWorker }));
+        window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: fullFallbackWorker }));
         window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: fallbackBooking.bookingId || fallbackBooking._id, patch: fullFallbackWorker } }));
       } catch (e) {}
       setEnquirySuccess(true);

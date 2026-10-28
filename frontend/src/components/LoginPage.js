@@ -42,9 +42,9 @@ export const WORKER_TRADE_CATEGORIES = [
 ];
 
 export const DEMO_WORKERS_LIST = [
-  { name: "Sunil Verma", phone: "9876500101", trade: "All Services" },
-  { name: "Sunil Verma (Cleaning)", phone: "9876500101", trade: "House Cleaning" },
-  { name: "Sunil Verma (Plumber)", phone: "9876500101", trade: "Plumber" },
+  { name: "Demo Worker", phone: "9876500101", trade: "All Services" },
+  { name: "Demo Worker (Cleaning)", phone: "9876500101", trade: "House Cleaning" },
+  { name: "Demo Worker (Plumber)", phone: "9876500101", trade: "Plumber" },
   { name: "Amit Verma", phone: "9876500102", trade: "Electrician" },
   { name: "Imran Khan", phone: "9876500104", trade: "AC Repair" },
   { name: "Manoj Chauffeur", phone: "9876500103", trade: "Driver" }
@@ -456,7 +456,7 @@ function LoginPage() {
         const fallbackWorker = {
           workerId: isDemo ? "WRK-101" : ("WRK-" + (cleanPh.slice(-4) || "101")),
           id: isDemo ? "WRK-101" : ("WRK-" + (cleanPh.slice(-4) || "101")),
-          name: isDemo ? "Sunil Verma" : (demoMatch ? demoMatch.name : `Technician ${cleanPh.slice(-4)}`),
+          name: isDemo ? "Demo Worker" : (demoMatch ? demoMatch.name : `Technician ${cleanPh.slice(-4)}`),
           phone: "+91 98765 00101",
           category: chosenTrade,
           role: chosenTrade === "All Services" ? "Multi-Trade Master Specialist" : `${chosenTrade} Specialist`,

@@ -100,10 +100,10 @@ function ItemDetailsPage() {
         serviceName: customerFinalService,
         price: item.price || "₹349",
         totalAmount: 349,
-        status: "ready_for_worker",
-        workerStatus: "assigned",
-        vendorAccepted: true,
-        vendorAcceptedAt: new Date().toISOString(),
+        status: "pending",
+        workerStatus: "unassigned",
+        vendorAccepted: false,
+        vendorAcceptedAt: null,
         timestamp: Date.now(),
         createdAt: new Date().toISOString(),
         assignedProvider: item.name || "Ramesh Express Plumbing & Home Care",
@@ -111,13 +111,9 @@ function ItemDetailsPage() {
         assignedProviderId: item.providerId || item.vendorId || "vdr_demo_01",
         provider: item.name || "Ramesh Express Plumbing & Home Care",
         providerId: item.providerId || item.vendorId || "vdr_demo_01",
-        assignedWorker: {
-          id: "WRK-101",
-          workerId: "WRK-101",
-          name: "Sunil Verma",
-          phone: "+91 98765 43210",
-          role: "Verified Expert Technician"
-        },
+        assignedWorker: null,
+        assignedWorkerName: "",
+        assignedWorkerPhone: "",
         scheduledDate: "Today",
         bookingDate: "Today",
         date: "Today",
@@ -145,11 +141,10 @@ function ItemDetailsPage() {
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
         localStorage.setItem("helper_user_bookings", JSON.stringify([newB, ...existing]));
-        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
-        localStorage.setItem("helper_worker_jobs", JSON.stringify([newB, ...existingW]));
         const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
         localStorage.setItem("helper_bookings", JSON.stringify([newB, ...existingB]));
-        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: newB }));
+        window.dispatchEvent(new CustomEvent("new_booking_created", { detail: newB }));
+        window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: newB }));
         window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: bookingCode, patch: newB } }));
       } catch (err) {}
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
-import { broadcastBookingSync, DEMO_WORKER } from "../../utils/bookingWorkflow";
+import { broadcastBookingSync, DEMO_WORKER, getActiveWorker } from "../../utils/bookingWorkflow";
 import "../../css/Admin/Admin.css";
 import "../../css/VendorDashboard.css";
 
@@ -144,10 +144,13 @@ function VendorDashboard() {
   const [tempRate, setTempRate] = useState("299");
   const [savingRate, setSavingRate] = useState(false);
 
+  // Primary Active Worker (from helper_worker login or demo default)
+  const primaryWorker = getActiveWorker();
+
   // Shop Members State (Capacity: 8 Members)
   const [teamMembers, setTeamMembers] = useState([
     { id: "mem_1", name: "Ramesh Kumar (Owner / Lead)", phone: "+91 98765 00001", role: "Master Specialist", active: true, isOwner: true, upiId: "owner@okhdfc" },
-    { id: "mem_2", name: "Sunil Verma", phone: "+91 98112 33445", role: "Senior Technician", active: true, isOwner: false, upiId: "sunil.verma@upi" },
+    { id: "mem_2", name: primaryWorker.name || "Demo Worker", phone: primaryWorker.phone || "+91 98765 00101", role: "Senior Technician", active: true, isOwner: false, upiId: "worker@upi" },
     { id: "mem_3", name: "Amit Sharma", phone: "+91 97123 44556", role: "Apprentice / Assistant", active: true, isOwner: false, upiId: "amit.plumber@paytm" }
   ]);
   const [pendingWorkersList, setPendingWorkersList] = useState([]);
@@ -162,7 +165,7 @@ function VendorDashboard() {
     }
     return {
       "mem_1": { totalJobs: 12, totalGross: 8400, adminCut: 8400, netPay: 8400, paidOut: 8400, pendingPay: 0, upiId: "owner@okhdfc" },
-      "mem_2": { totalJobs: 6, totalGross: 4200, adminCut: 420, netPay: 3780, paidOut: 2500, pendingPay: 1280, upiId: "sunil.verma@upi" },
+      "mem_2": { totalJobs: 6, totalGross: 4200, adminCut: 420, netPay: 3780, paidOut: 2500, pendingPay: 1280, upiId: "worker@upi" },
       "mem_3": { totalJobs: 4, totalGross: 2800, adminCut: 280, netPay: 2520, paidOut: 1800, pendingPay: 720, upiId: "amit.plumber@paytm" }
     };
   });
@@ -269,7 +272,7 @@ function VendorDashboard() {
         } else if (p.name) {
           setTeamMembers([
             { id: "mem_1", name: `${p.name} (Owner / Lead)`, phone: p.phone || "+91 98765 00001", role: "Master Specialist", active: true, isOwner: true, upiId: "owner@okhdfc" },
-            { id: "mem_2", name: "Sunil Verma", phone: "+91 98112 33445", role: "Senior Technician", active: true, isOwner: false, upiId: "sunil.verma@upi" },
+            { id: "mem_2", name: primaryWorker.name || "Demo Worker", phone: primaryWorker.phone || "+91 98765 00101", role: "Senior Technician", active: true, isOwner: false, upiId: "worker@upi" },
             { id: "mem_3", name: "Amit Sharma", phone: "+91 97123 44556", role: "Apprentice / Assistant", active: true, isOwner: false, upiId: "amit.plumber@paytm" }
           ]);
         }
@@ -1001,9 +1004,9 @@ function VendorDashboard() {
   const handleAssignWorker = async (bookingId, workerId) => {
     const assignedMember = teamMembers.find(m => m.id === workerId) || {
       id: workerId,
-      name: "Sunil Verma",
-      phone: "+91 98765 00101",
-      role: "Senior Technician"
+      name: primaryWorker.name || "Demo Worker",
+      phone: primaryWorker.phone || "+91 98765 00101",
+      role: primaryWorker.role || "Senior Technician"
     };
 
     setBookings(prev => prev.map(b => (b.bookingId || b.id || b._id) === bookingId ? {
@@ -1188,12 +1191,13 @@ function VendorDashboard() {
     const bCode = booking.bookingCode || booking.bookingId || booking.id || bId;
     const vId = vendor?.id || vendor?._id || "vdr_demo_01";
     const vName = vendor?.shopName ? `${vendor.shopName} • ${vendor.name}` : (vendor?.name || "Ramesh Express Plumbing & Home Care");
+    const storedWrk = JSON.parse(localStorage.getItem("helper_worker") || "{}");
     const primaryWorker = {
-      id: "WRK-101",
-      workerId: "WRK-101",
-      name: "Sunil Verma",
-      phone: "+91 98765 00101",
-      role: "Senior Master Multi-Trade Specialist",
+      id: storedWrk.workerId || storedWrk.id || "WRK-101",
+      workerId: storedWrk.workerId || storedWrk.id || "WRK-101",
+      name: storedWrk.name || "Field Pro Specialist",
+      phone: storedWrk.phone || "+91 98765 00101",
+      role: storedWrk.role || "Senior Field Technician",
       category: booking.serviceName || booking.service || "All Services"
     };
 
@@ -2081,7 +2085,7 @@ function VendorDashboard() {
                     acceptedOrdersMap[bCode] ||
                     b.vendorAccepted || 
                     b.status === "ready_for_worker" || 
-                    b.workerStatus === "assigned" || 
+                    b.status === "slot_confirmed" || 
                     b.workerStatus === "accepted" || 
                     b.workerStatus === "traveling" || 
                     b.workerStatus === "arrived" || 
@@ -2273,7 +2277,7 @@ function VendorDashboard() {
                               </h5>
                               <p style={{ margin: 0, fontSize: "13px", color: "#475569" }}>
                                 Customer <strong>{b.customerName || "Customer"}</strong> ({b.customerPhone}) ne <strong>{b.serviceName || b.service}</strong> book ki hai. 
-                                Booking accept karte hi request field technician (Demo Worker: Sunil Verma) ke pass dispatch ho jayegi.
+                                Booking accept karte hi request field technician ke pass dispatch ho jayegi.
                               </p>
                             </div>
                             <div className="slot-action-inline" style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
@@ -2342,7 +2346,7 @@ function VendorDashboard() {
                                     Booking Accepted &amp; Dispatched to Field Worker! 🎉
                                   </h4>
                                   <span style={{ fontSize: "12.5px", color: "#475569" }}>
-                                    Order #{bCode} ({b.serviceName || b.service}) is assigned to Master Technician Sunil Verma.
+                                    Order #{bCode} ({b.serviceName || b.service}) is assigned to Field Technician {b.assignedWorkerName || ""}.
                                   </span>
                                 </div>
                               </div>
@@ -2365,12 +2369,12 @@ function VendorDashboard() {
                                 gap: "8px"
                               }}>
                                 <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#FFF", display: "inline-block" }} />
-                                {(b.workerStatus === "in_progress" || b.status === "in_progress") ? "⏱️ Work In Progress by Sunil Verma" :
+                                {(b.workerStatus === "in_progress" || b.status === "in_progress") ? `⏱️ Work In Progress by ${b.assignedWorkerName || primaryWorker.name || "Worker"}` :
                                  (b.workerStatus === "awaiting_payment" || b.status === "awaiting_payment") ? "📷 Service Complete • QR Payment Due" :
                                  (b.workerStatus === "completed" || b.status === "completed") ? "🎉 Order Completed" :
                                  (b.workerStatus === "arrived") ? "🏁 Worker Arrived at Doorstep" :
                                  (b.workerStatus === "traveling") ? "🛵 Worker En Route to Customer" :
-                                 (b.workerStatus === "accepted") ? "✓ Worker Sunil Verma Accepted" :
+                                 (b.workerStatus === "accepted") ? `✓ Worker ${b.assignedWorkerName || primaryWorker.name || "Worker"} Accepted` :
                                  "📡 Dispatched • Alert Sent to Worker Mobile"}
                               </span>
                             </div>
@@ -2404,27 +2408,27 @@ function VendorDashboard() {
                                 </div>
                                 <div>
                                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <strong style={{ fontSize: "14.5px", color: "#0F172A" }}>Sunil Verma</strong>
+                                    <strong style={{ fontSize: "14.5px", color: "#0F172A" }}>{b.assignedWorkerName || "Field Technician"}</strong>
                                     <span style={{ fontSize: "11px", background: "#ECFDF5", color: "#059669", padding: "2px 8px", borderRadius: "10px", fontWeight: 700 }}>
-                                      ⭐ 4.95 Rating • Multi-Trade Specialist
+                                      ⭐ 4.95 Rating • Verified Specialist
                                     </span>
                                   </div>
                                   <span style={{ fontSize: "12px", color: "#64748B" }}>
-                                    📱 +91 98765 00101 • Net Technician Share: <strong>₹{orderAmount - Math.round(orderAmount * 0.10)} (90%)</strong>
+                                    📱 {b.assignedWorkerPhone || "+91 98765 00101"} • Net Technician Share: <strong>₹{orderAmount - Math.round(orderAmount * 0.10)} (90%)</strong>
                                   </span>
                                 </div>
                               </div>
 
                               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                                 <a
-                                  href="tel:+919876500101"
+                                  href={`tel:${String(b.assignedWorkerPhone || "+919876500101").replace(/\s+/g, "")}`}
                                   className="quick-contact-btn"
                                   style={{ background: "#065F46", color: "#FFF", textDecoration: "none", padding: "9px 16px", borderRadius: "10px", fontWeight: 700, fontSize: "12.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}
                                 >
-                                  📞 Call Worker Sunil
+                                  📞 Call Worker
                                 </a>
                                 <a
-                                  href={`https://wa.me/919876500101?text=${encodeURIComponent(`Hello Sunil Verma, new service order #${bCode} for ${b.serviceName || b.service} has been dispatched to you. Customer: ${b.customerName} (${b.customerPhone}), Location: ${b.customerAddress || b.address}. Please accept and proceed.`)}`}
+                                  href={`https://wa.me/${String(b.assignedWorkerPhone || "9876500101").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello, new service order #${bCode} for ${b.serviceName || b.service} has been dispatched to you. Customer: ${b.customerName} (${b.customerPhone}), Location: ${b.customerAddress || b.address}. Please accept and proceed.`)}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="quick-contact-btn quick-wa-btn"
@@ -2446,7 +2450,7 @@ function VendorDashboard() {
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "#065F46" }}>
                               <span>📡</span>
                               <span>
-                                <strong>Live Dispatch Active:</strong> Technician Sunil Verma has received the dispatch alert and can accept order #{bCode} across any trade category. Doorstep OTP will unlock upon arrival.
+                                <strong>Live Dispatch Active:</strong> Technician {b.assignedWorkerName || "Field Pro"} has received the dispatch alert and can accept order #{bCode} across any trade category. Doorstep OTP will unlock upon arrival.
                               </span>
                             </div>
                           </div>
@@ -2496,7 +2500,7 @@ function VendorDashboard() {
                                     💰 3-Way Split: 90% Worker • 5% Vendor Profit • 5% Platform Admin:
                                   </div>
                                   <div className="receipt-split-item" style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                                    <span>👷 Worker Payout (90% - {b.assignedWorkerName || "Sunil Verma"}):</span>
+                                    <span>👷 Worker Payout (90% - {b.assignedWorkerName || primaryWorker.name || "Demo Worker"}):</span>
                                     <strong style={{ color: "#059669" }}>₹{workerShare}</strong>
                                   </div>
                                   <div className="receipt-split-item" style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
@@ -3153,7 +3157,7 @@ function VendorDashboard() {
                       <label style={{ fontSize: "12.5px", color: "#CBD5E1", display: "block", marginBottom: "4px" }}>Member Full Name *</label>
                       <input 
                         type="text"
-                        placeholder="e.g. Sunil Verma"
+                        placeholder="e.g. Rahul Sharma"
                         value={memberForm.name}
                         onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
                         required

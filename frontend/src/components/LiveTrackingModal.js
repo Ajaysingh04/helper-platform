@@ -244,7 +244,7 @@ function LiveTrackingModal({ booking, onClose }) {
   // Pro & Vendor details
   const w = currentBooking?.assignedWorker;
   const proName = isWorkerAccepted 
-    ? (w?.name || currentBooking?.assignedWorkerName || "Sunil Verma (Technician)")
+    ? (w?.name || currentBooking?.assignedWorkerName || "Demo Worker (Technician)")
     : (currentBooking?.assignedProviderName || currentBooking?.assignedProvider?.name || currentBooking?.provider || "Ramesh Express Plumbing & Home Care (Demo Vendor)");
   const proPhone = isWorkerAccepted 
     ? (w?.phone || currentBooking?.assignedWorkerPhone || "+91 98765 00101")

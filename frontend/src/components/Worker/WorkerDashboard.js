@@ -701,9 +701,9 @@ function WorkerDashboard() {
         new CustomEvent("worker_arrived_notification", {
           detail: {
             bookingId,
-            workerName: worker?.name || "Sunil Sharma",
+            workerName: worker?.name || "Demo Worker",
             phone: worker?.phone || "9876500101",
-            message: "Technician Sunil Sharma has arrived at your doorstep! Please share the 4-digit Service Start OTP with technician."
+            message: `Technician ${worker?.name || "Demo Worker"} has arrived at your doorstep! Please share the 4-digit Service Start OTP with technician.`
           }
         })
       );
@@ -1609,7 +1609,7 @@ function WorkerDashboard() {
                 <span>{getCategoryEmoji(worker?.category)}</span>
               </div>
               <span className="admin-name-text" style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {worker?.name || "Sunil Sharma"}
+                {worker?.name || "Demo Worker"}
               </span>
             </div>
           </div>
@@ -2906,7 +2906,7 @@ function WorkerDashboard() {
                   style={{ width: "80px", height: "80px", borderRadius: "16px", objectFit: "cover", border: "3px solid #10B981" }}
                 />
                 <div>
-                  <h2 style={{ margin: "0 0 4px" }}>{worker?.name || "Sunil Sharma"}</h2>
+                  <h2 style={{ margin: "0 0 4px" }}>{worker?.name || "Demo Worker"}</h2>
                   <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
                     Worker ID: <strong>{worker?.workerId || "WRK-101"}</strong> • {worker?.category || "Specialist"} Specialist
                   </span>

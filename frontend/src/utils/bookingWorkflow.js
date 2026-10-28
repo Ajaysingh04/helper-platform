@@ -17,10 +17,31 @@ export const DEMO_VENDOR = {
   avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=300"
 };
 
+export const getActiveWorker = () => {
+  try {
+    const raw = localStorage.getItem("helper_worker");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && (parsed.name || parsed.workerId)) {
+        return {
+          id: parsed.workerId || parsed.id || "WRK-101",
+          workerId: parsed.workerId || parsed.id || "WRK-101",
+          name: parsed.name || "Demo Worker",
+          phone: parsed.phone || "+91 98765 00101",
+          category: parsed.category || "All Services Multi-Trade Specialist",
+          role: parsed.role || "Verified Field Technician",
+          avatar: parsed.avatar || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300"
+        };
+      }
+    }
+  } catch (e) {}
+  return DEMO_WORKER;
+};
+
 export const DEMO_WORKER = {
   id: "WRK-101",
   workerId: "WRK-101",
-  name: "Sunil Verma",
+  name: "Demo Worker",
   phone: "+91 98765 00101",
   category: "All Services Multi-Trade Specialist",
   skills: [
@@ -259,7 +280,7 @@ export function broadcastBookingSync(bookingId, patchData) {
     localStorage.setItem("helper_bookings", JSON.stringify(listB));
   } catch (e) {}
 
-  // 3. Update helper_worker_jobs for immediate Demo Worker pickup
+  // 3. Update helper_worker_jobs ONLY when vendor has confirmed/accepted the booking
   try {
     const rawW = localStorage.getItem("helper_worker_jobs");
     let listW = rawW ? JSON.parse(rawW) : [];
@@ -273,52 +294,62 @@ export function broadcastBookingSync(bookingId, patchData) {
       if (found) fullOriginal = found;
     } catch (e) {}
 
-    const customerFinalName = patchData?.customerName || fullOriginal?.customerName || patchData?.name || fullOriginal?.name;
-    const customerFinalPhone = patchData?.customerPhone || fullOriginal?.customerPhone || patchData?.phone || fullOriginal?.phone;
-    const customerFinalAddress = patchData?.customerAddress || fullOriginal?.customerAddress || patchData?.address || fullOriginal?.address || patchData?.fullAddress || fullOriginal?.fullAddress;
-    const customerFinalDate = patchData?.scheduledDate || fullOriginal?.scheduledDate || patchData?.bookingDate || fullOriginal?.bookingDate || patchData?.date || fullOriginal?.date || "Today";
-    const customerFinalTime = patchData?.scheduledTime || fullOriginal?.scheduledTime || patchData?.timeSlot || fullOriginal?.timeSlot || patchData?.time || fullOriginal?.time || "11:00 AM";
-    const customerFinalService = patchData?.serviceName || fullOriginal?.serviceName || patchData?.service || fullOriginal?.service;
-    const customerFinalProblem = patchData?.problemDescription || fullOriginal?.problemDescription || patchData?.problem || fullOriginal?.problem;
+    const isVendorApproved = Boolean(
+      patchData?.vendorAccepted || 
+      fullOriginal?.vendorAccepted || 
+      patchData?.status === "ready_for_worker" || 
+      patchData?.status === "slot_confirmed" || 
+      fullOriginal?.status === "ready_for_worker"
+    );
 
-    const fullJobData = {
-      ...fullOriginal,
-      ...patchData,
-      bookingId: key,
-      id: key,
-      bookingCode: patchData?.bookingCode || fullOriginal?.bookingCode || key,
-      customerName: customerFinalName,
-      name: customerFinalName,
-      customerPhone: customerFinalPhone,
-      phone: customerFinalPhone,
-      customerAddress: customerFinalAddress,
-      address: customerFinalAddress,
-      fullAddress: customerFinalAddress,
-      scheduledDate: customerFinalDate,
-      bookingDate: customerFinalDate,
-      date: customerFinalDate,
-      scheduledTime: customerFinalTime,
-      timeSlot: customerFinalTime,
-      time: customerFinalTime,
-      serviceName: customerFinalService,
-      service: customerFinalService,
-      problemDescription: customerFinalProblem,
-      vendorAccepted: true,
-      status: patchData?.status || fullOriginal?.status || "ready_for_worker",
-      workerStatus: patchData?.workerStatus || fullOriginal?.workerStatus || "assigned",
-      timestamp: patchData?.timestamp || fullOriginal?.timestamp || Date.now(),
-      createdAt: patchData?.createdAt || fullOriginal?.createdAt || new Date().toISOString()
-    };
+    if (isVendorApproved) {
+      const customerFinalName = patchData?.customerName || fullOriginal?.customerName || patchData?.name || fullOriginal?.name;
+      const customerFinalPhone = patchData?.customerPhone || fullOriginal?.customerPhone || patchData?.phone || fullOriginal?.phone;
+      const customerFinalAddress = patchData?.customerAddress || fullOriginal?.customerAddress || patchData?.address || fullOriginal?.address || patchData?.fullAddress || fullOriginal?.fullAddress;
+      const customerFinalDate = patchData?.scheduledDate || fullOriginal?.scheduledDate || patchData?.bookingDate || fullOriginal?.bookingDate || patchData?.date || fullOriginal?.date || "Today";
+      const customerFinalTime = patchData?.scheduledTime || fullOriginal?.scheduledTime || patchData?.timeSlot || fullOriginal?.timeSlot || patchData?.time || fullOriginal?.time || "11:00 AM";
+      const customerFinalService = patchData?.serviceName || fullOriginal?.serviceName || patchData?.service || fullOriginal?.service;
+      const customerFinalProblem = patchData?.problemDescription || fullOriginal?.problemDescription || patchData?.problem || fullOriginal?.problem;
 
-    const existingIdxW = listW.findIndex(matchItem);
-    if (existingIdxW >= 0) {
-      const mergedW = { ...listW[existingIdxW], ...fullJobData };
-      listW.splice(existingIdxW, 1);
-      listW.unshift(mergedW);
-    } else {
-      listW.unshift(fullJobData);
+      const fullJobData = {
+        ...fullOriginal,
+        ...patchData,
+        bookingId: key,
+        id: key,
+        bookingCode: patchData?.bookingCode || fullOriginal?.bookingCode || key,
+        customerName: customerFinalName,
+        name: customerFinalName,
+        customerPhone: customerFinalPhone,
+        phone: customerFinalPhone,
+        customerAddress: customerFinalAddress,
+        address: customerFinalAddress,
+        fullAddress: customerFinalAddress,
+        scheduledDate: customerFinalDate,
+        bookingDate: customerFinalDate,
+        date: customerFinalDate,
+        scheduledTime: customerFinalTime,
+        timeSlot: customerFinalTime,
+        time: customerFinalTime,
+        serviceName: customerFinalService,
+        service: customerFinalService,
+        problemDescription: customerFinalProblem,
+        vendorAccepted: true,
+        status: patchData?.status || fullOriginal?.status || "ready_for_worker",
+        workerStatus: patchData?.workerStatus || fullOriginal?.workerStatus || "assigned",
+        timestamp: patchData?.timestamp || fullOriginal?.timestamp || Date.now(),
+        createdAt: patchData?.createdAt || fullOriginal?.createdAt || new Date().toISOString()
+      };
+
+      const existingIdxW = listW.findIndex(matchItem);
+      if (existingIdxW >= 0) {
+        const mergedW = { ...listW[existingIdxW], ...fullJobData };
+        listW.splice(existingIdxW, 1);
+        listW.unshift(mergedW);
+      } else {
+        listW.unshift(fullJobData);
+      }
+      localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));
     }
-    localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));
   } catch (e) {}
 
   // 3. Post to BroadcastChannel
@@ -364,7 +395,7 @@ export function broadcastBookingSync(bookingId, patchData) {
 export async function handleDemoVendorAccept(booking, customWorker = null) {
   const bCode = booking.bookingCode || booking.bookingId || booking.id || booking._id || "HLP-0000";
   const key = String(bCode);
-  const workerObj = customWorker || DEMO_WORKER;
+  const workerObj = customWorker || getActiveWorker();
   const vendorObj = DEMO_VENDOR;
 
   const customerFinalName = booking.customerName || booking.name || "Customer";

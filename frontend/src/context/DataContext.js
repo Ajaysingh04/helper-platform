@@ -1014,19 +1014,15 @@ export const DataProvider = ({ children }) => {
       serviceCategory: bookingData.serviceCategory || "General",
       price: bookingData.price || "₹302",
       totalAmount: parseInt(String(bookingData.price || bookingData.totalAmount || "302").replace(/[^0-9]/g, "")) || 302,
-      status: bookingData.status || "ready_for_worker",
-      workerStatus: bookingData.workerStatus || "assigned",
-      vendorAccepted: true,
-      vendorAcceptedAt: new Date().toISOString(),
+      status: bookingData.status || "pending",
+      workerStatus: bookingData.workerStatus || "unassigned",
+      vendorAccepted: false,
+      vendorAcceptedAt: null,
       timestamp: bookingData.timestamp || Date.now(),
       createdAt: bookingData.createdAt || new Date().toISOString(),
-      assignedWorker: bookingData.assignedWorker || {
-        id: "WRK-101",
-        workerId: "WRK-101",
-        name: "Sunil Verma",
-        phone: "+91 98765 43210",
-        role: "Verified Expert Technician"
-      },
+      assignedWorker: null,
+      assignedWorkerName: "",
+      assignedWorkerPhone: "",
       slotOtp: bookingData.slotOtp || bookingData.doorOtp || bookingData.startOtp || bookingData.otp || "3459",
       startQrCode: bookingData.startQrCode || `QR-${bookingCode}`,
       doorOtp: bookingData.doorOtp || bookingData.slotOtp || bookingData.startOtp || bookingData.otp || "3459",
@@ -1059,8 +1055,8 @@ export const DataProvider = ({ children }) => {
       const existingNotifs = JSON.parse(localStorage.getItem("notifications")) || [];
       const newNotif = {
         id: `notif_${Date.now()}`,
-        title: `⚡ Booking Dispatched: ${item.serviceName}`,
-        message: `Order #${item.bookingId} assigned to ${item.assignedProvider}. Customer: ${item.customerName} (${item.customerPhone})`,
+        title: `⚡ New Booking Received: ${item.serviceName}`,
+        message: `Order #${item.bookingId} requested by ${item.customerName} (${item.customerPhone}). Awaiting Vendor Acceptance.`,
         providerId: item.providerId,
         bookingId: item.bookingId,
         date: "Just now",
@@ -1074,12 +1070,8 @@ export const DataProvider = ({ children }) => {
       localStorage.setItem("helper_vendor_notifications", JSON.stringify([newNotif, ...vendorNotifs]));
     } catch (e) {}
 
-    // Save directly to helper_worker_jobs, helper_user_bookings, and helper_bookings
+    // Save directly to helper_user_bookings and helper_bookings (waiting for vendor acceptance)
     try {
-      const wList = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
-      const filteredW = wList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
-      localStorage.setItem("helper_worker_jobs", JSON.stringify([item, ...filteredW]));
-
       const uList = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
       const filteredU = uList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
       localStorage.setItem("helper_user_bookings", JSON.stringify([item, ...filteredU]));
@@ -1089,11 +1081,10 @@ export const DataProvider = ({ children }) => {
       localStorage.setItem("helper_bookings", JSON.stringify([item, ...filteredB]));
     } catch (e) {}
 
-    // Dispatch real-time booking event so Service Man Panel and Admin receive it instantly
+    // Dispatch real-time booking event so Vendor Panel receives incoming request instantly
     broadcastBookingSync(item.bookingId, item);
     window.dispatchEvent(new CustomEvent("new_booking_created", { detail: item }));
     window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: item }));
-    window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: item }));
     window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: item.bookingId, patch: item } }));
 
     try {

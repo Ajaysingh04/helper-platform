@@ -1037,9 +1037,12 @@ function CategoryPage() {
       date: "Just now",
       timestamp: Date.now(),
       createdAt: new Date().toISOString(),
-      vendorAccepted: true,
-      status: "ready_for_worker",
-      workerStatus: "assigned"
+      vendorAccepted: false,
+      status: "pending",
+      workerStatus: "unassigned",
+      assignedWorker: null,
+      assignedWorkerName: "",
+      assignedWorkerPhone: ""
     };
 
     try {
@@ -1050,9 +1053,10 @@ function CategoryPage() {
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
         localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
-        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
-        localStorage.setItem("helper_worker_jobs", JSON.stringify([newBookingData, ...existingW]));
-        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: newBookingData }));
+        const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+        localStorage.setItem("helper_bookings", JSON.stringify([newBookingData, ...existingB]));
+        window.dispatchEvent(new CustomEvent("new_booking_created", { detail: newBookingData }));
+        window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: newBookingData }));
         window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: bookingCode, patch: newBookingData } }));
       } catch (e) {}
       setConfirmedBookingInfo(newBookingData);
@@ -1062,8 +1066,10 @@ function CategoryPage() {
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
         localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
-        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
-        localStorage.setItem("helper_worker_jobs", JSON.stringify([newBookingData, ...existingW]));
+        const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+        localStorage.setItem("helper_bookings", JSON.stringify([newBookingData, ...existingB]));
+        window.dispatchEvent(new CustomEvent("new_booking_created", { detail: newBookingData }));
+        window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: newBookingData }));
       } catch (e) {}
       showToast(`Booking registered: ${err.message}`);
       setConfirmedBookingInfo(newBookingData);

@@ -166,7 +166,7 @@ function MyBookings() {
   const handleSimulateVendorAccept = async (b) => {
     try {
       const full = await handleDemoVendorAccept(b);
-      showToast("⚡ Demo Vendor Accepted! Request dispatched to Demo Worker (Sunil Verma).");
+      showToast("⚡ Vendor Confirmed! Request dispatched to Field Technician.");
       const targetId = String(b.bookingId || b.id || b._id || b.bookingCode);
       setLocalCustomerBookings((prev) => {
         const updated = prev.map((item) => {
@@ -196,7 +196,7 @@ function MyBookings() {
   const handleSimulateWorkerAccept = async (b) => {
     try {
       await handleDemoWorkerAccept(b);
-      showToast("🎉 Demo Worker Sunil Verma Accepted! Contact & hours calculation unlocked!");
+      showToast("🎉 Field Technician Accepted! Contact & hours calculation unlocked!");
       const targetId = String(b.bookingId || b.id || b._id || b.bookingCode);
       setLocalCustomerBookings((prev) =>
         prev.map((item) => {
@@ -622,17 +622,16 @@ function MyBookings() {
                 Boolean(b.vendorAccepted) ||
                 rawStatus === "ready_for_worker" ||
                 rawStatus === "vendor_accepted" ||
-                rawStatus === "assigned" ||
-                workerStatus === "assigned";
+                rawStatus === "slot_confirmed";
 
               const vendorName = b.assignedProviderName || b.assignedProvider?.name || b.provider || `${DEMO_VENDOR.shopName} (${DEMO_VENDOR.name})`;
               const vendorPhone = typeof b.assignedProvider === "object" ? b.assignedProvider?.phone : (b.assignedProviderPhone || b.providerPhone || DEMO_VENDOR.phone);
 
-              const assignedWorker = b.assignedWorker || {};
-              const workerName = assignedWorker.name || b.assignedWorkerName || DEMO_WORKER.name;
-              const workerPhone = assignedWorker.phone || b.assignedWorkerPhone || DEMO_WORKER.phone;
-              const workerRole = assignedWorker.role || "Verified Master Specialist";
-              const workerRating = assignedWorker.rating || 4.95;
+              const assignedWorker = b.assignedWorker || null;
+              const workerName = isWorkerAccepted ? (assignedWorker?.name || b.assignedWorkerName || "Field Technician") : (assignedWorker?.name || b.assignedWorkerName || "");
+              const workerPhone = isWorkerAccepted ? (assignedWorker?.phone || b.assignedWorkerPhone || "+91 98765 00101") : (assignedWorker?.phone || b.assignedWorkerPhone || "");
+              const workerRole = assignedWorker?.role || "Verified Specialist";
+              const workerRating = assignedWorker?.rating || 4.95;
 
               const serviceTitle = b.serviceName || b.service || "Home Service Specialist";
               const schedDate = b.scheduledDate || b.bookingDate || "Scheduled Date";
@@ -785,7 +784,7 @@ function MyBookings() {
                           <span>WORK COMPLETE • TECHNICIAN QR READY</span>
                         </div>
                         <h4 style={{ margin: "2px 0", fontSize: "16px", color: "#FFFFFF" }}>
-                          Sunil Verma has completed your service!
+                          {workerName || "Field Technician"} has completed your service!
                         </h4>
                         <p style={{ margin: 0, fontSize: "13px", color: "#94A3B8" }}>
                           Scan worker's QR to view timing-based calculated bill and pay via Helper Secure UPI.
@@ -913,20 +912,20 @@ function MyBookings() {
                           <div className="pending-vendor-title">
                             <span>
                               {isVendorAccepted
-                                ? "⚡ Demo Vendor Accepted • Dispatched to Demo Worker (Sunil Verma)"
-                                : "⏳ Awaiting Demo Vendor Confirmation (Ramesh Express Plumbing)"}
+                                ? "⚡ Vendor Confirmed • Dispatched to Field Technician"
+                                : `⏳ Awaiting Vendor Confirmation (${vendorName})`}
                             </span>
                           </div>
                           <p className="pending-vendor-desc">
                             {isVendorAccepted ? (
                               <>
-                                <strong>{vendorName}</strong> has accepted your booking and forwarded the request to <strong>Demo Worker (Sunil Verma)</strong>. 
-                                As soon as the worker accepts, his direct phone number, name, and exact duration calculation will unlock right here with live animations!
+                                <strong>{vendorName}</strong> has confirmed your booking and forwarded the request to the field technician. 
+                                As soon as the technician accepts, his direct contact details and duration calculation will unlock here with live animations!
                               </>
                             ) : (
                               <>
                                 Your booking request has been forwarded to <strong>{vendorName}</strong>. 
-                                Once the vendor accepts, it will be dispatched to the technician, unlocking direct contact details and live schedule calculations.
+                                Once the vendor accepts, a dedicated technician will be assigned and dispatched.
                               </>
                             )}
                           </p>
@@ -950,7 +949,7 @@ function MyBookings() {
                                   onClick={() => handleSimulateWorkerAccept(b)}
                                   className="btn-demo-sim worker"
                                 >
-                                  👨‍🔧 Step 3: Worker Accept ({DEMO_WORKER.name})
+                                  👨‍🔧 Step 3: Worker Accept (Field Technician)
                                 </button>
                               )}
                               {isWorkerAccepted && workerStatus === "accepted" && (
@@ -1193,7 +1192,7 @@ function MyBookings() {
               {scannerStep === "scan" && (
                 <div style={{ textAlign: "center" }}>
                   <p style={{ margin: "0 0 12px", fontSize: "13.5px", color: "var(--text-muted, #64748b)" }}>
-                    Apne phone camera se <strong>Demo Worker (Sunil Verma)</strong> ki screen par dikh raha Service QR scan karein:
+                    Apne phone camera se <strong>Field Technician</strong> ki screen par dikh raha Service QR scan karein:
                   </p>
 
                   <div className="scanner-viewfinder-box">
@@ -1339,7 +1338,7 @@ function MyBookings() {
               </div>
 
               <h3 style={{ margin: "0 0 4px", fontSize: "18px", fontWeight: 800 }}>
-                {feedbackBooking.assignedWorkerName || DEMO_WORKER.name}
+                {feedbackBooking.assignedWorkerName || "Field Technician"}
               </h3>
               <p style={{ margin: "0 0 16px", fontSize: "13px", color: "var(--text-muted, #64748B)" }}>
                 Aap technician ke kaam ko review de sakte hain ya skip kar sakte hain.

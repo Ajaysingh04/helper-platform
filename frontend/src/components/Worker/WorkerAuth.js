@@ -32,9 +32,9 @@ const ALL_DEMO_SKILLS = [
 ];
 
 const DEMO_WORKERS = [
-  { name: "Sunil Verma", phone: "9876500101", trade: "All Services", role: "Multi-Trade Master Specialist" },
-  { name: "Sunil Verma", phone: "9876500101", trade: "House Cleaning", role: "House Cleaning Specialist" },
-  { name: "Sunil Verma", phone: "9876500101", trade: "Plumber", role: "Master Sanitary Specialist" },
+  { name: "Demo Worker", phone: "9876500101", trade: "All Services", role: "Multi-Trade Master Specialist" },
+  { name: "Demo Worker (Cleaning)", phone: "9876500101", trade: "House Cleaning", role: "House Cleaning Specialist" },
+  { name: "Demo Worker (Plumber)", phone: "9876500101", trade: "Plumber", role: "Master Sanitary Specialist" },
   { name: "Amit Verma", phone: "9876500102", trade: "Electrician", role: "Senior Wireman" },
   { name: "Manoj Chauffeur", phone: "9876500103", trade: "Driver", role: "Executive Chauffeur" },
   { name: "Imran Khan", phone: "9876500104", trade: "AC Repair", role: "HVAC Specialist" }
@@ -152,7 +152,7 @@ function WorkerAuth() {
       const fallbackWorker = {
         workerId: "WRK-101",
         id: "WRK-101",
-        name: "Sunil Verma",
+        name: "Demo Worker",
         phone: loginPhone,
         category: tradeChoice === "All Services" ? "All Services Multi-Trade Specialist" : `${tradeChoice} Specialist`,
         selectedCategory: tradeChoice,
