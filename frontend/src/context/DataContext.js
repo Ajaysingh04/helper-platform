@@ -993,19 +993,40 @@ export const DataProvider = ({ children }) => {
   // Bookings
   const addBooking = async (bookingData) => {
     const bookingCode = bookingData.id || bookingData.bookingCode || `HLP-${Math.floor(10000 + Math.random() * 90000)}`;
+    const customerFinalName = bookingData.name || bookingData.customerName || "Customer";
+    const customerFinalPhone = bookingData.phone || bookingData.customerPhone || "+91 98765 00000";
+    const customerFinalAddress = bookingData.address || bookingData.customerAddress || bookingData.fullAddress || "Palasia Square, Indore, MP";
+    const customerFinalService = bookingData.service || bookingData.serviceName || "Specialist Doorstep Service";
+
     const item = {
       id: bookingCode,
       bookingId: bookingCode,
       bookingCode: bookingCode,
-      customerName: bookingData.name || bookingData.customerName || "Customer",
-      customerPhone: bookingData.phone || bookingData.customerPhone || "+91 98765 00000",
-      phone: bookingData.phone || bookingData.customerPhone || "+91 98765 00000",
-      service: bookingData.service || bookingData.serviceName || "Body Massage & Spa",
-      serviceName: bookingData.serviceName || bookingData.service || "Body Massage & Spa",
-      serviceCategory: bookingData.serviceCategory || "Body Massage & Spa",
+      customerName: customerFinalName,
+      name: customerFinalName,
+      customerPhone: customerFinalPhone,
+      phone: customerFinalPhone,
+      address: customerFinalAddress,
+      customerAddress: customerFinalAddress,
+      fullAddress: customerFinalAddress,
+      service: customerFinalService,
+      serviceName: customerFinalService,
+      serviceCategory: bookingData.serviceCategory || "General",
       price: bookingData.price || "₹302",
       totalAmount: parseInt(String(bookingData.price || bookingData.totalAmount || "302").replace(/[^0-9]/g, "")) || 302,
-      status: bookingData.status || "Pending",
+      status: bookingData.status || "ready_for_worker",
+      workerStatus: bookingData.workerStatus || "assigned",
+      vendorAccepted: true,
+      vendorAcceptedAt: new Date().toISOString(),
+      timestamp: bookingData.timestamp || Date.now(),
+      createdAt: bookingData.createdAt || new Date().toISOString(),
+      assignedWorker: bookingData.assignedWorker || {
+        id: "WRK-101",
+        workerId: "WRK-101",
+        name: "Sunil Verma",
+        phone: "+91 98765 43210",
+        role: "Verified Expert Technician"
+      },
       slotOtp: bookingData.slotOtp || bookingData.doorOtp || bookingData.startOtp || bookingData.otp || "3459",
       startQrCode: bookingData.startQrCode || `QR-${bookingCode}`,
       doorOtp: bookingData.doorOtp || bookingData.slotOtp || bookingData.startOtp || bookingData.otp || "3459",
@@ -1017,13 +1038,14 @@ export const DataProvider = ({ children }) => {
       },
       homeServiceCharge: bookingData.homeServiceCharge || 149,
       hourlyRate: bookingData.hourlyRate || 299,
-      scheduledDate: bookingData.scheduledDate || "Today",
-      scheduledTime: bookingData.scheduledTime || "11:00 AM - 01:00 PM",
+      scheduledDate: bookingData.scheduledDate || bookingData.bookingDate || bookingData.date || "Today",
+      bookingDate: bookingData.bookingDate || bookingData.scheduledDate || bookingData.date || "Today",
+      date: bookingData.date || bookingData.scheduledDate || bookingData.bookingDate || "Today",
+      scheduledTime: bookingData.scheduledTime || bookingData.timeSlot || bookingData.time || "11:00 AM - 01:00 PM",
+      timeSlot: bookingData.timeSlot || bookingData.scheduledTime || bookingData.time || "11:00 AM - 01:00 PM",
+      time: bookingData.time || bookingData.scheduledTime || bookingData.timeSlot || "11:00 AM",
       scheduledTimestamp: bookingData.scheduledTimestamp || (Date.now() + 7200000),
-      problemDescription: bookingData.problemDescription || "",
-      date: bookingData.date || "Just now",
-      address: bookingData.address || "Palasia Square, Indore, MP",
-      customerAddress: bookingData.address || "Palasia Square, Indore, MP",
+      problemDescription: bookingData.problemDescription || bookingData.problem || bookingData.notes || "",
       provider: bookingData.provider || bookingData.assignedProvider || "Ramesh Express Plumbing & Home Care • Ramesh Kumar",
       assignedProvider: bookingData.assignedProvider || bookingData.provider || "Ramesh Express Plumbing & Home Care",
       assignedProviderName: bookingData.assignedProviderName || "Ramesh Kumar",
@@ -1052,10 +1074,27 @@ export const DataProvider = ({ children }) => {
       localStorage.setItem("helper_vendor_notifications", JSON.stringify([newNotif, ...vendorNotifs]));
     } catch (e) {}
 
+    // Save directly to helper_worker_jobs, helper_user_bookings, and helper_bookings
+    try {
+      const wList = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+      const filteredW = wList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
+      localStorage.setItem("helper_worker_jobs", JSON.stringify([item, ...filteredW]));
+
+      const uList = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
+      const filteredU = uList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
+      localStorage.setItem("helper_user_bookings", JSON.stringify([item, ...filteredU]));
+
+      const bList = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+      const filteredB = bList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
+      localStorage.setItem("helper_bookings", JSON.stringify([item, ...filteredB]));
+    } catch (e) {}
+
     // Dispatch real-time booking event so Service Man Panel and Admin receive it instantly
     broadcastBookingSync(item.bookingId, item);
     window.dispatchEvent(new CustomEvent("new_booking_created", { detail: item }));
     window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: item }));
+    window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: item }));
+    window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: item.bookingId, patch: item } }));
 
     try {
       const res = await fetch(`${API_BASE}/bookings`, {

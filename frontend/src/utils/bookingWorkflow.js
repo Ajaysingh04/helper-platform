@@ -233,15 +233,12 @@ export function broadcastBookingSync(bookingId, patchData) {
   try {
     const raw = localStorage.getItem("helper_user_bookings");
     let list = raw ? JSON.parse(raw) : [];
-    let updated = false;
-    list = list.map((b) => {
-      if (matchItem(b)) {
-        updated = true;
-        return { ...b, ...patchData };
-      }
-      return b;
-    });
-    if (!updated && patchData) {
+    const existingIdx = list.findIndex(matchItem);
+    if (existingIdx >= 0) {
+      const merged = { ...list[existingIdx], ...patchData };
+      list.splice(existingIdx, 1);
+      list.unshift(merged);
+    } else if (patchData) {
       list.unshift({ bookingId: key, id: key, ...patchData });
     }
     localStorage.setItem("helper_user_bookings", JSON.stringify(list));
@@ -251,15 +248,12 @@ export function broadcastBookingSync(bookingId, patchData) {
   try {
     const rawB = localStorage.getItem("helper_bookings");
     let listB = rawB ? JSON.parse(rawB) : [];
-    let updatedB = false;
-    listB = listB.map((b) => {
-      if (matchItem(b)) {
-        updatedB = true;
-        return { ...b, ...patchData };
-      }
-      return b;
-    });
-    if (!updatedB && patchData) {
+    const existingIdxB = listB.findIndex(matchItem);
+    if (existingIdxB >= 0) {
+      const mergedB = { ...listB[existingIdxB], ...patchData };
+      listB.splice(existingIdxB, 1);
+      listB.unshift(mergedB);
+    } else if (patchData) {
       listB.unshift({ bookingId: key, id: key, ...patchData });
     }
     localStorage.setItem("helper_bookings", JSON.stringify(listB));
@@ -269,7 +263,6 @@ export function broadcastBookingSync(bookingId, patchData) {
   try {
     const rawW = localStorage.getItem("helper_worker_jobs");
     let listW = rawW ? JSON.parse(rawW) : [];
-    let updatedW = false;
 
     // Retrieve full booking data from helper_user_bookings or helper_bookings to guarantee 100% complete fields
     let fullOriginal = {};
@@ -309,26 +302,21 @@ export function broadcastBookingSync(bookingId, patchData) {
       time: customerFinalTime,
       serviceName: customerFinalService,
       service: customerFinalService,
-      problemDescription: customerFinalProblem
+      problemDescription: customerFinalProblem,
+      vendorAccepted: true,
+      status: patchData?.status || fullOriginal?.status || "ready_for_worker",
+      workerStatus: patchData?.workerStatus || fullOriginal?.workerStatus || "assigned",
+      timestamp: patchData?.timestamp || fullOriginal?.timestamp || Date.now(),
+      createdAt: patchData?.createdAt || fullOriginal?.createdAt || new Date().toISOString()
     };
 
-    listW = listW.map((b) => {
-      if (matchItem(b)) {
-        updatedW = true;
-        return { ...b, ...fullJobData };
-      }
-      return b;
-    });
-    // Ensure all new bookings reach Demo Worker immediately with high priority
-    if (!updatedW) {
-      listW.unshift({
-        ...fullJobData,
-        vendorAccepted: true,
-        status: fullJobData.status || "ready_for_worker",
-        workerStatus: fullJobData.workerStatus || "assigned",
-        timestamp: fullJobData.timestamp || Date.now(),
-        createdAt: fullJobData.createdAt || new Date().toISOString()
-      });
+    const existingIdxW = listW.findIndex(matchItem);
+    if (existingIdxW >= 0) {
+      const mergedW = { ...listW[existingIdxW], ...fullJobData };
+      listW.splice(existingIdxW, 1);
+      listW.unshift(mergedW);
+    } else {
+      listW.unshift(fullJobData);
     }
     localStorage.setItem("helper_worker_jobs", JSON.stringify(listW));
   } catch (e) {}

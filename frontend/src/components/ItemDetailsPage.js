@@ -80,27 +80,50 @@ function ItemDetailsPage() {
     if (phoneInput.length >= 10) {
       const bookingCode = `HLP-${Math.floor(10000 + Math.random() * 90000)}`;
       const slotOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      const customerFinalName = nameInput.trim() || currentUser?.name || "Customer";
+      const customerFinalPhone = phoneInput.startsWith("+91") ? phoneInput : `+91 ${phoneInput}`;
+      const customerFinalAddress = item.address || "Sector 18, Noida";
+      const customerFinalService = item.shopName || item.name || "Home Repair & Specialist Service";
+
       const newB = {
         id: bookingCode,
         bookingCode,
         bookingId: bookingCode,
-        customerName: nameInput.trim() || currentUser?.name || "Customer",
-        name: nameInput.trim() || currentUser?.name || "Customer",
-        phone: phoneInput.startsWith("+91") ? phoneInput : `+91 ${phoneInput}`,
-        customerPhone: phoneInput.startsWith("+91") ? phoneInput : `+91 ${phoneInput}`,
-        service: item.shopName || item.name,
-        serviceName: item.shopName || item.name,
+        customerName: customerFinalName,
+        name: customerFinalName,
+        customerPhone: customerFinalPhone,
+        phone: customerFinalPhone,
+        customerAddress: customerFinalAddress,
+        address: customerFinalAddress,
+        fullAddress: customerFinalAddress,
+        service: customerFinalService,
+        serviceName: customerFinalService,
         price: item.price || "₹349",
         totalAmount: 349,
-        status: "pending",
-        workerStatus: "unassigned",
+        status: "ready_for_worker",
+        workerStatus: "assigned",
+        vendorAccepted: true,
+        vendorAcceptedAt: new Date().toISOString(),
+        timestamp: Date.now(),
+        createdAt: new Date().toISOString(),
         assignedProvider: item.name || "Ramesh Express Plumbing & Home Care",
         assignedProviderName: item.name || "Ramesh Express Plumbing & Home Care",
         assignedProviderId: item.providerId || item.vendorId || "vdr_demo_01",
         provider: item.name || "Ramesh Express Plumbing & Home Care",
         providerId: item.providerId || item.vendorId || "vdr_demo_01",
+        assignedWorker: {
+          id: "WRK-101",
+          workerId: "WRK-101",
+          name: "Sunil Verma",
+          phone: "+91 98765 43210",
+          role: "Verified Expert Technician"
+        },
         scheduledDate: "Today",
+        bookingDate: "Today",
+        date: "Today",
         scheduledTime: "11:00 AM - 12:00 PM",
+        timeSlot: "11:00 AM - 12:00 PM",
+        time: "11:00 AM",
         slotOtp,
         startOtp: slotOtp,
         doorOtp: slotOtp,
@@ -108,8 +131,8 @@ function ItemDetailsPage() {
         security: {
           startOtpPlainForCustomer: slotOtp
         },
-        notes: notesInput,
-        date: "Just now"
+        problemDescription: notesInput || "Standard doorstep maintenance required.",
+        notes: notesInput
       };
 
       try {
@@ -122,6 +145,12 @@ function ItemDetailsPage() {
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
         localStorage.setItem("helper_user_bookings", JSON.stringify([newB, ...existing]));
+        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+        localStorage.setItem("helper_worker_jobs", JSON.stringify([newB, ...existingW]));
+        const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
+        localStorage.setItem("helper_bookings", JSON.stringify([newB, ...existingB]));
+        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: newB }));
+        window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: bookingCode, patch: newB } }));
       } catch (err) {}
 
       setCreatedBooking(newB);

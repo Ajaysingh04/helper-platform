@@ -1052,6 +1052,8 @@ function CategoryPage() {
         localStorage.setItem("helper_user_bookings", JSON.stringify([newBookingData, ...existing]));
         const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
         localStorage.setItem("helper_worker_jobs", JSON.stringify([newBookingData, ...existingW]));
+        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: newBookingData }));
+        window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: bookingCode, patch: newBookingData } }));
       } catch (e) {}
       setConfirmedBookingInfo(newBookingData);
       setEnquirySent(true);

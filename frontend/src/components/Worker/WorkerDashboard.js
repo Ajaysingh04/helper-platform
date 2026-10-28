@@ -255,6 +255,7 @@ function WorkerDashboard() {
   useEffect(() => {
     const handleJobUpdate = () => {
       const wid = worker?.workerId || worker?.id || "WRK-101";
+      setCurrentPage(1);
       fetchWorkerJobs(wid);
     };
 
@@ -266,13 +267,12 @@ function WorkerDashboard() {
         if (bKey) {
           setJobs(prev => {
             const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(String(bKey));
-            if (prev.some(isMatch)) {
-              return prev.map(j => isMatch(j) ? { ...j, ...item } : j);
-            }
-            return [item, ...prev];
+            const filtered = prev.filter(j => !isMatch(j));
+            return [item, ...filtered];
           });
         }
       }
+      setCurrentPage(1);
       handleJobUpdate();
     };
 
@@ -293,13 +293,14 @@ function WorkerDashboard() {
               setJobs(prev => {
                 const targetKey = String(bId || patch?.bookingId || patch?.bookingCode || "");
                 const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(targetKey);
-                if (prev.some(isMatch)) {
-                  return prev.map(j => isMatch(j) ? { ...j, ...(patch || {}) } : j);
-                }
-                const isDispatched = patch && (patch.vendorAccepted || patch.status === "ready_for_worker" || patch.workerStatus);
-                if (isDispatched) return [patch, ...prev];
-                return prev;
+                const matched = prev.find(isMatch);
+                const filtered = prev.filter(j => !isMatch(j));
+                const itemToInsert = matched ? { ...matched, ...(patch || {}) } : (patch || { bookingId: bId, id: bId });
+                return [itemToInsert, ...filtered];
               });
+              const wid = worker?.workerId || worker?.id || "WRK-101";
+              setCurrentPage(1);
+              fetchWorkerJobs(wid);
             }
           }
         };
@@ -404,7 +405,7 @@ function WorkerDashboard() {
               return itemKeys.some(k => targetKeys.includes(k));
             });
             if (existingIdx >= 0) {
-              combined[existingIdx] = {
+              const updatedItem = {
                 ...combined[existingIdx],
                 ...formattedItem,
                 customerName: formattedItem.customerName || combined[existingIdx].customerName,
@@ -421,8 +422,11 @@ function WorkerDashboard() {
                 timeSlot: formattedItem.timeSlot || combined[existingIdx].timeSlot,
                 time: formattedItem.time || combined[existingIdx].time,
                 serviceName: formattedItem.serviceName || combined[existingIdx].serviceName,
-                problemDescription: formattedItem.problemDescription || combined[existingIdx].problemDescription
+                problemDescription: formattedItem.problemDescription || combined[existingIdx].problemDescription,
+                vendorAccepted: true
               };
+              combined.splice(existingIdx, 1);
+              combined.unshift(updatedItem);
             } else {
               combined.unshift(formattedItem);
             }
@@ -481,7 +485,7 @@ function WorkerDashboard() {
               return itemKeys.some(key => targetKeys.includes(key));
             });
             if (existingIdx >= 0) {
-              combined[existingIdx] = {
+              const updatedItem = {
                 ...combined[existingIdx],
                 ...formattedItem,
                 customerName: formattedItem.customerName || combined[existingIdx].customerName,
@@ -501,6 +505,8 @@ function WorkerDashboard() {
                 problemDescription: formattedItem.problemDescription || combined[existingIdx].problemDescription,
                 vendorAccepted: true
               };
+              combined.splice(existingIdx, 1);
+              combined.unshift(updatedItem);
             } else {
               combined.unshift(formattedItem);
             }
@@ -1083,6 +1089,9 @@ function WorkerDashboard() {
   const activeJobsList = jobs.filter((b) => {
     const isNotDone = b.workerStatus !== "completed" || b.paymentStatus === "payment_due";
     if (!isNotDone) return false;
+    // Newly assigned/dispatched bookings should ALWAYS be visible to Demo Worker
+    const isNewlyAssigned = b.workerStatus === "assigned" || b.status === "ready_for_worker" || b.status === "dispatched" || b.status === "pending" || b.vendorAccepted;
+    if (isNewlyAssigned) return true;
     if (!selectedTradeFilter || selectedTradeFilter === "All Services") return true;
     const sName = (b.serviceName || b.service || b.category || "").toLowerCase();
     if (!sName) return true;
@@ -1099,6 +1108,7 @@ function WorkerDashboard() {
         vendor_accepted: 1,
         ready_for_worker: 1,
         dispatched: 1,
+        pending: 1,
         accepted: 2,
         traveling: 3,
         on_the_way: 3,
@@ -1116,12 +1126,14 @@ function WorkerDashboard() {
         if (!item) return 0;
         if (typeof item.timestamp === "number" && item.timestamp > 0) return item.timestamp;
         if (typeof item._timestamp === "number" && item._timestamp > 0) return item._timestamp;
-        const d = item.vendorAcceptedAt || item.updatedAt || item.createdAt || (item.date !== "Just now" && item.date !== "Today" ? item.date : null);
+        const d = item.vendorAcceptedAt || item.updatedAt || item.createdAt;
         if (d && !isNaN(new Date(d).getTime())) return new Date(d).getTime();
         if (item.scheduledTimestamp) return item.scheduledTimestamp;
         if (item.date === "Just now") return Date.now();
-        const num = String(item.bookingCode || item.bookingId || item.id || item._id || "").replace(/\D/g, "");
-        return parseInt(num, 10) || 0;
+        if (item.date && item.date !== "Today" && !isNaN(new Date(item.date).getTime())) {
+          return new Date(item.date).getTime();
+        }
+        return 0;
       };
 
       return parseTime(b) - parseTime(a);
@@ -1814,7 +1826,7 @@ function WorkerDashboard() {
                 paginatedActiveJobs.map((b) => {
                   const bookingId = b._id || b.id || b.bookingCode || b.bookingId;
                   const status = (b.workerStatus || b.status || "assigned").toLowerCase();
-                  const isAssigned = (status === "assigned" || status === "vendor_accepted" || status === "dispatched") && b.workerStatus !== "awaiting_payment" && b.workerStatus !== "completed";
+                  const isAssigned = (status === "assigned" || status === "vendor_accepted" || status === "dispatched" || status === "ready_for_worker" || status === "pending" || status === "searching_provider") && b.workerStatus !== "awaiting_payment" && b.workerStatus !== "completed";
                   const isAccepted = status === "accepted";
                   const isTraveling = status === "traveling" || status === "on_the_way";
                   const isArrived = status === "arrived";

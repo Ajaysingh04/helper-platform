@@ -662,6 +662,8 @@ function Home() {
           localStorage.setItem("helper_user_bookings", JSON.stringify([fullWorkerBooking, ...existing]));
           localStorage.setItem("helper_worker_jobs", JSON.stringify([fullWorkerBooking, ...existingW]));
           broadcastBookingSync(fullBooking.bookingId || fullBooking._id, fullWorkerBooking);
+          window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: fullWorkerBooking }));
+          window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: fullBooking.bookingId || fullBooking._id, patch: fullWorkerBooking } }));
         } catch (e) {}
 
         setEnquirySuccess(true);
@@ -759,6 +761,8 @@ function Home() {
         localStorage.setItem("helper_user_bookings", JSON.stringify([fullFallbackWorker, ...existing]));
         localStorage.setItem("helper_worker_jobs", JSON.stringify([fullFallbackWorker, ...existingW]));
         broadcastBookingSync(fallbackBooking.bookingId || fallbackBooking._id, fullFallbackWorker);
+        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: fullFallbackWorker }));
+        window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: fallbackBooking.bookingId || fallbackBooking._id, patch: fullFallbackWorker } }));
       } catch (e) {}
       setEnquirySuccess(true);
       setActiveLiveBooking(fallbackBooking);
