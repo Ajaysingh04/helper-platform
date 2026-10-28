@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE, SOCKET_URL } from "../../apiConfig";
@@ -41,6 +41,8 @@ function WorkerDashboard() {
   const [worker, setWorker] = useState(null);
   const [activeTab, setActiveTab] = useState("active_jobs"); // active_jobs | map_radar | history | earnings | attendance | profile
   const [selectedTradeFilter, setSelectedTradeFilter] = useState("All Services");
+  const [currentPage, setCurrentPage] = useState(1);
+  const jobsPerPage = 3;
   const [jobs, setJobs] = useState([]);
   const [, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState("");
@@ -971,6 +973,47 @@ function WorkerDashboard() {
     const filterKey = selectedTradeFilter.toLowerCase().replace(/ specialist| & deep cleaning| & sanitary| & hvac/g, "").trim();
     return sName.includes(filterKey) || filterKey.includes(sName);
   });
+
+  // Guarantee newest bookings and newly assigned orders ALWAYS stay at the very top
+  const sortedActiveJobsList = useMemo(() => {
+    return [...activeJobsList].sort((a, b) => {
+      // 1. Status priority: newly assigned/dispatched/ready orders stay at the top
+      const statusPriority = {
+        assigned: 1,
+        vendor_accepted: 1,
+        ready_for_worker: 1,
+        dispatched: 1,
+        accepted: 2,
+        traveling: 3,
+        on_the_way: 3,
+        arrived: 4,
+        in_progress: 5,
+        awaiting_payment: 6,
+        completed: 7
+      };
+      const pA = statusPriority[a.workerStatus || a.status] || 10;
+      const pB = statusPriority[b.workerStatus || b.status] || 10;
+      if (pA !== pB) return pA - pB;
+
+      // 2. Newest updated/accepted/created timestamp on top
+      const parseTime = (item) => {
+        const d = item.vendorAcceptedAt || item.updatedAt || item.createdAt || item.date;
+        if (d && !isNaN(new Date(d).getTime())) return new Date(d).getTime();
+        if (item.scheduledTimestamp) return item.scheduledTimestamp;
+        const num = String(item.bookingCode || item.bookingId || item.id || "").replace(/\D/g, "");
+        return parseInt(num, 10) || 0;
+      };
+
+      return parseTime(b) - parseTime(a);
+    });
+  }, [activeJobsList]);
+
+  const totalPages = Math.ceil(sortedActiveJobsList.length / jobsPerPage) || 1;
+  const paginatedActiveJobs = sortedActiveJobsList.slice(
+    (currentPage - 1) * jobsPerPage,
+    currentPage * jobsPerPage
+  );
+
   const completedJobsList = jobs.filter((b) => b.workerStatus === "completed" && b.paymentStatus !== "payment_due");
 
   const totalEarned = worker?.earnings?.totalEarnings || 42600;
@@ -1569,12 +1612,19 @@ function WorkerDashboard() {
                 <div>
                   <h3 style={{ margin: 0 }}>Assigned Customer Service Orders</h3>
                   <p style={{ margin: "4px 0 0 0", color: "var(--text-muted)" }}>
-                    Accept orders, broadcast live GPS travel, verify doorstep OTP, and execute service with live stopwatch.
+                    New orders appear at the top. Accept orders, broadcast live GPS travel, verify doorstep OTP, and execute service with live stopwatch.
                   </p>
                 </div>
-                <span className="admin-count-pill" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10B981" }}>
-                  {activeJobsList.length} Active Orders
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  {totalPages > 1 && (
+                    <span style={{ fontSize: "12px", color: "var(--wrk-text-muted)", fontWeight: 700 }}>
+                      Page {currentPage} of {totalPages}
+                    </span>
+                  )}
+                  <span className="admin-count-pill" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10B981" }}>
+                    {sortedActiveJobsList.length} Active Orders
+                  </span>
+                </div>
               </div>
 
               {/* Multi-Service Trade Filter Bar */}
@@ -1605,7 +1655,10 @@ function WorkerDashboard() {
                   <button
                     key={cat.id}
                     type="button"
-                    onClick={() => setSelectedTradeFilter(cat.id)}
+                    onClick={() => {
+                      setSelectedTradeFilter(cat.id);
+                      setCurrentPage(1);
+                    }}
                     style={{
                       background: selectedTradeFilter === cat.id ? "linear-gradient(135deg, #10B981 0%, #059669 100%)" : "rgba(255, 255, 255, 0.9)",
                       color: selectedTradeFilter === cat.id ? "#FFFFFF" : "#1E293B",
@@ -1624,11 +1677,11 @@ function WorkerDashboard() {
                 ))}
               </div>
 
-              {activeJobsList.length === 0 ? (
+              {sortedActiveJobsList.length === 0 ? (
                 <div className="admin-empty-state">
                   <span style={{ fontSize: "52px" }}>🎉</span>
                   <h4>All Assigned Jobs Completed!</h4>
-                  <p>Your radar is live. New customer orders assigned by your vendor will appear here instantly.</p>
+                  <p>Your radar is live. New customer orders assigned by your vendor will appear here instantly at the top.</p>
                   <button 
                     type="button" 
                     className="btn-secondary-outline"
@@ -1638,7 +1691,7 @@ function WorkerDashboard() {
                   </button>
                 </div>
               ) : (
-                activeJobsList.map((b) => {
+                paginatedActiveJobs.map((b) => {
                   const bookingId = b._id || b.id || b.bookingCode;
                   const status = (b.workerStatus || b.status || "assigned").toLowerCase();
                   const isAssigned = status === "assigned" || status === "vendor_accepted" || status === "dispatched";
@@ -2225,6 +2278,98 @@ function WorkerDashboard() {
                     </div>
                   );
                 })
+              )}
+
+              {/* Pagination Controls Bar */}
+              {sortedActiveJobsList.length > 0 && totalPages > 1 && (
+                <div className="wrk-pagination-bar" style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                  padding: "16px 20px",
+                  background: "rgba(15, 23, 42, 0.03)",
+                  borderRadius: "14px",
+                  marginTop: "20px",
+                  border: "1px solid rgba(0, 0, 0, 0.08)"
+                }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--wrk-text-muted)" }}>
+                    Showing <strong>{((currentPage - 1) * jobsPerPage) + 1} - {Math.min(currentPage * jobsPerPage, sortedActiveJobsList.length)}</strong> of <strong>{sortedActiveJobsList.length}</strong> Orders
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <button
+                      type="button"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: "10px",
+                        border: "1px solid rgba(0, 0, 0, 0.15)",
+                        background: currentPage <= 1 ? "rgba(0,0,0,0.04)" : "#FFFFFF",
+                        color: currentPage <= 1 ? "#94A3B8" : "#1E293B",
+                        cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                        fontWeight: 700,
+                        fontSize: "13px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        boxShadow: currentPage <= 1 ? "none" : "0 2px 6px rgba(0,0,0,0.06)",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      <span>← Prev Page</span>
+                    </button>
+
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                        <button
+                          key={pg}
+                          type="button"
+                          onClick={() => setCurrentPage(pg)}
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            borderRadius: "10px",
+                            border: `1.5px solid ${currentPage === pg ? "#10B981" : "rgba(0,0,0,0.12)"}`,
+                            background: currentPage === pg ? "linear-gradient(135deg, #10B981 0%, #059669 100%)" : "#FFFFFF",
+                            color: currentPage === pg ? "#FFFFFF" : "#1E293B",
+                            fontWeight: 800,
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            boxShadow: currentPage === pg ? "0 2px 8px rgba(16,185,129,0.3)" : "none"
+                          }}
+                        >
+                          {pg}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: "10px",
+                        border: "1px solid rgba(0, 0, 0, 0.15)",
+                        background: currentPage >= totalPages ? "rgba(0,0,0,0.04)" : "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                        color: currentPage >= totalPages ? "#94A3B8" : "#FFFFFF",
+                        cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+                        fontWeight: 700,
+                        fontSize: "13px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        boxShadow: currentPage >= totalPages ? "none" : "0 3px 10px rgba(16,185,129,0.3)",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      <span>Next Page (अगला पेज) →</span>
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}
