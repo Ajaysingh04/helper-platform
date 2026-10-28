@@ -261,15 +261,18 @@ function WorkerDashboard() {
 
     const handleNewOffer = (e) => {
       if (e?.detail) {
-        showToast(`🔔 NEW JOB OFFER: ${e.detail.serviceName || e.detail.service} from Demo Vendor!`);
         const item = e.detail;
-        const bKey = item.bookingId || item.id || item._id || item.bookingCode;
-        if (bKey) {
-          setJobs(prev => {
-            const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(String(bKey));
-            const filtered = prev.filter(j => !isMatch(j));
-            return [item, ...filtered];
-          });
+        const isApproved = item.vendorAccepted || item.status === "ready_for_worker" || item.status === "dispatched" || ["accepted", "traveling", "arrived", "in_progress", "awaiting_payment", "completed"].includes(item.workerStatus);
+        if (isApproved) {
+          showToast(`🔔 NEW JOB OFFER: ${item.serviceName || item.service} from Demo Vendor!`);
+          const bKey = item.bookingId || item.id || item._id || item.bookingCode;
+          if (bKey) {
+            setJobs(prev => {
+              const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(String(bKey));
+              const filtered = prev.filter(j => !isMatch(j));
+              return [item, ...filtered];
+            });
+          }
         }
       }
       setCurrentPage(1);
@@ -277,7 +280,6 @@ function WorkerDashboard() {
     };
 
     window.addEventListener("worker_new_offer", handleNewOffer);
-    window.addEventListener("new_booking_created", handleNewOffer);
     window.addEventListener("user_bookings_updated", handleJobUpdate);
     window.addEventListener("booking_workflow_updated", handleJobUpdate);
     window.addEventListener("booking_updated", handleJobUpdate);
@@ -292,14 +294,17 @@ function WorkerDashboard() {
             const patch = ev.data.patch;
             const bId = ev.data.bookingId;
             if (patch || bId) {
-              setJobs(prev => {
-                const targetKey = String(bId || patch?.bookingId || patch?.bookingCode || "");
-                const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(targetKey);
-                const matched = prev.find(isMatch);
-                const filtered = prev.filter(j => !isMatch(j));
-                const itemToInsert = matched ? { ...matched, ...(patch || {}) } : (patch || { bookingId: bId, id: bId });
-                return [itemToInsert, ...filtered];
-              });
+              const isApproved = patch?.vendorAccepted || patch?.status === "ready_for_worker" || patch?.status === "dispatched" || ["accepted", "traveling", "arrived", "in_progress", "awaiting_payment", "completed"].includes(patch?.workerStatus);
+              if (isApproved) {
+                setJobs(prev => {
+                  const targetKey = String(bId || patch?.bookingId || patch?.bookingCode || "");
+                  const isMatch = (j) => [j.bookingId, j.id, j._id, j.bookingCode].filter(Boolean).map(String).includes(targetKey);
+                  const matched = prev.find(isMatch);
+                  const filtered = prev.filter(j => !isMatch(j));
+                  const itemToInsert = matched ? { ...matched, ...(patch || {}) } : (patch || { bookingId: bId, id: bId });
+                  return [itemToInsert, ...filtered];
+                });
+              }
               const wid = worker?.workerId || worker?.id || "WRK-101";
               setCurrentPage(1);
               fetchWorkerJobs(wid);
@@ -311,7 +316,6 @@ function WorkerDashboard() {
 
     return () => {
       window.removeEventListener("worker_new_offer", handleNewOffer);
-      window.removeEventListener("new_booking_created", handleNewOffer);
       window.removeEventListener("user_bookings_updated", handleJobUpdate);
       window.removeEventListener("booking_workflow_updated", handleJobUpdate);
       window.removeEventListener("booking_updated", handleJobUpdate);
@@ -338,12 +342,20 @@ function WorkerDashboard() {
     setLoading(true);
     let combined = [];
 
+    const isFakeBooking = (b) => {
+      if (!b) return true;
+      const bId = String(b.bookingId || b.id || b._id || b.bookingCode || "");
+      if (bId.startsWith("BK-") || bId.startsWith("demo_job_") || bId === "HLP-72819" || bId === "HLP-78219" || bId === "HLP-91044") return true;
+      const name = String(b.customerName || b.name || "");
+      return ["Vikas Malhotra", "Ananya Deshmukh", "Vikramaditya Roy", "Rahul Verma", "Priya Mehra", "Siddharth Jain", "Ananya Roy", "Manish Agarwal", "Sneha Kapoor", "Gaurav Sen", "Kavita Nair", "Amitabh Das", "Ritu Singhania", "Kunal Bansal", "Sunaina Joshi", "Arjun Rampal", "Meenakshi Sundaram", "Harsh Vardhan", "Divya Chawla", "Rohan Khanna"].includes(name);
+    };
+
     // 1. Fetch from server /workers/:id/jobs API
     try {
       const res = await fetch(`${API_BASE}/workers/${id}/jobs`);
       const data = await res.json();
       if (data.success && Array.isArray(data.jobs) && data.jobs.length > 0) {
-        combined = [...data.jobs];
+        combined = data.jobs.filter(b => !isFakeBooking(b));
       }
     } catch (e) {}
 
@@ -355,12 +367,8 @@ function WorkerDashboard() {
         const all = Array.isArray(data.data) ? data.data : (Array.isArray(data.bookings) ? data.bookings : []);
         const workerJobs = all.filter(
           (b) =>
-            b.assignedWorker?.workerId === id ||
-            b.assignedWorker?.id === id ||
-            (b.assignedWorkers || []).some((w) => w.workerId === id) ||
-            b.status === "ready_for_worker" ||
-            b.workerStatus === "assigned" ||
-            b.status === "assigned"
+            !isFakeBooking(b) &&
+            (b.vendorAccepted || b.status === "ready_for_worker" || b.status === "dispatched" || ["accepted", "traveling", "arrived", "in_progress", "awaiting_payment", "completed"].includes(b.workerStatus))
         );
         combined = [...workerJobs];
       } catch (e) {}
@@ -375,9 +383,11 @@ function WorkerDashboard() {
         const listW = JSON.parse(rawW);
         if (Array.isArray(listW)) {
           listW.forEach((b) => {
-            if (!b) return;
+            if (!b || isFakeBooking(b)) return;
             const bId = b.bookingId || b.id || b._id || b.bookingCode;
             if (!bId) return;
+            const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || b.status === "dispatched" || acceptedMap[bId] || acceptedMap[b.bookingCode] || ["accepted", "traveling", "arrived", "in_progress", "awaiting_payment", "completed"].includes(b.workerStatus);
+            if (!isVendorApproved) return;
             const formattedItem = {
               ...b,
               bookingCode: b.bookingCode || b.bookingId || b.id || bId,
@@ -449,14 +459,15 @@ function WorkerDashboard() {
         if (!Array.isArray(list)) return;
 
         list.forEach((b) => {
-          if (!b) return;
+          if (!b || isFakeBooking(b)) return;
           const bId = b.bookingId || b.id || b._id || b.bookingCode;
           if (!bId) return;
           if (b.status === "cancelled" || b.workerStatus === "cancelled") return;
 
           const targetKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
           const isLocallyAccepted = targetKeys.some(key => acceptedMap[key]);
-          const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || isLocallyAccepted || !b.status || b.status === "pending" || b.status === "searching_provider" || b.workerStatus === "assigned" || b.workerStatus === "unassigned";
+          // ONLY allow bookings that have been accepted/dispatched by Demo Vendor
+          const isVendorApproved = Boolean(b.vendorAccepted) || b.status === "ready_for_worker" || b.status === "dispatched" || isLocallyAccepted || ["accepted", "traveling", "arrived", "in_progress", "awaiting_payment", "completed"].includes(b.workerStatus);
 
           if (isVendorApproved) {
             const formattedItem = {
@@ -519,44 +530,9 @@ function WorkerDashboard() {
       } catch (err) {}
     });
 
-    if (combined.length > 0) {
-      setJobs(combined);
-      checkActiveJobStopwatch(combined);
-    } else {
-      // Fallback demo active jobs
-      setJobs([
-        {
-          _id: "demo_job_1",
-          bookingCode: "HLP-78219",
-          serviceName: "Bathroom Pipe Leakage & Basin Fix",
-          customerName: "Vikas Malhotra",
-          customerPhone: "+91 98765 43210",
-          customerAddress: "Flat 402, Green Glen Heights, Sector 62, Noida",
-          scheduledDate: "Today",
-          scheduledTime: "11:30 AM",
-          price: 499,
-          workerStatus: "assigned",
-          status: "assigned",
-          doorOtp: "3459",
-          problemDescription: "Under-sink pipe leaking and low pressure in main tap."
-        },
-        {
-          _id: "demo_job_2",
-          bookingCode: "HLP-91044",
-          serviceName: "Kitchen RO Water Purifier Servicing",
-          customerName: "Ananya Deshmukh",
-          customerPhone: "+91 98112 55443",
-          customerAddress: "Villa 12, Palm Meadows, Indirapuram, Ghaziabad",
-          scheduledDate: "Today",
-          scheduledTime: "02:00 PM",
-          price: 699,
-          workerStatus: "assigned",
-          status: "assigned",
-          doorOtp: "7821",
-          problemDescription: "Filter membrane replacement & TDS level calibration."
-        }
-      ]);
-    }
+    const cleanCombined = combined.filter(b => !isFakeBooking(b));
+    setJobs(cleanCombined);
+    checkActiveJobStopwatch(cleanCombined);
     setLoading(false);
   };
 
@@ -1815,9 +1791,9 @@ function WorkerDashboard() {
 
               {sortedActiveJobsList.length === 0 ? (
                 <div className="admin-empty-state">
-                  <span style={{ fontSize: "52px" }}>🎉</span>
-                  <h4>All Assigned Jobs Completed!</h4>
-                  <p>Your radar is live. New customer orders assigned by your vendor will appear here instantly at the top.</p>
+                  <span style={{ fontSize: "52px" }}>⏳</span>
+                  <h4>Waiting for Demo Vendor Dispatch...</h4>
+                  <p>Your radar is live. As soon as Demo Vendor reviews &amp; accepts an incoming customer booking, it will appear right here for you to accept!</p>
                   <button 
                     type="button" 
                     className="btn-secondary-outline"

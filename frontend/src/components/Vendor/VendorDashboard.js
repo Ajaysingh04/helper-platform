@@ -549,10 +549,19 @@ function VendorDashboard() {
       const data = await res.json();
       const serverList = (data.success && Array.isArray(data.data)) ? data.data : [];
 
+      // Filter out all fake/mock seed bookings so only real demo user bookings are shown
+      const isFakeBooking = (b) => {
+        if (!b) return true;
+        const bId = String(b.bookingId || b.id || b._id || b.bookingCode || "");
+        if (bId.startsWith("BK-") || bId.startsWith("demo_job_") || bId === "HLP-72819" || bId === "HLP-78219" || bId === "HLP-91044") return true;
+        const name = String(b.customerName || b.name || "");
+        return ["Vikas Malhotra", "Ananya Deshmukh", "Vikramaditya Roy", "Rahul Verma", "Priya Mehra", "Siddharth Jain", "Ananya Roy", "Manish Agarwal", "Sneha Kapoor", "Gaurav Sen", "Kavita Nair", "Amitabh Das", "Ritu Singhania", "Kunal Bansal", "Sunaina Joshi", "Arjun Rampal", "Meenakshi Sundaram", "Harsh Vardhan", "Divya Chawla", "Rohan Khanna"].includes(name);
+      };
+
       // Merge with locally accepted bookings so newly accepted bookings keep vendorAccepted: true & ready_for_worker
-      const userBookings = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
-      const localBookings = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
-      const workerJobs = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
+      const userBookings = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]").filter(b => !isFakeBooking(b));
+      const localBookings = JSON.parse(localStorage.getItem("helper_bookings") || "[]").filter(b => !isFakeBooking(b));
+      const workerJobs = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]").filter(b => !isFakeBooking(b));
       const acceptedMap = JSON.parse(localStorage.getItem("helper_accepted_orders") || "{}");
 
       // Merge all local booking stores without duplicates
@@ -564,7 +573,7 @@ function VendorDashboard() {
         }
       });
 
-      const mergedList = serverList.map(sb => {
+      const mergedList = serverList.filter(sb => !isFakeBooking(sb)).map(sb => {
         const sKeys = [sb.bookingId, sb.id, sb._id, sb.bookingCode].filter(Boolean).map(String);
         const isLocallyAccepted = sKeys.some(k => acceptedMap[k] || acceptedOrdersMap[k]);
         const localMatch = allLocal.find(lb => [lb.bookingId, lb.id, lb._id, lb.bookingCode].filter(Boolean).map(String).some(k => sKeys.includes(k))) ||
@@ -607,23 +616,8 @@ function VendorDashboard() {
         }
       });
 
-      if (mergedList.length > 0) {
-        setBookings(mergedList);
-      } else {
-        // Fallback to locally tracked bookings matching this vendor
-        const myLocal = allLocal.filter(b => 
-          b.providerId === idToFetch || 
-          b.provider === idToFetch ||
-          !b.providerId ||
-          (vendor?.name && String(b.assignedProvider || "").toLowerCase().includes(vendor.name.toLowerCase())) ||
-          idToFetch === "vdr_demo_01"
-        );
-        if (myLocal.length > 0) {
-          setBookings(myLocal);
-        } else if (Array.isArray(data.data)) {
-          setBookings(data.data);
-        }
-      }
+      const cleanFinal = mergedList.filter(b => !isFakeBooking(b));
+      setBookings(cleanFinal);
     } catch (err) {
       console.warn("fetchBookings error:", err);
     } finally {

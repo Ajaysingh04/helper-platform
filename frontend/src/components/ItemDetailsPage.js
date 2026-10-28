@@ -100,8 +100,8 @@ function ItemDetailsPage() {
         serviceName: customerFinalService,
         price: item.price || "₹349",
         totalAmount: 349,
-        status: "ready_for_worker",
-        workerStatus: "assigned",
+        status: "pending",
+        workerStatus: "unassigned",
         vendorAccepted: false,
         vendorAcceptedAt: null,
         timestamp: Date.now(),
@@ -143,10 +143,7 @@ function ItemDetailsPage() {
         localStorage.setItem("helper_user_bookings", JSON.stringify([newB, ...existing]));
         const existingB = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
         localStorage.setItem("helper_bookings", JSON.stringify([newB, ...existingB]));
-        const existingW = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
-        localStorage.setItem("helper_worker_jobs", JSON.stringify([newB, ...existingW]));
         window.dispatchEvent(new CustomEvent("new_booking_created", { detail: newB }));
-        window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: newB }));
         window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: newB }));
         window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: bookingCode, patch: newB } }));
       } catch (err) {}

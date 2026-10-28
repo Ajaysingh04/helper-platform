@@ -400,26 +400,7 @@ const initialProviders = [
   }
 ];
 
-const initialBookings = [
-  { id: "HLP-72819", bookingId: "HLP-72819", bookingCode: "HLP-72819", customerName: "Vikramaditya Roy", customerPhone: "+91 98260 12345", phone: "+91 98260 12345", service: "Body Massage & Spa", price: "₹302", totalAmount: 302, status: "Pending", doorOtp: "1234", date: "Today, 11:30 AM", address: "Palasia Square, Near AB Road, Indore", provider: "Amritam • Rahul Gandhi" },
-  { id: "BK-9081", customerName: "Rahul Verma", phone: "+91 98765 12345", service: "AC Repair & Gas", price: "₹399", status: "Pending", date: "Today, 02:30 PM", address: "Flat 402, Green Valley Apartments, Sector 62", provider: "CoolTech AC & Jet Services" },
-  { id: "BK-9080", customerName: "Priya Mehra", phone: "+91 98765 67890", service: "Home Cleaner", price: "₹499", status: "In Progress", date: "Today, 11:15 AM", address: "House 18, Block C, Metro Park, Noida", provider: "ProClean Sanitization Hub" },
-  { id: "BK-9079", customerName: "Siddharth Jain", phone: "+91 98765 99887", service: "Electrician", price: "₹249", status: "Completed", date: "Yesterday, 04:00 PM", address: "Plot 89, Tech Residency, Sector 18", provider: "Sharma Express Electricals" },
-  { id: "BK-9078", customerName: "Ananya Roy", phone: "+91 98765 44332", service: "Plumber", price: "₹199", status: "Cancelled", date: "Yesterday, 10:00 AM", address: "Tower 2, Urban Heights, Indirapuram", provider: "Rapid Flow Plumbing Works" },
-  { id: "BK-9077", customerName: "Manish Agarwal", phone: "+91 98765 33112", service: "Carpenter", price: "₹299", status: "Completed", date: "24 Sep, 03:00 PM", address: "Villa 12, Palm Meadows, Greater Noida", provider: "Precision Woodcraft & Locks" },
-  { id: "BK-9076", customerName: "Sneha Kapoor", phone: "+91 98765 88223", service: "Home Chef", price: "₹399", status: "In Progress", date: "24 Sep, 01:20 PM", address: "B-401, Royal Palms, Sector 137", provider: "Gourmet Home Dining Co." },
-  { id: "BK-9075", customerName: "Gaurav Sen", phone: "+91 98765 55441", service: "Pest & Termite Control", price: "₹799", status: "Pending", date: "24 Sep, 11:00 AM", address: "Block D-14, Mayur Vihar, Delhi", provider: "ProClean Deep Sanitization" },
-  { id: "BK-9074", customerName: "Kavita Nair", phone: "+91 98765 77665", service: "Nanny / Babysitter", price: "₹450", status: "Completed", date: "23 Sep, 09:30 AM", address: "Flat 102, Sunrise Towers, Noida", provider: "SafeHands Nanny Care" },
-  { id: "BK-9073", customerName: "Amitabh Das", phone: "+91 98765 11998", service: "Wall Painter", price: "₹599", status: "In Progress", date: "23 Sep, 02:45 PM", address: "House 55, Sector 45, Gurgaon", provider: "ColorCraft Waterproofing & Walls" },
-  { id: "BK-9072", customerName: "Ritu Singhania", phone: "+91 98765 22334", service: "Sofa & Carpet Sanitization", price: "₹599", status: "Completed", date: "22 Sep, 05:00 PM", address: "Penthouse 9, DLF Phase 5", provider: "ProClean Sanitization Hub" },
-  { id: "BK-9071", customerName: "Kunal Bansal", phone: "+91 98765 66778", service: "Door Locks & Hardware", price: "₹249", status: "Completed", date: "22 Sep, 12:10 PM", address: "Flat 303, Cyber City Hub", provider: "Precision Woodcraft & Locks" },
-  { id: "BK-9070", customerName: "Sunaina Joshi", phone: "+91 98765 44889", service: "Home Keeper", price: "₹349", status: "Pending", date: "21 Sep, 10:15 AM", address: "Row House 4, Greenfield Colony", provider: "SafeDrive Verified Chauffeurs" },
-  { id: "BK-9069", customerName: "Arjun Rampal", phone: "+91 98765 99112", service: "RO Water Purifier Service", price: "₹299", status: "Completed", date: "21 Sep, 04:30 PM", address: "Plot 77, Sector 50, Noida", provider: "CoolTech AC & Jet Services" },
-  { id: "BK-9068", customerName: "Meenakshi Sundaram", phone: "+91 98765 88334", service: "Kitchen Chimney Cleaning", price: "₹449", status: "Completed", date: "20 Sep, 01:00 PM", address: "A-12, Express Greens, Sector 76", provider: "Gourmet Home Dining Co." },
-  { id: "BK-9067", customerName: "Harsh Vardhan", phone: "+91 98765 33771", service: "Personal Driver / Chauffeur", price: "₹399", status: "Cancelled", date: "20 Sep, 08:30 AM", address: "Terminal 3 Airport Pickup, Delhi", provider: "SafeDrive Verified Chauffeurs" },
-  { id: "BK-9066", customerName: "Divya Chawla", phone: "+91 98765 55667", service: "Party Catering & Bartender Host", price: "₹999", status: "Completed", date: "19 Sep, 07:00 PM", address: "Club House, Eldeco Utopia", provider: "Gourmet Home Dining Co." },
-  { id: "BK-9065", customerName: "Rohan Khanna", phone: "+91 98765 22990", service: "Washing Machine & Fridge Fix", price: "₹299", status: "In Progress", date: "19 Sep, 03:15 PM", address: "Flat 801, Supertech Capetown", provider: "CoolTech AC & Jet Services" }
-];
+const initialBookings = [];
 
 const initialSlides = initialOffers;
 
@@ -556,12 +537,15 @@ export const DataProvider = ({ children }) => {
       const saved = localStorage.getItem("helper_bookings");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 10) {
-          return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.filter(b => {
+            const id = String(b.id || b.bookingId || b.bookingCode || "");
+            return !id.startsWith("BK-") && !id.startsWith("demo_job_") && id !== "HLP-72819";
+          });
         }
       }
     } catch (e) {}
-    return initialBookings;
+    return [];
   });
 
   const [slides, setSlides] = useState(() => {
@@ -1070,25 +1054,20 @@ export const DataProvider = ({ children }) => {
       localStorage.setItem("helper_vendor_notifications", JSON.stringify([newNotif, ...vendorNotifs]));
     } catch (e) {}
 
-    // Save directly to helper_user_bookings, helper_bookings, and helper_worker_jobs
+    // Save directly to helper_user_bookings and helper_bookings (waiting for vendor acceptance)
     try {
       const uList = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
-      const filteredU = uList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
+      const filteredU = uList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode && !String(b.id || "").startsWith("BK-"));
       localStorage.setItem("helper_user_bookings", JSON.stringify([item, ...filteredU]));
 
       const bList = JSON.parse(localStorage.getItem("helper_bookings") || "[]");
-      const filteredB = bList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
+      const filteredB = bList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode && !String(b.id || "").startsWith("BK-"));
       localStorage.setItem("helper_bookings", JSON.stringify([item, ...filteredB]));
-
-      const wList = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]");
-      const filteredW = wList.filter(b => b.bookingId !== item.bookingId && b.id !== item.id && b.bookingCode !== item.bookingCode);
-      localStorage.setItem("helper_worker_jobs", JSON.stringify([item, ...filteredW]));
     } catch (e) {}
 
-    // Dispatch real-time booking event so Vendor Panel & Worker Panel receive incoming request instantly
+    // Dispatch real-time booking event so Vendor Panel receives incoming request instantly
     broadcastBookingSync(item.bookingId, item);
     window.dispatchEvent(new CustomEvent("new_booking_created", { detail: item }));
-    window.dispatchEvent(new CustomEvent("worker_new_offer", { detail: item }));
     window.dispatchEvent(new CustomEvent("vendor_notification_received", { detail: item }));
     window.dispatchEvent(new CustomEvent("booking_workflow_updated", { detail: { bookingId: item.bookingId, patch: item } }));
 
