@@ -92,16 +92,10 @@ export function AppProvider({ children }) {
 
   // Load cached settings first, then fetch live from backend
   useEffect(() => {
-    AsyncStorage.getItem('@helper_theme_v2_initialized').then(async (init) => {
-      if (!init) {
-        // Fresh download: Default to clean white/light theme
-        setThemeModeState('light');
-        await AsyncStorage.setItem('@helper_theme_v2_initialized', 'true').catch(() => {});
-        await AsyncStorage.setItem('@helper_theme_mode', 'light').catch(() => {});
-      } else {
-        const saved = await AsyncStorage.getItem('@helper_theme_mode').catch(() => null);
-        if (saved) setThemeModeState(saved);
-      }
+    AsyncStorage.getItem('@helper_theme_v3_light_forced').then(async (init) => {
+      setThemeModeState('light');
+      await AsyncStorage.setItem('@helper_theme_v3_light_forced', 'true').catch(() => {});
+      await AsyncStorage.setItem('@helper_theme_mode', 'light').catch(() => {});
     }).catch(() => {});
     AsyncStorage.getItem('@helper_language').then((savedLang) => {
       if (savedLang) setLanguageState(savedLang);

@@ -7,6 +7,7 @@ import { AppProvider, AppContext } from './src/context/AppContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import VendorPartnerScreen from './src/screens/VendorPartnerScreen';
 import WorkerTechnicianScreen from './src/screens/WorkerTechnicianScreen';
+import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
 import AnimatedSplashScreen from './src/components/AnimatedSplashScreen';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,6 +23,7 @@ function MainApp(props: AppProps) {
   const [isLocked, setIsLocked] = useState(false);
   const isPartner = props?.appFlavor === 'partner';
   const isWorker = props?.appFlavor === 'worker';
+  const isAdmin = props?.appFlavor === 'admin';
   const isDark = themeColors?.isDark !== false;
 
   useEffect(() => {
@@ -53,7 +55,9 @@ function MainApp(props: AppProps) {
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={themeColors?.bg || (isDark ? '#070A12' : '#F8FAFC')}
       />
-      {isWorker ? (
+      {isAdmin ? (
+        <AdminDashboardScreen navigation={{ goBack: () => {}, navigate: () => {} } as any} />
+      ) : isWorker ? (
         <WorkerTechnicianScreen navigation={{ goBack: () => {}, navigate: () => {} } as any} />
       ) : isPartner ? (
         <VendorPartnerScreen navigation={{ goBack: () => {}, navigate: () => {} } as any} />

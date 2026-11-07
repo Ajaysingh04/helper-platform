@@ -19,6 +19,7 @@ const BookingSchema = new mongoose.Schema(
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
     customerName: { type: String, required: true, trim: true },
     customerPhone: { type: String, trim: true },
+    customerEmail: { type: String, trim: true },
     
     provider: { type: mongoose.Schema.Types.Mixed, ref: "Provider", index: true },
     providerId: { type: String, index: true },
@@ -88,6 +89,10 @@ const BookingSchema = new mongoose.Schema(
       type: String,
       enum: [
         "pending",
+        "confirmed",
+        "new",
+        "open",
+        "broadcast",
         "pending_vendor",
         "ready_for_worker",
         "vendor_accepted",
@@ -164,12 +169,16 @@ const BookingSchema = new mongoose.Schema(
 
     paymentMode: {
       type: String,
-      enum: ["razorpay_online", "upi", "upi_qr", "cash", "cash_after_service", "wallet"],
+      enum: ["razorpay_online", "online_paid", "paid_online", "online", "upi", "upi_qr", "cash", "cash_after", "cash_after_service", "cash_on_delivery", "cod", "wallet"],
       default: "cash_after_service"
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "authorized", "captured", "refunded", "failed", "payment_due", "paid"],
+      enum: ["pending",
+        "confirmed",
+        "new",
+        "open",
+        "broadcast", "authorized", "captured", "refunded", "failed", "payment_due", "paid"],
       default: "pending",
       index: true
     },

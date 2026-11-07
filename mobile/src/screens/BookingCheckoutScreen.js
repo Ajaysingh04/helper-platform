@@ -360,7 +360,7 @@ export default function BookingCheckoutScreen({ route, navigation }) {
 
   const finalizeBooking = async (bookingDetails, paymentData = null) => {
     const isOnline = paymentData?.mode === 'razorpay_online';
-    const finalStatus = isOnline ? 'confirmed' : 'pending';
+    const finalStatus = 'pending'; // Start pending so vendor radar triggers siren
     const finalPaymentStatus = isOnline ? 'authorized' : 'pending';
     const finalPaymentId = paymentData?.razorpayPaymentId || '';
 
@@ -389,13 +389,22 @@ export default function BookingCheckoutScreen({ route, navigation }) {
       assignedProviderName: pro?.name || pro?.shopName || 'Indore Multi-Specialist Hub',
       status: finalStatus,
       paymentStatus: finalPaymentStatus,
-      paymentMode: isOnline ? 'online_paid' : 'cash_after',
+      paymentMode: isOnline ? 'razorpay_online' : 'cash_after_service',
       razorpayOrderId: paymentData?.razorpayOrderId || '',
       razorpayPaymentId: finalPaymentId,
     };
 
     // Emit to backend non-blocking
-    client.post('/bookings', payload).catch(() => {});
+    try {
+      axios.post('http://192.168.1.8:5000/api/bookings', payload, { timeout: 8000 })
+        .then(() => console.log('[Booking] Emitted to vendor radar via port 5000'))
+        .catch(err => {
+          console.warn('[Booking Direct Post Error]:', err.message);
+          client.post('/bookings', payload).catch(() => {});
+        });
+    } catch(e) {
+      client.post('/bookings', payload).catch(() => {});
+    }
 
     // Save to local user bookings cache so it instantly appears in My Bookings
     try {

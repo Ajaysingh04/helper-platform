@@ -1,4 +1,5 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import client from '../api/client';
 import {
   View,
   Text,
@@ -275,6 +276,23 @@ const FILTERS = ['All Experts', '⭐ 4.9+ Rated', '⚡ Express (15m)', '💰 Low
 export default function CategoryDetailsScreen({ route, navigation }) {
   const { category = { id: 'ac-repair-services', name: 'Service', icon: '⚡' } } = route.params || {};
   const [activeFilter, setActiveFilter] = useState('All Experts');
+  const [liveServices, setLiveServices] = useState([]);
+
+  useEffect(() => {
+    client.get('/services')
+      .then(res => {
+        if (res.data?.data) setLiveServices(res.data.data);
+      })
+      .catch(() => {});
+    const interval = setInterval(() => {
+      client.get('/services')
+        .then(res => {
+          if (res.data?.data) setLiveServices(res.data.data);
+        })
+        .catch(() => {});
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   const { primaryColor, themeColors, isDark: ctxIsDark, themeMode, language } = useContext(AppContext);
   const isDark = themeColors?.isDark !== undefined ? themeColors.isDark : (ctxIsDark !== undefined ? ctxIsDark : themeMode === 'dark');
@@ -359,6 +377,18 @@ export default function CategoryDetailsScreen({ route, navigation }) {
   else if (normalizedId.includes('ac') || normalizedId.includes('air')) categoryKey = 'ac-repair-services';
   else if (PROS_BY_CATEGORY[category.id]) categoryKey = category.id;
 
+  const matchedServices = (liveServices || []).filter(s => {
+    const sCat = (s.category || '').toLowerCase().trim();
+    const cName = (category.name || '').toLowerCase().trim();
+    const cId = (category.id || '').toLowerCase().trim();
+    const norm = (normalizedId || '').toLowerCase().trim();
+    return (
+      (sCat && cName && (sCat.includes(cName) || cName.includes(sCat))) ||
+      (sCat && norm && (sCat.includes(norm) || norm.includes(sCat))) ||
+      (sCat && cId && (sCat.includes(cId) || cId.includes(sCat)))
+    );
+  });
+
   const rawPros = PROS_BY_CATEGORY[categoryKey] || PROS_BY_CATEGORY['ac-repair-services'];
 
   const filteredPros = rawPros.filter((pro) => {
@@ -430,6 +460,87 @@ export default function CategoryDetailsScreen({ route, navigation }) {
             <Text style={styles.heroBigEmoji}>{category.icon || '⚡'}</Text>
           </View>
         </View>
+
+        {/* LIVE PACKAGES & RATE CARD (VENDOR ADDED SERVICES) */}
+        {matchedServices.length > 0 && (
+          <View style={{ marginBottom: 18, marginTop: 4 }}>
+            <Text style={[styles.sectionTitle, dyn.sectionTitle, { marginBottom: 10, fontSize: 15 }]}>
+              {language === 'hi' ? '🏷️ उपलब्ध पैकेज और सेवाएं (Doorstep Rates)' : '🏷️ Available Packages & Rates'}
+            </Text>
+            {matchedServices.map((srv) => (
+              <View
+                key={srv.id || srv._id}
+                style={[
+                  styles.proCard,
+                  dyn.card,
+                  { padding: 14, marginBottom: 10, borderRadius: 14, backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0' }
+                ]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {srv.image ? (
+                    <Image
+                      source={{ uri: srv.image }}
+                      style={{ width: 66, height: 66, borderRadius: 10, marginRight: 12, backgroundColor: '#F1F5F9' }}
+                      resizeMode="cover"
+                    />
+                  ) : null}
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Text style={{ fontSize: 15, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0F172A' }}>
+                      {srv.name}
+                    </Text>
+                    <Text style={{ fontSize: 11.5, color: '#64748B', marginTop: 3 }}>
+                      ⏱️ {srv.duration || '45 mins'} • 📍 Indore Doorstep Pro
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#10B981' }}>
+                      ₹{srv.price}
+                    </Text>
+                    {srv.originalPrice ? (
+                      <Text style={{ fontSize: 10.5, color: '#94A3B8', textDecorationLine: 'line-through' }}>
+                        ₹{srv.originalPrice}
+                      </Text>
+                    ) : null}
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: primaryColor || '#FF4D2D',
+                        paddingHorizontal: 14,
+                        paddingVertical: 6.5,
+                        borderRadius: 8,
+                        marginTop: 6,
+                      }}
+                      onPress={() =>
+                        navigation.navigate('BookingCheckout', {
+                          service: {
+                            name: srv.name,
+                            price: srv.price,
+                            category: srv.category || category.name,
+                            image: srv.image,
+                          },
+                          pro: {
+                            name: 'Indore Partner Hub',
+                            shopName: 'Verified Doorstep Pro',
+                            phone: '+91 98765 43210',
+                          },
+                        })
+                      }
+                      activeOpacity={0.85}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 11.5 }}>
+                        Book Now
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                {srv.description ? (
+                  <Text style={{ fontSize: 11, color: isDark ? '#94A3B8' : '#64748B', marginTop: 6, lineHeight: 16 }} numberOfLines={2}>
+                    {srv.description}
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Filter Chips */}
         <View style={styles.filterRow}>

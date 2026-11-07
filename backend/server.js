@@ -8,6 +8,8 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
+process.on('uncaughtException', err => console.error('Unhandled Exception:', err));
+process.on('unhandledRejection', reason => console.error('Unhandled Rejection:', reason));
 // Reload trigger: 2026-09-29T11:55
 
 // Initialize Socket.IO with CORS

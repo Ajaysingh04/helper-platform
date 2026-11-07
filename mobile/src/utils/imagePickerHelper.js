@@ -76,15 +76,15 @@ export const pickFromGallery = async (onSuccess, options = {}) => {
   const isHi = lang === 'hi';
 
   try {
-    const result = await launchImageLibrary({
+    const safeOptions = {
       mediaType: 'photo',
       includeBase64: true,
-      maxHeight: 1200,
-      maxWidth: 1200,
-      quality: 0.85,
+      maxHeight: 800,
+      maxWidth: 800,
+      quality: 0.7,
       selectionLimit: 1,
-      ...options,
-    });
+    };
+    const result = await launchImageLibrary(safeOptions);
 
     if (result.didCancel) return;
     if (result.errorCode) {
@@ -130,11 +130,11 @@ export const pickFromCamera = async (onSuccess, options = {}) => {
     const cameraOptions = {
       mediaType: 'photo',
       includeBase64: true,
-      maxHeight: 1200,
-      maxWidth: 1200,
-      quality: 0.85,
+      maxHeight: 800,
+      maxWidth: 800,
+      quality: 0.7,
       saveToPhotos: false,
-      ...options,
+      cameraType: 'back',
     };
 
     const result = await launchCamera(cameraOptions);

@@ -267,7 +267,7 @@ export default function WorkerTechnicianScreen({ navigation }) {
       return;
     }
     setAuthLoading(true);
-    const hostCandidates = ['http://localhost:5000', 'http://192.168.1.9:5000'];
+    const hostCandidates = ['http://192.168.1.8:5000', 'http://localhost:5000', 'https://helper-backend-api-8878.onrender.com'];
     let loginSuccess = false;
 
     for (const host of hostCandidates) {
@@ -336,7 +336,7 @@ export default function WorkerTechnicianScreen({ navigation }) {
 
     let registerSuccess = false;
     // 1. Try USB reverse (localhost) and Wi-Fi host (192.168.1.9)
-    const hostCandidates = ['http://localhost:5000', 'http://192.168.1.9:5000'];
+    const hostCandidates = ['http://192.168.1.8:5000', 'http://localhost:5000', 'https://helper-backend-api-8878.onrender.com'];
     for (const host of hostCandidates) {
       try {
         const res = await axios.post(`${host}/api/auth/worker/register`, payload, { timeout: 3500 });

@@ -1,3 +1,4 @@
+const seedWorkers = [
   // 1. Multi-Trade Master Worker (Handles House Cleaning, Plumbing, Electrical, AC Repair & All Services)
   {
     id: "wrk_101",

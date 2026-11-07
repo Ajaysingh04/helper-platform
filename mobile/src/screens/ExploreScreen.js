@@ -190,6 +190,10 @@ export default function ExploreScreen({ route, navigation }) {
 
   useEffect(() => {
     fetchExploreData();
+    const pollInterval = setInterval(() => {
+      fetchExploreData();
+    }, 8000);
+    return () => clearInterval(pollInterval);
   }, []);
 
   const onRefresh = async () => {

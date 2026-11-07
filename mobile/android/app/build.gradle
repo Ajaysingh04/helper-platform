@@ -103,6 +103,11 @@ android {
             applicationId "com.helper.worker"
             resValue "string", "app_name", "Helper Crew"
         }
+        admin {
+            dimension "default"
+            applicationId "com.helper.admin"
+            resValue "string", "app_name", "Helper Admin"
+        }
     }
     signingConfigs {
         debug {
@@ -129,6 +134,11 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.activity:activity:1.8.2")
+    implementation("androidx.activity:activity-ktx:1.8.2")
+    implementation("androidx.core:core-ktx:1.12.0")
+
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

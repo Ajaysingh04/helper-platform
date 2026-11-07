@@ -930,28 +930,20 @@ function MyBookings() {
                             )}
                           </p>
 
-                          {/* 5-Step Demo Simulation Controls */}
-                          <div className="demo-simulation-action-bar">
-                            <span className="demo-sim-title">⚡ Interactive Demo Step-by-Step Flow:</span>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "6px" }}>
-                              {!isVendorAccepted && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleSimulateVendorAccept(b)}
-                                  className="btn-demo-sim vendor"
-                                >
-                                  ⚡ Step 2: Vendor Accept ({DEMO_VENDOR.name})
-                                </button>
-                              )}
-                              {isVendorAccepted && !isWorkerAccepted && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleSimulateWorkerAccept(b)}
-                                  className="btn-demo-sim worker"
-                                >
-                                  👨‍🔧 Step 3: Worker Accept (Field Technician)
-                                </button>
-                              )}
+                          {/* Simulation Controls only after Vendor has confirmed in Vendor Portal */}
+                          {isVendorAccepted && (
+                            <div className="demo-simulation-action-bar">
+                              <span className="demo-sim-title">⚡ Interactive Demo Step-by-Step Flow:</span>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "6px" }}>
+                                {!isWorkerAccepted && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSimulateWorkerAccept(b)}
+                                    className="btn-demo-sim worker"
+                                  >
+                                    👨‍🔧 Step 3: Worker Accept (Field Technician)
+                                  </button>
+                                )}
                               {isWorkerAccepted && workerStatus === "accepted" && (
                                 <button
                                   type="button"
@@ -1007,6 +999,7 @@ function MyBookings() {
                               (Real-time synchronized across User, Vendor, and Worker tabs!)
                             </span>
                           </div>
+                          )}
                         </div>
                       )}
                     </div>

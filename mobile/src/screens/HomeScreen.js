@@ -802,6 +802,10 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     fetchHomeData();
+    const pollInterval = setInterval(() => {
+      fetchHomeData();
+    }, 8000);
+    return () => clearInterval(pollInterval);
   }, []);
 
   const onRefresh = async () => {

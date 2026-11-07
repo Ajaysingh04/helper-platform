@@ -481,33 +481,77 @@ function VendorDashboard() {
     return () => clearInterval(interval);
   }, [incomingOffer]);
 
-  // Listen for real-time customer bookings from custom window events
+  // Helper to determine if a booking should be received by this vendor
+  const isVendorForBooking = (b) => {
+    if (!b) return false;
+    const myId = vendor?.id || vendor?._id || "vdr_demo_01";
+    const isDemoVendor = !myId || myId === "vdr_demo_01" || myId === "9876500001" || 
+      String(vendor?.phone || "").includes("9876500001") || 
+      String(vendor?.email || "").toLowerCase().includes("demo") || 
+      String(vendor?.name || "").toLowerCase().includes("ramesh");
+
+    // Demo vendor receives all customer bookings on demo platform
+    if (isDemoVendor) return true;
+
+    const myName = (vendor?.name || "").toLowerCase();
+    const provId = String(b.providerId || b.provider || b.assignedProviderId || "");
+    const provName = typeof b.assignedProvider === "string" ? b.assignedProvider.toLowerCase() : "";
+    const provObjName = b.assignedProvider && typeof b.assignedProvider === "object" ? String(b.assignedProvider.name || "").toLowerCase() : "";
+    const provAssigned = String(b.assignedProviderName || "").toLowerCase();
+
+    return provId === myId || (myName && (provName.includes(myName) || provObjName.includes(myName) || provAssigned.includes(myName)));
+  };
+
+  // Listen for real-time customer bookings from custom window events & cross-tab storage
   useEffect(() => {
     const handleNewBooking = (e) => {
-      if (e.detail) {
-        const newB = e.detail;
-        const myId = vendor?.id || vendor?._id;
-        const myName = (vendor?.name || "").toLowerCase();
-        const bAssigned = String(newB.assignedProvider || newB.assignedProviderName || "").toLowerCase();
-        const isForMe = !myId || newB.providerId === myId || newB.provider === myId || (myName && bAssigned.includes(myName));
-
-        if (isForMe) {
-          const id = newB.bookingId || newB.id || newB.bookingCode;
-          setIncomingOffer({
-            ...newB,
-            bookingId: id,
-            expiresAt: Date.now() + 60000
-          });
-          setOfferCountdown(60);
-          setBookings(prev => {
-            const exists = prev.some(b => (b.bookingId || b.id || b._id) === id);
-            if (exists) return prev;
-            return [{ ...newB, bookingId: id, id, status: newB.status || "assigned", createdAt: "Just now" }, ...prev];
-          });
-          showToast(`🔔 NEW CUSTOMER BOOKING: ${newB.serviceName || newB.service} from ${newB.customerName}! ⚡`);
-        }
+      let newB = e?.detail;
+      if (!newB && e && (e.key === "helper_user_bookings" || e.key === "helper_bookings" || e.key === "helper_sync_ping")) {
+        try {
+          const raw = localStorage.getItem("helper_user_bookings") || localStorage.getItem("helper_bookings");
+          if (raw) {
+            const list = JSON.parse(raw);
+            if (Array.isArray(list) && list.length > 0) newB = list[0];
+          }
+        } catch (err) {}
       }
+      if (!newB) return;
+      if (!isVendorForBooking(newB)) return;
+
+      const id = newB.bookingId || newB.id || newB.bookingCode;
+      const bCode = newB.bookingCode || newB.bookingId || newB.id || id;
+      const isAccepted = Boolean(
+        acceptedOrdersMap[id] || 
+        acceptedOrdersMap[bCode] || 
+        newB.vendorAccepted || 
+        newB.status === "ready_for_worker" || 
+        newB.status === "dispatched" ||
+        ["ready_for_worker", "dispatched", "accepted", "traveling", "arrived", "in_progress", "awaiting_payment", "completed"].includes(newB.status)
+      );
+
+      if (!isAccepted) {
+        setIncomingOffer({
+          ...newB,
+          bookingId: id,
+          id,
+          bookingCode: bCode,
+          expiresAt: Date.now() + 60000
+        });
+        setOfferCountdown(60);
+      }
+
+      setBookings(prev => {
+        const targetKeys = [id, bCode, newB.id, newB._id].filter(Boolean).map(String);
+        const filtered = prev.filter(b => {
+          const bKeys = [b.bookingId, b.id, b._id, b.bookingCode].filter(Boolean).map(String);
+          return !bKeys.some(k => targetKeys.includes(k));
+        });
+        return [{ ...newB, bookingId: id, id, bookingCode: bCode, status: newB.status || "pending", createdAt: newB.createdAt || "Just now" }, ...filtered];
+      });
+
+      showToast(`🔔 NEW CUSTOMER BOOKING: ${newB.serviceName || newB.service} from ${newB.customerName || "Customer"}! ⚡`);
     };
+
     window.addEventListener("new_booking_created", handleNewBooking);
     window.addEventListener("vendor_notification_received", handleNewBooking);
     window.addEventListener("storage", handleNewBooking);
@@ -520,11 +564,29 @@ function VendorDashboard() {
           if (ev.data && ev.data.type === "BOOKING_WORKFLOW_UPDATE") {
             const b = ev.data.patch;
             const bId = ev.data.bookingId;
-            if (b && (b.status === "pending" || b.status === "assigned" || b.status === "pending_vendor")) {
-              setIncomingOffer({ ...b, bookingId: bId, id: bId, expiresAt: Date.now() + 60000 });
-              setOfferCountdown(60);
+            if (b && isVendorForBooking(b)) {
+              const bCode = b.bookingCode || b.bookingId || b.id || bId;
+              const fullB = { ...b, bookingId: bId, id: bId, bookingCode: bCode };
+              const isAccepted = Boolean(
+                acceptedOrdersMap[bId] || 
+                acceptedOrdersMap[bCode] || 
+                b.vendorAccepted || 
+                b.status === "ready_for_worker" || 
+                b.status === "dispatched"
+              );
+              if (!isAccepted && (b.status === "pending" || b.status === "assigned" || b.status === "pending_vendor" || !b.status)) {
+                setIncomingOffer({ ...fullB, expiresAt: Date.now() + 60000 });
+                setOfferCountdown(60);
+              }
+              setBookings(prev => {
+                const targetKeys = [bId, bCode, b.id, b._id].filter(Boolean).map(String);
+                const filtered = prev.filter(x => {
+                  const xKeys = [x.bookingId, x.id, x._id, x.bookingCode].filter(Boolean).map(String);
+                  return !xKeys.some(k => targetKeys.includes(k));
+                });
+                return [{ ...fullB, status: fullB.status || "pending", createdAt: fullB.createdAt || "Just now" }, ...filtered];
+              });
             }
-            if (vendor?.id || vendor?._id) fetchBookings(vendor.id || vendor._id);
           }
         };
       }
@@ -543,81 +605,112 @@ function VendorDashboard() {
   const fetchBookings = async (vendorId) => {
     setLoadingBookings(true);
     try {
-      const idToFetch = vendorId || vendor?.id || vendor?._id;
-      if (!idToFetch) return;
-      const res = await fetch(`${API_BASE}/providers/${idToFetch}/bookings`);
-      const data = await res.json();
-      const serverList = (data.success && Array.isArray(data.data)) ? data.data : [];
+      const idToFetch = vendorId || vendor?.id || vendor?._id || "vdr_demo_01";
+      let serverList = [];
+      try {
+        const res = await fetch(`${API_BASE}/providers/${idToFetch}/bookings`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) serverList = data.data;
+      } catch (err) {
+        console.warn("Server bookings fetch fallback:", err);
+      }
 
-      // Filter out all fake/mock seed bookings so only real demo user bookings are shown
+      // Filter out seed mock bookings
       const isFakeBooking = (b) => {
         if (!b) return true;
         const bId = String(b.bookingId || b.id || b._id || b.bookingCode || "");
-        if (bId.startsWith("BK-") || bId.startsWith("demo_job_") || bId === "HLP-72819" || bId === "HLP-78219" || bId === "HLP-91044") return true;
-        const name = String(b.customerName || b.name || "");
-        return ["Vikas Malhotra", "Ananya Deshmukh", "Vikramaditya Roy", "Rahul Verma", "Priya Mehra", "Siddharth Jain", "Ananya Roy", "Manish Agarwal", "Sneha Kapoor", "Gaurav Sen", "Kavita Nair", "Amitabh Das", "Ritu Singhania", "Kunal Bansal", "Sunaina Joshi", "Arjun Rampal", "Meenakshi Sundaram", "Harsh Vardhan", "Divya Chawla", "Rohan Khanna"].includes(name);
+        if (bId.startsWith("demo_job_") || bId.startsWith("BK-") || bId.includes("mock")) return true;
+
+        const cName = String(b.customerName || b.name || "").trim().toLowerCase();
+        const mockNames = [
+          "pooja patel", "vikas malhotra", "sneha gupta", "ananya deshmukh", "vikramaditya roy",
+          "rahul verma", "priya mehra", "siddharth jain", "ananya roy", "manish agarwal",
+          "sneha kapoor", "gaurav sen", "kavita nair", "amitabh das", "ritu singhania",
+          "kunal bansal", "sunaina joshi", "arjun rampal", "meenakshi sundaram", "harsh vardhan",
+          "divya chawla", "rohan khanna", "aman singh", "pradeep sharma", "suneel pandit",
+          "panchar patel", "satendra", "sardanand dubey", "salman khan", "narendra modi"
+        ];
+        if (mockNames.includes(cName)) return true;
+
+        const d = b.createdAt || b.updatedAt;
+        if (d && !isNaN(new Date(d).getTime()) && new Date(d).getTime() < new Date("2026-10-28T00:00:00Z").getTime()) {
+          return true;
+        }
+
+        return false;
       };
 
-      // Merge with locally accepted bookings so newly accepted bookings keep vendorAccepted: true & ready_for_worker
       const userBookings = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]").filter(b => !isFakeBooking(b));
       const localBookings = JSON.parse(localStorage.getItem("helper_bookings") || "[]").filter(b => !isFakeBooking(b));
       const workerJobs = JSON.parse(localStorage.getItem("helper_worker_jobs") || "[]").filter(b => !isFakeBooking(b));
       const acceptedMap = JSON.parse(localStorage.getItem("helper_accepted_orders") || "{}");
 
-      // Merge all local booking stores without duplicates
-      const allLocal = [...userBookings];
-      localBookings.forEach(lb => {
-        const id = lb.bookingId || lb.id || lb._id || lb.bookingCode;
-        if (!allLocal.some(x => (x.bookingId || x.id || x._id || x.bookingCode) === id)) {
+      // Merge all local customer bookings first (most recent first)
+      const allLocal = [];
+      [...userBookings, ...localBookings].forEach(lb => {
+        const lId = lb.bookingId || lb.id || lb._id || lb.bookingCode;
+        if (lId && !allLocal.some(x => (x.bookingId || x.id || x._id || x.bookingCode) === lId)) {
           allLocal.push(lb);
         }
       });
 
-      const mergedList = serverList.filter(sb => !isFakeBooking(sb)).map(sb => {
+      // Deduplicate serverList by bookingCode/id
+      const seenKeys = new Set();
+      const uniqueServer = [];
+      serverList.filter(sb => !isFakeBooking(sb)).forEach(sb => {
+        const key = String(sb.bookingCode || sb.bookingId || sb.id || sb._id || "");
+        if (key && !seenKeys.has(key)) {
+          seenKeys.add(key);
+          uniqueServer.push(sb);
+        }
+      });
+
+      // Merge: real customer local bookings first at top, then unique server bookings
+      const mergedList = [...allLocal];
+      uniqueServer.forEach(sb => {
         const sKeys = [sb.bookingId, sb.id, sb._id, sb.bookingCode].filter(Boolean).map(String);
-        const isLocallyAccepted = sKeys.some(k => acceptedMap[k] || acceptedOrdersMap[k]);
-        const localMatch = allLocal.find(lb => [lb.bookingId, lb.id, lb._id, lb.bookingCode].filter(Boolean).map(String).some(k => sKeys.includes(k))) ||
-                           workerJobs.find(wj => [wj.bookingId, wj.id, wj._id, wj.bookingCode].filter(Boolean).map(String).some(k => sKeys.includes(k)));
-        if (isLocallyAccepted || (localMatch && (localMatch.vendorAccepted || localMatch.status === "ready_for_worker" || localMatch.workerStatus))) {
+        const existsInLocal = allLocal.some(lb => {
+          const lKeys = [lb.bookingId, lb.id, lb._id, lb.bookingCode].filter(Boolean).map(String);
+          return lKeys.some(k => sKeys.includes(k));
+        });
+        if (!existsInLocal) {
+          mergedList.push(sb);
+        }
+      });
+
+      const cleanFinal = mergedList.map(item => {
+        const itemKeys = [item.bookingId, item.id, item._id, item.bookingCode].filter(Boolean).map(String);
+        const isLocallyAccepted = itemKeys.some(k => acceptedMap[k] || acceptedOrdersMap[k]);
+        const workerMatch = workerJobs.find(wj => {
+          const wjKeys = [wj.bookingId, wj.id, wj._id, wj.bookingCode].filter(Boolean).map(String);
+          return wjKeys.some(k => itemKeys.includes(k));
+        });
+
+        if (isLocallyAccepted || item.vendorAccepted || item.status === "ready_for_worker" || (workerMatch && (workerMatch.vendorAccepted || workerMatch.status === "ready_for_worker"))) {
           return {
-            ...sb,
-            ...(localMatch || {}),
-            customerName: localMatch?.customerName || localMatch?.name || sb.customerName || sb.name,
-            name: localMatch?.customerName || localMatch?.name || sb.customerName || sb.name,
-            customerPhone: localMatch?.customerPhone || localMatch?.phone || sb.customerPhone || sb.phone,
-            phone: localMatch?.customerPhone || localMatch?.phone || sb.customerPhone || sb.phone,
-            customerAddress: localMatch?.customerAddress || localMatch?.address || localMatch?.fullAddress || sb.customerAddress || sb.address,
-            address: localMatch?.customerAddress || localMatch?.address || localMatch?.fullAddress || sb.customerAddress || sb.address,
-            fullAddress: localMatch?.fullAddress || localMatch?.customerAddress || localMatch?.address || sb.fullAddress || sb.address,
-            scheduledDate: localMatch?.scheduledDate || localMatch?.bookingDate || localMatch?.date || sb.scheduledDate || sb.bookingDate,
-            bookingDate: localMatch?.bookingDate || localMatch?.scheduledDate || localMatch?.date || sb.bookingDate || sb.scheduledDate,
-            date: localMatch?.date || localMatch?.scheduledDate || localMatch?.bookingDate || sb.date,
-            scheduledTime: localMatch?.scheduledTime || localMatch?.timeSlot || localMatch?.time || sb.scheduledTime || sb.timeSlot,
-            timeSlot: localMatch?.timeSlot || localMatch?.scheduledTime || localMatch?.time || sb.timeSlot || sb.scheduledTime,
-            time: localMatch?.time || localMatch?.scheduledTime || localMatch?.timeSlot || sb.time,
-            serviceName: localMatch?.serviceName || localMatch?.service || sb.serviceName || sb.service,
-            service: localMatch?.service || localMatch?.serviceName || sb.service,
-            problemDescription: localMatch?.problemDescription || localMatch?.problem || sb.problemDescription,
+            ...item,
+            ...(workerMatch || {}),
             vendorAccepted: true,
-            status: localMatch?.status || "ready_for_worker",
-            workerStatus: localMatch?.workerStatus || "assigned",
-            assignedWorker: localMatch?.assignedWorker || sb.assignedWorker,
-            assignedWorkerName: localMatch?.assignedWorkerName || sb.assignedWorkerName
+            status: workerMatch?.status || item.status || "ready_for_worker",
+            workerStatus: workerMatch?.workerStatus || item.workerStatus || "assigned",
+            assignedWorker: workerMatch?.assignedWorker || item.assignedWorker || primaryWorker,
+            assignedWorkerName: workerMatch?.assignedWorkerName || item.assignedWorkerName || primaryWorker.name
           };
         }
-        return sb;
+        return item;
       });
 
-      // Also append local bookings that might not be on the server yet
-      allLocal.forEach(lb => {
-        const lId = lb.bookingId || lb.id || lb._id || lb.bookingCode;
-        if (lId && !mergedList.some(sb => (sb.bookingId || sb.id || sb._id || sb.bookingCode) === lId)) {
-          mergedList.unshift(lb);
-        }
-      });
-
-      const cleanFinal = mergedList.filter(b => !isFakeBooking(b));
       setBookings(cleanFinal);
+
+      // Check if there is a pending unaccepted booking and pop up offer modal
+      const pendingOffer = cleanFinal.find(b => {
+        const bId = b.bookingId || b.id || b._id || b.bookingCode;
+        return !acceptedMap[bId] && !acceptedOrdersMap[bId] && !b.vendorAccepted && b.status !== "ready_for_worker" && b.status !== "completed";
+      });
+      if (pendingOffer && !incomingOffer) {
+        setIncomingOffer({ ...pendingOffer, expiresAt: Date.now() + 60000 });
+        setOfferCountdown(60);
+      }
     } catch (err) {
       console.warn("fetchBookings error:", err);
     } finally {

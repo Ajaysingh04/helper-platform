@@ -1,3 +1,4 @@
+const BACKEND_CANDIDATES = ['http://192.168.1.8:5000', 'http://10.0.2.2:5000', 'http://192.168.1.8:5000'];
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   View,
@@ -24,7 +25,7 @@ import axios from 'axios';
 import { colors } from '../theme/colors';
 import { AppContext } from '../context/AppContext';
 import { AuthContext } from '../context/AuthContext';
-import { openImagePicker } from '../utils/imagePickerHelper';
+import { openImagePicker, pickFromCamera, pickFromGallery } from '../utils/imagePickerHelper';
 
 const { BellSound } = NativeModules;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -136,22 +137,23 @@ const INITIAL_SERVICES = [
 
 export default function VendorPartnerScreen({ navigation }) {
   const { primaryColor, themeColors, isDark: ctxIsDark, toggleTheme: ctxToggleTheme, themeMode, setThemeMode } = useContext(AppContext);
-  const isDark = themeColors?.isDark !== undefined ? themeColors.isDark : (ctxIsDark !== undefined ? ctxIsDark : themeMode === 'dark');
-  const toggleTheme = ctxToggleTheme || (() => setThemeMode && setThemeMode(isDark ? 'light' : 'dark'));
+  const isDark = false;
+  const [partnerThemeMode, setPartnerThemeMode] = useState("light");
+  const toggleTheme = () => setPartnerThemeMode(prev => prev === "dark" ? "light" : "dark");
 
   // Comprehensive theme palette for 100% consistent light/dark styling
   const colors = {
-    bg: isDark ? '#070A12' : '#F1F5F9',
-    card: isDark ? '#0D1322' : '#FFFFFF',
-    cardElevated: isDark ? '#131B2E' : '#FFFFFF',
-    subCard: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
-    headerBg: isDark ? '#0B101D' : '#FFFFFF',
-    border: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
-    borderLight: isDark ? 'rgba(255, 255, 255, 0.15)' : '#CBD5E1',
-    text: isDark ? '#FFFFFF' : '#0F172A',
-    textSecondary: isDark ? '#94A3B8' : '#64748B',
-    textMuted: isDark ? '#64748B' : '#94A3B8',
-    inputBg: isDark ? '#1E293B' : '#F1F5F9',
+    bg: "#F8FAFC",
+    card: "#FFFFFF",
+    cardElevated: "#FFFFFF",
+    subCard: "#F1F5F9",
+    headerBg: "#FFFFFF",
+    border: "#E2E8F0",
+    borderLight: "#CBD5E1",
+    text: "#0F172A",
+    textSecondary: "#475569",
+    textMuted: "#64748B",
+    inputBg: "#F8FAFC",
   };
   const activeColor = '#10B981'; // Emerald Green for Partner App
 
@@ -194,6 +196,10 @@ export default function VendorPartnerScreen({ navigation }) {
   const [vendorSetTime, setVendorSetTime] = useState('45 mins');
   const [vendorSetPrice, setVendorSetPrice] = useState('499');
 
+  // Dismissed / Skipped Bookings (Never re-alert unless new customer booking)
+  const [dismissedBookingIds, setDismissedBookingIds] = useState(new Set());
+  const dismissedBookingIdsRef = useRef(new Set());
+
   // Active Job Execution States
   const [jobStage, setJobStage] = useState('accepted'); // accepted | on_the_way | reached | in_progress | completed
   const [inputOtp, setInputOtp] = useState('');
@@ -225,6 +231,22 @@ export default function VendorPartnerScreen({ navigation }) {
   const [hourlyRate, setHourlyRate] = useState('299');
   const [vendorServices, setVendorServices] = useState(INITIAL_SERVICES);
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Plumber');
+  const [newServiceOriginalPrice, setNewServiceOriginalPrice] = useState('');
+  const [newServiceDesc, setNewServiceDesc] = useState('');
+  const [newServiceImage, setNewServiceImage] = useState('');
+  const [isAddingCustomCategory, setIsAddingCustomCategory] = useState(false);
+  const [customCategoryInput, setCustomCategoryInput] = useState('');
+  const [isPublishingService, setIsPublishingService] = useState(false);
+  const [categoriesList, setCategoriesList] = useState([
+    { id: 'cat_plumb', name: 'Plumber', icon: '🔧', color: '#06B6D4' },
+    { id: 'cat_elec', name: 'Electrician', icon: '⚡', color: '#F59E0B' },
+    { id: 'cat_ac', name: 'AC & Appliance Repair', icon: '❄️', color: '#3B82F6' },
+    { id: 'cat_clean', name: 'Home Deep Cleaning', icon: '🧹', color: '#EC4899' },
+    { id: 'cat_carp', name: 'Carpenter', icon: '🪚', color: '#8B5CF6' },
+    { id: 'cat_paint', name: 'Painting & Waterproofing', icon: '🎨', color: '#10B981' },
+    { id: 'cat_pest', name: 'Pest Control', icon: '🦟', color: '#64748B' },
+  ]);
   const [newServiceName, setNewServiceName] = useState('');
   const [newServicePrice, setNewServicePrice] = useState('');
   const [newServiceTime, setNewServiceTime] = useState('45 mins');
@@ -267,7 +289,7 @@ export default function VendorPartnerScreen({ navigation }) {
         'helper_vendor_session',
         JSON.stringify({ vendor: updated, token: 'vendor-token-active' })
       );
-      await axios.put(`http://localhost:5000/api/providers/${updated.id || 'VND-IND-01'}`, {
+      await axios.put(`http://192.168.1.8:5000/api/providers/${updated.id || 'VND-IND-01'}`, {
         name: updated.shopName,
         contactPerson: updated.name,
         phone: updated.phone,
@@ -302,9 +324,9 @@ export default function VendorPartnerScreen({ navigation }) {
   }, []);
 
   const handleVendorPhotoUpload = () => {
-    openImagePicker(async (asset) => {
-      if (asset?.uri) {
-        const newAvatar = asset.uri;
+    openImagePicker(async (imageUriOrAsset, assetObj) => {
+      const newAvatar = typeof imageUriOrAsset === "string" ? imageUriOrAsset : (imageUriOrAsset?.uri || assetObj?.uri);
+      if (newAvatar) {
         const updated = {
           ...vendorProfile,
           avatar: newAvatar,
@@ -315,7 +337,7 @@ export default function VendorPartnerScreen({ navigation }) {
             'helper_vendor_session',
             JSON.stringify({ vendor: updated, token: 'vendor-token-active' })
           );
-          await axios.put(`http://localhost:5000/api/providers/${vendorProfile.id || 'VND-IND-01'}`, {
+          await axios.put(`http://192.168.1.8:5000/api/providers/${vendorProfile.id || 'VND-IND-01'}`, {
             avatar: newAvatar,
             logo: newAvatar,
           });
@@ -329,8 +351,45 @@ export default function VendorPartnerScreen({ navigation }) {
 
   useEffect(() => {
 
+    // Fetch services from backend so vendor and user side are in sync
+    axios.get('http://192.168.1.8:5000/api/services')
+      .then(res => {
+        if (res.data?.data && res.data.data.length > 0) {
+          const apiSrvs = res.data.data.map(s => ({
+            id: s.id || s._id,
+            name: s.name,
+            price: s.price,
+            originalPrice: s.originalPrice || Math.round(s.price * 1.3),
+            time: s.duration || '45 mins',
+            category: s.category || 'Home Repair',
+            description: s.description || '',
+          }));
+          setVendorServices(apiSrvs);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch live categories from backend
+    axios.get('http://192.168.1.8:5000/api/categories')
+      .then(res => {
+        if (res.data?.data && res.data.data.length > 0) {
+          const apiCats = res.data.data.map(c => ({
+            id: c.id || c._id,
+            name: c.name,
+            icon: c.icon || '🛠️',
+            color: '#10B981',
+          }));
+          setCategoriesList(prev => {
+            const names = new Set(prev.map(p => p.name.toLowerCase()));
+            const newOnes = apiCats.filter(c => !names.has(c.name.toLowerCase()));
+            return [...prev, ...newOnes];
+          });
+        }
+      })
+      .catch(() => {});
+
     // Fetch team workers from backend
-    axios.get('http://localhost:5000/api/workers')
+    axios.get('http://192.168.1.8:5000/api/workers')
       .then(res => {
         if (res.data?.data && res.data.data.length > 0) {
           const apiWorkers = res.data.data.map(w => ({
@@ -357,6 +416,20 @@ export default function VendorPartnerScreen({ navigation }) {
         }
       })
       .catch(() => {});
+
+    // Load persisted dismissed booking IDs so skipped bookings never reappear
+    AsyncStorage.getItem('@helper_dismissed_bookings')
+      .then((data) => {
+        if (data) {
+          const list = JSON.parse(data);
+          if (Array.isArray(list)) {
+            const nextSet = new Set(list);
+            setDismissedBookingIds(nextSet);
+            dismissedBookingIdsRef.current = nextSet;
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Poll backend for customer bookings placed on website or mobile app AND track assigned worker progress
@@ -365,66 +438,130 @@ export default function VendorPartnerScreen({ navigation }) {
     const fetchLatestBookings = () => {
       if (!isLoggedIn || !isDutyOn) return;
 
-      // If active order is being executed by assigned worker, track live progress
-      if (acceptedOrder) {
-        axios
-          .get('http://localhost:5000/api/bookings')
-          .then((res) => {
-            if (res.data?.data && res.data.data.length > 0) {
-              const currentId = acceptedOrder.id || acceptedOrder.bookingCode;
-              const found = res.data.data.find(b => (b.bookingCode === currentId || b.id === currentId || b._id === currentId));
-              if (found) {
-                if (found.status === 'completed' || found.status === 'work_completed') {
-                  if (jobStage !== 'completed') {
-                    const payout = acceptedOrder?.payout || 499;
-                    const helperFee = Math.round(payout * 0.10);
-                    const vendorShare = payout - helperFee;
-                    setJobStage('completed');
-                    setWalletBalance((prev) => prev + vendorShare);
-                    setTodayEarnings((prev) => prev + vendorShare);
-                    setCompletedJobsToday((prev) => prev + 1);
-                  }
-                } else if (found.status === 'in_progress' || found.workerStatus === 'in_progress') {
-                  setJobStage('in_progress');
-                } else if (found.status === 'arrived' || found.workerStatus === 'arrived') {
-                  setJobStage('reached');
-                } else if (found.status === 'on_the_way' || found.workerStatus === 'traveling') {
-                  setJobStage('on_the_way');
+      axios
+        .get('http://192.168.1.8:5000/api/bookings')
+        .then((res) => {
+          const allBookings = res.data?.data || [];
+          if (!allBookings || allBookings.length === 0) return;
+
+          // 1. Live status update for accepted order (if any)
+          if (acceptedOrder) {
+            const currentId = acceptedOrder.bookingCode || acceptedOrder.id || acceptedOrder.mongoId;
+            const found = allBookings.find(b => (
+              b.bookingCode === currentId ||
+              b.id === currentId ||
+              b._id === currentId ||
+              b.bookingCode === acceptedOrder.id ||
+              b.id === acceptedOrder.bookingCode
+            ));
+            if (found) {
+              if (found.status === 'completed' || found.status === 'work_completed') {
+                if (jobStage !== 'completed') {
+                  const payout = acceptedOrder?.payout || 499;
+                  const helperFee = Math.round(payout * 0.10);
+                  const vendorShare = payout - helperFee;
+                  setJobStage('completed');
+                  setWalletBalance((prev) => prev + vendorShare);
+                  setTodayEarnings((prev) => prev + vendorShare);
+                  setCompletedJobsToday((prev) => prev + 1);
                 }
+              } else if (found.status === 'in_progress' || found.workerStatus === 'in_progress') {
+                if (jobStage !== 'in_progress') setJobStage('in_progress');
+              } else if (found.status === 'arrived' || found.workerStatus === 'arrived') {
+                if (jobStage !== 'reached' && jobStage !== 'in_progress' && jobStage !== 'completed') setJobStage('reached');
+              } else if (found.status === 'on_the_way' || found.workerStatus === 'traveling') {
+                if (jobStage === 'dispatched') setJobStage('on_the_way');
               }
             }
-          })
-          .catch(() => {});
-        return;
-      }
+          }
 
-      // No accepted order yet, scan for incoming bookings from customer
-      axios
-        .get('http://localhost:5000/api/bookings')
-        .then((res) => {
-          if (res.data?.data && res.data.data.length > 0) {
-            const pendingBookings = res.data.data.filter(b => 
-              (b.status === 'pending' || b.status === 'confirmed' || b.status === 'requested' || b.status === 'broadcast') &&
-              b.status !== 'completed' && b.status !== 'cancelled' && b.status !== 'assigned' && b.status !== 'slot_confirmed' && b.status !== 'in_progress'
-            );
-            const latest = pendingBookings[0] || null;
-            if (latest && (!incomingOrder || incomingOrder.id !== (latest.bookingCode || latest.id))) {
+          // 2. Scan for incoming real customer bookings (never blocked by accepted active job)
+          const dismissedSet = dismissedBookingIdsRef.current || new Set();
+
+          const pendingBookings = allBookings.filter(b => {
+            const bId = String(b.id || b.bookingId || '');
+            const bCode = String(b.bookingCode || '');
+            const bMongoId = String(b._id || '');
+
+            // Exclude if vendor skipped/dismissed this booking
+            if (
+              dismissedSet.has(bId) ||
+              dismissedSet.has(bCode) ||
+              dismissedSet.has(bMongoId)
+            ) {
+              return false;
+            }
+
+            // Exclude if already accepted or passed in DB
+            if (b.vendorAccepted === true || b.vendorPassed === true) {
+              return false;
+            }
+
+            // Exclude the currently accepted active order from incoming radar list
+            if (acceptedOrder) {
+              const currentId = String(acceptedOrder.bookingCode || acceptedOrder.id || acceptedOrder.mongoId || '');
+              if (bId === currentId || bCode === currentId || bMongoId === currentId) {
+                return false;
+              }
+            }
+
+            // Exclude if already assigned to a fleet worker other than default unassigned
+            if (b.assignedWorker && typeof b.assignedWorker === 'object' && b.assignedWorker.workerId && b.assignedWorker.workerId !== 'WRK-101' && b.assignedWorker.status === 'assigned') {
+              return false;
+            }
+
+            // Accept any genuine customer booking in pending / confirmed / requested / new state
+            const st = (b.status || '').toLowerCase().trim();
+            const isPendingOrNew = [
+              'pending',
+              'requested',
+              'searching_provider',
+              'broadcast',
+              'confirmed',
+              'new',
+              'unassigned',
+              'open',
+              'paid'
+            ].includes(st);
+
+            const isTerminated = [
+              'completed',
+              'cancelled',
+              'rejected',
+              'work_completed',
+              'refunded'
+            ].includes(st);
+
+            return isPendingOrNew && !isTerminated;
+          });
+
+          pendingBookings.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          const latest = pendingBookings[0] || null;
+
+          if (latest) {
+            const latestId = latest.bookingCode || latest.id || String(latest._id);
+            if (!incomingOrder || incomingOrder.id !== latestId) {
               setIncomingOrder({
-                id: latest.bookingCode || latest.id || 'HLP-73262',
-                serviceName: latest.serviceName || latest.service || 'Master Plumbing & Leak Fix',
-                customerName: latest.customerName || 'Ajay Singh',
-                customerPhone: latest.customerPhone || latest.phone || '+91 7389451349',
-                address: latest.customerAddress || latest.address || latest.serviceAddress?.fullAddress || 'Flat 402, Royal Palms, Vijay Nagar, Indore',
+                id: latestId,
+                mongoId: String(latest._id || ''),
+                bookingCode: latest.bookingCode || latestId,
+                serviceName: latest.serviceName || latest.service || 'Master Plumbing & Doorstep Service',
+                customerName: latest.customerName || latest.name || 'Customer',
+                customerPhone: latest.customerPhone || latest.phone || '+91 98260 00000',
+                customerEmail: latest.customerEmail || latest.email || latest.userEmail || (latest.customerName ? `${latest.customerName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@gmail.com` : 'customer@helper.com'),
+                address: latest.customerAddress || latest.address || latest.serviceAddress?.fullAddress || 'Indore, Madhya Pradesh',
                 payout: latest.totalAmount || latest.price || 499,
-                distance: latest.distance || (latest.distanceKm ? `${latest.distanceKm} km away` : '2.4 km away'),
+                distance: latest.distance || (latest.distanceKm ? `${latest.distanceKm} km away` : '1.8 km away'),
                 timeEstimate: '10-12 mins drive',
-                scheduledTime: latest.scheduledDate ? `${latest.scheduledDate} • ${latest.scheduledTime || '03:30 PM'}` : 'Today • 03:30 PM',
-                otp: latest.doorOtp || '3909',
-                category: latest.serviceCategory || 'Plumber',
+                scheduledTime: latest.scheduledDate ? `${latest.scheduledDate} • ${latest.scheduledTime || 'Immediate'}` : 'Immediate (Now)',
+                otp: latest.doorOtp || latest.security?.startOtpPlainForCustomer || '3459',
+                category: latest.serviceCategory || 'Home Specialist',
                 items: [latest.serviceName || 'Home Service', 'Doorstep Inspection & Repair', 'Verified Standard Warranty'],
               });
               setCountdown(45);
-            } else if (!latest && !acceptedOrder && incomingOrder) {
+            }
+          } else {
+            if (incomingOrder) {
               setIncomingOrder(null);
             }
           }
@@ -445,7 +582,7 @@ export default function VendorPartnerScreen({ navigation }) {
       return;
     }
     setAuthLoading(true);
-    const hostCandidates = ['http://localhost:5000', 'http://192.168.1.9:5000'];
+    const hostCandidates = ['http://192.168.1.8:5000', 'http://192.168.1.8:5000'];
     let loginSuccess = false;
 
     for (const host of hostCandidates) {
@@ -509,7 +646,7 @@ export default function VendorPartnerScreen({ navigation }) {
     };
 
     let registerSuccess = false;
-    const hostCandidates = ['http://localhost:5000', 'http://192.168.1.9:5000'];
+    const hostCandidates = ['http://192.168.1.8:5000', 'http://192.168.1.8:5000'];
     for (const host of hostCandidates) {
       try {
         const res = await axios.post(`${host}/api/auth/vendor/register`, payload, { timeout: 3500 });
@@ -586,6 +723,11 @@ export default function VendorPartnerScreen({ navigation }) {
   // Animation values
   const dutyPulseAnim = useRef(new Animated.Value(1)).current;
   const radarWaveAnim = useRef(new Animated.Value(0)).current;
+  const radarWaveAnim1 = useRef(new Animated.Value(0)).current;
+  const radarWaveAnim2 = useRef(new Animated.Value(0)).current;
+  const radarWaveAnim3 = useRef(new Animated.Value(0)).current;
+  const radarSweepAnim = useRef(new Animated.Value(0)).current;
+  const blipPulseAnim = useRef(new Animated.Value(0.4)).current;
   const orderCardScale = useRef(new Animated.Value(0.92)).current;
   const orderCardOpacity = useRef(new Animated.Value(0)).current;
   const bellWobbleAnim = useRef(new Animated.Value(0)).current;
@@ -685,23 +827,67 @@ export default function VendorPartnerScreen({ navigation }) {
     return () => pulse?.stop();
   }, [isDutyOn]);
 
-  // Radar ripple wave animation
+  // Radar ripple waves, rotating sweep, and demand blips animation
   useEffect(() => {
-    let wave;
+    let loop1, loop2, loop3, sweepLoop, blipLoop;
     if (isDutyOn && !incomingOrder && !acceptedOrder) {
-      wave = Animated.loop(
-        Animated.timing(radarWaveAnim, {
+      const createWave = (animVal, delayMs) => {
+        return Animated.loop(
+          Animated.sequence([
+            Animated.delay(delayMs),
+            Animated.timing(animVal, {
+              toValue: 1,
+              duration: 2400,
+              easing: Easing.out(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(animVal, {
+              toValue: 0,
+              duration: 0,
+              useNativeDriver: true,
+            }),
+          ])
+        );
+      };
+
+      loop1 = createWave(radarWaveAnim1, 0);
+      loop2 = createWave(radarWaveAnim2, 800);
+      loop3 = createWave(radarWaveAnim3, 1600);
+      loop1.start();
+      loop2.start();
+      loop3.start();
+
+      sweepLoop = Animated.loop(
+        Animated.timing(radarSweepAnim, {
           toValue: 1,
-          duration: 2200,
-          easing: Easing.out(Easing.ease),
+          duration: 3500,
+          easing: Easing.linear,
           useNativeDriver: true,
         })
       );
-      wave.start();
+      sweepLoop.start();
+
+      blipLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(blipPulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+          Animated.timing(blipPulseAnim, { toValue: 0.3, duration: 900, useNativeDriver: true }),
+        ])
+      );
+      blipLoop.start();
     } else {
-      radarWaveAnim.setValue(0);
+      radarWaveAnim1.setValue(0);
+      radarWaveAnim2.setValue(0);
+      radarWaveAnim3.setValue(0);
+      radarSweepAnim.setValue(0);
+      blipPulseAnim.setValue(0.4);
     }
-    return () => wave?.stop();
+    return () => {
+      loop1?.stop();
+      loop2?.stop();
+      loop3?.stop();
+      sweepLoop?.stop();
+      blipLoop?.stop();
+    };
   }, [isDutyOn, incomingOrder, acceptedOrder]);
 
   // Order card entrance animation
@@ -825,6 +1011,38 @@ export default function VendorPartnerScreen({ navigation }) {
     }
   };
 
+  const formatStopwatch = (totalSeconds) => {
+    const s = Number(totalSeconds) || 0;
+    const hrs = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    if (hrs > 0) {
+      return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+    }
+    return `${pad(mins)}:${pad(secs)}`;
+  };
+
+  const calculateTimingPayment = (baseAmount, totalSeconds) => {
+    const base = Number(baseAmount) || 299;
+    const s = Number(totalSeconds) || 0;
+    const minutes = Math.floor(s / 60);
+    // Work rate: Rs 5 per minute of labor
+    const timeCharge = minutes * 5;
+    const total = base + timeCharge;
+    const helperFee = Math.round(total * 0.10);
+    const vendorShare = total - helperFee;
+    return {
+      minutes,
+      seconds: s % 60,
+      base,
+      timeCharge,
+      total,
+      helperFee,
+      vendorShare,
+    };
+  };
+
   const getCategoryMatches = () => {
     if (!incomingOrder) return workersList;
     const kw = ((incomingOrder.serviceName || '') + ' ' + (incomingOrder.category || '')).toLowerCase();
@@ -844,11 +1062,163 @@ export default function VendorPartnerScreen({ navigation }) {
     return matched.length > 0 ? matched : workersList;
   };
 
+    const handleSimulateCustomerBooking = async () => {
+    try {
+      const testNames = ['Rohit Sharma', 'Pooja Verma', 'Vikram Patel', 'Ananya Gupta', 'Karan Mehta'];
+      const testServices = ['Master Plumbing & Pipe Leak Fix', 'AC Deep Cleaning & Gas Refill', 'Complete Electrical Safety Check', 'Emergency RO Water Filter Service'];
+      const testAddresses = ['Scheme 54, Vijay Nagar, Indore', 'Palasia Square, AB Road, Indore', 'Bhawarkua Main Road, Indore', 'Annapurna Nagar, Indore'];
+      const chosenName = testNames[Math.floor(Math.random() * testNames.length)];
+      const chosenService = testServices[Math.floor(Math.random() * testServices.length)];
+      const chosenAddress = testAddresses[Math.floor(Math.random() * testAddresses.length)];
+      const price = 499 + Math.floor(Math.random() * 4) * 100;
+      const testOtp = String(Math.floor(1000 + Math.random() * 9000));
+
+      const payload = {
+        customerName: chosenName,
+        customerPhone: '+91 98260 ' + Math.floor(10000 + Math.random() * 90000),
+        serviceName: chosenService,
+        serviceCategory: 'Plumber',
+        fullAddress: chosenAddress,
+        address: chosenAddress,
+        totalAmount: price,
+        price: '₹' + price,
+        doorOtp: testOtp,
+        slotOtp: testOtp,
+        status: 'pending'
+      };
+
+      let success = false;
+      for (const host of BACKEND_CANDIDATES) {
+        try {
+          const res = await axios.post(host + '/api/bookings', payload, { timeout: 3000 });
+          if (res?.data?.success) {
+            success = true;
+            break;
+          }
+        } catch (e) {}
+      }
+
+      if (success) {
+        Alert.alert('Customer Booking Placed! 📲', 'Customer: ' + chosenName + '\nService: ' + chosenService + '\nAddress: ' + chosenAddress + '\n\nYour Radar will alert you with siren now!');
+      } else {
+        // Direct local test lead trigger
+        setIncomingOrder({
+          id: 'HLP-' + Math.floor(10000 + Math.random() * 90000),
+          serviceName: chosenService,
+          customerName: chosenName,
+          customerPhone: payload.customerPhone,
+          address: chosenAddress,
+          payout: price,
+          distance: '1.8 km away',
+          timeEstimate: '8-10 mins drive',
+          scheduledTime: 'Immediate (Now)',
+          otp: testOtp,
+          category: 'Plumber',
+          items: [chosenService, 'Doorstep Inspection & Service', 'Verified Standard Warranty'],
+        });
+        setCountdown(45);
+        setActiveTab('radar');
+        triggerBookingBell();
+      }
+    } catch (err) {
+      console.log('Simulate error:', err);
+    }
+  };
+
+  const handleAcceptDirectDelivery = async () => {
+    stopBookingBell();
+    const orderId = incomingOrder?.bookingCode || incomingOrder?.id || incomingOrder?.mongoId || 'HLP-ORD';
+    const finalPriceVal = Number(vendorSetPrice) || incomingOrder?.payout || 499;
+
+    // Immediately mark all identifiers as dismissed so radar never alerts for it again
+    if (orderId) {
+      setDismissedBookingIds((prev) => {
+        const next = new Set(prev);
+        next.add(orderId);
+        if (incomingOrder?.id) next.add(incomingOrder.id);
+        if (incomingOrder?.bookingCode) next.add(incomingOrder.bookingCode);
+        if (incomingOrder?.mongoId) next.add(incomingOrder.mongoId);
+        dismissedBookingIdsRef.current = next;
+        return next;
+      });
+    }
+
+    try {
+      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/accept`, {
+        providerId: vendorProfile?.id || 'VND-IND-01',
+        providerName: shopName || 'Indore Multi-Specialist Hub',
+        workerId: vendorProfile?.id || 'VND-IND-01',
+        workerName: `${vendorProfile?.name || 'Ramesh Sharma'} (Owner Direct)`,
+        workerPhone: vendorProfile?.phone || '+91 98765 43210',
+        isVendorDirect: true,
+      });
+    } catch (e) {
+      console.log('Vendor accept sync note:', e.message);
+    }
+
+    const orderToAccept = {
+      ...incomingOrder,
+      customerEmail: incomingOrder?.customerEmail || (incomingOrder?.customerName ? `${incomingOrder.customerName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@gmail.com` : 'customer@helper.com'),
+      payout: finalPriceVal,
+      isVendorDirect: true,
+      assignedWorker: {
+        id: vendorProfile?.id || 'VND-IND-01',
+        name: `${vendorProfile?.name || 'Ramesh Sharma'} (Owner Direct)`,
+        phone: vendorProfile?.phone || '+91 98765 43210',
+        specialty: 'Master Specialist (Vendor Direct)',
+        experience: '8+ Yrs Exp',
+      },
+    };
+
+    setAcceptedOrder(orderToAccept);
+    setAssignedWorker(orderToAccept.assignedWorker);
+    setIncomingOrder(null);
+    setActiveTab('active');
+    setJobStage('dispatched');
+
+    Alert.alert(
+      'Order Accepted for Direct Delivery! 🛵',
+      `You are fulfilling this service directly.\n\nCustomer: ${orderToAccept.customerName}\nAddress: ${orderToAccept.address}\n\nClick "Start Journey" when leaving for customer address.`
+    );
+  };
+
+  const handleStartTransit = async () => {
+    const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
+    setJobStage('on_the_way');
+    try {
+      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/traveling`, { etaMinutes: 15 });
+    } catch (e) {}
+    Alert.alert('On The Way! 🛵', 'Customer has been notified that you are en route with a 15-minute ETA.');
+  };
+
+  const handleMarkReached = async () => {
+    const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
+    setJobStage('reached');
+    try {
+      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/arrived`);
+    } catch (e) {}
+    Alert.alert('Arrived at Location! 📍', 'Customer has been notified of your arrival. Please enter the 4-digit start OTP provided by the customer.');
+  };
+
   const handleAcceptOrder = async () => {
     stopBookingBell();
-    const orderId = incomingOrder?.id || 'ORD-88219';
+    const orderId = incomingOrder?.bookingCode || incomingOrder?.id || incomingOrder?.mongoId || 'HLP-ORD';
+
+    // Immediately mark as dismissed from radar
+    if (orderId) {
+      setDismissedBookingIds((prev) => {
+        const next = new Set(prev);
+        next.add(orderId);
+        if (incomingOrder?.id) next.add(incomingOrder.id);
+        if (incomingOrder?.bookingCode) next.add(incomingOrder.bookingCode);
+        if (incomingOrder?.mongoId) next.add(incomingOrder.mongoId);
+        dismissedBookingIdsRef.current = next;
+        return next;
+      });
+    }
+
     try {
-      await axios.post(`http://localhost:5000/api/bookings/${orderId}/accept`, {
+      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/accept`, {
         providerId: vendorProfile?.id || 'VND-IND-01',
         providerName: shopName || 'Indore Multi-Specialist Hub',
       });
@@ -868,10 +1238,10 @@ export default function VendorPartnerScreen({ navigation }) {
     const chosenWorker = selectedWorkerToAssign || workersList[0];
     const finalPriceVal = Number(vendorSetPrice) || incomingOrder?.payout || 499;
     const finalTimeVal = vendorSetTime || '45 mins';
-    const orderId = incomingOrder?.id || 'ORD-88219';
+    const orderId = incomingOrder?.bookingCode || incomingOrder?.id || incomingOrder?.mongoId || 'HLP-ORD';
 
     try {
-      await axios.post(`http://localhost:5000/api/bookings/${orderId}/assign-worker`, {
+      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/assign-worker`, {
         workerId: chosenWorker.workerId || chosenWorker.id,
         workerName: chosenWorker.name,
         workerPhone: chosenWorker.phone,
@@ -886,6 +1256,7 @@ export default function VendorPartnerScreen({ navigation }) {
 
     const orderToAccept = {
       ...incomingOrder,
+      customerEmail: incomingOrder?.customerEmail || (incomingOrder?.customerName ? `${incomingOrder.customerName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@gmail.com` : 'customer@helper.com'),
       payout: finalPriceVal,
       vendorCustomPrice: finalPriceVal,
       vendorEstimatedTime: finalTimeVal,
@@ -909,55 +1280,99 @@ export default function VendorPartnerScreen({ navigation }) {
     );
   };
 
-  const handleDeclineOrder = () => {
+  const handleDeclineOrder = async () => {
     stopBookingBell();
-    Alert.alert('Order Passed ✕', 'Order passed to the next available specialist.');
+    if (incomingOrder) {
+      const orderId = incomingOrder.bookingCode || incomingOrder.id || incomingOrder.mongoId;
+      const mongoId = incomingOrder.mongoId || incomingOrder.id;
+
+      // Update state and ref so immediate poller will not pick it up
+      setDismissedBookingIds((prev) => {
+        const next = new Set(prev);
+        if (orderId) next.add(orderId);
+        if (mongoId) next.add(mongoId);
+        if (incomingOrder.id) next.add(incomingOrder.id);
+        if (incomingOrder.bookingCode) next.add(incomingOrder.bookingCode);
+        dismissedBookingIdsRef.current = next;
+        return next;
+      });
+
+      // Persist to AsyncStorage so it never re-appears after reloads
+      try {
+        const stored = await AsyncStorage.getItem('@helper_dismissed_bookings');
+        const list = stored ? JSON.parse(stored) : [];
+        [orderId, mongoId, incomingOrder.id, incomingOrder.bookingCode].forEach((id) => {
+          if (id && !list.includes(id)) list.push(id);
+        });
+        await AsyncStorage.setItem('@helper_dismissed_bookings', JSON.stringify(list));
+      } catch (e) {}
+
+      // Tell backend vendor passed this order
+      try {
+        await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/reject`, {
+          providerId: vendorProfile?.id || 'VND-IND-01',
+          reason: 'passed_by_vendor',
+        });
+      } catch (e) {}
+    }
+
     setIncomingOrder(null);
+    Alert.alert('Order Passed ✓', 'This booking has been skipped. It will not appear on your radar again.');
   };
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     const requiredOtp = acceptedOrder?.slotOtp || acceptedOrder?.doorOtp || acceptedOrder?.startOtp || acceptedOrder?.otp || acceptedOrder?.security?.startOtpPlainForCustomer || '3459';
+    const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
     if (inputOtp === requiredOtp || inputOtp === '1234' || inputOtp === '3459' || inputOtp === '5421') {
+      try {
+        await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/verify-start-otp`, { otp: inputOtp });
+      } catch (e) {}
       setOtpVerified(true);
       setJobStage('in_progress');
       setStopwatchSeconds(0);
-      Alert.alert('OTP Verified! ✅', 'Customer Start OTP matched successfully! You may now begin the service.');
+      Alert.alert(
+        'Start OTP Verified! ⚡',
+        'Customer Start OTP matched successfully! Live service countdown and timing billing is now started.'
+      );
     } else {
-      Alert.alert('Invalid OTP ❌', `Please enter the 4-digit start OTP provided by the customer (Demo OTP: ${requiredOtp} or 1234).`);
+      Alert.alert('Invalid OTP ❌', `Please enter the 4-digit start OTP provided by the customer (Start OTP: ${requiredOtp} or 1234).`);
     }
   };
 
-  const handleCompleteJob = () => {
-    const payout = acceptedOrder?.payout || 499;
-    const helperFee = Math.round(payout * 0.10);
-    const vendorShare = payout - helperFee;
+  const handleCompleteJob = async () => {
+    const timingCalc = calculateTimingPayment(acceptedOrder?.payout || 499, stopwatchSeconds);
+    const finalBill = timingCalc.total;
+    const vendorShare = timingCalc.vendorShare;
+    const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
+
+    try {
+      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/complete`, {
+        paymentMode: 'cash',
+        workDurationSeconds: stopwatchSeconds,
+        finalAmount: finalBill,
+      });
+    } catch (e) {}
+
     setJobStage('completed');
     setWalletBalance((prev) => prev + vendorShare);
     setTodayEarnings((prev) => prev + vendorShare);
     setCompletedJobsToday((prev) => prev + 1);
 
     Alert.alert(
-      'Service Completed! 🏆',
-      `Customer Bill: ₹${payout}\n\n• 10% Helper Platform Fee: ₹${helperFee}\n• 90% Net Settlement: ₹${vendorShare} (Credited to Your Hub Wallet)\n\nYou can now disburse payout to ${assignedWorker?.name || 'Worker'} from your wallet.`,
+      'Service Completed & Bill Generated! 🏆',
+      `Customer: ${acceptedOrder?.customerName}\nService: ${acceptedOrder?.serviceName}\nDuration Worked: ${timingCalc.minutes}m ${timingCalc.seconds}s\n\n• Base Service Fee: ₹${timingCalc.base}\n• Timing Charge (+₹5/min): ₹${timingCalc.timeCharge}\n• Total Bill: ₹${finalBill}\n• 90% Net Settlement: ₹${vendorShare} (Credited to Hub Wallet!)\n\nService delivery completed successfully!`,
       [
-        {
-          text: 'Disburse to Worker 💸',
-          onPress: () => {
-            setSelectedWorkerForDisburse(assignedWorker || workersList[0]);
-            setDisburseAmount(String(Math.round(vendorShare * 0.75)));
-            setShowDisburseModal(true);
-          },
-        },
         {
           text: 'Show Dynamic UPI QR',
           onPress: () => setShowQrModal(true),
         },
         {
-          text: 'Next Job Radar',
+          text: 'Scan Next Job Radar ➔',
           onPress: () => {
             setAcceptedOrder(null);
             setOtpVerified(false);
             setInputOtp('');
+            setStopwatchSeconds(0);
             setActiveTab('radar');
           },
         },
@@ -1023,7 +1438,7 @@ export default function VendorPartnerScreen({ navigation }) {
 
     // Sync with backend API so Admin Dashboard immediately receives the worker
     axios
-      .post('http://localhost:5000/api/workers', {
+      .post('http://192.168.1.8:5000/api/workers', {
         vendorId: vendorProfile?.id || 'VND-IND-01',
         vendorName: shopName || 'Indore Multi-Specialist Hub',
         name: newWorker.name,
@@ -1067,22 +1482,112 @@ export default function VendorPartnerScreen({ navigation }) {
     ]);
   };
 
-  const handleAddService = () => {
+  const handleAddService = async () => {
     if (!newServiceName.trim() || !newServicePrice.trim()) {
-      Alert.alert('Service Details Required', 'Please enter service title and price.');
+      Alert.alert('Service Details Required', 'Please enter service title and customer price.');
       return;
     }
-    const srv = {
-      id: `srv_${Date.now()}`,
-      name: newServiceName.trim(),
-      price: Number(newServicePrice),
-      time: newServiceTime,
-    };
-    setVendorServices([...vendorServices, srv]);
-    setShowAddServiceModal(false);
-    setNewServiceName('');
-    setNewServicePrice('');
-    Alert.alert('Service Published! 🏷️', `${srv.name} (₹${srv.price}) has been added to your catalog.`);
+
+    const finalCat = isAddingCustomCategory
+      ? (customCategoryInput.trim() || 'Home Repair')
+      : (selectedCategory || 'Home Repair');
+
+    setIsPublishingService(true);
+    try {
+      // 1. If custom category, post to /api/categories as well
+      if (isAddingCustomCategory && customCategoryInput.trim()) {
+        try {
+          await axios.post('http://192.168.1.8:5000/api/categories', {
+            name: customCategoryInput.trim(),
+            icon: '🛠️',
+            count: 'Verified Pros'
+          });
+        } catch (catErr) {
+          console.log('[Category Note]:', catErr.message);
+        }
+      }
+
+      // 2. Post service to /api/services
+      const payload = {
+        name: newServiceName.trim(),
+        category: finalCat,
+        price: Number(newServicePrice),
+        originalPrice: Number(newServiceOriginalPrice || Math.round(Number(newServicePrice) * 1.3)),
+        duration: newServiceTime?.trim() || '45 mins',
+        description: newServiceDesc?.trim() || `${newServiceName.trim()} with doorstep pros & satisfaction warranty.`,
+        image: newServiceImage || undefined,
+        highlights: [
+          '30-minute rapid arrival',
+          'Verified Doorstep Pro',
+          '30-Day Service Warranty'
+        ]
+      };
+
+      const res = await axios.post('http://192.168.1.8:5000/api/services', payload);
+      const savedService = res.data?.data;
+
+      const srvItem = {
+        id: savedService?.id || savedService?._id || `srv_${Date.now()}`,
+        name: savedService?.name || newServiceName.trim(),
+        price: savedService?.price || Number(newServicePrice),
+        originalPrice: savedService?.originalPrice || Math.round(Number(newServicePrice) * 1.3),
+        time: savedService?.duration || newServiceTime || '45 mins',
+        category: savedService?.category || finalCat,
+        description: savedService?.description || (newServiceDesc ? newServiceDesc.trim() : ''),
+        image: savedService?.image || newServiceImage || undefined,
+      };
+
+      setVendorServices((prev) => [srvItem, ...prev]);
+      setShowAddServiceModal(false);
+      setNewServiceName('');
+      setNewServicePrice('');
+      setNewServiceOriginalPrice('');
+      setNewServiceTime('45 mins');
+      setNewServiceDesc('');
+      setIsAddingCustomCategory(false);
+      setCustomCategoryInput('');
+      setNewServiceImage('');
+
+      Alert.alert(
+        'Live on Customer App! 🎉',
+        `"${srvItem.name}" (₹${srvItem.price}) has been saved to database and is now LIVE for all customers in the Helper Customer App under "${srvItem.category}".`
+      );
+    } catch (error) {
+      console.error('[Publish Service Error]:', error);
+      Alert.alert(
+        'Publish Failed',
+        error.response?.data?.message || error.message || 'Could not connect to backend server. Please verify Wi-Fi connection.'
+      );
+    } finally {
+      setIsPublishingService(false);
+    }
+  };
+
+  const handleDeleteService = (srv) => {
+    Alert.alert(
+      'Remove Service?',
+      `Delete "${srv.name}" from your catalog and Customer App?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (srv.id) {
+                await axios.delete(`http://192.168.1.8:5000/api/services/${srv.id}`);
+              }
+              setVendorServices((prev) => prev.filter((s) => s.id !== srv.id));
+              Alert.alert('Service Removed', `"${srv.name}" has been removed from Customer App.`);
+            } catch (err) {
+              console.error('[Delete Service Error]:', err);
+              setVendorServices((prev) => prev.filter((s) => s.id !== srv.id));
+              Alert.alert('Service Removed', `"${srv.name}" has been removed.`);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleWithdraw = () => {
@@ -1096,16 +1601,10 @@ export default function VendorPartnerScreen({ navigation }) {
     Alert.alert('Withdrawal Successful! 💸', `₹${amt} has been transferred to your UPI ID (${withdrawUpi}).`);
   };
 
-  const formatStopwatch = (sec) => {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
   if (!isLoggedIn) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        <StatusBar barStyle="light-content" backgroundColor="#070A12" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={styles.authHeader}>
           <TouchableOpacity style={styles.authBackBtn} onPress={() => navigation.goBack()}>
             <Text style={styles.authBackIcon}>‹</Text>
@@ -1328,159 +1827,212 @@ export default function VendorPartnerScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors?.bg || (isDark ? '#070A12' : '#F8FAFC') }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: "#F8FAFC" }]} edges={['top', 'left', 'right', 'bottom']}>
       <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={themeColors?.bg || (isDark ? '#070A12' : '#F8FAFC')}
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
       />
 
-      {/* ================= 1. LUXURY TOP APP BAR ================= */}
-      <View style={[styles.topAppBar, { backgroundColor: themeColors?.headerBg || (isDark ? '#0D1322' : '#FFFFFF'), borderBottomColor: themeColors?.border || (isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0') }]}>
-        <View style={styles.appBarLeft}>
-          <TouchableOpacity style={styles.appBarBackBtn} onPress={() => navigation.goBack()}>
-            <Text style={[styles.appBarBackIcon, { color: themeColors?.text || '#FFFFFF' }]}>‹</Text>
-          </TouchableOpacity>
-          <Image
-            source={require('../assets/logo.png')}
-            style={{ width: 28, height: 28, borderRadius: 8, marginRight: 5 }}
-          />
-          <TouchableOpacity
-            style={styles.vendorHeaderAvatarWrap}
-            activeOpacity={0.8}
-            onPress={() => setActiveTab('shop')}
-          >
-            <Image
-              source={{
-                uri: vendorProfile?.avatar || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300',
-              }}
-              style={styles.vendorHeaderAvatar}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{ flex: 1, minWidth: 0, marginLeft: 6 }}
-            activeOpacity={0.8}
-            onPress={() => setActiveTab('shop')}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              <Text style={[styles.brandTitle, { color: themeColors?.text || '#FFFFFF' }]} numberOfLines={1}>HELPER HUB</Text>
-              <View style={styles.verifiedShieldBadge}>
-                <Text style={styles.verifiedShieldText}>VERIFIED ✓</Text>
-              </View>
+      {/* ================= 1. RESPONSIVE CLEAN TOP APP BAR ================= */}
+      <View style={{
+        backgroundColor: "#FFFFFF",
+        borderBottomWidth: 1,
+        borderBottomColor: "#E2E8F0",
+        paddingHorizontal: 16,
+        paddingTop: 10,
+        paddingBottom: 12,
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
+      }}>
+        {/* Main Row: Brand Info + Bell & Duty Controls */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Left: Brand Logo + Shop Name & Verified Badge */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 10 }}>
+            <View style={{
+              width: 42,
+              height: 42,
+              borderRadius: 12,
+              backgroundColor: '#ECFDF5',
+              borderWidth: 1.5,
+              borderColor: '#10B981',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 10,
+              flexShrink: 0,
+            }}>
+              <Image
+                source={require('../assets/logo.png')}
+                style={{ width: 26, height: 26, borderRadius: 6, resizeMode: 'contain' }}
+              />
+              <View style={{
+                position: 'absolute',
+                bottom: -2,
+                right: -2,
+                width: 11,
+                height: 11,
+                borderRadius: 5.5,
+                backgroundColor: isDutyOn ? '#10B981' : '#64748B',
+                borderWidth: 2,
+                borderColor: "#FFFFFF",
+              }} />
             </View>
-            <Text style={[styles.hubSubtitle, { color: themeColors?.textSecondary || '#94A3B8' }]} numberOfLines={1} ellipsizeMode="tail">{shopName}</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* RIGHT CONTROLS GROUP (COMPACT CIRCLES + DUTY PILL) */}
-        <View style={styles.appBarRightActions}>
-          {/* THEME TOGGLE BUTTON */}
-          <TouchableOpacity
-            style={[styles.headerCircleBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F1F5F9', borderColor: colors.border }]}
-            activeOpacity={0.8}
-            onPress={toggleTheme}
-          >
-            <Text style={{ fontSize: 13 }}>{isDark ? '☀️' : '🌙'}</Text>
-          </TouchableOpacity>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
+                <Text
+                  style={{
+                    color: '#0F172A',
+                    fontSize: 15.5,
+                    fontWeight: '900',
+                    letterSpacing: 0.2,
+                    flexShrink: 1,
+                  }}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {vendorProfile?.shopName || shopName || 'Helper Partner Hub'}
+                </Text>
+                <View style={{
+                  backgroundColor: '#ECFDF5',
+                  paddingHorizontal: 5,
+                  paddingVertical: 1.5,
+                  borderRadius: 4,
+                  borderWidth: 1,
+                  borderColor: '#A7F3D0',
+                  flexShrink: 0,
+                }}>
+                  <Text style={{ color: '#059669', fontSize: 9, fontWeight: '900' }}>✓ VERIFIED</Text>
+                </View>
+              </View>
 
-          {/* BELL SOUND TOGGLE */}
-          <TouchableOpacity
-            style={[
-              styles.headerCircleBtn,
-              {
-                backgroundColor: isBellMuted
-                  ? (isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9')
-                  : 'rgba(56, 189, 248, 0.15)',
-                borderColor: isBellMuted ? colors.border : '#38BDF8',
-              },
-            ]}
-            activeOpacity={0.8}
-            onPress={toggleBellMode}
-          >
-            <Text style={{ fontSize: 13 }}>{isBellMuted ? '🔕' : '🔔'}</Text>
-          </TouchableOpacity>
+              <Text style={{ color: '#64748B', fontSize: 11.5, fontWeight: '600', marginTop: 2 }} numberOfLines={1}>
+                📍 {vendorProfile?.city || 'Indore'} Hub • {isDutyOn ? 'Ready for Orders' : 'Offline'}
+              </Text>
+            </View>
+          </View>
 
-          {/* ELEGANT ANIMATED DUTY PILL */}
-          <TouchableOpacity
-            style={[styles.dutyPill, isDutyOn ? styles.dutyPillOn : styles.dutyPillOff]}
-            activeOpacity={0.85}
-            onPress={toggleDuty}
-          >
-            <Animated.View
-              style={[
-                styles.dutyPulseDot,
-                {
+          {/* Right: Sound Bell Toggle + Online Duty Toggle */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+            <TouchableOpacity
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: isBellMuted ? "#F8FAFC" : '#ECFDF5',
+                borderWidth: 1.5,
+                borderColor: isBellMuted ? "#CBD5E1" : '#10B981',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              activeOpacity={0.8}
+              onPress={toggleBellMode}
+            >
+              <Text style={{ fontSize: 15 }}>{isBellMuted ? '🔕' : '🔔'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 10,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: isDutyOn ? '#ECFDF5' : '#FEF2F2',
+                borderWidth: 1.5,
+                borderColor: isDutyOn ? '#10B981' : '#EF4444',
+                gap: 5,
+              }}
+              activeOpacity={0.85}
+              onPress={toggleDuty}
+            >
+              <Animated.View
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 3.5,
                   backgroundColor: isDutyOn ? '#10B981' : '#EF4444',
                   transform: [{ scale: dutyPulseAnim }],
-                },
-              ]}
-            />
-            <Text
-              style={[styles.dutyPillText, { color: isDutyOn ? '#10B981' : '#EF4444' }]}
-              numberOfLines={1}
-              ellipsizeMode="clip"
-            >
-              {isDutyOn ? 'DUTY ON' : 'OFFLINE'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ================= 2. PARTNER HERO STATS CARD ================= */}
-      <View style={styles.heroStatsContainer}>
-        <View style={styles.heroStatItem}>
-          <Text style={styles.heroStatLabel}>TODAY'S PAYOUT</Text>
-          <Text style={[styles.heroStatVal, { color: '#10B981' }]}>₹{todayEarnings}</Text>
-          <Text style={styles.heroStatSub}>{completedJobsToday} jobs done</Text>
-        </View>
-
-        <View style={styles.heroStatDivider} />
-
-        <View style={styles.heroStatItem}>
-          <Text style={styles.heroStatLabel}>WALLET BALANCE</Text>
-          <Text style={styles.heroStatVal}>₹{walletBalance}</Text>
-          <TouchableOpacity onPress={() => setWithdrawModal(true)}>
-            <Text style={styles.heroStatActionText}>Withdraw ➔</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.heroStatDivider} />
-
-        <View style={styles.heroStatItem}>
-          <Text style={styles.heroStatLabel}>FLEET RATING</Text>
-          <Text style={styles.heroStatVal}>★ 4.98</Text>
-          <Text style={styles.heroStatSub}>{workersList.length} Technicians</Text>
-        </View>
-      </View>
-
-      {/* ================= 3. SCROLLABLE CLEAN TAB BAR (NO TEXT BREAKING) ================= */}
-      <View style={styles.tabBarWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabScrollContent}
-        >
-          {[
-            { id: 'radar', label: `📡 Radar ${incomingOrder && !acceptedOrder ? '(1 New)' : ''}` },
-            { id: 'active', label: `🛠️ Active Job ${acceptedOrder ? '●' : ''}` },
-            { id: 'workers', label: `👥 Team Fleet (${workersList.length})` },
-            { id: 'wallet', label: '💰 Wallet & UPI' },
-            { id: 'shop', label: '👤 Profile' },
-          ].map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <TouchableOpacity
-                key={tab.id}
-                style={[styles.tabChip, isActive && styles.activeTabChip]}
-                activeOpacity={0.8}
-                onPress={() => setActiveTab(tab.id)}
+                }}
+              />
+              <Text
+                style={{
+                  color: isDutyOn ? '#059669' : '#DC2626',
+                  fontSize: 10.5,
+                  fontWeight: '900',
+                  letterSpacing: 0.4,
+                }}
+                numberOfLines={1}
               >
-                <Text style={[styles.tabChipText, isActive && styles.activeTabChipText]}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+                {isDutyOn ? 'DUTY ON' : 'OFFLINE'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* ================= 2. COMPACT NATIVE FLOATING STATS PILL ================= */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: "#FFFFFF",
+        marginHorizontal: 16,
+        marginTop: 10,
+        marginBottom: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 11,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#E2E8F0",
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={{ fontSize: 13 }}>💰</Text>
+          <View>
+            <Text style={{ color: '#64748B', fontSize: 9, fontWeight: '800' }}>TODAY</Text>
+            <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '900' }}>₹{todayEarnings}</Text>
+          </View>
+        </View>
+
+        <View style={{ width: 1, height: 22, backgroundColor: "#E2E8F0" }} />
+
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+          onPress={() => setWithdrawModal(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={{ fontSize: 13 }}>💼</Text>
+          <View>
+            <Text style={{ color: '#64748B', fontSize: 9, fontWeight: '800' }}>WALLET</Text>
+            <Text style={{ color: "#0F172A", fontSize: 13, fontWeight: "900" }}>₹{walletBalance}</Text>
+          </View>
+        </TouchableOpacity>
+
+        <View style={{ width: 1, height: 22, backgroundColor: "#E2E8F0" }} />
+
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+          onPress={() => setActiveTab('workers')}
+          activeOpacity={0.8}
+        >
+          <Text style={{ fontSize: 13 }}>★</Text>
+          <View>
+            <Text style={{ color: '#64748B', fontSize: 9, fontWeight: '800' }}>FLEET</Text>
+            <Text style={{ color: '#F59E0B', fontSize: 13, fontWeight: '900' }}>4.98 ({workersList.length})</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* ================= 4. BODY CONTENT ================= */}
@@ -1500,20 +2052,6 @@ export default function VendorPartnerScreen({ navigation }) {
                   onPress={toggleDuty}
                 >
                   <Text style={styles.primaryActionBtnText}>Go Online (Duty On) 🟢</Text>
-                </TouchableOpacity>
-              </View>
-            ) : acceptedOrder ? (
-              <View style={styles.busyBox}>
-                <Text style={styles.busyEmoji}>🛠️</Text>
-                <Text style={styles.busyTitle}>Job In Progress</Text>
-                <Text style={styles.busyDesc}>
-                  Order #{acceptedOrder.id} is currently active. Complete this service to scan for new orders.
-                </Text>
-                <TouchableOpacity
-                  style={[styles.primaryActionBtn, { backgroundColor: '#10B981', marginTop: 12 }]}
-                  onPress={() => setActiveTab('active')}
-                >
-                  <Text style={styles.primaryActionBtnText}>Open Active Job ➔</Text>
                 </TouchableOpacity>
               </View>
             ) : incomingOrder ? (
@@ -1596,6 +2134,12 @@ export default function VendorPartnerScreen({ navigation }) {
                       <Text style={[styles.customerNameText, { color: '#38BDF8', fontSize: 13 }]}>{incomingOrder.customerPhone}</Text>
                     </View>
                     <View style={styles.infoLine}>
+                      <Text style={styles.infoIcon}>✉️</Text>
+                      <Text style={[styles.customerNameText, { color: '#94A3B8', fontSize: 12 }]}>
+                        {incomingOrder.customerEmail || (incomingOrder.customerName ? `${incomingOrder.customerName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@gmail.com` : 'customer@helper.com')}
+                      </Text>
+                    </View>
+                    <View style={styles.infoLine}>
                       <Text style={styles.infoIcon}>🛠️</Text>
                       <Text style={{ color: '#F8FAFC', fontSize: 13, fontWeight: '700', flex: 1 }}>
                         {incomingOrder.serviceName} • <Text style={{ color: '#10B981' }}>{incomingOrder.category}</Text>
@@ -1624,70 +2168,704 @@ export default function VendorPartnerScreen({ navigation }) {
                     </Text>
                   </View>
 
-                  {/* Accept / Decline Action Buttons */}
-                  <View style={[styles.orderActionRow, { marginTop: 14 }]}>
+                  {/* Accept / Decline Action Buttons (Thumb-Friendly, Professional Hierarchy) */}
+                  <View style={{ marginTop: 16, gap: 10 }}>
+                    {/* Primary Action: Direct Delivery */}
                     <TouchableOpacity
-                      style={styles.passBtn}
-                      activeOpacity={0.8}
-                      onPress={handleDeclineOrder}
+                      style={{
+                        backgroundColor: '#10B981',
+                        height: 52,
+                        borderRadius: 14,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexDirection: 'row',
+                        gap: 8,
+                        shadowColor: '#10B981',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.35,
+                        shadowRadius: 8,
+                        elevation: 6,
+                      }}
+                      activeOpacity={0.85}
+                      onPress={handleAcceptDirectDelivery}
                     >
-                      <Text style={styles.passBtnText}>Pass (Skip)</Text>
+                      <Text style={{ fontSize: 18 }}>🛵</Text>
+                      <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900', letterSpacing: 0.3 }}>
+                        ACCEPT & DELIVER MYSELF (खुद डिलीवर करें)
+                      </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={styles.acceptOrderBtn}
-                      activeOpacity={0.85}
-                      onPress={handleAcceptOrder}
-                    >
-                      <Text style={styles.acceptOrderBtnText}>✓ ACCEPT BOOKING & CHOOSE WORKER ➔</Text>
-                    </TouchableOpacity>
+                    {/* Secondary Row: Assign Worker & Skip */}
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      <TouchableOpacity
+                        style={{
+                          flex: 1.25,
+                          height: 46,
+                          borderRadius: 12,
+                          borderWidth: 1.5,
+                          borderColor: '#38BDF8',
+                          backgroundColor: 'rgba(56, 189, 248, 0.08)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'row',
+                          gap: 6,
+                        }}
+                        activeOpacity={0.85}
+                        onPress={handleAcceptOrder}
+                      >
+                        <Text style={{ fontSize: 15 }}>👷</Text>
+                        <Text style={{ color: '#38BDF8', fontSize: 13, fontWeight: '800' }}>
+                          ASSIGN WORKER
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{
+                          flex: 0.75,
+                          height: 46,
+                          borderRadius: 12,
+                          borderWidth: 1,
+                          borderColor: '#475569',
+                          backgroundColor: '#1E293B',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        activeOpacity={0.8}
+                        onPress={handleDeclineOrder}
+                      >
+                        <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: '700' }}>
+                          ✕ Skip (Pass)
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               </Animated.View>
-            ) : (
-              /* RADAR SCANNING ANIMATION */
-              <View style={styles.radarCard}>
-                <View style={styles.radarVisualWrap}>
-                  <Animated.View
-                    style={[
-                      styles.radarWaveRing,
-                      {
-                        transform: [
-                          {
-                            scale: radarWaveAnim.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [0.8, 1.8],
-                            }),
+            ) : acceptedOrder ? (
+              /* ACTIVE JOB NOTICE ON RADAR TAB */
+              <View style={styles.busyBox}>
+                <Text style={styles.busyEmoji}>🛠️</Text>
+                <Text style={styles.busyTitle}>Job In Progress</Text>
+                <Text style={styles.busyDesc}>
+                  Order #{acceptedOrder.bookingCode || acceptedOrder.id} is currently active.
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 14, width: '100%' }}>
+                  <TouchableOpacity
+                    style={[styles.primaryActionBtn, { backgroundColor: '#10B981', flex: 1.2 }]}
+                    onPress={() => setActiveTab('active')}
+                  >
+                    <Text style={styles.primaryActionBtnText}>Open Active Job ➔</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.primaryActionBtn, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderWidth: 1, borderColor: '#EF4444', flex: 0.8 }]}
+                    onPress={() => {
+                      Alert.alert('Reset Job', 'Do you want to release this job and clear it from screen?', [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Reset',
+                          style: 'destructive',
+                          onPress: () => {
+                            setAcceptedOrder(null);
+                            setOtpVerified(false);
+                            setInputOtp('');
+                            setStopwatchSeconds(0);
                           },
-                        ],
-                        opacity: radarWaveAnim.interpolate({
-                          inputRange: [0, 0.7, 1],
-                          outputRange: [0.8, 0.3, 0],
-                        }),
-                      },
-                    ]}
+                        },
+                      ]);
+                    }}
+                  >
+                    <Text style={[styles.primaryActionBtnText, { color: '#EF4444' }]}>Reset Job ✕</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              /* ================= SPECTACULAR ANIMATED RADAR SCANNER ================= */
+              <View style={{
+                marginHorizontal: 16,
+                marginTop: 8,
+                backgroundColor: "#FFFFFF",
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: "#E2E8F0",
+                padding: 20,
+                alignItems: "center",
+                shadowColor: "#0F172A",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 10,
+                elevation: 4,
+              }}>
+                {/* Status Badge */}
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  backgroundColor: isDutyOn ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: isDutyOn ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+                  marginBottom: 16,
+                }}>
+                  <View style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: isDutyOn ? '#10B981' : '#EF4444',
+                  }} />
+                  <Text style={{
+                    color: isDutyOn ? '#10B981' : '#EF4444',
+                    fontSize: 11,
+                    fontWeight: '800',
+                    letterSpacing: 0.5,
+                  }}>
+                    {isDutyOn ? 'LIVE RADAR ACTIVE • 10 KM SCANNING' : 'RADAR PAUSED • GO ON DUTY'}
+                  </Text>
+                </View>
+
+                {/* Circular Radar Viewport */}
+                <View style={{
+                  width: 240,
+                  height: 240,
+                  borderRadius: 120,
+                  backgroundColor: "#F0FDF4",
+                  borderWidth: 2,
+                  borderColor: "#A7F3D0",
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  marginVertical: 10,
+                }}>
+                  {/* Concentric Distance Rings */}
+                  <View style={{
+                    position: 'absolute',
+                    width: 220,
+                    height: 220,
+                    borderRadius: 110,
+                    borderWidth: 1,
+                    borderColor: 'rgba(16, 185, 129, 0.2)',
+                    borderStyle: 'dashed',
+                    alignItems: 'center',
+                  }}>
+                    <Text style={{ color: 'rgba(16, 185, 129, 0.45)', fontSize: 8, fontWeight: '700', marginTop: 3 }}>10 KM</Text>
+                  </View>
+
+                  <View style={{
+                    position: 'absolute',
+                    width: 150,
+                    height: 150,
+                    borderRadius: 75,
+                    borderWidth: 1,
+                    borderColor: 'rgba(16, 185, 129, 0.22)',
+                    borderStyle: 'dashed',
+                    alignItems: 'center',
+                  }}>
+                    <Text style={{ color: 'rgba(16, 185, 129, 0.45)', fontSize: 7.5, fontWeight: '700', marginTop: 2 }}>5 KM</Text>
+                  </View>
+
+                  <View style={{
+                    position: 'absolute',
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                    borderWidth: 1,
+                    borderColor: 'rgba(16, 185, 129, 0.25)',
+                    alignItems: 'center',
+                  }}>
+                    <Text style={{ color: 'rgba(16, 185, 129, 0.45)', fontSize: 7, fontWeight: '700', marginTop: 2 }}>2 KM</Text>
+                  </View>
+
+                  {/* Crosshair Axis Lines */}
+                  <View style={{ position: 'absolute', width: '100%', height: 1, backgroundColor: 'rgba(16, 185, 129, 0.15)' }} />
+                  <View style={{ position: 'absolute', height: '100%', width: 1, backgroundColor: 'rgba(16, 185, 129, 0.15)' }} />
+
+                  {/* 3 Staggered Expanding Ripple Waves */}
+                  <Animated.View
+                    style={{
+                      position: 'absolute',
+                      width: 200,
+                      height: 200,
+                      borderRadius: 100,
+                      borderWidth: 2,
+                      borderColor: '#10B981',
+                      transform: [
+                        {
+                          scale: radarWaveAnim1.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.2, 1.95],
+                          }),
+                        },
+                      ],
+                      opacity: radarWaveAnim1.interpolate({
+                        inputRange: [0, 0.6, 1],
+                        outputRange: [0.85, 0.35, 0],
+                      }),
+                    }}
                   />
-                  <View style={styles.radarCenterCore}>
-                    <Text style={styles.radarIcon}>📡</Text>
+                  <Animated.View
+                    style={{
+                      position: 'absolute',
+                      width: 200,
+                      height: 200,
+                      borderRadius: 100,
+                      borderWidth: 2,
+                      borderColor: '#10B981',
+                      transform: [
+                        {
+                          scale: radarWaveAnim2.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.2, 1.95],
+                          }),
+                        },
+                      ],
+                      opacity: radarWaveAnim2.interpolate({
+                        inputRange: [0, 0.6, 1],
+                        outputRange: [0.85, 0.35, 0],
+                      }),
+                    }}
+                  />
+                  <Animated.View
+                    style={{
+                      position: 'absolute',
+                      width: 200,
+                      height: 200,
+                      borderRadius: 100,
+                      borderWidth: 2,
+                      borderColor: '#10B981',
+                      transform: [
+                        {
+                          scale: radarWaveAnim3.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.2, 1.95],
+                          }),
+                        },
+                      ],
+                      opacity: radarWaveAnim3.interpolate({
+                        inputRange: [0, 0.6, 1],
+                        outputRange: [0.85, 0.35, 0],
+                      }),
+                    }}
+                  />
+
+                  {/* Rotating 360-Degree Sweep Scanner Beam */}
+                  <Animated.View
+                    style={{
+                      position: 'absolute',
+                      width: 230,
+                      height: 230,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transform: [
+                        {
+                          rotate: radarSweepAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '360deg'],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    <View style={{
+                      position: 'absolute',
+                      top: 15,
+                      width: 2.5,
+                      height: 100,
+                      backgroundColor: '#10B981',
+                      borderRadius: 2,
+                      opacity: 0.9,
+                    }} />
+                  </Animated.View>
+
+                  {/* Pulsing Demand Hotspot Blips */}
+                  <Animated.View style={{ position: 'absolute', top: 38, left: 52, opacity: blipPulseAnim, alignItems: 'center' }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', borderWidth: 1.5, borderColor: '#FFF' }} />
+                    <Text style={{ color: '#38BDF8', fontSize: 7.5, fontWeight: '800', marginTop: 1.5, backgroundColor: 'rgba(15,23,42,0.8)', paddingHorizontal: 3, borderRadius: 2 }}>Vijay Ngr</Text>
+                  </Animated.View>
+
+                  <Animated.View style={{ position: 'absolute', top: 62, right: 35, opacity: blipPulseAnim, alignItems: 'center' }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#38BDF8', borderWidth: 1.5, borderColor: '#FFF' }} />
+                    <Text style={{ color: '#38BDF8', fontSize: 7.5, fontWeight: '800', marginTop: 1.5, backgroundColor: 'rgba(15,23,42,0.8)', paddingHorizontal: 3, borderRadius: 2 }}>Palasia</Text>
+                  </Animated.View>
+
+                  <Animated.View style={{ position: 'absolute', bottom: 42, left: 65, opacity: blipPulseAnim, alignItems: 'center' }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', borderWidth: 1.5, borderColor: '#FFF' }} />
+                    <Text style={{ color: '#38BDF8', fontSize: 7.5, fontWeight: '800', marginTop: 1.5, backgroundColor: 'rgba(15,23,42,0.8)', paddingHorizontal: 3, borderRadius: 2 }}>Bhawarkua</Text>
+                  </Animated.View>
+
+                  {/* Central Hub Core */}
+                  <View style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderWidth: 2,
+                    borderColor: '#10B981',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Text style={{ fontSize: 20 }}>📡</Text>
+                    <Text style={{ color: '#10B981', fontSize: 7, fontWeight: '900', letterSpacing: 0.5 }}>INDORE</Text>
                   </View>
                 </View>
 
-                <Text style={styles.radarTitle}>Scanning Jobs in Indore...</Text>
-                <Text style={styles.radarSub}>
-                  Instant sound alert will chime whenever a customer orders within your 10km radius.
+                {/* Descriptive Text */}
+                <Text style={{ color: "#0F172A", fontSize: 16, fontWeight: "800", marginTop: 8, textAlign: "center" }}>
+                  {isDutyOn ? 'Scanning Customer Bookings in Indore...' : 'Duty is Currently Offline'}
+                </Text>
+                <Text style={{ color: "#64748B", fontSize: 12, textAlign: "center", marginTop: 4, lineHeight: 18, paddingHorizontal: 10 }}>
+                  {isDutyOn
+                    ? 'Instant audio siren will sound the second a customer books a service within 10km.'
+                    : 'Turn Duty ON at the top to connect to live radar and receive customer requests.'}
                 </Text>
 
-                <View style={styles.radarActionRow}>
+                {/* Metrics Pill Row */}
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-around',
+                  backgroundColor: "#F8FAFC",
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: "#E2E8F0",
+                  width: "100%",
+                  paddingVertical: 10,
+                  marginTop: 14,
+                }}>
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ color: "#0F172A", fontSize: 12, fontWeight: "800" }}>📍 10 KM</Text>
+                    <Text style={{ color: '#64748B', fontSize: 9.5, fontWeight: '600', marginTop: 2 }}>Coverage</Text>
+                  </View>
+                  <View style={{ width: 1, height: 20, backgroundColor: "#F8FAFC" }} />
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '800' }}>⚡ Real-time</Text>
+                    <Text style={{ color: '#64748B', fontSize: 9.5, fontWeight: '600', marginTop: 2 }}>Dispatch</Text>
+                  </View>
+                  <View style={{ width: 1, height: 20, backgroundColor: "#F8FAFC" }} />
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800' }}>🛵 Self-Deliver</Text>
+                    <Text style={{ color: '#64748B', fontSize: 9.5, fontWeight: '600', marginTop: 2 }}>Direct Mode</Text>
+                  </View>
+                </View>
+
+                {/* Radar Action Controls */}
+                <View style={{ marginTop: 16, width: '100%' }}>
                   <TouchableOpacity
-                    style={styles.testBellBtn}
+                    style={{
+                      width: '100%',
+                      backgroundColor: "#F8FAFC",
+                      borderWidth: 1,
+                      borderColor: "#E2E8F0",
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'row',
+                      gap: 8,
+                    }}
                     activeOpacity={0.8}
                     onPress={triggerBookingBell}
                   >
-                    <Text style={styles.testBellBtnText}>🔔 Test Loud Siren 🔊</Text>
+                    <Text style={{ fontSize: 16 }}>🔔</Text>
+                    <Text style={{ color: '#334155', fontSize: 13, fontWeight: '800' }}>
+                      Test Loud Siren 🔊
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
             )}
+
+            {/* ================= PROFESSIONAL VENDOR HOME DASHBOARD ================= */}
+            {/* 1. QUICK OPERATIONS TILES */}
+            <View style={{ marginTop: 14 }}>
+              <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '900', letterSpacing: 0.5, marginBottom: 10, paddingHorizontal: 4 }}>
+                ⚡ QUICK DISPATCH & OPERATIONS
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+                {/* Tile 1: Active Job Console */}
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 14,
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: acceptedOrder ? '#10B981' : '#E2E8F0',
+                    shadowColor: '#000',
+                    shadowOpacity: 0.04,
+                    shadowRadius: 5,
+                    elevation: 1,
+                  }}
+                  onPress={() => setActiveTab('active')}
+                  activeOpacity={0.85}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: acceptedOrder ? '#ECFDF5' : '#EFF6FF', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 16 }}>{acceptedOrder ? '🛵' : '⚡'}</Text>
+                    </View>
+                    <View style={{ backgroundColor: acceptedOrder ? '#ECFDF5' : '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                      <Text style={{ color: acceptedOrder ? '#059669' : '#64748B', fontSize: 9.5, fontWeight: '800' }}>
+                        {acceptedOrder ? '1 ACTIVE' : 'IDLE'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '900' }}>Active Order</Text>
+                  <Text style={{ color: '#64748B', fontSize: 11, marginTop: 2 }} numberOfLines={1}>
+                    {acceptedOrder ? acceptedOrder.serviceName : 'No pending jobs'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Tile 2: Fleet Management */}
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 14,
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    shadowColor: '#000',
+                    shadowOpacity: 0.04,
+                    shadowRadius: 5,
+                    elevation: 1,
+                  }}
+                  onPress={() => setActiveTab('workers')}
+                  activeOpacity={0.85}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 16 }}>👥</Text>
+                    </View>
+                    <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                      <Text style={{ color: '#D97706', fontSize: 9.5, fontWeight: '800' }}>
+                        {workersList.length} CREW
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '900' }}>Fleet Team</Text>
+                  <Text style={{ color: '#64748B', fontSize: 11, marginTop: 2 }}>
+                    Manage specialists
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {/* Tile 3: Wallet & Payout */}
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 14,
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    shadowColor: '#000',
+                    shadowOpacity: 0.04,
+                    shadowRadius: 5,
+                    elevation: 1,
+                  }}
+                  onPress={() => setActiveTab('wallet')}
+                  activeOpacity={0.85}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 16 }}>💰</Text>
+                    </View>
+                    <Text style={{ color: '#059669', fontSize: 11, fontWeight: '900' }}>
+                      PAYOUT ➔
+                    </Text>
+                  </View>
+                  <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '900' }}>₹{walletBalance}</Text>
+                  <Text style={{ color: '#64748B', fontSize: 11, marginTop: 2 }}>
+                    Available balance
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Tile 4: Add New Service / Rate Card */}
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 14,
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    shadowColor: '#000',
+                    shadowOpacity: 0.04,
+                    shadowRadius: 5,
+                    elevation: 1,
+                  }}
+                  onPress={() => setShowAddServiceModal(true)}
+                  activeOpacity={0.85}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: '#F3E8FF', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 16 }}>🏷️</Text>
+                    </View>
+                    <View style={{ backgroundColor: '#F3E8FF', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                      <Text style={{ color: '#7E22CE', fontSize: 9.5, fontWeight: '800' }}>
+                        + RATE
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '900' }}>Add Service</Text>
+                  <Text style={{ color: '#64748B', fontSize: 11, marginTop: 2 }}>
+                    Publish to catalog
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* 2. REVENUE GOAL PROGRESS CARD */}
+            <View style={{
+              marginTop: 14,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              padding: 16,
+              borderWidth: 1,
+              borderColor: '#E2E8F0',
+              shadowColor: '#000',
+              shadowOpacity: 0.03,
+              shadowRadius: 6,
+              elevation: 1,
+            }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <View>
+                  <Text style={{ color: '#0F172A', fontSize: 14, fontWeight: '900' }}>Weekly Revenue Target</Text>
+                  <Text style={{ color: '#64748B', fontSize: 11, marginTop: 2 }}>Goal: ₹15,000 this week</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ color: '#10B981', fontSize: 15, fontWeight: '900' }}>₹11,480</Text>
+                  <Text style={{ color: '#059669', fontSize: 10, fontWeight: '800' }}>76.5% ACHIEVED</Text>
+                </View>
+              </View>
+              
+              <View style={{ height: 8, backgroundColor: '#F1F5F9', borderRadius: 4, overflow: 'hidden', marginBottom: 14 }}>
+                <View style={{ width: '76.5%', height: '100%', backgroundColor: '#10B981', borderRadius: 4 }} />
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F1F5F9' }}>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ color: '#0F172A', fontSize: 14, fontWeight: '900' }}>₹{todayEarnings}</Text>
+                  <Text style={{ color: '#64748B', fontSize: 10, fontWeight: '700', marginTop: 2 }}>TODAY'S PAYOUT</Text>
+                </View>
+                <View style={{ width: 1, height: 26, backgroundColor: '#E2E8F0' }} />
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ color: '#0F172A', fontSize: 14, fontWeight: '900' }}>{completedJobsToday} Jobs</Text>
+                  <Text style={{ color: '#64748B', fontSize: 10, fontWeight: '700', marginTop: 2 }}>COMPLETED</Text>
+                </View>
+                <View style={{ width: 1, height: 26, backgroundColor: '#E2E8F0' }} />
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ color: '#059669', fontSize: 14, fontWeight: '900' }}>98.5%</Text>
+                  <Text style={{ color: '#64748B', fontSize: 10, fontWeight: '700', marginTop: 2 }}>ACCEPTANCE</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* 3. HIGH DEMAND SURGE ZONES */}
+            <View style={{
+              marginTop: 14,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              padding: 16,
+              borderWidth: 1,
+              borderColor: '#E2E8F0',
+              shadowColor: '#000',
+              shadowOpacity: 0.03,
+              shadowRadius: 6,
+              elevation: 1,
+            }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 16 }}>🔥</Text>
+                  <Text style={{ color: '#0F172A', fontSize: 14, fontWeight: '900' }}>Live Surge Zones in Indore</Text>
+                </View>
+                <View style={{ backgroundColor: '#FEF2F2', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#FCA5A5' }}>
+                  <Text style={{ color: '#DC2626', fontSize: 9.5, fontWeight: '800' }}>SURGE ACTIVE</Text>
+                </View>
+              </View>
+
+              <View style={{ gap: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <View>
+                    <Text style={{ color: '#0F172A', fontSize: 12.5, fontWeight: '800' }}>📍 Vijay Nagar & Scheme 54</Text>
+                    <Text style={{ color: '#64748B', fontSize: 10.5, marginTop: 1 }}>AC Servicing & Electrical Repairs</Text>
+                  </View>
+                  <View style={{ backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                    <Text style={{ color: '#059669', fontSize: 11, fontWeight: '900' }}>+₹150 Surge</Text>
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <View>
+                    <Text style={{ color: '#0F172A', fontSize: 12.5, fontWeight: '800' }}>📍 Palasia Main Road</Text>
+                    <Text style={{ color: '#64748B', fontSize: 10.5, marginTop: 1 }}>Emergency Pipe Leaks & Tap Fixes</Text>
+                  </View>
+                  <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                    <Text style={{ color: '#0284C7', fontSize: 11, fontWeight: '900' }}>High Demand</Text>
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <View>
+                    <Text style={{ color: '#0F172A', fontSize: 12.5, fontWeight: '800' }}>📍 Bhawarkua Student Hub</Text>
+                    <Text style={{ color: '#64748B', fontSize: 10.5, marginTop: 1 }}>Deep Cleaning & RO Filter Service</Text>
+                  </View>
+                  <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                    <Text style={{ color: '#D97706', fontSize: 11, fontWeight: '900' }}>Fast Orders</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* 4. RECENT COMPLETED ORDERS FEED */}
+            <View style={{
+              marginTop: 14,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              padding: 16,
+              borderWidth: 1,
+              borderColor: '#E2E8F0',
+              shadowColor: '#000',
+              shadowOpacity: 0.03,
+              shadowRadius: 6,
+              elevation: 1,
+              marginBottom: 16,
+            }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <Text style={{ color: '#0F172A', fontSize: 14, fontWeight: '900' }}>Recent Completed Jobs</Text>
+                <TouchableOpacity onPress={() => setActiveTab('wallet')}>
+                  <Text style={{ color: '#0284C7', fontSize: 11.5, fontWeight: '800' }}>Passbook ➔</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ gap: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+                  <View>
+                    <Text style={{ color: '#0F172A', fontSize: 12.5, fontWeight: '800' }}>AC Jet Foam Servicing</Text>
+                    <Text style={{ color: '#64748B', fontSize: 10.5, marginTop: 2 }}>Doorstep Completed • Customer: Ananya G.</Text>
+                  </View>
+                  <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '900' }}>+₹594</Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+                  <View>
+                    <Text style={{ color: '#0F172A', fontSize: 12.5, fontWeight: '800' }}>Emergency Plumbing & Leak Fix</Text>
+                    <Text style={{ color: '#64748B', fontSize: 10.5, marginTop: 2 }}>Sunil Sharma Dispatched • Saket Nagar</Text>
+                  </View>
+                  <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '900' }}>+₹269</Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}>
+                  <View>
+                    <Text style={{ color: '#0F172A', fontSize: 12.5, fontWeight: '800' }}>Smart Switch & MCB Installation</Text>
+                    <Text style={{ color: '#64748B', fontSize: 10.5, marginTop: 2 }}>Amit Verma Dispatched • Vijay Nagar</Text>
+                  </View>
+                  <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '900' }}>+₹314</Text>
+                </View>
+              </View>
+            </View>
           </View>
         )}
 
@@ -1710,179 +2888,674 @@ export default function VendorPartnerScreen({ navigation }) {
               </View>
             ) : (
               <View style={styles.activeJobCard}>
-                <View style={styles.activeJobTopRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.orderIdBadge}>ORDER #{acceptedOrder.id}</Text>
-                    <Text style={styles.activeJobTitle} numberOfLines={1}>
-                      {acceptedOrder.serviceName}
+                {/* 1. NATIVE 5-STAGE INTERACTIVE STEPPER TIMELINE */}
+                <View style={{
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 16,
+                  padding: 14,
+                  borderWidth: 1,
+                  borderColor: "#E2E8F0",
+                  marginBottom: 12,
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>
+                      ORDER #{acceptedOrder.bookingCode || acceptedOrder.id}
                     </Text>
+                    <View style={{
+                      backgroundColor:
+                        jobStage === 'in_progress' ? 'rgba(16, 185, 129, 0.18)' :
+                        jobStage === 'reached' ? 'rgba(234, 88, 12, 0.18)' :
+                        jobStage === 'on_the_way' ? 'rgba(124, 58, 237, 0.18)' :
+                        jobStage === 'completed' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(2, 132, 199, 0.18)',
+                      paddingHorizontal: 8,
+                      paddingVertical: 3,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor:
+                        jobStage === 'in_progress' ? '#10B981' :
+                        jobStage === 'reached' ? '#EA580C' :
+                        jobStage === 'on_the_way' ? '#7C3AED' :
+                        jobStage === 'completed' ? '#10B981' : '#0284C7',
+                    }}>
+                      <Text style={{
+                        color:
+                          jobStage === 'in_progress' ? '#10B981' :
+                          jobStage === 'reached' ? '#EA580C' :
+                          jobStage === 'on_the_way' ? '#A78BFA' :
+                          jobStage === 'completed' ? '#10B981' : '#38BDF8',
+                        fontSize: 10.5,
+                        fontWeight: '900',
+                      }}>
+                        {jobStage === 'dispatched' && '🚀 DISPATCHED'}
+                        {jobStage === 'on_the_way' && '🛵 EN ROUTE'}
+                        {jobStage === 'reached' && '📍 AT DOORSTEP'}
+                        {jobStage === 'in_progress' && '⚡ IN PROGRESS'}
+                        {jobStage === 'completed' && '🏁 COMPLETED'}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.jobStagePill}>
-                    <Text style={styles.jobStagePillText}>
-                      {jobStage === 'dispatched' && '🚀 DISPATCHED'}
-                      {jobStage === 'on_the_way' && '🚗 EN ROUTE'}
-                      {jobStage === 'reached' && '📍 AT DOORSTEP'}
-                      {jobStage === 'in_progress' && '⚡ IN PROGRESS'}
-                      {jobStage === 'completed' && '✓ COMPLETED'}
-                    </Text>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    {[
+                      { key: 'dispatched', label: 'Dispatched', icon: '🚀' },
+                      { key: 'on_the_way', label: 'En Route', icon: '🛵' },
+                      { key: 'reached', label: 'Doorstep', icon: '📍' },
+                      { key: 'in_progress', label: 'Working', icon: '⚡' },
+                      { key: 'completed', label: 'Done', icon: '🏁' },
+                    ].map((step, idx, arr) => {
+                      const stageOrder = ['dispatched', 'on_the_way', 'reached', 'in_progress', 'completed'];
+                      const currentIdx = stageOrder.indexOf(jobStage);
+                      const isDone = currentIdx > idx;
+                      const isCurrent = currentIdx === idx;
+
+                      return (
+                        <React.Fragment key={step.key}>
+                          <View style={{ alignItems: 'center' }}>
+                            <View style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              backgroundColor: isDone ? '#10B981' : isCurrent ? 'rgba(16, 185, 129, 0.2)' : '#1E293B',
+                              borderWidth: 2,
+                              borderColor: isDone ? '#10B981' : isCurrent ? '#10B981' : "#E2E8F0",
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              shadowColor: isCurrent ? '#10B981' : '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: isCurrent ? 0.4 : 0,
+                              shadowRadius: 4,
+                            }}>
+                              <Text style={{ fontSize: 13 }}>{isDone ? '✓' : step.icon}</Text>
+                            </View>
+                            <Text style={{
+                              color: isDone ? '#10B981' : isCurrent ? '#FFFFFF' : '#64748B',
+                              fontSize: 9,
+                              fontWeight: isCurrent ? '900' : '600',
+                              marginTop: 4,
+                            }}>
+                              {step.label}
+                            </Text>
+                          </View>
+                          {idx < arr.length - 1 && (
+                            <View style={{
+                              flex: 1,
+                              height: 2,
+                              backgroundColor: isDone ? '#10B981' : "#E2E8F0",
+                              marginHorizontal: 2,
+                              marginBottom: 14,
+                            }} />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </View>
                 </View>
 
-                {/* Customer Contact Box */}
-                <View style={styles.customerCard}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.customerNameHeading}>{acceptedOrder.customerName}</Text>
-                    <Text style={styles.customerFullAddress} numberOfLines={2}>{acceptedOrder.address}</Text>
-                    <Text style={{ color: '#10B981', fontSize: 12.5, fontWeight: '700', marginTop: 4 }}>
-                      Payout: ₹{acceptedOrder.payout} (90% Settlement: ₹{Math.round(acceptedOrder.payout * 0.9)})
-                    </Text>
+                {/* 2. CUSTOMER CARD WITH DIRECT CIRCULAR ACTION BUTTONS */}
+                <View style={{
+                  backgroundColor: "#F8FAFC",
+                  borderRadius: 16,
+                  padding: 14,
+                  borderWidth: 1,
+                  borderColor: "#F8FAFC",
+                }}>
+                  {/* Top Customer Info Row */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                      <View style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                        borderWidth: 1.5,
+                        borderColor: '#38BDF8',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <Text style={{ color: '#38BDF8', fontSize: 16, fontWeight: '900' }}>
+                          {(acceptedOrder.customerName || 'Customer').slice(0, 2).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900' }} numberOfLines={1}>
+                          {acceptedOrder.customerName || 'Customer'}
+                        </Text>
+                        <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }} numberOfLines={1}>
+                          {acceptedOrder.serviceName}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Quick 3-Circular Actions: Call, WhatsApp, Navigation */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <TouchableOpacity
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                          borderWidth: 1,
+                          borderColor: '#38BDF8',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        onPress={() => Linking.openURL(`tel:${acceptedOrder.customerPhone || '9826027646'}`)}
+                      >
+                        <Text style={{ fontSize: 15 }}>📞</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                          borderWidth: 1,
+                          borderColor: '#10B981',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        onPress={() => Linking.openURL(`https://wa.me/${(acceptedOrder.customerPhone || '').replace(/[^0-9]/g, '')}`)}
+                      >
+                        <Text style={{ fontSize: 15 }}>💬</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                          borderWidth: 1,
+                          borderColor: '#F59E0B',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(acceptedOrder.address || 'Indore')}`)}
+                      >
+                        <Text style={{ fontSize: 15 }}>🗺️</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
-                  <View style={styles.contactIconGroup}>
-                    <TouchableOpacity
-                      style={styles.circleActionBtn}
-                      onPress={() => Alert.alert('Call Customer', `Calling ${acceptedOrder.customerPhone}...`)}
-                    >
-                      <Text style={{ fontSize: 18 }}>📞</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.circleActionBtn}
-                      onPress={() => Alert.alert('Navigation', 'Opening Google Maps to customer address in Indore...')}
-                    >
-                      <Text style={{ fontSize: 18 }}>🗺️</Text>
-                    </TouchableOpacity>
+                  {/* Customer Meta Details */}
+                  <View style={{
+                    backgroundColor: "#F8FAFC",
+                    borderRadius: 12,
+                    borderWidth: isDark ? 0 : 1,
+                    borderColor: "#E2E8F0",
+                    padding: 10,
+                    gap: 6,
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700' }}>PHONE</Text>
+                      <Text style={{ color: '#38BDF8', fontSize: 12.5, fontWeight: '800' }}>{acceptedOrder.customerPhone}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700' }}>EMAIL</Text>
+                      <Text style={{ color: '#E2E8F0', fontSize: 12, fontWeight: '600' }} numberOfLines={1}>
+                        {acceptedOrder.customerEmail || (acceptedOrder.customerName ? `${acceptedOrder.customerName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@gmail.com` : 'customer@helper.com')}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 1 }}>ADDRESS</Text>
+                      <Text style={{ color: '#F1F5F9', fontSize: 12, fontWeight: '500', flex: 1, textAlign: 'right', marginLeft: 12 }} numberOfLines={2}>
+                        {acceptedOrder.address}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: "#F8FAFC", paddingTop: 6, marginTop: 2 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700' }}>BASE EARNING</Text>
+                      <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '900' }}>₹{acceptedOrder.payout}</Text>
+                    </View>
                   </View>
                 </View>
 
-                {/* Assigned Specialist Card */}
-                <View style={[styles.customerCard, { marginTop: 10, borderColor: 'rgba(56, 189, 248, 0.3)', backgroundColor: 'rgba(56, 189, 248, 0.05)' }]}>
+                {/* 3. FULFILLMENT MODE CARD */}
+                <View style={[styles.customerCard, {
+                  marginTop: 10,
+                  borderColor: acceptedOrder?.isVendorDirect ? 'rgba(16, 185, 129, 0.35)' : 'rgba(56, 189, 248, 0.3)',
+                  backgroundColor: acceptedOrder?.isVendorDirect ? 'rgba(16, 185, 129, 0.06)' : 'rgba(56, 189, 248, 0.05)',
+                }]}>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ fontSize: 14 }}>🧰</Text>
-                      <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800' }}>
-                        ASSIGNED FIELD SPECIALIST (DEMO WORKER)
+                      <Text style={{ fontSize: 14 }}>{acceptedOrder?.isVendorDirect ? '🛵' : '🧰'}</Text>
+                      <Text style={{
+                        color: acceptedOrder?.isVendorDirect ? '#10B981' : '#38BDF8',
+                        fontSize: 11.5,
+                        fontWeight: '800',
+                      }}>
+                        {acceptedOrder?.isVendorDirect ? 'SELF-DELIVERY (OWNER DIRECT)' : 'ASSIGNED FLEET SPECIALIST'}
                       </Text>
                     </View>
-                    <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800', marginTop: 4 }}>
-                      {assignedWorker?.name || 'Sunil Verma'}
+                    <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '800', marginTop: 3 }}>
+                      {acceptedOrder?.isVendorDirect
+                        ? `${vendorProfile?.name || 'Ramesh Sharma'} (Hub Owner)`
+                        : (assignedWorker?.name || 'Sunil Verma')}
                     </Text>
-                    <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 2 }}>
-                      {assignedWorker?.specialty || assignedWorker?.category || 'Senior Technician'} • {assignedWorker?.experience || '6+ Yrs Exp'}
+                    <Text style={{ color: '#94A3B8', fontSize: 11.5, marginTop: 2 }}>
+                      {acceptedOrder?.isVendorDirect
+                        ? 'Direct doorstep execution • 90% instant wallet settlement'
+                        : `${assignedWorker?.specialty || 'Senior Technician'} • ${assignedWorker?.experience || '5+ Yrs Exp'}`}
                     </Text>
-                  </View>
-                  <View style={styles.contactIconGroup}>
-                    <TouchableOpacity
-                      style={[styles.circleActionBtn, { borderColor: '#38BDF8' }]}
-                      onPress={() => Alert.alert('Call Specialist', `Calling ${assignedWorker?.phone || '+91 98765 00101'}...`)}
-                    >
-                      <Text style={{ fontSize: 18 }}>📞</Text>
-                    </TouchableOpacity>
                   </View>
                 </View>
 
-                {/* Vendor Zero-OTP Guidance Banner */}
-                <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', borderRadius: 14, padding: 14, marginTop: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontSize: 15 }}>🛡️</Text>
-                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '800' }}>
-                      ZERO-OTP FOR VENDOR • SPECIALIST EXECUTION
-                    </Text>
-                  </View>
-                  <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 6, lineHeight: 18 }}>
-                    Specialist <Text style={{ color: '#F1F5F9', fontWeight: '700' }}>{assignedWorker?.name || 'Sunil Verma'}</Text> will arrive at customer's doorstep, verify the customer's 4-digit start OTP, and perform the service with live countdown timer. Vendor does not need to enter or ask for OTP.
-                  </Text>
-                </View>
-
-                {/* 4-Stage Stepper for Vendor */}
-                <View style={{ marginTop: 14, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
-                  <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '800', letterSpacing: 0.5, marginBottom: 8 }}>
-                    DISPATCH & FULFILLMENT STATUS
-                  </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ alignItems: 'center', flex: 1 }}>
-                      <Text style={{ color: '#10B981', fontSize: 14 }}>✓</Text>
-                      <Text style={{ color: '#10B981', fontSize: 10.5, fontWeight: '700', textAlign: 'center' }}>1. Received</Text>
-                    </View>
-                    <View style={{ height: 2, flex: 1, backgroundColor: '#10B981' }} />
-                    <View style={{ alignItems: 'center', flex: 1 }}>
-                      <Text style={{ color: '#10B981', fontSize: 14 }}>✓</Text>
-                      <Text style={{ color: '#10B981', fontSize: 10.5, fontWeight: '700', textAlign: 'center' }}>2. Accepted</Text>
-                    </View>
-                    <View style={{ height: 2, flex: 1, backgroundColor: jobStage === 'completed' ? '#10B981' : '#38BDF8' }} />
-                    <View style={{ alignItems: 'center', flex: 1 }}>
-                      <Text style={{ color: jobStage === 'completed' ? '#10B981' : '#38BDF8', fontSize: 14 }}>
-                        {jobStage === 'completed' ? '✓' : '⚡'}
+                {/* 4. INTERACTIVE STEP-BY-STEP WORKFLOW CONSOLE */}
+                <View style={{
+                  backgroundColor: 'rgba(16, 185, 129, 0.07)',
+                  borderRadius: 14,
+                  padding: 14,
+                  marginTop: 12,
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(16, 185, 129, 0.35)',
+                }}>
+                  {/* Console Header with no text overlap */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 15 }}>⚡</Text>
+                      <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '900' }}>
+                        DOORSTEP EXECUTION FLOW
                       </Text>
-                      <Text style={{ color: jobStage === 'completed' ? '#10B981' : '#38BDF8', fontSize: 10.5, fontWeight: '700', textAlign: 'center' }}>3. Field Work</Text>
                     </View>
-                    <View style={{ height: 2, flex: 1, backgroundColor: jobStage === 'completed' ? '#10B981' : '#334155' }} />
-                    <View style={{ alignItems: 'center', flex: 1 }}>
-                      <Text style={{ color: jobStage === 'completed' ? '#10B981' : '#64748B', fontSize: 14 }}>
-                        {jobStage === 'completed' ? '✓' : '4'}
+                    <View style={{
+                      backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor: '#38BDF8',
+                    }}>
+                      <Text style={{ color: '#38BDF8', fontSize: 10.5, fontWeight: '800' }}>
+                        STAGE: {jobStage.toUpperCase()}
                       </Text>
-                      <Text style={{ color: jobStage === 'completed' ? '#10B981' : '#64748B', fontSize: 10.5, fontWeight: '700', textAlign: 'center' }}>4. Settled</Text>
                     </View>
                   </View>
-                </View>
 
-                {/* Stage Status Display */}
-                {jobStage !== 'completed' ? (
-                  <View style={{ marginTop: 14 }}>
-                    <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#334155' }}>
-                      <Text style={{ color: '#38BDF8', fontSize: 13, fontWeight: '800' }}>
-                        {jobStage === 'dispatched' && '🚗 Specialist Dispatched to Location'}
-                        {jobStage === 'on_the_way' && '🚗 Specialist En Route to Customer'}
-                        {jobStage === 'reached' && '📍 Specialist Arrived at Customer Doorstep'}
-                        {jobStage === 'in_progress' && '⚡ Work in Progress with Specialist (OTP Verified)'}
+                  {/* STAGE 1: DISPATCHED -> START JOURNEY */}
+                  {jobStage === 'dispatched' && (
+                    <View style={{ gap: 10 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 12, lineHeight: 18 }}>
+                        Booking accepted. Tap below when you head out towards customer address to notify them you are on the way.
                       </Text>
-                      <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>
-                        {jobStage === 'in_progress'
-                          ? 'Technician is actively servicing at customer location. Work countdown is live on technician app.'
-                          : 'Monitoring live updates from technician. Payout will credit automatically upon job completion.'}
-                      </Text>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#0284C7',
+                          height: 50,
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'row',
+                          gap: 8,
+                        }}
+                        activeOpacity={0.85}
+                        onPress={handleStartTransit}
+                      >
+                        <Text style={{ fontSize: 17 }}>🛵</Text>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>
+                          START JOURNEY / ON THE WAY (रास्ते में निकलें) ➔
+                        </Text>
+                      </TouchableOpacity>
                     </View>
+                  )}
 
-                    <TouchableOpacity
-                      style={[styles.primaryActionBtn, { backgroundColor: '#10B981', marginTop: 12 }]}
-                      onPress={handleCompleteJob}
-                    >
-                      <Text style={styles.primaryActionBtnText}>Complete & Collect Payment ➔</Text>
-                    </TouchableOpacity>
+                  {/* STAGE 2: ON THE WAY -> MARK ARRIVED */}
+                  {jobStage === 'on_the_way' && (
+                    <View style={{ gap: 10 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 12, lineHeight: 18 }}>
+                        You are en route. Live tracking is active for customer. When you reach customer location, tap below.
+                      </Text>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#7C3AED',
+                          height: 50,
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'row',
+                          gap: 8,
+                        }}
+                        activeOpacity={0.85}
+                        onPress={handleMarkReached}
+                      >
+                        <Text style={{ fontSize: 17 }}>📍</Text>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>
+                          I HAVE ARRIVED AT DOORSTEP (पहुँच गए) ➔
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
 
+                  {/* STAGE 3: REACHED -> TAKE 4-DIGIT START OTP */}
+                  {jobStage === 'reached' && (
+                    <View style={{ gap: 12 }}>
+                      <View style={{ backgroundColor: 'rgba(234, 88, 12, 0.12)', padding: 12, borderRadius: 14, borderWidth: 1, borderColor: '#EA580C' }}>
+                        <Text style={{ color: '#FB923C', fontSize: 13, fontWeight: '800', textAlign: 'center' }}>
+                          🔑 ASK CUSTOMER FOR 4-DIGIT START OTP
+                        </Text>
+                        <Text style={{ color: '#CBD5E1', fontSize: 11, textAlign: 'center', marginTop: 3 }}>
+                          Entering Start OTP confirms doorstep arrival and initiates live work countdown timer.
+                        </Text>
+                      </View>
+
+                      {/* 4 Styled Digital Boxes for Native Look & Feel */}
+                      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginVertical: 4 }}>
+                        {[0, 1, 2, 3].map((digitIdx) => {
+                          const digit = inputOtp[digitIdx] || '';
+                          const isFilled = Boolean(digit);
+                          return (
+                            <View
+                              key={digitIdx}
+                              style={{
+                                width: 54,
+                                height: 58,
+                                borderRadius: 14,
+                                backgroundColor: "#F8FAFC",
+                                borderWidth: 2,
+                                borderColor: isFilled ? "#10B981" : (isDark ? "#E2E8F0" : "#CBD5E1"),
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                shadowColor: isFilled ? '#10B981' : '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: isFilled ? 0.4 : 0,
+                                shadowRadius: 6,
+                                elevation: isFilled ? 4 : 0,
+                              }}
+                            >
+                              <Text style={{ color: isFilled ? '#10B981' : '#64748B', fontSize: 24, fontWeight: '900' }}>
+                                {digit || '•'}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+
+                      <TextInput
+                        placeholder="TAP TO TYPE 4-DIGIT OTP"
+                        placeholderTextColor="#64748B"
+                        value={inputOtp}
+                        onChangeText={setInputOtp}
+                        keyboardType="number-pad"
+                        maxLength={4}
+                        style={{
+                          backgroundColor: "#F8FAFC",
+                          borderColor: "#E2E8F0",
+                          borderWidth: 1,
+                          borderRadius: 12,
+                          color: '#FFFFFF',
+                          padding: 10,
+                          fontSize: 13,
+                          fontWeight: '700',
+                          textAlign: 'center',
+                        }}
+                      />
+
+                      {/* Quick Auto-Fill Helper Chip */}
+                      <TouchableOpacity
+                        style={{
+                          paddingVertical: 7,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                          borderWidth: 1,
+                          borderColor: '#38BDF8',
+                          alignSelf: 'center',
+                        }}
+                        onPress={() => setInputOtp(acceptedOrder.otp || '3459')}
+                      >
+                        <Text style={{ color: '#38BDF8', fontSize: 11, fontWeight: '800' }}>
+                          ⚡ Tap to Auto-Fill Customer OTP: {acceptedOrder.otp || '3459'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#EA580C',
+                          height: 50,
+                          borderRadius: 14,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'row',
+                          gap: 8,
+                          shadowColor: '#EA580C',
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.35,
+                          shadowRadius: 8,
+                          elevation: 6,
+                        }}
+                        activeOpacity={0.85}
+                        onPress={handleVerifyOtp}
+                      >
+                        <Text style={{ fontSize: 17 }}>🔐</Text>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>
+                          VERIFY OTP &amp; BEGIN WORK (काम शुरू करें) ➔
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* STAGE 4: IN PROGRESS -> LIVE COUNTDOWN TIMER & DYNAMIC BILLING */}
+                  {jobStage === 'in_progress' && (
+                    <View style={{ gap: 12 }}>
+                      {/* Live Digital Timer Display */}
+                      <View style={{
+                        backgroundColor: "#F8FAFC",
+                        borderRadius: 14,
+                        padding: 16,
+                        borderWidth: 1.5,
+                        borderColor: "#10B981",
+                        alignItems: "center",
+                      }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981' }} />
+                          <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 }}>
+                            LIVE WORK TIMER ACTIVE
+                          </Text>
+                        </View>
+
+                        <Text style={{
+                          color: '#FFFFFF',
+                          fontSize: 34,
+                          fontWeight: '900',
+                          fontVariant: ['tabular-nums'],
+                          letterSpacing: 2,
+                          marginVertical: 4,
+                        }}>
+                          ⏱️ {formatStopwatch(stopwatchSeconds)}
+                        </Text>
+
+                        <Text style={{ color: '#94A3B8', fontSize: 11 }}>
+                          Duration: {Math.floor(stopwatchSeconds / 60)}m {stopwatchSeconds % 60}s worked
+                        </Text>
+                      </View>
+
+                      {/* Live Timing-Based Dynamic Bill Breakdown */}
+                      <View style={{
+                        backgroundColor: "#F8FAFC",
+                        borderRadius: 12,
+                        padding: 12,
+                        borderWidth: 1,
+                        borderColor: "#F8FAFC",
+                        gap: 6,
+                      }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text style={{ color: '#94A3B8', fontSize: 12 }}>Base Service Price:</Text>
+                          <Text style={{ color: "#0F172A", fontSize: 12, fontWeight: "700" }}>₹{acceptedOrder.payout || 499}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text style={{ color: '#94A3B8', fontSize: 12 }}>Time Rate (+₹5/min):</Text>
+                          <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>
+                            +₹{Math.floor(stopwatchSeconds / 60) * 5} ({Math.floor(stopwatchSeconds / 60)} mins)
+                          </Text>
+                        </View>
+                        <View style={{ height: 1, backgroundColor: "#E2E8F0", marginVertical: 4 }} />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>LIVE DYNAMIC BILL:</Text>
+                          <Text style={{ color: '#10B981', fontSize: 17, fontWeight: '900' }}>
+                            ₹{(Number(acceptedOrder.payout) || 499) + Math.floor(stopwatchSeconds / 60) * 5}
+                          </Text>
+                        </View>
+                        <Text style={{ color: '#38BDF8', fontSize: 11, textAlign: 'right', fontWeight: '600' }}>
+                          Your 90% Net Settlement: ₹{Math.round(((Number(acceptedOrder.payout) || 499) + Math.floor(stopwatchSeconds / 60) * 5) * 0.9)}
+                        </Text>
+                      </View>
+
+                      {/* Complete Work & Generate Bill Button */}
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#10B981',
+                          height: 52,
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'row',
+                          gap: 8,
+                          shadowColor: '#10B981',
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.35,
+                          shadowRadius: 8,
+                          elevation: 6,
+                        }}
+                        activeOpacity={0.85}
+                        onPress={handleCompleteJob}
+                      >
+                        <Text style={{ fontSize: 18 }}>🏁</Text>
+                        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900' }}>
+                          FINISH WORK &amp; GENERATE BILL (बिल बनाएं) ➔
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* STAGE 5: COMPLETED -> FINAL INVOICE & NEXT RADAR */}
+                  {jobStage === 'completed' && (
+                    <View style={{ gap: 12 }}>
+                      <View style={{
+                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                        borderRadius: 12,
+                        padding: 14,
+                        borderWidth: 1.5,
+                        borderColor: '#10B981',
+                        alignItems: 'center',
+                      }}>
+                        <Text style={{ fontSize: 32 }}>🏆</Text>
+                        <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900', marginTop: 4 }}>
+                          SERVICE COMPLETED &amp; DELIVERED!
+                        </Text>
+                        <Text style={{ color: '#94A3B8', fontSize: 11.5, marginTop: 2, textAlign: 'center' }}>
+                          Total Time Worked: {Math.floor(stopwatchSeconds / 60)} minutes
+                        </Text>
+
+                        <View style={{
+                          width: "100%",
+                          backgroundColor: "#F1F5F9",
+                          borderRadius: 10,
+                          borderWidth: isDark ? 0 : 1,
+                          borderColor: "#E2E8F0",
+                          padding: 10,
+                          marginTop: 10,
+                          gap: 4,
+                        }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <Text style={{ color: '#94A3B8', fontSize: 12 }}>Customer Bill:</Text>
+                            <Text style={{ color: "#0F172A", fontSize: 12, fontWeight: "700" }}>
+                              ₹{(Number(acceptedOrder.payout) || 499) + Math.floor(stopwatchSeconds / 60) * 5}
+                            </Text>
+                          </View>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '800' }}>90% Wallet Settlement:</Text>
+                            <Text style={{ color: '#10B981', fontSize: 14, fontWeight: '900' }}>
+                              +₹{Math.round(((Number(acceptedOrder.payout) || 499) + Math.floor(stopwatchSeconds / 60) * 5) * 0.9)}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#0284C7',
+                          height: 48,
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'row',
+                          gap: 8,
+                        }}
+                        activeOpacity={0.85}
+                        onPress={() => setShowQrModal(true)}
+                      >
+                        <Text style={{ fontSize: 16 }}>📱</Text>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+                          Show Customer Payment UPI QR
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#1E293B',
+                          borderColor: '#10B981',
+                          borderWidth: 1.5,
+                          height: 48,
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          setAcceptedOrder(null);
+                          setOtpVerified(false);
+                          setInputOtp('');
+                          setStopwatchSeconds(0);
+                          setActiveTab('radar');
+                        }}
+                      >
+                        <Text style={{ color: '#10B981', fontSize: 14, fontWeight: '800' }}>
+                          Ready for Next Order on Radar ➔
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Option to release / cancel job and return to radar anytime */}
+                  {jobStage !== 'completed' && (
                     <TouchableOpacity
-                      style={[styles.nextJobOutlineBtn, { marginTop: 8 }]}
-                      onPress={() => setActiveTab('radar')}
-                    >
-                      <Text style={styles.nextJobOutlineText}>Scan More Bookings on Radar ➔</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  /* COMPLETED SUMMARY */
-                  <View style={[styles.completedCard, { marginTop: 14 }]}>
-                    <Text style={{ fontSize: 44, textAlign: 'center' }}>🎉</Text>
-                    <Text style={styles.completedTitle}>Job Completed Successfully!</Text>
-                    <Text style={styles.completedSub}>
-                      Customer Bill: ₹{acceptedOrder.payout} • 90% Net Settlement: ₹{Math.round(acceptedOrder.payout * 0.9)} credited to Partner Wallet.
-                    </Text>
-                    <TouchableOpacity
-                      style={[styles.primaryActionBtn, { backgroundColor: '#10B981', marginTop: 12 }]}
-                      onPress={() => setShowQrModal(true)}
-                    >
-                      <Text style={styles.primaryActionBtnText}>Show Customer Payment QR 📱</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.nextJobOutlineBtn, { marginTop: 8 }]}
+                      style={{
+                        marginTop: 14,
+                        paddingVertical: 10,
+                        borderRadius: 10,
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                        borderColor: 'rgba(239, 68, 68, 0.3)',
+                        borderWidth: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      activeOpacity={0.8}
                       onPress={() => {
-                        setAcceptedOrder(null);
-                        setOtpVerified(false);
-                        setInputOtp('');
-                        setActiveTab('radar');
+                        Alert.alert(
+                          'Release / Reset Active Job',
+                          'Do you want to release this active job and return to Radar?',
+                          [
+                            { text: 'Keep Job', style: 'cancel' },
+                            {
+                              text: 'Yes, Return to Radar',
+                              style: 'destructive',
+                              onPress: () => {
+                                setAcceptedOrder(null);
+                                setOtpVerified(false);
+                                setInputOtp('');
+                                setStopwatchSeconds(0);
+                                setActiveTab('radar');
+                              },
+                            },
+                          ]
+                        );
                       }}
                     >
-                      <Text style={styles.nextJobOutlineText}>Ready for Next Booking ➔</Text>
+                      <Text style={{ color: '#F87171', fontSize: 12.5, fontWeight: '700' }}>
+                        ✕ Release / Cancel Job &amp; Return to Radar
+                      </Text>
                     </TouchableOpacity>
-                  </View>
-                )}
+                  )}
+                </View>
               </View>
             )}
           </View>
@@ -1975,18 +3648,18 @@ export default function VendorPartnerScreen({ navigation }) {
                   activeOpacity={0.85}
                   onPress={() => setShowDisburseModal(true)}
                 >
-                  <Text style={[styles.withdrawFullBtnText, { color: '#070A12' }]}>💸 Disburse to Worker</Text>
+                  <Text style={[styles.withdrawFullBtnText, { color: "#FFFFFF", fontWeight: "900" }]}>💸 Disburse to Worker</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Financial Settlement Flow Banner */}
-            <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.08)', borderRadius: 12, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.25)' }}>
+            <View style={{ backgroundColor: "#F0F9FF", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1.5, borderColor: "#BAE6FD" }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                 <Text style={{ fontSize: 14 }}>🏛️</Text>
                 <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800' }}>HELPER 10% - VENDOR 90% SETTLEMENT RULE</Text>
               </View>
-              <Text style={{ color: '#94A3B8', fontSize: 11, lineHeight: 16 }}>
+              <Text style={{ color: "#334155", fontSize: 11.5, lineHeight: 17 }}>
                 Customer scans the dynamic QR and pays directly to Helper Platform. Helper retains 10% platform commission, and 90% is credited directly to your Vendor Wallet. You disburse the technician's wage from here.
               </Text>
             </View>
@@ -2037,7 +3710,7 @@ export default function VendorPartnerScreen({ navigation }) {
         {activeTab === 'shop' && (
           <View>
             {/* 1. HERO HUB PROFILE CARD */}
-            <View style={[styles.contentCard, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0', backgroundColor: isDark ? '#0D1322' : '#FFFFFF', marginBottom: 14 }]}>
+            <View style={[styles.contentCard, { borderColor: "#E2E8F0", backgroundColor: "#FFFFFF", marginBottom: 14 }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -2056,7 +3729,7 @@ export default function VendorPartnerScreen({ navigation }) {
                 </TouchableOpacity>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={[styles.cardHeading, { color: themeColors?.text || '#FFFFFF', marginBottom: 0 }]} numberOfLines={1}>
+                    <Text style={[styles.cardHeading, { color: "#0F172A", fontSize: 17, fontWeight: "900", marginBottom: 0 }]} numberOfLines={1}>
                       {vendorProfile?.shopName || shopName}
                     </Text>
                     <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
@@ -2064,7 +3737,7 @@ export default function VendorPartnerScreen({ navigation }) {
                     </View>
                   </View>
 
-                  <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 4, marginBottom: 8 }}>
+                  <Text style={{ color: "#475569", fontSize: 12.5, marginTop: 4, marginBottom: 8 }}>
                     {vendorProfile?.name || 'Ramesh Sharma'} • {vendorProfile?.city || 'Indore, MP'}
                   </Text>
 
@@ -2089,12 +3762,14 @@ export default function VendorPartnerScreen({ navigation }) {
 
             {/* 2. INLINE HUB PROFILE EDIT FORM (Shown when edit button is tapped) */}
             {isEditingShop && (
-              <View style={[styles.contentCard, { borderColor: '#38BDF8', backgroundColor: isDark ? '#0D1322' : '#FFFFFF', marginBottom: 14, padding: 16 }]}>
-                <Text style={{ color: '#38BDF8', fontSize: 14, fontWeight: '900', marginBottom: 12 }}>✏️ Edit Vendor Hub Details</Text>
+              <View style={[styles.contentCard, { borderColor: '#38BDF8', backgroundColor: "#FFFFFF", marginBottom: 14, padding: 16 }]}>
+                <Text style={{ color: "#38BDF8", fontSize: 14, fontWeight: "900", marginBottom: 12 }}>✏️ Edit Vendor Hub Details</Text>
+
+                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#ECFDF5", borderWidth: 1.5, borderColor: "#10B981", borderRadius: 10, paddingVertical: 10, marginBottom: 14 }} onPress={handleVendorPhotoUpload} activeOpacity={0.8}><Text style={{ fontSize: 16 }}>📷</Text><Text style={{ color: "#059669", fontSize: 12.5, fontWeight: "800" }}>Change Hub Logo / Camera Photo</Text></TouchableOpacity>
 
                 <Text style={styles.fieldLabel}>SHOP / HUB NAME</Text>
                 <TextInput
-                  style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: isDark ? '#1E293B' : '#F1F5F9', marginBottom: 10 }]}
+                  style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: "#F1F5F9", marginBottom: 10 }]}
                   value={shopName}
                   onChangeText={setShopName}
                   placeholder="Enter shop or hub name"
@@ -2103,7 +3778,7 @@ export default function VendorPartnerScreen({ navigation }) {
 
                 <Text style={styles.fieldLabel}>OWNER / MANAGER NAME</Text>
                 <TextInput
-                  style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: isDark ? '#1E293B' : '#F1F5F9', marginBottom: 10 }]}
+                  style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: "#F1F5F9", marginBottom: 10 }]}
                   value={editOwnerName}
                   onChangeText={setEditOwnerName}
                   placeholder="Owner name"
@@ -2112,7 +3787,7 @@ export default function VendorPartnerScreen({ navigation }) {
 
                 <Text style={styles.fieldLabel}>CONTACT MOBILE NUMBER</Text>
                 <TextInput
-                  style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: isDark ? '#1E293B' : '#F1F5F9', marginBottom: 10 }]}
+                  style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: "#F1F5F9", marginBottom: 10 }]}
                   value={editOwnerPhone}
                   onChangeText={setEditOwnerPhone}
                   placeholder="10-digit phone"
@@ -2124,7 +3799,7 @@ export default function VendorPartnerScreen({ navigation }) {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.fieldLabel}>VISITING RATE (₹)</Text>
                     <TextInput
-                      style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }]}
+                      style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: "#F1F5F9" }]}
                       keyboardType="numeric"
                       value={hourlyRate}
                       onChangeText={setHourlyRate}
@@ -2133,7 +3808,7 @@ export default function VendorPartnerScreen({ navigation }) {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.fieldLabel}>SETTLEMENT UPI</Text>
                     <TextInput
-                      style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }]}
+                      style={[styles.fieldInput, { color: themeColors?.text || '#FFFFFF', backgroundColor: "#F1F5F9" }]}
                       value={editShopUpi}
                       onChangeText={setEditShopUpi}
                       placeholder="shop@upi"
@@ -2150,7 +3825,7 @@ export default function VendorPartnerScreen({ navigation }) {
                     <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 12 }}>💾 Save Hub Details</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0', paddingVertical: 11, borderRadius: 8, alignItems: 'center' }}
+                    style={{ flex: 1, backgroundColor: "#E2E8F0", paddingVertical: 11, borderRadius: 8, alignItems: 'center' }}
                     onPress={() => setIsEditingShop(false)}
                   >
                     <Text style={{ color: themeColors?.text || '#FFFFFF', fontWeight: '800', fontSize: 12 }}>Cancel</Text>
@@ -2160,7 +3835,7 @@ export default function VendorPartnerScreen({ navigation }) {
             )}
 
             {/* 3. FLEET & PERFORMANCE SUMMARY */}
-            <View style={[styles.contentCard, { borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0', backgroundColor: isDark ? '#0D1322' : '#FFFFFF', marginBottom: 14, padding: 16 }]}>
+            <View style={[styles.contentCard, { borderColor: "#E2E8F0", backgroundColor: "#FFFFFF", marginBottom: 14, padding: 16 }]}>
               <Text style={{ color: '#F59E0B', fontSize: 11, fontWeight: '900', letterSpacing: 0.8, marginBottom: 12 }}>
                 ⭐ FLEET PERFORMANCE & RATINGS
               </Text>
@@ -2169,12 +3844,12 @@ export default function VendorPartnerScreen({ navigation }) {
                   <Text style={{ color: '#F59E0B', fontSize: 20, fontWeight: '900' }}>★ 4.95</Text>
                   <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>Rating (280+ rev)</Text>
                 </View>
-                <View style={{ width: 1, height: 35, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+                <View style={{ width: 1, height: 35, backgroundColor: "#E2E8F0" }} />
                 <View style={{ alignItems: 'center', flex: 1 }}>
                   <Text style={{ color: '#10B981', fontSize: 20, fontWeight: '900' }}>{workersList.length}</Text>
                   <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>Active Crew</Text>
                 </View>
-                <View style={{ width: 1, height: 35, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+                <View style={{ width: 1, height: 35, backgroundColor: "#E2E8F0" }} />
                 <View style={{ alignItems: 'center', flex: 1 }}>
                   <Text style={{ color: '#38BDF8', fontSize: 20, fontWeight: '900' }}>312</Text>
                   <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>Orders Done</Text>
@@ -2182,24 +3857,89 @@ export default function VendorPartnerScreen({ navigation }) {
               </View>
             </View>
 
-            {/* 4. SERVICES & CUSTOM RATE CARD */}
-            <View style={[styles.contentCard, { borderColor: colors.border, backgroundColor: colors.card, marginBottom: 14 }]}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <Text style={[styles.cardHeading, { color: colors.text, marginBottom: 0 }]}>SERVICES & RATE CARD</Text>
-                <TouchableOpacity onPress={() => setShowAddServiceModal(true)}>
-                  <Text style={{ color: '#10B981', fontWeight: '800', fontSize: 12 }}>+ Add Service</Text>
+            {/* 4. SERVICES & CUSTOM RATE CARD (Live Synced with Customer App) */}
+            <View style={[styles.contentCard, { borderColor: "#E2E8F0", backgroundColor: "#FFFFFF", marginBottom: 14, padding: 16 }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <View>
+                  <Text style={{ color: "#0F172A", fontSize: 14, fontWeight: "900", letterSpacing: 0.5 }}>SERVICES & RATE CARD</Text>
+                  <Text style={{ color: "#64748B", fontSize: 11, marginTop: 1 }}>Live catalog visible to customer mobile app</Text>
+                </View>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "#ECFDF5",
+                    borderWidth: 1.5,
+                    borderColor: "#10B981",
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                  }}
+                  onPress={() => setShowAddServiceModal(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ color: '#059669', fontWeight: '900', fontSize: 11.5 }}>+ Add Service</Text>
                 </TouchableOpacity>
               </View>
 
-              {vendorServices.map((srv) => (
-                <View key={srv.id} style={[styles.rateCardRow, { borderBottomColor: colors.border }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.rateCardName, { color: colors.text }]}>{srv.name}</Text>
-                    <Text style={[styles.rateCardTime, { color: colors.textSecondary }]}>⏱️ {srv.time}</Text>
+              {vendorServices.map((srv) => {
+                const getCategoryEmoji = (cat) => {
+                  const c = (cat || '').toLowerCase();
+                  if (c.includes('plumb')) return '🔧';
+                  if (c.includes('elec')) return '⚡';
+                  if (c.includes('ac') || c.includes('cool')) return '❄️';
+                  if (c.includes('clean')) return '🧹';
+                  if (c.includes('carp')) return '🪚';
+                  if (c.includes('paint')) return '🎨';
+                  return '🛠️';
+                };
+
+                return (
+                  <View key={srv.id} style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#F1F5F9",
+                  }}>
+                    <View style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: "#F0FDF4",
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 10,
+                      borderWidth: 1,
+                      borderColor: "#DCFCE7",
+                    }}>
+                      <Text style={{ fontSize: 16 }}>{getCategoryEmoji(srv.category)}</Text>
+                    </View>
+
+                    <View style={{ flex: 1, marginRight: 8 }}>
+                      <Text style={{ color: "#0F172A", fontSize: 13, fontWeight: "800" }} numberOfLines={1}>
+                        {srv.name}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                        <View style={{ backgroundColor: "#F0F9FF", paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 0.8, borderColor: "#BAE6FD" }}>
+                          <Text style={{ color: "#0284C7", fontSize: 9.5, fontWeight: "800" }}>{srv.category || 'Specialist'}</Text>
+                        </View>
+                        <Text style={{ color: "#64748B", fontSize: 11 }}>⏱️ {srv.time}</Text>
+                      </View>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ color: "#059669", fontSize: 14.5, fontWeight: "900" }}>₹{srv.price}</Text>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteService(srv)}
+                        style={{ padding: 4 }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ fontSize: 13 }}>🗑️</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <Text style={styles.rateCardPrice}>₹{srv.price}</Text>
-                </View>
-              ))}
+                );
+              })}
             </View>
 
             {/* 5. LEGAL KYC & GOVERNMENT REGISTRATIONS */}
@@ -2323,6 +4063,200 @@ export default function VendorPartnerScreen({ navigation }) {
         )}
       </ScrollView>
 
+      {/* ================= FIXED NATIVE BOTTOM NAVIGATION DOCK ================= */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        backgroundColor: "#FFFFFF",
+        borderTopWidth: 1,
+        borderTopColor: "#E2E8F0",
+        paddingVertical: 8,
+        paddingBottom: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+        elevation: 12,
+      }}>
+        {/* Tab 1: Radar */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', minWidth: 62 }}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('radar')}
+        >
+          <View style={{
+            width: 44,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: activeTab === "radar" ? "#ECFDF5" : "transparent",
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Text style={{ fontSize: 18 }}>📡</Text>
+            {incomingOrder && !acceptedOrder && (
+              <View style={{
+                position: 'absolute',
+                top: 0,
+                right: 2,
+                backgroundColor: '#EF4444',
+                borderRadius: 7,
+                minWidth: 14,
+                height: 14,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 3,
+                borderWidth: 1.5,
+                borderColor: "#FFFFFF",
+              }}>
+                <Text style={{ color: '#FFF', fontSize: 8.5, fontWeight: '900' }}>1</Text>
+              </View>
+            )}
+          </View>
+          <Text style={{
+            fontSize: 10.5,
+            fontWeight: activeTab === 'radar' ? '900' : '600',
+            color: activeTab === 'radar' ? '#10B981' : '#64748B',
+            marginTop: 2,
+          }}>
+            Radar
+          </Text>
+        </TouchableOpacity>
+
+        {/* Tab 2: Active Job */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', minWidth: 62 }}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('active')}
+        >
+          <View style={{
+            width: 44,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: activeTab === "active" ? "#EFF6FF" : "transparent",
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Text style={{ fontSize: 18 }}>⚡</Text>
+            {acceptedOrder && (
+              <View style={{
+                position: 'absolute',
+                top: 2,
+                right: 6,
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: '#10B981',
+                borderWidth: 1.5,
+                borderColor: "#FFFFFF",
+              }} />
+            )}
+          </View>
+          <Text style={{
+            fontSize: 10.5,
+            fontWeight: activeTab === 'active' ? '900' : '600',
+            color: activeTab === 'active' ? '#38BDF8' : '#64748B',
+            marginTop: 2,
+          }}>
+            Active Job
+          </Text>
+        </TouchableOpacity>
+
+        {/* Tab 3: Team Fleet */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', minWidth: 62 }}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('workers')}
+        >
+          <View style={{
+            width: 44,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: activeTab === "workers" ? "#F5F3FF" : "transparent",
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Text style={{ fontSize: 18 }}>👥</Text>
+            <View style={{
+              position: 'absolute',
+              top: 0,
+              right: 2,
+              backgroundColor: 'rgba(124, 58, 237, 0.9)',
+              borderRadius: 7,
+              minWidth: 14,
+              height: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 3,
+              borderWidth: 1.5,
+              borderColor: "#FFFFFF",
+            }}>
+              <Text style={{ color: '#FFF', fontSize: 8.5, fontWeight: '900' }}>{workersList.length}</Text>
+            </View>
+          </View>
+          <Text style={{
+            fontSize: 10.5,
+            fontWeight: activeTab === 'workers' ? '900' : '600',
+            color: activeTab === 'workers' ? '#A78BFA' : '#64748B',
+            marginTop: 2,
+          }}>
+            Fleet ({workersList.length})
+          </Text>
+        </TouchableOpacity>
+
+        {/* Tab 4: Wallet */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', minWidth: 62 }}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('wallet')}
+        >
+          <View style={{
+            width: 44,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: activeTab === "wallet" ? "#FEF3C7" : "transparent",
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Text style={{ fontSize: 18 }}>💰</Text>
+          </View>
+          <Text style={{
+            fontSize: 10.5,
+            fontWeight: activeTab === 'wallet' ? '900' : '600',
+            color: activeTab === 'wallet' ? '#F59E0B' : '#64748B',
+            marginTop: 2,
+          }}>
+            Wallet
+          </Text>
+        </TouchableOpacity>
+
+        {/* Tab 5: Profile / Hub */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', minWidth: 62 }}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('shop')}
+        >
+          <View style={{
+            width: 44,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: activeTab === 'shop' ? "#E2E8F0" : 'transparent',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Text style={{ fontSize: 18 }}>👤</Text>
+          </View>
+          <Text style={{
+            fontSize: 10.5,
+            fontWeight: activeTab === 'shop' ? '900' : '600',
+            color: activeTab === 'shop' ? '#FFFFFF' : '#64748B',
+            marginTop: 2,
+          }}>
+            Hub Profile
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* ================= MODAL: ADD WORKER ================= */}
       <Modal visible={showAddWorkerModal} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
@@ -2392,53 +4326,263 @@ export default function VendorPartnerScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* ================= MODAL: ADD CUSTOM SERVICE ================= */}
+      {/* ================= MODAL: ADD SERVICE & CATEGORY (Synced with User App) ================= */}
       <Modal visible={showAddServiceModal} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { maxHeight: '88%', backgroundColor: '#FFFFFF' }]}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>+ Add Custom Service</Text>
-              <TouchableOpacity onPress={() => setShowAddServiceModal(false)}>
-                <Text style={styles.modalCloseIcon}>✕</Text>
+              <View>
+                <Text style={[styles.modalHeaderTitle, { color: '#0F172A', fontSize: 16, fontWeight: '900' }]}>
+                  ✨ Add New Service
+                </Text>
+                <Text style={{ color: '#64748B', fontSize: 11.5, marginTop: 1 }}>
+                  This service will instantly be visible in the Customer App
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowAddServiceModal(false);
+                  setIsAddingCustomCategory(false);
+                }}
+                style={{ padding: 4 }}
+              >
+                <Text style={[styles.modalCloseIcon, { color: '#64748B' }]}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalFieldLabel}>SERVICE NAME *</Text>
-            <TextInput
-              style={styles.modalInputBox}
-              placeholder="e.g. Inverter AC PCB Circuit Repair"
-              placeholderTextColor="#64748B"
-              value={newServiceName}
-              onChangeText={setNewServiceName}
-            />
+            <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 10 }}>
+              {/* Field 1: Service Name */}
+              <Text style={styles.modalFieldLabel}>SERVICE TITLE *</Text>
+              <TextInput
+                style={[styles.modalInputBox, { color: '#0F172A', backgroundColor: '#F8FAFC' }]}
+                placeholder="e.g. Inverter AC PCB Circuit Repair & Gas Fill"
+                placeholderTextColor="#94A3B8"
+                value={newServiceName}
+                onChangeText={setNewServiceName}
+              />
 
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modalFieldLabel}>PRICE (₹) *</Text>
-                <TextInput
-                  style={styles.modalInputBox}
-                  placeholder="e.g. 599"
-                  placeholderTextColor="#64748B"
-                  keyboardType="numeric"
-                  value={newServicePrice}
-                  onChangeText={setNewServicePrice}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modalFieldLabel}>ESTIMATED TIME</Text>
-                <TextInput
-                  style={styles.modalInputBox}
-                  placeholder="e.g. 45 mins"
-                  placeholderTextColor="#64748B"
-                  value={newServiceTime}
-                  onChangeText={setNewServiceTime}
-                />
-              </View>
-            </View>
+              {/* Field 2: Select Category */}
+              <Text style={[styles.modalFieldLabel, { marginTop: 12 }]}>SERVICE CATEGORY *</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+                <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 4 }}>
+                  {categoriesList.map((cat) => {
+                    const isSelected = selectedCategory === cat.name && !isAddingCustomCategory;
+                    return (
+                      <TouchableOpacity
+                        key={cat.id || cat.name}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                          paddingHorizontal: 12,
+                          paddingVertical: 7,
+                          borderRadius: 20,
+                          backgroundColor: isSelected ? '#ECFDF5' : '#F1F5F9',
+                          borderWidth: 1.5,
+                          borderColor: isSelected ? '#10B981' : '#E2E8F0',
+                        }}
+                        onPress={() => {
+                          setSelectedCategory(cat.name);
+                          setIsAddingCustomCategory(false);
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={{ fontSize: 13 }}>{cat.icon || '🛠️'}</Text>
+                        <Text style={{
+                          color: isSelected ? '#059669' : '#334155',
+                          fontSize: 12,
+                          fontWeight: isSelected ? '900' : '700',
+                        }}>
+                          {cat.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
 
-            <TouchableOpacity style={styles.modalPrimaryBtn} onPress={handleAddService}>
-              <Text style={styles.modalPrimaryBtnText}>Publish to Rate Card ➔</Text>
-            </TouchableOpacity>
+                  {/* Add Custom Category Chip */}
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      paddingHorizontal: 12,
+                      paddingVertical: 7,
+                      borderRadius: 20,
+                      backgroundColor: isAddingCustomCategory ? '#FEF3C7' : '#F8FAFC',
+                      borderWidth: 1.5,
+                      borderColor: isAddingCustomCategory ? '#F59E0B' : '#CBD5E1',
+                    }}
+                    onPress={() => setIsAddingCustomCategory(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={{ fontSize: 12 }}>➕</Text>
+                    <Text style={{
+                      color: isAddingCustomCategory ? '#B45309' : '#64748B',
+                      fontSize: 12,
+                      fontWeight: isAddingCustomCategory ? '900' : '700',
+                    }}>
+                      New Category
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+
+              {/* Custom Category Input (if selected) */}
+              {isAddingCustomCategory && (
+                <View style={{ marginBottom: 12, backgroundColor: '#FFFBEB', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#FDE68A' }}>
+                  <Text style={{ color: '#B45309', fontSize: 10.5, fontWeight: '800', marginBottom: 4 }}>
+                    ENTER NEW CATEGORY NAME:
+                  </Text>
+                  <TextInput
+                    style={[styles.modalInputBox, { color: '#0F172A', backgroundColor: '#FFFFFF', borderColor: '#F59E0B' }]}
+                    placeholder="e.g. Solar Panel Cleaning & Maintenance"
+                    placeholderTextColor="#94A3B8"
+                    value={customCategoryInput}
+                    onChangeText={setCustomCategoryInput}
+                  />
+                </View>
+              )}
+
+              {/* Field 3: Pricing & Duration Row */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalFieldLabel}>CUSTOMER PRICE (₹) *</Text>
+                  <TextInput
+                    style={[styles.modalInputBox, { color: '#0F172A', backgroundColor: '#F8FAFC' }]}
+                    placeholder="e.g. 499"
+                    placeholderTextColor="#94A3B8"
+                    keyboardType="numeric"
+                    value={newServicePrice}
+                    onChangeText={setNewServicePrice}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalFieldLabel}>ESTIMATED TIME</Text>
+                  <TextInput
+                    style={[styles.modalInputBox, { color: '#0F172A', backgroundColor: '#F8FAFC' }]}
+                    placeholder="e.g. 45 mins"
+                    placeholderTextColor="#94A3B8"
+                    value={newServiceTime}
+                    onChangeText={setNewServiceTime}
+                  />
+                </View>
+              </View>
+
+              {/* Field 4: Short Description */}
+              <Text style={[styles.modalFieldLabel, { marginTop: 12 }]}>SERVICE HIGHLIGHTS & WARRANTY</Text>
+              <TextInput
+                style={[styles.modalInputBox, { color: '#0F172A', backgroundColor: '#F8FAFC', height: 60, textAlignVertical: 'top' }]}
+                placeholder="e.g. Includes doorstep diagnosis, 30 days warranty & genuine spare parts."
+                placeholderTextColor="#94A3B8"
+                multiline
+                numberOfLines={2}
+                value={newServiceDesc}
+                onChangeText={setNewServiceDesc}
+              />
+
+              {/* Field 5: Service Image Picker (Camera & Gallery) */}
+              <Text style={[styles.modalFieldLabel, { marginTop: 14 }]}>
+                SERVICE PHOTO / RATE CARD IMAGE
+              </Text>
+              {newServiceImage ? (
+                <View style={{ marginBottom: 14, borderRadius: 12, overflow: 'hidden', borderWidth: 1.5, borderColor: '#10B981', backgroundColor: '#F0FDF4' }}>
+                  <Image
+                    source={{ uri: newServiceImage }}
+                    style={{ width: '100%', height: 160, borderRadius: 10 }}
+                    resizeMode="cover"
+                  />
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 8, backgroundColor: '#FFFFFF' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 13 }}>✅</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: '#059669' }}>Photo Attached</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <TouchableOpacity
+                        onPress={() => openImagePicker((uri) => setNewServiceImage(uri), { language })}
+                        style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, backgroundColor: '#F1F5F9' }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: '#334155' }}>Change</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setNewServiceImage('')}
+                        style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, backgroundColor: '#FEE2E2' }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: '#DC2626' }}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={{ marginBottom: 14, marginTop: 4 }}>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    {/* Button 1: Open Camera */}
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        backgroundColor: '#EEF2FF',
+                        paddingVertical: 12,
+                        paddingHorizontal: 8,
+                        borderRadius: 12,
+                        borderWidth: 1.5,
+                        borderColor: '#6366F1',
+                        borderStyle: 'dashed',
+                      }}
+                      onPress={() => pickFromCamera((uri) => setNewServiceImage(uri), { language })}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={{ fontSize: 18 }}>📷</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#4F46E5' }}>
+                        Camera
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Button 2: Choose from Gallery */}
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        backgroundColor: '#F0FDF4',
+                        paddingVertical: 12,
+                        paddingHorizontal: 8,
+                        borderRadius: 12,
+                        borderWidth: 1.5,
+                        borderColor: '#10B981',
+                        borderStyle: 'dashed',
+                      }}
+                      onPress={() => pickFromGallery((uri) => setNewServiceImage(uri), { language })}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={{ fontSize: 18 }}>🖼️</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#059669' }}>
+                        Gallery
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 5, textAlign: 'center' }}>
+                    Take camera photo or pick from gallery (Will display in Customer App)
+                  </Text>
+                </View>
+              )}
+
+              {/* Action Button */}
+              <TouchableOpacity
+                style={[styles.modalPrimaryBtn, { backgroundColor: '#10B981', marginTop: 16 }]}
+                onPress={handleAddService}
+                disabled={isPublishingService}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.modalPrimaryBtnText, { color: '#FFFFFF' }]}>
+                  {isPublishingService ? 'Publishing to Database...' : '🚀 Publish & Live to Customer App ➔'}
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -2534,7 +4678,7 @@ export default function VendorPartnerScreen({ navigation }) {
               style={[styles.modalPrimaryBtn, { backgroundColor: '#F59E0B' }]}
               onPress={handleDisburseToWorker}
             >
-              <Text style={[styles.modalPrimaryBtnText, { color: '#070A12' }]}>
+              <Text style={[styles.modalPrimaryBtnText, { color: "#FFFFFF", fontWeight: "900" }]}>
                 Send ₹{disburseAmount} to {selectedWorkerForDisburse.name} ➔
               </Text>
             </TouchableOpacity>
@@ -2568,7 +4712,7 @@ export default function VendorPartnerScreen({ navigation }) {
             </View>
 
             {/* Split breakdown */}
-            <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: 10, width: '100%', marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+            <View style={{ backgroundColor: "#F8FAFC", borderRadius: 10, padding: 10, width: '100%', marginBottom: 12, borderWidth: 1, borderColor: "#F8FAFC" }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                 <Text style={{ color: '#94A3B8', fontSize: 11 }}>10% Helper Platform Fee:</Text>
                 <Text style={{ color: '#F59E0B', fontSize: 11, fontWeight: '800' }}>
@@ -2616,7 +4760,7 @@ export default function VendorPartnerScreen({ navigation }) {
             </View>
 
             {/* Filter Tabs */}
-            <View style={{ flexDirection: 'row', backgroundColor: '#0B1120', borderRadius: 10, padding: 4, marginTop: 12 }}>
+            <View style={{ flexDirection: "row", backgroundColor: "#F1F5F9", borderRadius: 10, padding: 4, marginTop: 12 }}>
               <TouchableOpacity
                 style={{
                   flex: 1,
@@ -2669,9 +4813,9 @@ export default function VendorPartnerScreen({ navigation }) {
                   <TouchableOpacity
                     key={w.id || w.workerId}
                     style={{
-                      backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.15)' : '#0F172A',
+                      backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.15)' : '#FFFFFF',
                       borderWidth: 1.5,
-                      borderColor: isSelected ? '#10B981' : 'rgba(255, 255, 255, 0.08)',
+                      borderColor: isSelected ? '#10B981' : "#F8FAFC",
                       borderRadius: 14,
                       padding: 12,
                       marginBottom: 10,
@@ -2723,12 +4867,12 @@ export default function VendorPartnerScreen({ navigation }) {
             </ScrollView>
 
             {/* Time & Price Inputs */}
-            <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: 10, marginTop: 10, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+            <View style={{ backgroundColor: "#F8FAFC", borderRadius: 10, padding: 10, marginTop: 10, borderWidth: 1, borderColor: "#F8FAFC" }}>
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: '700', marginBottom: 4 }}>ARRIVAL TIME</Text>
                   <TextInput
-                    style={{ backgroundColor: '#0B1120', color: '#FFFFFF', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontWeight: '700', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.12)' }}
+                    style={{ backgroundColor: "#F8FAFC", color: '#FFFFFF', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontWeight: '700', borderWidth: 1, borderColor: "#E2E8F0" }}
                     value={vendorSetTime}
                     onChangeText={setVendorSetTime}
                     placeholder="45 mins"
@@ -2738,7 +4882,7 @@ export default function VendorPartnerScreen({ navigation }) {
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: '700', marginBottom: 4 }}>FINAL PRICE (₹)</Text>
                   <TextInput
-                    style={{ backgroundColor: '#0B1120', color: '#10B981', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontWeight: '800', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' }}
+                    style={{ backgroundColor: "#F8FAFC", color: '#10B981', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontWeight: '800', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' }}
                     value={vendorSetPrice}
                     onChangeText={setVendorSetPrice}
                     keyboardType="numeric"
@@ -2802,7 +4946,7 @@ export default function VendorPartnerScreen({ navigation }) {
             <TouchableOpacity
               style={[
                 styles.dutyModalCloseBtn,
-                { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9' },
+                { backgroundColor: "#F1F5F9" },
               ]}
               onPress={closeDutyModal}
               activeOpacity={0.7}
@@ -2999,20 +5143,20 @@ export default function VendorPartnerScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#070A12',
+    backgroundColor: "#F8FAFC",
   },
 
   /* 1. TOP APP BAR (NO WRAPPING / NO SQUEEZING) */
   topAppBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 12,
     paddingTop: 8,
     paddingBottom: 10,
-    backgroundColor: '#0C111E',
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: "#E2E8F0",
   },
   appBarLeft: {
     flexDirection: 'row',
@@ -3052,7 +5196,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: '#0F1523',
+    backgroundColor: "#FFFFFF",
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#10B981',
@@ -3079,7 +5223,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: "#F8FAFC",
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 6,
@@ -3091,7 +5235,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   brandTitle: {
-    color: '#FFFFFF',
+    color: "#0F172A",
     fontSize: 11.5,
     fontWeight: '900',
     letterSpacing: 0.4,
@@ -3199,12 +5343,12 @@ const styles = StyleSheet.create({
 
   /* 2. HERO STATS CONTAINER */
   heroStatsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#0F172A',
+    flexDirection: "row",
+    backgroundColor: "#FFFFFF",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: "#F8FAFC",
   },
   heroStatItem: {
     flex: 1,
@@ -3213,7 +5357,7 @@ const styles = StyleSheet.create({
   heroStatDivider: {
     width: 1,
     height: '75%',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: "#F8FAFC",
     alignSelf: 'center',
   },
   heroStatLabel: {
@@ -3223,7 +5367,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   heroStatVal: {
-    color: '#FFFFFF',
+    color: "#0F172A",
     fontSize: 16,
     fontWeight: '900',
     marginTop: 2,
@@ -3242,9 +5386,9 @@ const styles = StyleSheet.create({
 
   /* 3. SCROLLABLE CLEAN TAB BAR */
   tabBarWrapper: {
-    backgroundColor: '#090D16',
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: "#E2E8F0",
   },
   tabScrollContent: {
     paddingHorizontal: 12,
@@ -3255,9 +5399,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: "#F1F5F9",
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: "#E2E8F0",
   },
   activeTabChip: {
     backgroundColor: 'rgba(16, 185, 129, 0.16)',
@@ -3275,17 +5419,17 @@ const styles = StyleSheet.create({
 
   bodyScroll: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 90,
   },
 
   /* OFFLINE / BUSY STATES */
   offlineBox: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 26,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: "#F8FAFC",
   },
   offlineEmoji: {
     fontSize: 48,
@@ -3315,7 +5459,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   busyBox: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 26,
     alignItems: 'center',
@@ -3338,7 +5482,7 @@ const styles = StyleSheet.create({
 
   /* INCOMING ORDER CARD */
   incomingCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     borderWidth: 2,
     borderColor: '#10B981',
@@ -3399,7 +5543,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   bellMuteBtn: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: "#E2E8F0",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
@@ -3420,11 +5564,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: "#F8FAFC",
     paddingBottom: 12,
   },
   serviceTitle: {
-    color: '#FFFFFF',
+    color: "#0F172A",
     fontSize: 16,
     fontWeight: '900',
   },
@@ -3447,7 +5591,9 @@ const styles = StyleSheet.create({
     color: '#10B981',
   },
   addressInfoCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     borderRadius: 10,
     padding: 12,
     marginVertical: 12,
@@ -3462,7 +5608,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   customerNameText: {
-    color: '#FFFFFF',
+    color: "#0F172A",
     fontSize: 13,
     fontWeight: '800',
   },
@@ -3491,9 +5637,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   workerSelectChip: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: "#E2E8F0",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -3518,7 +5664,9 @@ const styles = StyleSheet.create({
   },
   passBtn: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     paddingVertical: 13,
     borderRadius: 10,
     alignItems: 'center',
@@ -3543,12 +5691,12 @@ const styles = StyleSheet.create({
 
   /* RADAR CARD */
   radarCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 30,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: "#F8FAFC",
   },
   radarVisualWrap: {
     width: 140,
@@ -3629,10 +5777,11 @@ const styles = StyleSheet.create({
 
   /* ACTIVE JOB CARD */
   activeJobCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E2E8F0",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: "#F8FAFC",
     padding: 16,
   },
   activeJobTopRow: {
@@ -3640,7 +5789,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: "#F8FAFC",
     paddingBottom: 12,
   },
   orderIdBadge: {
@@ -3667,7 +5816,7 @@ const styles = StyleSheet.create({
   customerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: "#F8FAFC",
     borderRadius: 10,
     padding: 12,
     marginVertical: 14,
@@ -3696,7 +5845,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: "#F8FAFC",
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -3709,11 +5858,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   otpCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: "#F8FAFC",
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: "#F8FAFC",
   },
   otpCardTitle: {
     color: '#FFFFFF',
@@ -3726,7 +5875,7 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   otpInput: {
-    backgroundColor: '#070A12',
+    backgroundColor: "#F8FAFC",
     borderWidth: 2,
     borderColor: '#10B981',
     borderRadius: 8,
@@ -3739,7 +5888,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   inProgressCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: "#F8FAFC",
     borderRadius: 12,
     padding: 14,
   },
@@ -3787,7 +5936,7 @@ const styles = StyleSheet.create({
   },
   nextJobOutlineBtn: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: "#E2E8F0",
     paddingVertical: 11,
     borderRadius: 10,
     alignItems: 'center',
@@ -3799,13 +5948,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   noActiveJobBox: {
-    backgroundColor: '#0F172A',
-    borderRadius: 14,
-    padding: 30,
-    alignItems: 'center',
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 32,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   noActiveTitle: {
-    color: '#FFFFFF',
+    color: "#0F172A",
     fontSize: 16,
     fontWeight: '800',
     marginTop: 8,
@@ -3831,9 +5987,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '900',
+    color: "#0F172A",
+    fontSize: 17,
+    fontWeight: "900",
   },
   addWorkerButton: {
     backgroundColor: '#10B981',
@@ -3847,12 +6003,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   workerItemCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: "#E2E8F0",
     padding: 14,
     marginBottom: 12,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   workerTopInfo: {
     flexDirection: 'row',
@@ -3865,9 +6026,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E293B',
   },
   workerNameText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
+    color: "#0F172A",
+    fontSize: 15,
+    fontWeight: "800",
   },
   workerDutyTag: {
     paddingHorizontal: 7,
@@ -3875,18 +6036,23 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   workerDutyActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: "#ECFDF5",
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
   },
   workerDutyLeave: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
   workerDutyTagText: {
     fontSize: 9,
     fontWeight: '800',
   },
   workerSpecialtyText: {
-    color: '#94A3B8',
-    fontSize: 11,
+    color: "#0284C7",
+    fontSize: 11.5,
+    fontWeight: "700",
     marginTop: 2,
   },
   workerMetaText: {
@@ -3899,7 +6065,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    borderTopColor: "#F8FAFC",
     paddingTop: 10,
     marginTop: 10,
   },
@@ -3908,7 +6074,7 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
   },
   workerCallActionBtn: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: "#F8FAFC",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
@@ -3927,13 +6093,18 @@ const styles = StyleSheet.create({
 
   /* WALLET */
   walletCardHero: {
-    backgroundColor: '#0F172A',
-    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderColor: "#10B981",
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 14,
+    shadowColor: "#059669",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   walletCardLabel: {
     color: '#94A3B8',
@@ -3971,12 +6142,17 @@ const styles = StyleSheet.create({
   },
   summaryStatBox: {
     flex: 1,
-    backgroundColor: '#0F172A',
-    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   summaryStatLabel: {
     color: '#64748B',
@@ -3995,18 +6171,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   contentCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: "#F8FAFC",
     padding: 14,
     marginBottom: 14,
   },
   cardHeading: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    color: '#10B981',
+    color: "#0F172A",
     marginBottom: 12,
   },
   fieldLabel: {
@@ -4016,9 +6189,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   fieldInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: "#E2E8F0",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -4032,7 +6205,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 9,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: "#F8FAFC",
   },
   rateCardName: {
     color: '#FFFFFF',
@@ -4071,7 +6244,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 13,
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: "#F8FAFC",
     marginBottom: 20,
   },
   modeSwitchText: {
@@ -4080,17 +6253,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   passbookRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 11,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: "#F1F5F9",
   },
   passbookTitle: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
+    color: "#0F172A",
+    fontSize: 12.5,
+    fontWeight: "700",
   },
   passbookDate: {
     color: '#64748B',
@@ -4109,12 +6282,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: "#E2E8F0",
   },
   modalHeaderRow: {
     flexDirection: 'row',
@@ -4140,9 +6313,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   modalInputBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: "#E2E8F0",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -4164,7 +6337,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   qrCardModal: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     margin: 20,
     borderRadius: 16,
     padding: 24,
@@ -4207,15 +6380,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 14,
-    backgroundColor: '#0C111E',
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: "#F8FAFC",
   },
   authBackBtn: {
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: "#F8FAFC",
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -4267,12 +6440,12 @@ const styles = StyleSheet.create({
   },
   authTabSwitch: {
     flexDirection: 'row',
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 4,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: "#F8FAFC",
   },
   authTabBtn: {
     flex: 1,
@@ -4292,11 +6465,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   authCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: "#F8FAFC",
     marginBottom: 18,
   },
   authCardTitle: {
@@ -4320,9 +6493,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   authInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: "#E2E8F0",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -4354,7 +6527,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: "#F8FAFC",
   },
   authPerkRow: {
     flexDirection: 'row',
@@ -4379,7 +6552,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 9,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    borderBottomColor: "#F8FAFC",
   },
   profileDetailLabel: {
     color: '#94A3B8',
