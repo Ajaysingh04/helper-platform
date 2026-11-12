@@ -1,4 +1,4 @@
-const BACKEND_CANDIDATES = ['http://192.168.1.8:5000', 'http://10.0.2.2:5000', 'http://192.168.1.8:5000'];
+const BACKEND_CANDIDATES = ['https://helper-backend-api-8878.onrender.com', 'https://helper-backend-api-8878.onrender.com', 'http://10.0.2.2:5000'];
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   View,
@@ -289,7 +289,7 @@ export default function VendorPartnerScreen({ navigation }) {
         'helper_vendor_session',
         JSON.stringify({ vendor: updated, token: 'vendor-token-active' })
       );
-      await axios.put(`http://192.168.1.8:5000/api/providers/${updated.id || 'VND-IND-01'}`, {
+      await axios.put(`https://helper-backend-api-8878.onrender.com/api/providers/${updated.id || 'VND-IND-01'}`, {
         name: updated.shopName,
         contactPerson: updated.name,
         phone: updated.phone,
@@ -337,7 +337,7 @@ export default function VendorPartnerScreen({ navigation }) {
             'helper_vendor_session',
             JSON.stringify({ vendor: updated, token: 'vendor-token-active' })
           );
-          await axios.put(`http://192.168.1.8:5000/api/providers/${vendorProfile.id || 'VND-IND-01'}`, {
+          await axios.put(`https://helper-backend-api-8878.onrender.com/api/providers/${vendorProfile.id || 'VND-IND-01'}`, {
             avatar: newAvatar,
             logo: newAvatar,
           });
@@ -352,7 +352,7 @@ export default function VendorPartnerScreen({ navigation }) {
   useEffect(() => {
 
     // Fetch services from backend so vendor and user side are in sync
-    axios.get('http://192.168.1.8:5000/api/services')
+    axios.get('https://helper-backend-api-8878.onrender.com/api/services')
       .then(res => {
         if (res.data?.data && res.data.data.length > 0) {
           const apiSrvs = res.data.data.map(s => ({
@@ -370,7 +370,7 @@ export default function VendorPartnerScreen({ navigation }) {
       .catch(() => {});
 
     // Fetch live categories from backend
-    axios.get('http://192.168.1.8:5000/api/categories')
+    axios.get('https://helper-backend-api-8878.onrender.com/api/categories')
       .then(res => {
         if (res.data?.data && res.data.data.length > 0) {
           const apiCats = res.data.data.map(c => ({
@@ -389,7 +389,7 @@ export default function VendorPartnerScreen({ navigation }) {
       .catch(() => {});
 
     // Fetch team workers from backend
-    axios.get('http://192.168.1.8:5000/api/workers')
+    axios.get('https://helper-backend-api-8878.onrender.com/api/workers')
       .then(res => {
         if (res.data?.data && res.data.data.length > 0) {
           const apiWorkers = res.data.data.map(w => ({
@@ -439,7 +439,7 @@ export default function VendorPartnerScreen({ navigation }) {
       if (!isLoggedIn || !isDutyOn) return;
 
       axios
-        .get('http://192.168.1.8:5000/api/bookings')
+        .get('https://helper-backend-api-8878.onrender.com/api/bookings')
         .then((res) => {
           const allBookings = res.data?.data || [];
           if (!allBookings || allBookings.length === 0) return;
@@ -582,7 +582,7 @@ export default function VendorPartnerScreen({ navigation }) {
       return;
     }
     setAuthLoading(true);
-    const hostCandidates = ['http://192.168.1.8:5000', 'http://192.168.1.8:5000'];
+    const hostCandidates = ['https://helper-backend-api-8878.onrender.com', 'https://helper-backend-api-8878.onrender.com'];
     let loginSuccess = false;
 
     for (const host of hostCandidates) {
@@ -646,7 +646,7 @@ export default function VendorPartnerScreen({ navigation }) {
     };
 
     let registerSuccess = false;
-    const hostCandidates = ['http://192.168.1.8:5000', 'http://192.168.1.8:5000'];
+    const hostCandidates = ['https://helper-backend-api-8878.onrender.com', 'https://helper-backend-api-8878.onrender.com'];
     for (const host of hostCandidates) {
       try {
         const res = await axios.post(`${host}/api/auth/vendor/register`, payload, { timeout: 3500 });
@@ -1144,7 +1144,7 @@ export default function VendorPartnerScreen({ navigation }) {
     }
 
     try {
-      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/accept`, {
+      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/accept`, {
         providerId: vendorProfile?.id || 'VND-IND-01',
         providerName: shopName || 'Indore Multi-Specialist Hub',
         workerId: vendorProfile?.id || 'VND-IND-01',
@@ -1186,7 +1186,7 @@ export default function VendorPartnerScreen({ navigation }) {
     const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
     setJobStage('on_the_way');
     try {
-      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/traveling`, { etaMinutes: 15 });
+      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/traveling`, { etaMinutes: 15 });
     } catch (e) {}
     Alert.alert('On The Way! 🛵', 'Customer has been notified that you are en route with a 15-minute ETA.');
   };
@@ -1195,7 +1195,7 @@ export default function VendorPartnerScreen({ navigation }) {
     const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
     setJobStage('reached');
     try {
-      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/arrived`);
+      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/arrived`);
     } catch (e) {}
     Alert.alert('Arrived at Location! 📍', 'Customer has been notified of your arrival. Please enter the 4-digit start OTP provided by the customer.');
   };
@@ -1218,7 +1218,7 @@ export default function VendorPartnerScreen({ navigation }) {
     }
 
     try {
-      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/accept`, {
+      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/accept`, {
         providerId: vendorProfile?.id || 'VND-IND-01',
         providerName: shopName || 'Indore Multi-Specialist Hub',
       });
@@ -1241,7 +1241,7 @@ export default function VendorPartnerScreen({ navigation }) {
     const orderId = incomingOrder?.bookingCode || incomingOrder?.id || incomingOrder?.mongoId || 'HLP-ORD';
 
     try {
-      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/assign-worker`, {
+      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/assign-worker`, {
         workerId: chosenWorker.workerId || chosenWorker.id,
         workerName: chosenWorker.name,
         workerPhone: chosenWorker.phone,
@@ -1309,7 +1309,7 @@ export default function VendorPartnerScreen({ navigation }) {
 
       // Tell backend vendor passed this order
       try {
-        await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/reject`, {
+        await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/reject`, {
           providerId: vendorProfile?.id || 'VND-IND-01',
           reason: 'passed_by_vendor',
         });
@@ -1325,7 +1325,7 @@ export default function VendorPartnerScreen({ navigation }) {
     const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
     if (inputOtp === requiredOtp || inputOtp === '1234' || inputOtp === '3459' || inputOtp === '5421') {
       try {
-        await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/verify-start-otp`, { otp: inputOtp });
+        await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/verify-start-otp`, { otp: inputOtp });
       } catch (e) {}
       setOtpVerified(true);
       setJobStage('in_progress');
@@ -1346,7 +1346,7 @@ export default function VendorPartnerScreen({ navigation }) {
     const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
 
     try {
-      await axios.post(`http://192.168.1.8:5000/api/bookings/${orderId}/complete`, {
+      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/complete`, {
         paymentMode: 'cash',
         workDurationSeconds: stopwatchSeconds,
         finalAmount: finalBill,
@@ -1438,7 +1438,7 @@ export default function VendorPartnerScreen({ navigation }) {
 
     // Sync with backend API so Admin Dashboard immediately receives the worker
     axios
-      .post('http://192.168.1.8:5000/api/workers', {
+      .post('https://helper-backend-api-8878.onrender.com/api/workers', {
         vendorId: vendorProfile?.id || 'VND-IND-01',
         vendorName: shopName || 'Indore Multi-Specialist Hub',
         name: newWorker.name,
@@ -1497,7 +1497,7 @@ export default function VendorPartnerScreen({ navigation }) {
       // 1. If custom category, post to /api/categories as well
       if (isAddingCustomCategory && customCategoryInput.trim()) {
         try {
-          await axios.post('http://192.168.1.8:5000/api/categories', {
+          await axios.post('https://helper-backend-api-8878.onrender.com/api/categories', {
             name: customCategoryInput.trim(),
             icon: '🛠️',
             count: 'Verified Pros'
@@ -1523,7 +1523,7 @@ export default function VendorPartnerScreen({ navigation }) {
         ]
       };
 
-      const res = await axios.post('http://192.168.1.8:5000/api/services', payload);
+      const res = await axios.post('https://helper-backend-api-8878.onrender.com/api/services', payload);
       const savedService = res.data?.data;
 
       const srvItem = {
@@ -1575,7 +1575,7 @@ export default function VendorPartnerScreen({ navigation }) {
           onPress: async () => {
             try {
               if (srv.id) {
-                await axios.delete(`http://192.168.1.8:5000/api/services/${srv.id}`);
+                await axios.delete(`https://helper-backend-api-8878.onrender.com/api/services/${srv.id}`);
               }
               setVendorServices((prev) => prev.filter((s) => s.id !== srv.id));
               Alert.alert('Service Removed', `"${srv.name}" has been removed from Customer App.`);
@@ -1987,16 +1987,11 @@ export default function VendorPartnerScreen({ navigation }) {
         borderRadius: 16,
         borderWidth: 1,
         borderColor: "#E2E8F0",
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-        elevation: 3,
-        shadowColor: '#000',
+        shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        elevation: 2,
       }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Text style={{ fontSize: 13 }}>💰</Text>
@@ -2141,7 +2136,7 @@ export default function VendorPartnerScreen({ navigation }) {
                     </View>
                     <View style={styles.infoLine}>
                       <Text style={styles.infoIcon}>🛠️</Text>
-                      <Text style={{ color: '#F8FAFC', fontSize: 13, fontWeight: '700', flex: 1 }}>
+                      <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '700', flex: 1 }}>
                         {incomingOrder.serviceName} • <Text style={{ color: '#10B981' }}>{incomingOrder.category}</Text>
                       </Text>
                     </View>
@@ -2225,17 +2220,15 @@ export default function VendorPartnerScreen({ navigation }) {
                           height: 46,
                           borderRadius: 12,
                           borderWidth: 1,
-                          borderColor: '#475569',
-                          backgroundColor: '#1E293B',
+                          borderColor: '#E2E8F0',
+                          backgroundColor: '#F1F5F9',
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                         activeOpacity={0.8}
                         onPress={handleDeclineOrder}
                       >
-                        <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: '700' }}>
-                          ✕ Skip (Pass)
-                        </Text>
+                        <Text style={{ color: '#64748B', fontSize: 13, fontWeight: '800' }}>✕ Skip (Pass)</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -2955,7 +2948,7 @@ export default function VendorPartnerScreen({ navigation }) {
                               width: 32,
                               height: 32,
                               borderRadius: 16,
-                              backgroundColor: isDone ? '#10B981' : isCurrent ? 'rgba(16, 185, 129, 0.2)' : '#1E293B',
+                              backgroundColor: isDone ? '#10B981' : isCurrent ? '#ECFDF5' : '#F1F5F9',
                               borderWidth: 2,
                               borderColor: isDone ? '#10B981' : isCurrent ? '#10B981' : "#E2E8F0",
                               alignItems: 'center',
@@ -2968,7 +2961,7 @@ export default function VendorPartnerScreen({ navigation }) {
                               <Text style={{ fontSize: 13 }}>{isDone ? '✓' : step.icon}</Text>
                             </View>
                             <Text style={{
-                              color: isDone ? '#10B981' : isCurrent ? '#FFFFFF' : '#64748B',
+                              color: isDone ? '#059669' : isCurrent ? '#059669' : '#64748B',
                               fontSize: 9,
                               fontWeight: isCurrent ? '900' : '600',
                               marginTop: 4,
@@ -2993,11 +2986,16 @@ export default function VendorPartnerScreen({ navigation }) {
 
                 {/* 2. CUSTOMER CARD WITH DIRECT CIRCULAR ACTION BUTTONS */}
                 <View style={{
-                  backgroundColor: "#F8FAFC",
+                  backgroundColor: '#FFFFFF',
                   borderRadius: 16,
                   padding: 14,
                   borderWidth: 1,
-                  borderColor: "#F8FAFC",
+                  borderColor: '#E2E8F0',
+                  shadowColor: '#0F172A',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.04,
+                  shadowRadius: 6,
+                  elevation: 2,
                 }}>
                   {/* Top Customer Info Row */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -3017,7 +3015,7 @@ export default function VendorPartnerScreen({ navigation }) {
                         </Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900' }} numberOfLines={1}>
+                        <Text style={{ color: '#0F172A', fontSize: 15, fontWeight: '900' }} numberOfLines={1}>
                           {acceptedOrder.customerName || 'Customer'}
                         </Text>
                         <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }} numberOfLines={1}>
@@ -3127,7 +3125,7 @@ export default function VendorPartnerScreen({ navigation }) {
                         {acceptedOrder?.isVendorDirect ? 'SELF-DELIVERY (OWNER DIRECT)' : 'ASSIGNED FLEET SPECIALIST'}
                       </Text>
                     </View>
-                    <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '800', marginTop: 3 }}>
+                    <Text style={{ color: '#0F172A', fontSize: 14.5, fontWeight: '800', marginTop: 3 }}>
                       {acceptedOrder?.isVendorDirect
                         ? `${vendorProfile?.name || 'Ramesh Sharma'} (Hub Owner)`
                         : (assignedWorker?.name || 'Sunil Verma')}
@@ -3353,8 +3351,8 @@ export default function VendorPartnerScreen({ navigation }) {
                         </View>
 
                         <Text style={{
-                          color: '#FFFFFF',
-                          fontSize: 34,
+                          color: '#059669',
+                          fontSize: 36,
                           fontWeight: '900',
                           fontVariant: ['tabular-nums'],
                           letterSpacing: 2,
@@ -3389,7 +3387,7 @@ export default function VendorPartnerScreen({ navigation }) {
                         </View>
                         <View style={{ height: 1, backgroundColor: "#E2E8F0", marginVertical: 4 }} />
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>LIVE DYNAMIC BILL:</Text>
+                          <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '800' }}>LIVE DYNAMIC BILL:</Text>
                           <Text style={{ color: '#10B981', fontSize: 17, fontWeight: '900' }}>
                             ₹{(Number(acceptedOrder.payout) || 499) + Math.floor(stopwatchSeconds / 60) * 5}
                           </Text>
@@ -4244,15 +4242,15 @@ export default function VendorPartnerScreen({ navigation }) {
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <Text style={{ fontSize: 18 }}>👤</Text>
+            <Text style={{ fontSize: 18 }}>🏷️</Text>
           </View>
           <Text style={{
             fontSize: 10.5,
             fontWeight: activeTab === 'shop' ? '900' : '600',
-            color: activeTab === 'shop' ? '#FFFFFF' : '#64748B',
+            color: activeTab === 'shop' ? '#10B981' : '#64748B',
             marginTop: 2,
           }}>
-            Hub Profile
+            Services
           </Text>
         </TouchableOpacity>
       </View>
