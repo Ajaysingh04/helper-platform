@@ -2126,11 +2126,11 @@ export default function VendorPartnerScreen({ navigation }) {
                     </View>
                     <View style={styles.infoLine}>
                       <Text style={styles.infoIcon}>📞</Text>
-                      <Text style={[styles.customerNameText, { color: '#38BDF8', fontSize: 13 }]}>{incomingOrder.customerPhone}</Text>
+                      <Text style={[styles.customerNameText, { color: '#0284C7', fontSize: 13 }]}>{incomingOrder.customerPhone}</Text>
                     </View>
                     <View style={styles.infoLine}>
                       <Text style={styles.infoIcon}>✉️</Text>
-                      <Text style={[styles.customerNameText, { color: '#94A3B8', fontSize: 12 }]}>
+                      <Text style={[styles.customerNameText, { color: '#64748B', fontSize: 12 }]}>
                         {incomingOrder.customerEmail || (incomingOrder.customerName ? `${incomingOrder.customerName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@gmail.com` : 'customer@helper.com')}
                       </Text>
                     </View>
@@ -3189,9 +3189,13 @@ export default function VendorPartnerScreen({ navigation }) {
                         onPress={handleStartTransit}
                       >
                         <Text style={{ fontSize: 17 }}>🛵</Text>
-                        <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>
-                          START JOURNEY / ON THE WAY (रास्ते में निकलें) ➔
-                        </Text>
+                        <View style={{ alignItems: 'center' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>Start Journey / On The Way</Text>
+                            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900' }}>➔</Text>
+                          </View>
+                          <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: '700', marginTop: 1 }}>रास्ते में निकलें</Text>
+                        </View>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -3216,9 +3220,13 @@ export default function VendorPartnerScreen({ navigation }) {
                         onPress={handleMarkReached}
                       >
                         <Text style={{ fontSize: 17 }}>📍</Text>
-                        <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>
-                          I HAVE ARRIVED AT DOORSTEP (पहुँच गए) ➔
-                        </Text>
+                        <View style={{ alignItems: 'center' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>Arrived at Doorstep</Text>
+                            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900' }}>➔</Text>
+                          </View>
+                          <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: '700', marginTop: 1 }}>ग्राहक के यहाँ पहुँच गए</Text>
+                        </View>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -3324,9 +3332,13 @@ export default function VendorPartnerScreen({ navigation }) {
                         onPress={handleVerifyOtp}
                       >
                         <Text style={{ fontSize: 17 }}>🔐</Text>
-                        <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>
-                          VERIFY OTP &amp; BEGIN WORK (काम शुरू करें) ➔
-                        </Text>
+                        <View style={{ alignItems: 'center' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={{ color: '#FFFFFF', fontSize: 14.5, fontWeight: '900' }}>Verify OTP &amp; Start Work</Text>
+                            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900' }}>➔</Text>
+                          </View>
+                          <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: '700', marginTop: 1 }}>OTP वेरिफाई करें और काम शुरू करें</Text>
+                        </View>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -3401,24 +3413,29 @@ export default function VendorPartnerScreen({ navigation }) {
                       <TouchableOpacity
                         style={{
                           backgroundColor: '#10B981',
-                          height: 52,
-                          borderRadius: 12,
+                          paddingVertical: 14,
+                          paddingHorizontal: 16,
+                          borderRadius: 14,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          flexDirection: 'row',
-                          gap: 8,
                           shadowColor: '#10B981',
                           shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.35,
+                          shadowOpacity: 0.3,
                           shadowRadius: 8,
-                          elevation: 6,
+                          elevation: 4,
                         }}
                         activeOpacity={0.85}
                         onPress={handleCompleteJob}
                       >
-                        <Text style={{ fontSize: 18 }}>🏁</Text>
-                        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900' }}>
-                          FINISH WORK &amp; GENERATE BILL (बिल बनाएं) ➔
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 17 }}>🏁</Text>
+                          <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', letterSpacing: 0.3 }}>
+                            Finish Work &amp; Generate Bill
+                          </Text>
+                          <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900' }}>➔</Text>
+                        </View>
+                        <Text style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: 11.5, fontWeight: '700', marginTop: 2 }}>
+                          काम पूरा करें और बिल बनाएं
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -4744,13 +4761,13 @@ export default function VendorPartnerScreen({ navigation }) {
           <View style={[styles.modalSheet, { maxHeight: '90%' }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalHeaderTitle}>🛠️ Choose Worker to Assign</Text>
-                <Text style={{ color: '#94A3B8', fontSize: 11.5, marginTop: 2 }}>
-                  Service: <Text style={{ color: '#10B981', fontWeight: '800' }}>{incomingOrder?.serviceName}</Text>
-                </Text>
-                <Text style={{ color: '#94A3B8', fontSize: 11 }}>
-                  Customer: {incomingOrder?.customerName} • 📞 {incomingOrder?.customerPhone} • 📍 {incomingOrder?.distance}
-                </Text>
+                <Text style={[styles.modalHeaderTitle, { color: '#0F172A', fontSize: 17, fontWeight: '900' }]}>🛠️ Assign Specialist to Job</Text>
+                <Text style={{ color: '#475569', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                    Service: <Text style={{ color: '#059669', fontWeight: '800' }}>{incomingOrder?.serviceName}</Text>
+                  </Text>
+                <Text style={{ color: '#64748B', fontSize: 11.5, marginTop: 1 }}>
+                    Customer: <Text style={{ color: '#0F172A', fontWeight: '700' }}>{incomingOrder?.customerName}</Text> • 📍 {incomingOrder?.distance}
+                  </Text>
               </View>
               <TouchableOpacity onPress={() => setShowChooseWorkerModal(false)}>
                 <Text style={styles.modalCloseIcon}>✕</Text>
@@ -4771,7 +4788,7 @@ export default function VendorPartnerScreen({ navigation }) {
               >
                 <Text
                   style={{
-                    color: workerFilterTab === 'suggested' ? '#020617' : '#94A3B8',
+                    color: workerFilterTab === 'suggested' ? '#FFFFFF' : '#475569',
                     fontWeight: '800',
                     fontSize: 12,
                   }}
@@ -4791,7 +4808,7 @@ export default function VendorPartnerScreen({ navigation }) {
               >
                 <Text
                   style={{
-                    color: workerFilterTab === 'all' ? '#020617' : '#94A3B8',
+                    color: workerFilterTab === 'all' ? '#FFFFFF' : '#475569',
                     fontWeight: '800',
                     fontSize: 12,
                   }}
@@ -4829,21 +4846,17 @@ export default function VendorPartnerScreen({ navigation }) {
                     />
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Text style={{ color: '#F8FAFC', fontSize: 15, fontWeight: '800' }}>{w.name}</Text>
+                        <Text style={{ color: '#0F172A', fontSize: 15, fontWeight: '900' }}>{w.name}</Text>
                         <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '700' }}>★ {w.rating || '4.95'}</Text>
                       </View>
-                      <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
-                        📞 {w.phone}
-                      </Text>
+                      <Text style={{ color: '#0284C7', fontSize: 12, fontWeight: '700', marginTop: 2 }}>📞 {w.phone}</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                         <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
                           <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '800' }}>
                             🏆 {w.experience || '6 Yrs Exp'}
                           </Text>
                         </View>
-                        <Text style={{ color: '#94A3B8', fontSize: 11, flexShrink: 1 }} numberOfLines={1}>
-                          {w.specialty || w.category}
-                        </Text>
+                        <Text style={{ color: '#475569', fontSize: 11, fontWeight: '600', flexShrink: 1 }} numberOfLines={1}>{w.specialty || w.category}</Text>
                       </View>
                     </View>
                     <View
@@ -4868,9 +4881,9 @@ export default function VendorPartnerScreen({ navigation }) {
             <View style={{ backgroundColor: "#F8FAFC", borderRadius: 10, padding: 10, marginTop: 10, borderWidth: 1, borderColor: "#F8FAFC" }}>
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: '700', marginBottom: 4 }}>ARRIVAL TIME</Text>
+                  <Text style={{ color: '#475569', fontSize: 11, fontWeight: '800', marginBottom: 4 }}>ESTIMATED ARRIVAL TIME</Text>
                   <TextInput
-                    style={{ backgroundColor: "#F8FAFC", color: '#FFFFFF', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontWeight: '700', borderWidth: 1, borderColor: "#E2E8F0" }}
+                    style={{ backgroundColor: '#FFFFFF', color: '#0F172A', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, fontWeight: '700', borderWidth: 1.5, borderColor: '#CBD5E1' }}
                     value={vendorSetTime}
                     onChangeText={setVendorSetTime}
                     placeholder="45 mins"
@@ -4878,9 +4891,9 @@ export default function VendorPartnerScreen({ navigation }) {
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: '700', marginBottom: 4 }}>FINAL PRICE (₹)</Text>
+                  <Text style={{ color: '#475569', fontSize: 11, fontWeight: '800', marginBottom: 4 }}>CUSTOMER FARE (₹)</Text>
                   <TextInput
-                    style={{ backgroundColor: "#F8FAFC", color: '#10B981', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontWeight: '800', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' }}
+                    style={{ backgroundColor: '#FFFFFF', color: '#059669', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, fontWeight: '900', borderWidth: 1.5, borderColor: '#A7F3D0' }}
                     value={vendorSetPrice}
                     onChangeText={setVendorSetPrice}
                     keyboardType="numeric"
@@ -4895,8 +4908,8 @@ export default function VendorPartnerScreen({ navigation }) {
               style={[styles.modalPrimaryBtn, { width: '100%', marginTop: 12 }]}
               onPress={handleConfirmAssignWorker}
             >
-              <Text style={styles.modalPrimaryBtnText}>
-                CONFIRM & FORWARD TO {selectedWorkerToAssign?.name?.toUpperCase() || 'WORKER'} ➔
+              <Text style={[styles.modalPrimaryBtnText, { fontSize: 14, fontWeight: '900' }]}>
+                CONFIRM &amp; ASSIGN {selectedWorkerToAssign?.name?.toUpperCase() || 'SPECIALIST'} ➔
               </Text>
             </TouchableOpacity>
           </View>
@@ -5617,12 +5630,12 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   addressText: {
-    color: '#CBD5E1',
+    color: '#334155',
     fontSize: 11.5,
     flex: 1,
   },
   timeScheduleText: {
-    color: '#F59E0B',
+    color: '#D97706',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -6294,9 +6307,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalHeaderTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
+    color: '#0F172A',
+    fontSize: 17,
+    fontWeight: '900',
   },
   modalCloseIcon: {
     color: '#94A3B8',
