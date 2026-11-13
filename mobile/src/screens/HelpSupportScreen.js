@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, {  useState, useContext , useMemo } from 'react';
 import {
   View,
   Text,
@@ -62,10 +62,10 @@ const FAQS_HI = [
 ];
 
 export default function HelpSupportScreen({ navigation }) {
-  const { primaryColor, language, showCustomAlert } = useContext(AppContext);
+  const { primaryColor, language, showCustomAlert, themeColors, isDark: ctxIsDark, themeMode } = useContext(AppContext);
+  const isDark = themeColors?.isDark !== undefined ? themeColors.isDark : (ctxIsDark !== undefined ? ctxIsDark : themeMode === 'dark');
   const activeColor = primaryColor || colors.primary;
-  const isHi = language === 'hi';
-
+  const styles = useMemo(() => createStyles(isDark, activeColor), [isDark, activeColor]);
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   // Ticket & Dispute Modal
@@ -760,10 +760,10 @@ export default function HelpSupportScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (isDark, activeColor) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.darkBg,
+    backgroundColor: isDark ? colors.darkBg : "#F8FAFC",
   },
   header: {
     flexDirection: 'row',
@@ -772,25 +772,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderDark,
-    backgroundColor: '#090D16',
+    borderBottomColor: isDark ? colors.borderDark : "#E2E8F0",
+    backgroundColor: isDark ? "#090D16" : "#FFFFFF",
   },
   backBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#F1F5F9",
     alignItems: 'center',
     justifyContent: 'center',
   },
   backArrow: {
-    color: '#FFFFFF',
-    fontSize: 20,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 20,
     fontWeight: '800',
   },
   headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 18,
     fontWeight: '900',
   },
   scrollContent: {
@@ -798,9 +796,9 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.04)" : "#EFF6FF",
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -813,14 +811,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   heroTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 20,
     fontWeight: '900',
     marginBottom: 4,
   },
   heroSub: {
-    color: '#94A3B8',
-    fontSize: 12.5,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 12.5,
     lineHeight: 18,
   },
   contactRow: {
@@ -830,10 +826,10 @@ const styles = StyleSheet.create({
   },
   contactCard: {
     flex: 1,
-    backgroundColor: colors.darkCard,
+    backgroundColor: isDark ? colors.darkCard : "#FFFFFF",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     padding: 14,
     alignItems: 'center',
   },
@@ -849,8 +845,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   contactTitle: {
-    color: '#FFFFFF',
-    fontSize: 13,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 13,
     fontWeight: '800',
   },
   contactSub: {
@@ -862,7 +857,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.darkCard,
+    backgroundColor: isDark ? colors.darkCard : "#FFFFFF",
     borderWidth: 1.5,
     borderRadius: 16,
     padding: 16,
@@ -878,8 +873,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   ticketTitle: {
-    color: '#FFFFFF',
-    fontSize: 13.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 13.5,
     fontWeight: '800',
   },
   activePill: {
@@ -888,13 +882,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   activePillText: {
-    color: '#FFFFFF',
-    fontSize: 8.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 8.5,
     fontWeight: '900',
   },
   ticketSub: {
-    color: '#94A3B8',
-    fontSize: 11,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 11,
     marginTop: 2,
     lineHeight: 14,
   },
@@ -931,8 +923,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   shieldDesc: {
-    color: '#CBD5E1',
-    fontSize: 11.5,
+    color: isDark ? '#CBD5E1' : '#334155', fontSize: 11.5,
     lineHeight: 16,
     marginTop: 2,
   },
@@ -944,10 +935,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   faqCard: {
-    backgroundColor: colors.darkCard,
+    backgroundColor: isDark ? colors.darkCard : "#FFFFFF",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     padding: 14,
     marginBottom: 10,
   },
@@ -958,8 +949,7 @@ const styles = StyleSheet.create({
   },
   faqQuestion: {
     flex: 1,
-    color: '#FFFFFF',
-    fontSize: 13.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 13.5,
     fontWeight: '700',
     paddingRight: 8,
   },
@@ -967,12 +957,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   faqAnswer: {
-    color: '#94A3B8',
-    fontSize: 12.5,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 12.5,
     lineHeight: 18,
     marginTop: 10,
     borderTopWidth: 1,
-    borderTopColor: colors.borderDark,
+    borderTopColor: isDark ? colors.borderDark : "#E2E8F0",
     paddingTop: 8,
   },
   modalOverlay: {
@@ -981,11 +970,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#0F172A',
+    backgroundColor: isDark ? "#0F172A" : "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     maxHeight: '90%',
   },
   modalHeader: {
@@ -996,34 +985,30 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderDark,
+    borderBottomColor: isDark ? colors.borderDark : "#E2E8F0",
   },
   modalTitle: {
-    color: '#FFFFFF',
-    fontSize: 16.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 16.5,
     fontWeight: '900',
   },
   modalSub: {
-    color: '#94A3B8',
-    fontSize: 11,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 11,
     marginTop: 2,
   },
   closeBtnCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#F1F5F9",
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeBtnText: {
-    color: '#94A3B8',
-    fontSize: 14,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 14,
     fontWeight: '800',
   },
   modalLabel: {
-    color: '#94A3B8',
-    fontSize: 11,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
     marginBottom: 8,
@@ -1039,22 +1024,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 8,
-    backgroundColor: colors.darkCard,
+    backgroundColor: isDark ? colors.darkCard : "#FFFFFF",
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
   },
   catChipText: {
-    color: '#94A3B8',
-    fontSize: 11.5,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 11.5,
     fontWeight: '600',
   },
   modalInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "#F8FAFC",
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     borderRadius: 10,
-    color: '#FFFFFF',
-    fontSize: 13,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 13,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
@@ -1073,13 +1056,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   videoTitle: {
-    color: '#FFFFFF',
-    fontSize: 12.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 12.5,
     fontWeight: '800',
   },
   videoSub: {
-    color: '#94A3B8',
-    fontSize: 10,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 10,
     marginTop: 2,
   },
   removeVideoBtn: {
@@ -1101,8 +1082,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   addBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 10.5,
     fontWeight: '900',
   },
   resolutionRow: {
@@ -1117,7 +1097,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.03)" : "#F8FAFC",
   },
   resolutionEmoji: {
     fontSize: 22,
@@ -1144,14 +1124,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   primaryActionText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 14,
     fontWeight: '900',
     letterSpacing: 0.3,
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: colors.darkBg,
+    backgroundColor: isDark ? colors.darkBg : "#F8FAFC",
   },
   chatHeader: {
     flexDirection: 'row',
@@ -1160,12 +1139,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderDark,
-    backgroundColor: '#090D16',
+    borderBottomColor: isDark ? colors.borderDark : "#E2E8F0",
+    backgroundColor: isDark ? "#090D16" : "#FFFFFF",
   },
   chatHeaderTitle: {
-    color: '#FFFFFF',
-    fontSize: 15,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 15,
     fontWeight: '800',
     textAlign: 'center',
   },
@@ -1182,8 +1160,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
   },
   chatHeaderSub: {
-    color: '#94A3B8',
-    fontSize: 10.5,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 10.5,
     fontWeight: '700',
   },
   msgCountBadge: {
@@ -1207,7 +1184,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#F1F5F9",
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1229,14 +1206,13 @@ const styles = StyleSheet.create({
   },
   agentBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.darkCard,
+    backgroundColor: isDark ? colors.darkCard : "#FFFFFF",
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     borderBottomLeftRadius: 2,
   },
   msgText: {
-    color: '#FFFFFF',
-    fontSize: 13.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 13.5,
     lineHeight: 19,
   },
   limitReachedBox: {
@@ -1249,14 +1225,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   limitReachedTitle: {
-    color: '#FFFFFF',
-    fontSize: 13,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 13,
     fontWeight: '800',
     marginBottom: 4,
   },
   limitReachedSub: {
-    color: '#94A3B8',
-    fontSize: 11.5,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 11.5,
     lineHeight: 16,
     marginBottom: 12,
   },
@@ -1269,8 +1243,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   limitActionBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 12.5,
     fontWeight: '800',
   },
   chatInputBar: {
@@ -1278,18 +1251,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: colors.borderDark,
-    backgroundColor: '#090D16',
+    borderTopColor: isDark ? colors.borderDark : "#E2E8F0",
+    backgroundColor: isDark ? "#090D16" : "#FFFFFF",
     gap: 8,
   },
   chatInput: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "#F8FAFC",
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     borderRadius: 20,
-    color: '#FFFFFF',
-    paddingHorizontal: 16,
+    color: isDark ? '#FFFFFF' : '#0F172A', paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 13.5,
   },
@@ -1301,8 +1273,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sendBtnText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 16,
     fontWeight: '900',
   },
 });

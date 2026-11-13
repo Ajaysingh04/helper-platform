@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, {  useState, useEffect, useContext , useMemo } from 'react';
 import {
   View,
   Text,
@@ -55,10 +55,12 @@ const TAG_OPTIONS = [
 ];
 
 export default function SavedAddressesScreen({ navigation }) {
-  const { primaryColor } = useContext(AppContext);
+  const { primaryColor, themeColors, isDark: ctxIsDark, themeMode } = useContext(AppContext);
+  const isDark = themeColors?.isDark !== undefined ? themeColors.isDark : (ctxIsDark !== undefined ? ctxIsDark : themeMode === 'dark');
+  const activeColor = primaryColor || colors.primary;
+  const styles = useMemo(() => createStyles(isDark, activeColor), [isDark, activeColor]);
   const { setBookingAddress } = useContext(CartContext);
   const { currentUser } = useContext(AuthContext);
-  const activeColor = primaryColor || colors.primary;
 
   const [addresses, setAddresses] = useState(DEFAULT_ADDRESSES);
   const [modalVisible, setModalVisible] = useState(false);
@@ -384,7 +386,7 @@ export default function SavedAddressesScreen({ navigation }) {
                       <Text
                         style={[
                           styles.tagChoiceLabel,
-                          isPicked && { color: '#FFFFFF', fontWeight: '800' },
+                          isPicked && { color: isDark ? '#FFFFFF' : '#0F172A', fontWeight: '800' },
                         ]}
                       >
                         {t.label}
@@ -492,10 +494,10 @@ export default function SavedAddressesScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (isDark, activeColor) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.darkBg,
+    backgroundColor: isDark ? colors.darkBg : "#F8FAFC",
   },
   header: {
     flexDirection: 'row',
@@ -504,25 +506,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderDark,
-    backgroundColor: '#090D16',
+    borderBottomColor: isDark ? colors.borderDark : "#E2E8F0",
+    backgroundColor: isDark ? "#090D16" : "#FFFFFF",
   },
   backBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#F1F5F9",
     alignItems: 'center',
     justifyContent: 'center',
   },
   backArrow: {
-    color: '#FFFFFF',
-    fontSize: 20,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 20,
     fontWeight: '800',
   },
   headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 18,
     fontWeight: '900',
   },
   addHeaderBtn: {
@@ -531,8 +531,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   addHeaderText: {
-    color: '#FFFFFF',
-    fontSize: 12.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 12.5,
     fontWeight: '800',
   },
   scrollContent: {
@@ -540,16 +539,15 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   subtitle: {
-    color: '#94A3B8',
-    fontSize: 12.5,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 12.5,
     marginBottom: 16,
     fontWeight: '500',
   },
   addressCard: {
-    backgroundColor: colors.darkCard,
+    backgroundColor: isDark ? colors.darkCard : "#FFFFFF",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     padding: 16,
     marginBottom: 14,
   },
@@ -562,7 +560,7 @@ const styles = StyleSheet.create({
   tagWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.06)" : "#F1F5F9",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -572,8 +570,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   tagLabel: {
-    color: '#FFFFFF',
-    fontSize: 12,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 12,
     fontWeight: '800',
   },
   defaultBadge: {
@@ -594,44 +591,38 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   makeDefaultText: {
-    color: '#94A3B8',
-    fontSize: 10.5,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 10.5,
     fontWeight: '700',
   },
   cardBody: {
     marginBottom: 12,
   },
   residentName: {
-    color: '#FFFFFF',
-    fontSize: 14.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 14.5,
     fontWeight: '800',
     marginBottom: 4,
   },
   addressLine: {
-    color: '#CBD5E1',
-    fontSize: 13,
+    color: isDark ? '#CBD5E1' : '#334155', fontSize: 13,
     lineHeight: 18,
   },
   landmarkLine: {
-    color: '#94A3B8',
-    fontSize: 12,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 12,
     marginTop: 2,
   },
   cityPincode: {
-    color: '#94A3B8',
-    fontSize: 12.5,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 12.5,
     marginTop: 2,
     fontWeight: '600',
   },
   phoneLine: {
-    color: '#94A3B8',
-    fontSize: 12,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 12,
     marginTop: 6,
   },
   cardActions: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: colors.borderDark,
+    borderTopColor: isDark ? colors.borderDark : "#E2E8F0",
     paddingTop: 10,
     gap: 12,
   },
@@ -639,11 +630,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "#F8FAFC",
   },
   actionText: {
-    color: '#CBD5E1',
-    fontSize: 12,
+    color: isDark ? '#CBD5E1' : '#334155', fontSize: 12,
     fontWeight: '700',
   },
   deleteActionBtn: {
@@ -679,12 +669,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#0F172A',
+    backgroundColor: isDark ? "#0F172A" : "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
   },
   modalHeader: {
     flexDirection: 'row',
@@ -694,24 +684,22 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderDark,
+    borderBottomColor: isDark ? colors.borderDark : "#E2E8F0",
   },
   modalTitle: {
-    color: '#FFFFFF',
-    fontSize: 17,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 17,
     fontWeight: '900',
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#F1F5F9",
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeBtnText: {
-    color: '#94A3B8',
-    fontSize: 14,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 14,
     fontWeight: '800',
   },
   modalScroll: {
@@ -719,8 +707,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   inputLabel: {
-    color: '#94A3B8',
-    fontSize: 11,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
     marginBottom: 6,
@@ -737,9 +724,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    backgroundColor: colors.darkCard,
+    backgroundColor: isDark ? colors.darkCard : "#FFFFFF",
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     paddingVertical: 8,
     borderRadius: 10,
   },
@@ -747,17 +734,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   tagChoiceLabel: {
-    color: '#94A3B8',
-    fontSize: 12,
+    color: isDark ? '#94A3B8' : '#475569', fontSize: 12,
     fontWeight: '700',
   },
   modalInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "#F8FAFC",
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: isDark ? colors.borderDark : "#E2E8F0",
     borderRadius: 10,
-    color: '#FFFFFF',
-    fontSize: 13.5,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 13.5,
     fontWeight: '600',
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -775,8 +760,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   modalSaveText: {
-    color: '#FFFFFF',
-    fontSize: 15,
+    color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 15,
     fontWeight: '900',
   },
 });

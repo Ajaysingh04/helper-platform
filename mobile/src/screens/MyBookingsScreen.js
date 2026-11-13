@@ -92,8 +92,33 @@ export default function MyBookingsScreen({ navigation }) {
         console.log('Bookings server fetch offline fallback:', e.message);
       }
 
-      // Combine server & local bookings
-      const combined = [...localBookings, ...serverBookings];
+      // Create a map of server bookings for instant fast lookup & precedence
+      const serverMap = new Map();
+      for (const sb of serverBookings) {
+        const sbId = String(sb.bookingCode || sb.bookingId || sb.id || sb._id || '');
+        if (sbId) serverMap.set(sbId, sb);
+      }
+
+      // Merge localBookings with updated server status and persist sync
+      let hasLocalUpdates = false;
+      const updatedLocalBookings = localBookings.map((lb) => {
+        const lbId = String(lb.bookingCode || lb.bookingId || lb.id || lb._id || '');
+        if (lbId && serverMap.has(lbId)) {
+          const matchingServer = serverMap.get(lbId);
+          if (matchingServer.status && matchingServer.status !== lb.status) {
+            hasLocalUpdates = true;
+          }
+          return { ...lb, ...matchingServer };
+        }
+        return lb;
+      });
+
+      if (hasLocalUpdates) {
+        AsyncStorage.setItem(USER_BOOKINGS_STORAGE_KEY, JSON.stringify(updatedLocalBookings)).catch(() => {});
+      }
+
+      // Combine server & updated local bookings (server bookings given primary priority)
+      const combined = [...serverBookings, ...updatedLocalBookings];
 
       let formatted = [];
       const seenIds = new Set();
@@ -112,14 +137,47 @@ export default function MyBookingsScreen({ navigation }) {
           (b.customerPhone && b.customerPhone.includes('7389451349'));
 
         if (isUserMatch) {
+          const rawStatus = String(b.status || b.workerStatus || 'pending').toLowerCase();
+          const isCompleted =
+            rawStatus === 'completed' ||
+            rawStatus === 'work_completed' ||
+            rawStatus === 'finished' ||
+            rawStatus === 'closed' ||
+            rawStatus === 'paid' ||
+            rawStatus === 'payment_completed';
+          const isCancelled = rawStatus === 'cancelled' || rawStatus === 'rejected';
+          const isOngoing =
+            rawStatus === 'in_progress' ||
+            rawStatus === 'on_the_way' ||
+            rawStatus === 'arrived' ||
+            rawStatus === 'accepted' ||
+            rawStatus === 'assigned';
+
+          let displayStatus = 'PENDING';
+          let statusColor = '#F59E0B';
+
+          if (isCompleted) {
+            displayStatus = 'COMPLETED';
+            statusColor = '#10B981';
+          } else if (isCancelled) {
+            displayStatus = 'CANCELLED';
+            statusColor = '#EF4444';
+          } else if (isOngoing) {
+            displayStatus = 'IN PROGRESS';
+            statusColor = '#0284C7';
+          } else if (rawStatus === 'confirmed' || rawStatus === 'slot_confirmed') {
+            displayStatus = 'CONFIRMED';
+            statusColor = '#10B981';
+          }
+
           formatted.push({
             id: bId,
             bookingId: bId,
             service: b.serviceName || b.service || 'Home Service',
             category: b.serviceCategory || b.category || 'Service',
             date: b.scheduledDate ? `${b.scheduledDate} • ${b.scheduledTime || '11:30 AM'}` : (b.date || 'Today • Immediate'),
-            status: (b.status || 'pending').toUpperCase(),
-            statusColor: b.status === 'completed' ? '#64748B' : (b.status === 'cancelled' ? '#EF4444' : (b.status === 'pending' ? '#F59E0B' : '#10B981')),
+            status: displayStatus,
+            statusColor,
             otp: b.doorOtp || b.otp || '3909',
             providerName: b.assignedWorkerName || b.assignedProviderName || b.providerName || 'Indore Multi-Specialist Hub',
             providerPhone: b.assignedWorkerPhone || b.providerPhone || '+91 98765 00101',

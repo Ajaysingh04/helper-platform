@@ -238,6 +238,16 @@ export default function VendorPartnerScreen({ navigation }) {
   const [isAddingCustomCategory, setIsAddingCustomCategory] = useState(false);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
   const [isPublishingService, setIsPublishingService] = useState(false);
+  const [showEditServiceModal, setShowEditServiceModal] = useState(false);
+  const [editingServiceId, setEditingServiceId] = useState('');
+  const [editServiceName, setEditServiceName] = useState('');
+  const [editServiceCategory, setEditServiceCategory] = useState('');
+  const [editServicePrice, setEditServicePrice] = useState('');
+  const [editServiceOriginalPrice, setEditServiceOriginalPrice] = useState('');
+  const [editServiceTime, setEditServiceTime] = useState('45 mins');
+  const [editServiceDesc, setEditServiceDesc] = useState('');
+  const [editServiceImage, setEditServiceImage] = useState('');
+  const [isUpdatingService, setIsUpdatingService] = useState(false);
   const [categoriesList, setCategoriesList] = useState([
     { id: 'cat_plumb', name: 'Plumber', icon: '🔧', color: '#06B6D4' },
     { id: 'cat_elec', name: 'Electrician', icon: '⚡', color: '#F59E0B' },
@@ -363,6 +373,7 @@ export default function VendorPartnerScreen({ navigation }) {
             time: s.duration || '45 mins',
             category: s.category || 'Home Repair',
             description: s.description || '',
+            image: s.image || '',
           }));
           setVendorServices(apiSrvs);
         }
@@ -1560,6 +1571,66 @@ export default function VendorPartnerScreen({ navigation }) {
       );
     } finally {
       setIsPublishingService(false);
+    }
+  };
+
+  const handleStartEditService = (srv) => {
+    setEditingServiceId(srv.id || srv._id);
+    setEditServiceName(srv.name || '');
+    setEditServiceCategory(srv.category || 'Home Repair');
+    setEditServicePrice(String(srv.price || ''));
+    setEditServiceOriginalPrice(String(srv.originalPrice || Math.round((srv.price || 299) * 1.3)));
+    setEditServiceTime(srv.time || srv.duration || '45 mins');
+    setEditServiceDesc(srv.description || '');
+    setEditServiceImage(srv.image || '');
+    setShowEditServiceModal(true);
+  };
+
+  const handleUpdateService = async () => {
+    if (!editServiceName.trim() || !editServicePrice.trim()) {
+      Alert.alert('Details Required', 'Please enter service title and customer price.');
+      return;
+    }
+
+    setIsUpdatingService(true);
+    try {
+      const payload = {
+        name: editServiceName.trim(),
+        category: editServiceCategory.trim() || 'Home Repair',
+        price: Number(editServicePrice),
+        originalPrice: Number(editServiceOriginalPrice || Math.round(Number(editServicePrice) * 1.3)),
+        duration: editServiceTime?.trim() || '45 mins',
+        description: editServiceDesc?.trim() || `${editServiceName.trim()} with doorstep pros & satisfaction warranty.`,
+        image: editServiceImage || undefined,
+      };
+
+      const res = await axios.put(`https://helper-backend-api-8878.onrender.com/api/services/${editingServiceId}`, payload);
+      const updated = res.data?.data;
+
+      setVendorServices((prev) =>
+        prev.map((s) =>
+          s.id === editingServiceId
+            ? {
+                ...s,
+                name: updated?.name || payload.name,
+                category: updated?.category || payload.category,
+                price: updated?.price || payload.price,
+                originalPrice: updated?.originalPrice || payload.originalPrice,
+                time: updated?.duration || payload.duration,
+                description: updated?.description || payload.description,
+                image: updated?.image || payload.image,
+              }
+            : s
+        )
+      );
+
+      setShowEditServiceModal(false);
+      Alert.alert('Service Updated! 🎉', `"${payload.name}" has been updated successfully and synced with Customer App.`);
+    } catch (err) {
+      console.error('[Update Service Error]:', err);
+      Alert.alert('Update Failed', err.response?.data?.message || err.message || 'Could not update service.');
+    } finally {
+      setIsUpdatingService(false);
     }
   };
 
@@ -3916,22 +3987,38 @@ export default function VendorPartnerScreen({ navigation }) {
                     borderBottomWidth: 1,
                     borderBottomColor: "#F1F5F9",
                   }}>
-                    <View style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: "#F0FDF4",
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: 10,
-                      borderWidth: 1,
-                      borderColor: "#DCFCE7",
-                    }}>
-                      <Text style={{ fontSize: 16 }}>{getCategoryEmoji(srv.category)}</Text>
-                    </View>
+                    {srv.image ? (
+                      <Image
+                        source={{ uri: srv.image }}
+                        style={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: 10,
+                          marginRight: 10,
+                          borderWidth: 1,
+                          borderColor: "#E2E8F0",
+                          backgroundColor: "#F8FAFC",
+                        }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 10,
+                        backgroundColor: "#F0FDF4",
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 10,
+                        borderWidth: 1,
+                        borderColor: "#DCFCE7",
+                      }}>
+                        <Text style={{ fontSize: 18 }}>{getCategoryEmoji(srv.category)}</Text>
+                      </View>
+                    )}
 
                     <View style={{ flex: 1, marginRight: 8 }}>
-                      <Text style={{ color: "#0F172A", fontSize: 13, fontWeight: "800" }} numberOfLines={1}>
+                      <Text style={{ color: "#0F172A", fontSize: 13.5, fontWeight: "800" }} numberOfLines={1}>
                         {srv.name}
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
@@ -3942,14 +4029,35 @@ export default function VendorPartnerScreen({ navigation }) {
                       </View>
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ color: "#059669", fontSize: 14.5, fontWeight: "900" }}>₹{srv.price}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ color: "#059669", fontSize: 14, fontWeight: "900", marginRight: 2 }}>₹{srv.price}</Text>
                       <TouchableOpacity
-                        onPress={() => handleDeleteService(srv)}
-                        style={{ padding: 4 }}
+                        onPress={() => handleStartEditService(srv)}
+                        style={{
+                          paddingHorizontal: 8,
+                          paddingVertical: 5,
+                          borderRadius: 6,
+                          backgroundColor: '#EFF6FF',
+                          borderWidth: 1,
+                          borderColor: '#BFDBFE',
+                        }}
                         activeOpacity={0.7}
                       >
-                        <Text style={{ fontSize: 13 }}>🗑️</Text>
+                        <Text style={{ color: '#1D4ED8', fontSize: 11, fontWeight: '800' }}>✏️ Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteService(srv)}
+                        style={{
+                          paddingHorizontal: 7,
+                          paddingVertical: 5,
+                          borderRadius: 6,
+                          backgroundColor: '#FEF2F2',
+                          borderWidth: 1,
+                          borderColor: '#FECACA',
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ fontSize: 11 }}>🗑️</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -4342,7 +4450,7 @@ export default function VendorPartnerScreen({ navigation }) {
       </Modal>
 
       {/* ================= MODAL: ADD SERVICE & CATEGORY (Synced with User App) ================= */}
-      <Modal visible={showAddServiceModal} transparent animationType="slide">
+      <Modal visible={showAddServiceModal} transparent animationType="slide" onRequestClose={() => { setShowAddServiceModal(false); setIsAddingCustomCategory(false); }}>
         <View style={styles.modalBackdrop}>
           <View style={[styles.modalSheet, { maxHeight: '88%', backgroundColor: '#FFFFFF' }]}>
             <View style={styles.modalHeaderRow}>
@@ -4597,6 +4705,243 @@ export default function VendorPartnerScreen({ navigation }) {
                   {isPublishingService ? 'Publishing to Database...' : '🚀 Publish & Live to Customer App ➔'}
                 </Text>
               </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: EDIT SERVICE & RATES (Synced with Customer App) ================= */}
+      <Modal
+        visible={showEditServiceModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditServiceModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalSheet, { maxHeight: '88%', backgroundColor: '#FFFFFF' }]}>
+            <View style={styles.modalHeaderRow}>
+              <View>
+                <Text style={[styles.modalHeaderTitle, { color: '#0F172A', fontSize: 16, fontWeight: '900' }]}>
+                  ✏️ Edit Service & Rates
+                </Text>
+                <Text style={{ color: '#64748B', fontSize: 11.5, marginTop: 1 }}>
+                  Changes will update instantly in Helper Customer & Partner apps
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowEditServiceModal(false)}
+                style={{ padding: 4 }}
+              >
+                <Text style={[styles.modalCloseIcon, { color: '#64748B' }]}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 10 }}>
+              {/* Field 1: Service Title */}
+              <Text style={styles.modalFieldLabel}>SERVICE TITLE *</Text>
+              <TextInput
+                style={[styles.modalInputBox, { color: '#0F172A', backgroundColor: '#F8FAFC' }]}
+                value={editServiceName}
+                onChangeText={setEditServiceName}
+                placeholder="Service Title"
+                placeholderTextColor="#94A3B8"
+              />
+
+              {/* Field 2: Category Selector */}
+              <Text style={[styles.modalFieldLabel, { marginTop: 12 }]}>SERVICE CATEGORY *</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+                <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 4 }}>
+                  {categoriesList.map((cat) => {
+                    const isSelected = editServiceCategory === cat.name;
+                    return (
+                      <TouchableOpacity
+                        key={cat.id || cat.name}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                          paddingHorizontal: 12,
+                          paddingVertical: 7,
+                          borderRadius: 20,
+                          backgroundColor: isSelected ? '#ECFDF5' : '#F1F5F9',
+                          borderWidth: 1.5,
+                          borderColor: isSelected ? '#10B981' : '#E2E8F0',
+                        }}
+                        onPress={() => setEditServiceCategory(cat.name)}
+                      >
+                        <Text style={{ fontSize: 13 }}>{cat.icon || '🛠️'}</Text>
+                        <Text style={{
+                          color: isSelected ? '#059669' : '#334155',
+                          fontSize: 12,
+                          fontWeight: isSelected ? '900' : '700',
+                        }}>
+                          {cat.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+
+              {/* Field 3: Pricing */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalFieldLabel}>CUSTOMER FARE (₹) *</Text>
+                  <TextInput
+                    style={[styles.modalInputBox, { color: '#059669', fontWeight: '900', fontSize: 16, backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}
+                    keyboardType="numeric"
+                    value={editServicePrice}
+                    onChangeText={setEditServicePrice}
+                    placeholder="499"
+                    placeholderTextColor="#94A3B8"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalFieldLabel}>MARKET PRICE (₹)</Text>
+                  <TextInput
+                    style={[styles.modalInputBox, { color: '#64748B', backgroundColor: '#F8FAFC' }]}
+                    keyboardType="numeric"
+                    value={editServiceOriginalPrice}
+                    onChangeText={setEditServiceOriginalPrice}
+                    placeholder="649"
+                    placeholderTextColor="#94A3B8"
+                  />
+                </View>
+              </View>
+
+              {/* Field 4: Duration */}
+              <Text style={[styles.modalFieldLabel, { marginTop: 12 }]}>ESTIMATED DURATION</Text>
+              <TextInput
+                style={[styles.modalInputBox, { color: '#0F172A', backgroundColor: '#F8FAFC' }]}
+                value={editServiceTime}
+                onChangeText={setEditServiceTime}
+                placeholder="45 mins"
+                placeholderTextColor="#94A3B8"
+              />
+
+              {/* Field 5: Description */}
+              <Text style={[styles.modalFieldLabel, { marginTop: 12 }]}>SERVICE HIGHLIGHTS / NOTES</Text>
+              <TextInput
+                style={[styles.modalInputBox, { color: '#0F172A', backgroundColor: '#F8FAFC', minHeight: 64, textAlignVertical: 'top' }]}
+                value={editServiceDesc}
+                onChangeText={setEditServiceDesc}
+                multiline
+                placeholder="Short description of inclusions..."
+                placeholderTextColor="#94A3B8"
+              />
+
+              {/* Field 6: Service Photo Upload & Preview */}
+              <Text style={[styles.modalFieldLabel, { marginTop: 14 }]}>
+                SERVICE PHOTO / RATE CARD IMAGE
+              </Text>
+              {editServiceImage ? (
+                <View style={{ marginBottom: 14, borderRadius: 12, overflow: 'hidden', borderWidth: 1.5, borderColor: '#10B981', backgroundColor: '#F0FDF4' }}>
+                  <Image
+                    source={{ uri: editServiceImage }}
+                    style={{ width: '100%', height: 160, borderRadius: 10 }}
+                    resizeMode="cover"
+                  />
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 8, backgroundColor: '#FFFFFF' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 13 }}>✅</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: '#059669' }}>Photo Attached</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <TouchableOpacity
+                        onPress={() => openImagePicker((uri) => setEditServiceImage(uri), { language })}
+                        style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, backgroundColor: '#F1F5F9' }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: '#334155' }}>Change</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setEditServiceImage('')}
+                        style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, backgroundColor: '#FEE2E2' }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: '#DC2626' }}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={{ marginBottom: 14, marginTop: 4 }}>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        backgroundColor: '#EEF2FF',
+                        paddingVertical: 12,
+                        paddingHorizontal: 8,
+                        borderRadius: 12,
+                        borderWidth: 1.5,
+                        borderColor: '#6366F1',
+                        borderStyle: 'dashed',
+                      }}
+                      onPress={() => pickFromCamera((uri) => setEditServiceImage(uri), { language })}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={{ fontSize: 18 }}>📷</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#4F46E5' }}>Camera</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        backgroundColor: '#F0FDF4',
+                        paddingVertical: 12,
+                        paddingHorizontal: 8,
+                        borderRadius: 12,
+                        borderWidth: 1.5,
+                        borderColor: '#10B981',
+                        borderStyle: 'dashed',
+                      }}
+                      onPress={() => pickFromGallery((uri) => setEditServiceImage(uri), { language })}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={{ fontSize: 18 }}>🖼️</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#059669' }}>Gallery</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 5, textAlign: 'center' }}>
+                    Take camera photo or pick from gallery (Will display in Customer App)
+                  </Text>
+                </View>
+              )}
+
+              {/* Action Buttons */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    backgroundColor: '#F1F5F9',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onPress={() => setShowEditServiceModal(false)}
+                >
+                  <Text style={{ color: '#475569', fontSize: 14, fontWeight: '800' }}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalPrimaryBtn, { flex: 2, backgroundColor: '#0284C7', marginTop: 0 }]}
+                  onPress={handleUpdateService}
+                  disabled={isUpdatingService}
+                  activeOpacity={0.85}
+                >
+                  <Text style={[styles.modalPrimaryBtnText, { color: '#FFFFFF' }]}>
+                    {isUpdatingService ? 'Updating Database...' : '🚀 Update & Save ➔'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           </View>
         </View>
