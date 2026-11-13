@@ -135,6 +135,81 @@ const INITIAL_SERVICES = [
   { id: 'srv_4', name: 'Emergency Pipe Leak & Tap Fix', price: 299, time: '40 mins' },
 ];
 
+const INITIAL_WALLET_TRANSACTIONS = [
+  {
+    id: 'tx_init_1',
+    title: 'AC Jet Foam Servicing (90% Settlement)',
+    category: 'earnings',
+    date: 'Today • 01:15 PM',
+    timestamp: Date.now() - 3600000,
+    amount: '+₹449',
+    rawAmount: 449,
+    sub: 'Order #HLP-9041 • Gross: ₹499 • 10% Platform Commission: -₹50',
+    type: 'credit',
+    status: 'SETTLED',
+    reference: 'HLP-ORD9041',
+  },
+  {
+    id: 'tx_init_2',
+    title: 'Worker Payout: Sunil Verma',
+    category: 'worker_payout',
+    date: 'Today • 12:45 PM',
+    timestamp: Date.now() - 5400000,
+    amount: '-₹320',
+    rawAmount: 320,
+    sub: 'Worker Disbursement • Sunil Verma (Technician) • UPI: sunil@upi',
+    type: 'debit',
+    status: 'PAID TO WORKER',
+    reference: 'WRK-DISB7829',
+    workerName: 'Sunil Verma',
+    workerRole: 'Senior Technician',
+    bankOrUpi: 'sunil@upi',
+  },
+  {
+    id: 'tx_init_3',
+    title: 'Electrician MCB Fix (90% Settlement)',
+    category: 'earnings',
+    date: 'Today • 11:30 AM',
+    timestamp: Date.now() - 9600000,
+    amount: '+₹224',
+    rawAmount: 224,
+    sub: 'Order #HLP-8921 • Gross: ₹249 • 10% Platform Commission: -₹25',
+    type: 'credit',
+    status: 'SETTLED',
+    reference: 'HLP-ORD8921',
+  },
+  {
+    id: 'tx_init_4',
+    title: 'Worker Payout: Ramesh Kumar',
+    category: 'worker_payout',
+    date: 'Today • 11:00 AM',
+    timestamp: Date.now() - 11400000,
+    amount: '-₹160',
+    rawAmount: 160,
+    sub: 'Worker Disbursement • Ramesh Kumar (Plumber) • UPI: ramesh@upi',
+    type: 'debit',
+    status: 'PAID TO WORKER',
+    reference: 'WRK-DISB7812',
+    workerName: 'Ramesh Kumar',
+    workerRole: 'Plumber',
+    bankOrUpi: 'ramesh@upi',
+  },
+  {
+    id: 'tx_init_5',
+    title: 'Bank Withdrawal to ICICI Bank A/C',
+    category: 'withdrawal',
+    date: 'Yesterday • 08:30 PM',
+    timestamp: Date.now() - 86400000,
+    amount: '-₹3,500',
+    rawAmount: 3500,
+    sub: 'UTR: HLP-WTH984712 • Instant UPI to primary bank account (..4829)',
+    type: 'debit',
+    status: 'SUCCESS',
+    reference: 'WTH-ICICI9847',
+    bankOrUpi: 'ICICI Bank (..4829)',
+  },
+];
+
 export default function VendorPartnerScreen({ navigation }) {
   const { primaryColor, themeColors, isDark: ctxIsDark, toggleTheme: ctxToggleTheme, themeMode, setThemeMode } = useContext(AppContext);
   const isDark = false;
@@ -188,6 +263,8 @@ export default function VendorPartnerScreen({ navigation }) {
   const [walletBalance, setWalletBalance] = useState(4650);
   const [todayEarnings, setTodayEarnings] = useState(1497);
   const [completedJobsToday, setCompletedJobsToday] = useState(3);
+  const [walletTransactions, setWalletTransactions] = useState(INITIAL_WALLET_TRANSACTIONS);
+  const [walletFilter, setWalletFilter] = useState('all'); // all | withdrawal | worker_payout | earnings
 
   // Incoming Job Lead State (Real-time live radar)
   const [incomingOrder, setIncomingOrder] = useState(null);
@@ -358,6 +435,26 @@ export default function VendorPartnerScreen({ navigation }) {
       }
     });
   };
+
+  useEffect(() => {
+    AsyncStorage.getItem('@helper_vendor_wallet_txns_v2').then((saved) => {
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setWalletTransactions(parsed);
+          }
+        } catch (_) {}
+      }
+    }).catch(() => {});
+
+    AsyncStorage.getItem('@helper_vendor_wallet_balance_v2').then((saved) => {
+      if (saved) {
+        const b = parseFloat(saved);
+        if (!isNaN(b) && b >= 0) setWalletBalance(b);
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
 
@@ -1369,6 +1466,26 @@ export default function VendorPartnerScreen({ navigation }) {
     setTodayEarnings((prev) => prev + vendorShare);
     setCompletedJobsToday((prev) => prev + 1);
 
+    const netEarnings = vendorShare;
+    const newJobTx = {
+      id: `ord_${Date.now()}`,
+      title: `${acceptedOrder?.serviceName || 'Service'} (90% Settlement)`,
+      category: 'earnings',
+      date: 'Today • Just now',
+      timestamp: Date.now(),
+      amount: `+₹${netEarnings}`,
+      rawAmount: netEarnings,
+      sub: `Gross: ₹${finalBill} • 10% Platform Commission: -₹${finalBill - vendorShare} • Customer: ${acceptedOrder?.customerName || 'Customer'}`,
+      type: 'credit',
+      status: 'SETTLED',
+      reference: `HLP-ORD${Math.floor(1000 + Math.random() * 9000)}`,
+    };
+    setWalletTransactions((prev) => {
+      const updated = [newJobTx, ...prev];
+      AsyncStorage.setItem('@helper_vendor_wallet_txns_v2', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+
     Alert.alert(
       'Service Completed & Bill Generated! 🏆',
       `Customer: ${acceptedOrder?.customerName}\nService: ${acceptedOrder?.serviceName}\nDuration Worked: ${timingCalc.minutes}m ${timingCalc.seconds}s\n\n• Base Service Fee: ₹${timingCalc.base}\n• Timing Charge (+₹5/min): ₹${timingCalc.timeCharge}\n• Total Bill: ₹${finalBill}\n• 90% Net Settlement: ₹${vendorShare} (Credited to Hub Wallet!)\n\nService delivery completed successfully!`,
@@ -1401,11 +1518,38 @@ export default function VendorPartnerScreen({ navigation }) {
       Alert.alert('Insufficient Balance', `Available balance is ₹${walletBalance}. Cannot disburse ₹${amt}.`);
       return;
     }
-    setWalletBalance((prev) => prev - amt);
+    const newBal = walletBalance - amt;
+    setWalletBalance(newBal);
+    AsyncStorage.setItem('@helper_vendor_wallet_balance_v2', String(newBal)).catch(() => {});
+
+    const chosenWorker = selectedWorkerForDisburse || workersList[0];
+    const newTx = {
+      id: `disb_${Date.now()}`,
+      title: `Worker Payout: ${chosenWorker.name}`,
+      category: 'worker_payout',
+      date: 'Today • Just now',
+      timestamp: Date.now(),
+      amount: `-₹${amt}`,
+      rawAmount: amt,
+      sub: `Worker Disbursement • ${chosenWorker.name} (${chosenWorker.role || 'Technician'}) • UPI: ${chosenWorker.upiId || 'worker@upi'}`,
+      type: 'debit',
+      status: 'PAID TO WORKER',
+      reference: `WRK-DISB${Math.floor(1000 + Math.random() * 9000)}`,
+      workerName: chosenWorker.name,
+      workerRole: chosenWorker.role || 'Technician',
+      bankOrUpi: chosenWorker.upiId || 'worker@upi',
+    };
+
+    setWalletTransactions((prev) => {
+      const updated = [newTx, ...prev];
+      AsyncStorage.setItem('@helper_vendor_wallet_txns_v2', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+
     setShowDisburseModal(false);
     Alert.alert(
-      'Payout Disbursed! 💸',
-      `₹${amt} has been successfully transferred to technician ${selectedWorkerForDisburse.name} (${selectedWorkerForDisburse.upiId || 'worker@upi'}).\n\nRemaining Wallet Balance: ₹${walletBalance - amt}`
+      'Worker Payout Disbursed! 💸',
+      `₹${amt} has been successfully transferred to technician ${chosenWorker.name} (${chosenWorker.upiId || 'worker@upi'}).\n\nRemaining Wallet Balance: ₹${newBal}\n\nTransaction recorded in Passbook History.`
     );
   };
 
@@ -1667,9 +1811,37 @@ export default function VendorPartnerScreen({ navigation }) {
       Alert.alert('Invalid Amount', `Please enter an amount between ₹1 and ₹${walletBalance}.`);
       return;
     }
-    setWalletBalance((prev) => prev - amt);
+    const newBal = walletBalance - amt;
+    setWalletBalance(newBal);
+    AsyncStorage.setItem('@helper_vendor_wallet_balance_v2', String(newBal)).catch(() => {});
+
+    const targetDest = withdrawUpi.trim() || 'Primary Bank Account';
+    const newTx = {
+      id: `wth_${Date.now()}`,
+      title: `Bank Withdrawal to ${targetDest}`,
+      category: 'withdrawal',
+      date: 'Today • Just now',
+      timestamp: Date.now(),
+      amount: `-₹${amt}`,
+      rawAmount: amt,
+      sub: `UTR: HLP-WTH${Math.floor(100000 + Math.random() * 900000)} • Instant Payout to ${targetDest}`,
+      type: 'debit',
+      status: 'SUCCESS',
+      reference: `WTH-${Math.floor(100000 + Math.random() * 900000)}`,
+      bankOrUpi: targetDest,
+    };
+
+    setWalletTransactions((prev) => {
+      const updated = [newTx, ...prev];
+      AsyncStorage.setItem('@helper_vendor_wallet_txns_v2', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+
     setWithdrawModal(false);
-    Alert.alert('Withdrawal Successful! 💸', `₹${amt} has been transferred to your UPI ID (${withdrawUpi}).`);
+    Alert.alert(
+      'Withdrawal Successful! 💸',
+      `₹${amt} has been transferred to ${targetDest}.\n\nNew Wallet Balance: ₹${newBal}\n\nTransaction recorded in Passbook History.`
+    );
   };
 
   if (!isLoggedIn) {
@@ -3715,79 +3887,292 @@ export default function VendorPartnerScreen({ navigation }) {
         {/* ================= TAB 4: WALLET & EARNINGS ================= */}
         {activeTab === 'wallet' && (
           <View>
-            <View style={styles.walletCardHero}>
-              <Text style={styles.walletCardLabel}>AVAILABLE PARTNER BALANCE</Text>
-              <Text style={styles.walletCardAmount}>₹{walletBalance}</Text>
-              <Text style={styles.walletCardNotice}>Direct 90% settlement from Helper Platform • Instant payouts</Text>
-              
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+            {/* 1. HERO WALLET CARD */}
+            <View style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 22,
+              borderWidth: 1.5,
+              borderColor: '#10B981',
+              padding: 20,
+              marginBottom: 16,
+              shadowColor: '#10B981',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 10,
+              elevation: 3,
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ECFDF5', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#A7F3D0' }}>
+                  <Text style={{ fontSize: 11 }}>🛡️</Text>
+                  <Text style={{ color: '#047857', fontSize: 10.5, fontWeight: '900', letterSpacing: 0.4 }}>
+                    VERIFIED PARTNER WALLET
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#10B981' }} />
+                  <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700' }}>Live Settled 24x7</Text>
+                </View>
+              </View>
+
+              <Text style={{ color: '#475569', fontSize: 12, fontWeight: '700', marginTop: 2 }}>
+                Available Partner Balance (कुल उपलब्ध बैलेंस)
+              </Text>
+
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', marginVertical: 6 }}>
+                <Text style={{ color: '#10B981', fontSize: 26, fontWeight: '900', marginRight: 4 }}>₹</Text>
+                <Text style={{ color: '#0F172A', fontSize: 36, fontWeight: '900', letterSpacing: -0.5 }}>
+                  {Number(walletBalance).toLocaleString('en-IN')}
+                </Text>
+                <Text style={{ color: '#94A3B8', fontSize: 18, fontWeight: '700', marginLeft: 2 }}>.00</Text>
+              </View>
+
+              <Text style={{ color: '#64748B', fontSize: 11.5, lineHeight: 16, marginBottom: 16 }}>
+                Direct 90% net settlement credited per completed job • Instant bank withdrawal
+              </Text>
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {/* Button 1: Bank Transfer */}
                 <TouchableOpacity
-                  style={[styles.withdrawFullBtn, { flex: 1, marginTop: 0 }]}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#10B981',
+                    paddingVertical: 13,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    shadowColor: '#10B981',
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 5,
+                    elevation: 3,
+                  }}
                   activeOpacity={0.85}
                   onPress={() => setWithdrawModal(true)}
                 >
-                  <Text style={styles.withdrawFullBtnText}>Bank Transfer ➔</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 15 }}>🏛️</Text>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13.5, fontWeight: '900' }}>Bank Transfer ➔</Text>
+                  </View>
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 10, fontWeight: '700', marginTop: 2 }}>
+                    बैंक खाते में निकालें
+                  </Text>
                 </TouchableOpacity>
 
+                {/* Button 2: Disburse to Worker */}
                 <TouchableOpacity
-                  style={[styles.withdrawFullBtn, { flex: 1.2, marginTop: 0, backgroundColor: '#F59E0B' }]}
+                  style={{
+                    flex: 1.15,
+                    backgroundColor: '#D97706',
+                    paddingVertical: 13,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    shadowColor: '#D97706',
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 5,
+                    elevation: 3,
+                  }}
                   activeOpacity={0.85}
                   onPress={() => setShowDisburseModal(true)}
                 >
-                  <Text style={[styles.withdrawFullBtnText, { color: "#FFFFFF", fontWeight: "900" }]}>💸 Disburse to Worker</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 15 }}>💸</Text>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13.5, fontWeight: '900' }}>Disburse Worker ➔</Text>
+                  </View>
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 10, fontWeight: '700', marginTop: 2 }}>
+                    कारीगर को भुगतान दें
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Financial Settlement Flow Banner */}
-            <View style={{ backgroundColor: "#F0F9FF", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1.5, borderColor: "#BAE6FD" }}>
+            {/* 2. SETTLEMENT MODEL BANNER */}
+            <View style={{ backgroundColor: "#F0F9FF", borderRadius: 16, padding: 14, marginBottom: 16, borderWidth: 1.5, borderColor: "#BAE6FD" }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <Text style={{ fontSize: 14 }}>🏛️</Text>
-                <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800' }}>HELPER 10% - VENDOR 90% SETTLEMENT RULE</Text>
+                <Text style={{ fontSize: 15 }}>🏛️</Text>
+                <Text style={{ color: '#0369A1', fontSize: 12.5, fontWeight: '900' }}>
+                  HELPER 10% - VENDOR 90% SETTLEMENT MODEL
+                </Text>
               </View>
               <Text style={{ color: "#334155", fontSize: 11.5, lineHeight: 17 }}>
-                Customer scans the dynamic QR and pays directly to Helper Platform. Helper retains 10% platform commission, and 90% is credited directly to your Vendor Wallet. You disburse the technician's wage from here.
+                Customer dynamic QR scan se payment Helper Platform ko bhejta hai. Helper 10% platform commission rakhta hai, aur 90% net earnings turant aapke Vendor Hub Wallet me credit ho jati hai. Yahan se aap technician wages disburse kar sakte hain ya apna balance direct bank me transfer kar sakte hain.
               </Text>
             </View>
 
-            <View style={styles.summaryStatsRow}>
-              <View style={styles.summaryStatBox}>
-                <Text style={styles.summaryStatLabel}>TODAY (90% NET)</Text>
-                <Text style={styles.summaryStatVal}>₹{todayEarnings}</Text>
-                <Text style={styles.summaryStatSub}>{completedJobsToday} jobs settled</Text>
+            {/* 3. PERFORMANCE STATS ROW */}
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+              <View style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ color: '#64748B', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>TODAY (90% NET)</Text>
+                <Text style={{ color: '#059669', fontSize: 18, fontWeight: '900', marginTop: 4 }}>₹{todayEarnings}</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>{completedJobsToday} jobs settled</Text>
               </View>
-              <View style={styles.summaryStatBox}>
-                <Text style={styles.summaryStatLabel}>THIS WEEK</Text>
-                <Text style={styles.summaryStatVal}>₹11,480</Text>
-                <Text style={styles.summaryStatSub}>23 jobs</Text>
+              <View style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ color: '#64748B', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>THIS WEEK</Text>
+                <Text style={{ color: '#0F172A', fontSize: 18, fontWeight: '900', marginTop: 4 }}>₹11,480</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>23 jobs</Text>
               </View>
-              <View style={styles.summaryStatBox}>
-                <Text style={styles.summaryStatLabel}>THIS MONTH</Text>
-                <Text style={styles.summaryStatVal}>₹48,920</Text>
-                <Text style={styles.summaryStatSub}>94 jobs</Text>
+              <View style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ color: '#64748B', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>THIS MONTH</Text>
+                <Text style={{ color: '#0F172A', fontSize: 18, fontWeight: '900', marginTop: 4 }}>₹48,920</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>94 jobs</Text>
               </View>
             </View>
 
-            <View style={styles.contentCard}>
-              <Text style={styles.cardHeading}>RECENT JOB PAYOUTS & PASSBOOK</Text>
-              {[
-                { title: 'AC Jet Foam Servicing (90% Settlement)', date: 'Today • 01:15 PM', amount: '+₹449', sub: 'Gross: ₹499 • 10% Helper: -₹50', type: 'credit' },
-                { title: 'Worker Wage Disbursed: Sunil Verma', date: 'Today • 01:45 PM', amount: '-₹320', sub: 'Transferred via UPI to technician', type: 'debit' },
-                { title: 'Electrician MCB Fix (90% Settlement)', date: 'Today • 11:30 AM', amount: '+₹224', sub: 'Gross: ₹249 • 10% Helper: -₹25', type: 'credit' },
-                { title: 'Worker Wage Disbursed: Ramesh Kumar', date: 'Today • 12:00 PM', amount: '-₹160', sub: 'Transferred via UPI to technician', type: 'debit' },
-                { title: 'UPI Withdrawal to Vendor Bank', date: 'Yesterday • 08:30 PM', amount: '-₹3,500', sub: 'Settled to ICICI Bank A/C', type: 'debit' },
-              ].map((tx, idx) => (
-                <View key={idx} style={styles.passbookRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.passbookTitle}>{tx.title}</Text>
-                    <Text style={styles.passbookDate}>{tx.date}</Text>
-                    <Text style={{ color: '#64748B', fontSize: 10, marginTop: 1 }}>{tx.sub}</Text>
-                  </View>
-                  <Text style={[styles.passbookAmount, { color: tx.type === 'credit' ? '#10B981' : '#EF4444' }]}>
-                    {tx.amount}
+            {/* 4. WALLET PASSBOOK & TRANSACTION HISTORY */}
+            <View style={{ backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 20 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ color: '#0F172A', fontSize: 15, fontWeight: '900' }}>
+                  📜 WALLET PASSBOOK & HISTORY
+                </Text>
+                <View style={{ backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                  <Text style={{ color: '#475569', fontSize: 11, fontWeight: '800' }}>
+                    {walletTransactions.length} Total
                   </Text>
                 </View>
-              ))}
+              </View>
+              <Text style={{ color: '#64748B', fontSize: 11.5, marginBottom: 12 }}>
+                Track bank withdrawals, technician disbursements & 90% job settlements
+              </Text>
+
+              {/* 4 Category Filter Tabs */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
+                <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 2 }}>
+                  {[
+                    { key: 'all', label: 'All (सभी)', icon: '⚡' },
+                    { key: 'withdrawal', label: 'Bank Withdrawals', icon: '🏛️' },
+                    { key: 'worker_payout', label: 'Worker Payouts', icon: '👷' },
+                    { key: 'earnings', label: 'Job Earnings', icon: '💰' },
+                  ].map((tab) => {
+                    const isSelected = walletFilter === tab.key;
+                    const count = tab.key === 'all'
+                      ? walletTransactions.length
+                      : walletTransactions.filter((t) => t.category === tab.key).length;
+                    return (
+                      <TouchableOpacity
+                        key={tab.key}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                          paddingHorizontal: 12,
+                          paddingVertical: 7,
+                          borderRadius: 20,
+                          backgroundColor: isSelected ? '#0F172A' : '#F1F5F9',
+                          borderWidth: 1,
+                          borderColor: isSelected ? '#0F172A' : '#E2E8F0',
+                        }}
+                        onPress={() => setWalletFilter(tab.key)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={{ fontSize: 12 }}>{tab.icon}</Text>
+                        <Text style={{
+                          color: isSelected ? '#FFFFFF' : '#334155',
+                          fontSize: 11.5,
+                          fontWeight: isSelected ? '900' : '700',
+                        }}>
+                          {tab.label} ({count})
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+
+              {/* Transaction List */}
+              {(() => {
+                const filtered = walletFilter === 'all'
+                  ? walletTransactions
+                  : walletTransactions.filter((t) => t.category === walletFilter);
+
+                if (filtered.length === 0) {
+                  return (
+                    <View style={{ alignItems: 'center', paddingVertical: 28 }}>
+                      <Text style={{ fontSize: 32, marginBottom: 8 }}>📭</Text>
+                      <Text style={{ color: '#0F172A', fontSize: 14, fontWeight: '800' }}>No Transactions Yet</Text>
+                      <Text style={{ color: '#64748B', fontSize: 12, textAlign: 'center', marginTop: 3, maxWidth: 260 }}>
+                        {walletFilter === 'withdrawal'
+                          ? 'No bank withdrawals recorded yet. Tap "Bank Transfer" above to withdraw funds.'
+                          : walletFilter === 'worker_payout'
+                          ? 'No worker disbursements recorded yet. Tap "Disburse to Worker" above to send technician wages.'
+                          : 'Completed customer jobs and platform earnings will appear here.'}
+                      </Text>
+                    </View>
+                  );
+                }
+
+                return filtered.map((tx) => {
+                  const isCredit = tx.type === 'credit';
+                  const isWithdrawal = tx.category === 'withdrawal';
+                  const isWorkerPayout = tx.category === 'worker_payout';
+
+                  const badgeBg = isWithdrawal ? '#EFF6FF' : isWorkerPayout ? '#FEF3C7' : '#ECFDF5';
+                  const badgeBorder = isWithdrawal ? '#BFDBFE' : isWorkerPayout ? '#FDE68A' : '#A7F3D0';
+                  const badgeTextColor = isWithdrawal ? '#1D4ED8' : isWorkerPayout ? '#B45309' : '#047857';
+                  const icon = isWithdrawal ? '🏛️' : isWorkerPayout ? '👷' : '💰';
+
+                  return (
+                    <View
+                      key={tx.id}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingVertical: 12,
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#F1F5F9',
+                      }}
+                    >
+                      <View style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 12,
+                        backgroundColor: badgeBg,
+                        borderWidth: 1,
+                        borderColor: badgeBorder,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12,
+                      }}>
+                        <Text style={{ fontSize: 18 }}>{icon}</Text>
+                      </View>
+
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '800' }} numberOfLines={1}>
+                          {tx.title}
+                        </Text>
+                        <Text style={{ color: '#64748B', fontSize: 11, marginTop: 2 }}>
+                          {tx.date}
+                        </Text>
+                        <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 1 }} numberOfLines={1}>
+                          {tx.sub}
+                        </Text>
+                        <View style={{ marginTop: 4, alignSelf: 'flex-start' }}>
+                          <View style={{ backgroundColor: badgeBg, borderWidth: 0.8, borderColor: badgeBorder, paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4 }}>
+                            <Text style={{ color: badgeTextColor, fontSize: 9, fontWeight: '900' }}>
+                              {tx.status || (isCredit ? 'CREDITED' : 'DEBITED')}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={{
+                          color: isCredit ? '#059669' : '#DC2626',
+                          fontSize: 15,
+                          fontWeight: '900',
+                          fontVariant: ['tabular-nums'],
+                        }}>
+                          {tx.amount}
+                        </Text>
+                        <Text style={{ color: isCredit ? '#10B981' : '#EF4444', fontSize: 9.5, fontWeight: '800', marginTop: 2 }}>
+                          {isCredit ? '90% Net ↙' : 'Debit ↗'}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                });
+              })()}
             </View>
           </View>
         )}
@@ -4947,99 +5332,280 @@ export default function VendorPartnerScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* ================= MODAL: WITHDRAW WALLET ================= */}
-      <Modal visible={withdrawModal} transparent animationType="slide">
+      {/* ================= MODAL: WITHDRAW WALLET (HIGH CONTRAST & ACCESSIBLE) ================= */}
+      <Modal visible={withdrawModal} transparent animationType="slide" onRequestClose={() => setWithdrawModal(false)}>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { backgroundColor: '#FFFFFF', padding: 20 }]}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>Withdraw Earnings to Bank</Text>
-              <TouchableOpacity onPress={() => setWithdrawModal(false)}>
-                <Text style={styles.modalCloseIcon}>✕</Text>
+              <View>
+                <Text style={[styles.modalHeaderTitle, { color: '#0F172A', fontSize: 17, fontWeight: '900' }]}>
+                  🏛️ Withdraw Earnings to Bank
+                </Text>
+                <Text style={{ color: '#64748B', fontSize: 11.5, marginTop: 1 }}>
+                  Instant IMPS/UPI transfer to your bank account
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setWithdrawModal(false)} style={{ padding: 4 }}>
+                <Text style={[styles.modalCloseIcon, { color: '#64748B' }]}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalFieldLabel}>ENTER AMOUNT (Available: ₹{walletBalance})</Text>
+            {/* Available Balance Pill */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#A7F3D0', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginVertical: 10 }}>
+              <Text style={{ color: '#047857', fontSize: 11.5, fontWeight: '800' }}>Available to Withdraw</Text>
+              <Text style={{ color: '#047857', fontSize: 14, fontWeight: '900' }}>₹{Number(walletBalance).toLocaleString('en-IN')}</Text>
+            </View>
+
+            {/* Amount Label */}
+            <Text style={{ color: '#1E293B', fontSize: 11.5, fontWeight: '800', marginTop: 6, marginBottom: 6 }}>
+              ENTER WITHDRAWAL AMOUNT (₹) *
+            </Text>
             <TextInput
-              style={styles.modalInputBox}
+              style={{
+                backgroundColor: '#F8FAFC',
+                borderWidth: 1.5,
+                borderColor: '#CBD5E1',
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: '#0F172A',
+                fontSize: 18,
+                fontWeight: '900',
+              }}
               keyboardType="numeric"
               value={withdrawAmount}
               onChangeText={setWithdrawAmount}
               placeholder="e.g. 2000"
-              placeholderTextColor="#64748B"
+              placeholderTextColor="#94A3B8"
             />
 
-            <Text style={styles.modalFieldLabel}>TRANSFER TO UPI ID / BANK</Text>
+            {/* Quick Amount Chips */}
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, marginBottom: 14 }}>
+              {['500', '1000', '2000', String(walletBalance)].map((amtStr) => (
+                <TouchableOpacity
+                  key={amtStr}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 7,
+                    borderRadius: 8,
+                    backgroundColor: withdrawAmount === amtStr ? '#ECFDF5' : '#F1F5F9',
+                    borderWidth: 1.5,
+                    borderColor: withdrawAmount === amtStr ? '#10B981' : '#E2E8F0',
+                    alignItems: 'center',
+                  }}
+                  onPress={() => setWithdrawAmount(amtStr)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{
+                    fontSize: 11.5,
+                    fontWeight: '800',
+                    color: withdrawAmount === amtStr ? '#059669' : '#334155',
+                  }}>
+                    {amtStr === String(walletBalance) ? `All (₹${amtStr})` : `₹${amtStr}`}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Destination UPI / Bank */}
+            <Text style={{ color: '#1E293B', fontSize: 11.5, fontWeight: '800', marginBottom: 6 }}>
+              TRANSFER TO UPI ID / BANK ACCOUNT *
+            </Text>
             <TextInput
-              style={styles.modalInputBox}
+              style={{
+                backgroundColor: '#F8FAFC',
+                borderWidth: 1.5,
+                borderColor: '#CBD5E1',
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: '#0F172A',
+                fontSize: 14,
+                fontWeight: '700',
+                marginBottom: 16,
+              }}
               value={withdrawUpi}
               onChangeText={setWithdrawUpi}
-              placeholder="yourname@upi"
-              placeholderTextColor="#64748B"
+              placeholder="e.g. 9826077777@paytm or name@okaxis"
+              placeholderTextColor="#94A3B8"
             />
 
-            <TouchableOpacity style={styles.modalPrimaryBtn} onPress={handleWithdraw}>
-              <Text style={styles.modalPrimaryBtnText}>Transfer ₹{withdrawAmount} Instantly ➔</Text>
+            {/* Transfer CTA Button */}
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#10B981',
+                paddingVertical: 15,
+                borderRadius: 14,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#10B981',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              onPress={handleWithdraw}
+              activeOpacity={0.85}
+            >
+              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', letterSpacing: 0.3 }}>
+                Transfer ₹{withdrawAmount || '0'} Instantly ➔
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* ================= MODAL: DISBURSE PAYOUT TO WORKER ================= */}
-      <Modal visible={showDisburseModal} transparent animationType="slide">
+      {/* ================= MODAL: DISBURSE PAYOUT TO WORKER (HIGH CONTRAST & ACCESSIBLE) ================= */}
+      <Modal visible={showDisburseModal} transparent animationType="slide" onRequestClose={() => setShowDisburseModal(false)}>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { backgroundColor: '#FFFFFF', padding: 20 }]}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>💸 Disburse Payout to Worker</Text>
-              <TouchableOpacity onPress={() => setShowDisburseModal(false)}>
-                <Text style={styles.modalCloseIcon}>✕</Text>
+              <View>
+                <Text style={[styles.modalHeaderTitle, { color: '#0F172A', fontSize: 17, fontWeight: '900' }]}>
+                  💸 Disburse Payout to Worker
+                </Text>
+                <Text style={{ color: '#64748B', fontSize: 11.5, marginTop: 1 }}>
+                  Disburse technician compensation from available balance (₹{Number(walletBalance).toLocaleString('en-IN')})
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowDisburseModal(false)} style={{ padding: 4 }}>
+                <Text style={[styles.modalCloseIcon, { color: '#64748B' }]}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={{ color: '#94A3B8', fontSize: 11.5, marginBottom: 12 }}>
-              Helper settled 90% into your hub account. Disburse technician compensation from your available wallet balance (₹{walletBalance}).
+            {/* Select Technician Label */}
+            <Text style={{ color: '#1E293B', fontSize: 11.5, fontWeight: '800', marginTop: 10, marginBottom: 6 }}>
+              SELECT TECHNICIAN / CREW MEMBER *
             </Text>
-
-            <Text style={styles.modalFieldLabel}>SELECT TECHNICIAN</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-              {workersList.map((w) => {
-                const isSelected = selectedWorkerForDisburse.id === w.id;
-                return (
-                  <TouchableOpacity
-                    key={w.id}
-                    style={[styles.workerSelectChip, isSelected && styles.activeWorkerSelectChip]}
-                    onPress={() => setSelectedWorkerForDisburse(w)}
-                  >
-                    <Text style={[styles.workerSelectText, isSelected && styles.activeWorkerSelectText]}>
-                      {isSelected ? '✓ ' : ''}{w.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+              <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 2 }}>
+                {workersList.map((w) => {
+                  const isSelected = selectedWorkerForDisburse.id === w.id;
+                  return (
+                    <TouchableOpacity
+                      key={w.id}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 14,
+                        backgroundColor: isSelected ? '#FEF3C7' : '#F1F5F9',
+                        borderWidth: 1.5,
+                        borderColor: isSelected ? '#F59E0B' : '#E2E8F0',
+                      }}
+                      onPress={() => setSelectedWorkerForDisburse(w)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={{ fontSize: 13 }}>👷</Text>
+                      <Text style={{
+                        color: isSelected ? '#B45309' : '#334155',
+                        fontSize: 12,
+                        fontWeight: isSelected ? '900' : '700',
+                      }}>
+                        {isSelected ? '✓ ' : ''}{w.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </ScrollView>
 
-            <Text style={styles.modalFieldLabel}>DISBURSEMENT AMOUNT (₹)</Text>
+            {/* Amount input */}
+            <Text style={{ color: '#1E293B', fontSize: 11.5, fontWeight: '800', marginBottom: 6 }}>
+              DISBURSEMENT AMOUNT (₹) *
+            </Text>
             <TextInput
-              style={styles.modalInputBox}
+              style={{
+                backgroundColor: '#F8FAFC',
+                borderWidth: 1.5,
+                borderColor: '#CBD5E1',
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: '#0F172A',
+                fontSize: 18,
+                fontWeight: '900',
+              }}
               keyboardType="numeric"
               value={disburseAmount}
               onChangeText={setDisburseAmount}
               placeholder="e.g. 350"
-              placeholderTextColor="#64748B"
+              placeholderTextColor="#94A3B8"
             />
 
-            <Text style={styles.modalFieldLabel}>WORKER UPI ADDRESS</Text>
-            <TextInput
-              style={[styles.modalInputBox, { color: '#38BDF8' }]}
-              value={selectedWorkerForDisburse.upiId || 'worker@upi'}
-              editable={false}
-            />
+            {/* Quick Chips */}
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, marginBottom: 14 }}>
+              {['200', '350', '500', '1000'].map((amtStr) => (
+                <TouchableOpacity
+                  key={amtStr}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 7,
+                    borderRadius: 8,
+                    backgroundColor: disburseAmount === amtStr ? '#FEF3C7' : '#F1F5F9',
+                    borderWidth: 1.5,
+                    borderColor: disburseAmount === amtStr ? '#F59E0B' : '#E2E8F0',
+                    alignItems: 'center',
+                  }}
+                  onPress={() => setDisburseAmount(amtStr)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{
+                    fontSize: 11.5,
+                    fontWeight: '800',
+                    color: disburseAmount === amtStr ? '#D97706' : '#334155',
+                  }}>
+                    ₹{amtStr}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
+            {/* Worker UPI Details */}
+            <Text style={{ color: '#1E293B', fontSize: 11.5, fontWeight: '800', marginBottom: 6 }}>
+              WORKER UPI DESTINATION
+            </Text>
+            <View style={{
+              backgroundColor: '#F0F9FF',
+              borderWidth: 1.5,
+              borderColor: '#BAE6FD',
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              marginBottom: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <Text style={{ color: '#0369A1', fontSize: 13, fontWeight: '800' }}>
+                {selectedWorkerForDisburse.upiId || 'worker@upi'}
+              </Text>
+              <Text style={{ color: '#0284C7', fontSize: 11, fontWeight: '700' }}>
+                {selectedWorkerForDisburse.name}
+              </Text>
+            </View>
+
+            {/* Send CTA Button */}
             <TouchableOpacity
-              style={[styles.modalPrimaryBtn, { backgroundColor: '#F59E0B' }]}
+              style={{
+                backgroundColor: '#D97706',
+                paddingVertical: 15,
+                borderRadius: 14,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#D97706',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
               onPress={handleDisburseToWorker}
+              activeOpacity={0.85}
             >
-              <Text style={[styles.modalPrimaryBtnText, { color: "#FFFFFF", fontWeight: "900" }]}>
-                Send ₹{disburseAmount} to {selectedWorkerForDisburse.name} ➔
+              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', letterSpacing: 0.3 }}>
+                Send ₹{disburseAmount || '0'} to {selectedWorkerForDisburse.name} ➔
               </Text>
             </TouchableOpacity>
           </View>
@@ -6675,9 +7241,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: '#FFFFFF',
-    fontSize: 13,
+    color: '#0F172A',
+    fontSize: 14,
     fontWeight: '700',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
   },
   modalPrimaryBtn: {
     backgroundColor: '#10B981',
