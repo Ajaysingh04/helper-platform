@@ -340,6 +340,25 @@ function AdminLayout() {
           </div>
 
           <div className="admin-top-actions">
+            <div 
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "rgba(16, 185, 129, 0.12)",
+                color: "#10B981",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
+                padding: "6px 12px",
+                borderRadius: "20px",
+                fontSize: "12px",
+                fontWeight: "700"
+              }}
+              title="Connected 24/7 to MongoDB Atlas & Mobile Applications (Customer, Vendor, Worker)"
+            >
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981" }}></span>
+              <span>📱 App &amp; Web Unified Live</span>
+            </div>
+
             <Link to="/" className="admin-live-badge" title="Go to Helper Home Page">
               <div className="live-pulse-dot"></div>
               <span>Live Platform ↗</span>

@@ -60,6 +60,7 @@ function AdminServices() {
   const [desc, setDesc] = useState("");
   const [tag, setTag] = useState("Repairs");
   const [popular, setPopular] = useState(false);
+  const [image, setImage] = useState("");
 
   // Filtered Services List
   const filteredServices = useMemo(() => {
@@ -118,6 +119,7 @@ function AdminServices() {
     setDesc("");
     setTag("Repairs");
     setPopular(false);
+    setImage("https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80");
     setShowAddModal(true);
   };
 
@@ -126,9 +128,10 @@ function AdminServices() {
     setName(service.name);
     setIcon(service.icon || "🛠️");
     setPrice(service.price);
-    setDesc(service.desc || "");
-    setTag(service.tag || "Repairs");
+    setDesc(service.desc || service.description || "");
+    setTag(service.tag || service.category || "Repairs");
     setPopular(Boolean(service.popular));
+    setImage(service.image || "");
     setShowAddModal(true);
   };
 
@@ -136,24 +139,22 @@ function AdminServices() {
     e.preventDefault();
     if (!name.trim()) return;
 
+    const payload = {
+      name: name.trim(),
+      icon: icon.trim() || "🛠️",
+      price: price.trim(),
+      desc: desc.trim(),
+      description: desc.trim(),
+      tag: tag.trim(),
+      category: tag.trim(),
+      popular,
+      image: image.trim() || "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80"
+    };
+
     if (editingService) {
-      updateService(editingService.id, {
-        name: name.trim(),
-        icon: icon.trim() || "🛠️",
-        price: price.trim(),
-        desc: desc.trim(),
-        tag: tag.trim(),
-        popular
-      });
+      updateService(editingService.id, payload);
     } else {
-      addService({
-        name: name.trim(),
-        icon: icon.trim() || "🛠️",
-        price: price.trim(),
-        desc: desc.trim(),
-        tag: tag.trim(),
-        popular
-      });
+      addService(payload);
     }
     setShowAddModal(false);
     setCurrentPage(1);
@@ -511,6 +512,27 @@ function AdminServices() {
                   onChange={(e) => setDesc(e.target.value)}
                   required
                 ></textarea>
+              </div>
+
+              <div className="admin-form-group">
+                <label>Service Image URL (Displays on Website & Mobile Apps) 🖼️</label>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/... or direct image link"
+                    value={image}
+                    onChange={(e) => setImage(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  {image && (
+                    <img
+                      src={image}
+                      alt="Preview"
+                      style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--border)" }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="admin-checkbox-group">

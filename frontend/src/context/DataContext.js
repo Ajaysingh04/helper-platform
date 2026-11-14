@@ -753,6 +753,11 @@ export const DataProvider = ({ children }) => {
 
   useEffect(() => {
     fetchAllFromBackend();
+    // Keep Web Admin continuously synced with all mobile app bookings, services & updates
+    const syncInterval = setInterval(() => {
+      fetchAllFromBackend();
+    }, 6000);
+    return () => clearInterval(syncInterval);
   }, [fetchAllFromBackend]);
 
   // Listen to vendor profile updates in real-time from Service Man Panel
@@ -845,28 +850,60 @@ export const DataProvider = ({ children }) => {
   // ================= CRUD ACTION DISPATCHERS =================
   // Services
   const addService = async (newServ) => {
-    const item = { ...newServ, id: `s${Date.now()}`, rating: 4.8, bookings: "New" };
+    const cleanPrice = Number(String(newServ.price || "299").replace(/[^0-9]/g, "")) || 299;
+    const cleanCategory = (newServ.category || newServ.tag || "Repairs").trim();
+    const cleanDesc = (newServ.description || newServ.desc || `${newServ.name} doorstep service`).trim();
+    const item = {
+      ...newServ,
+      id: newServ.id || `s${Date.now()}`,
+      category: cleanCategory,
+      tag: cleanCategory,
+      price: cleanPrice,
+      originalPrice: Number(String(newServ.originalPrice || "").replace(/[^0-9]/g, "")) || Math.round(cleanPrice * 1.3),
+      description: cleanDesc,
+      desc: cleanDesc,
+      rating: newServ.rating || 4.8,
+      bookings: newServ.bookings || "New",
+      image: newServ.image || "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80",
+      popular: Boolean(newServ.popular)
+    };
+
     setServices(prev => [item, ...prev]);
 
     try {
-      await fetch(`${API_BASE}/services`, {
+      const res = await fetch(`${API_BASE}/services`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(item)
       });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setServices(prev => prev.map(s => s.id === item.id ? { ...s, ...data.data } : s));
+      }
     } catch (err) {
       console.warn("Backend addService error:", err);
     }
   };
 
   const updateService = async (id, updatedFields) => {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, ...updatedFields } : s));
+    const cleanPrice = updatedFields.price !== undefined ? (Number(String(updatedFields.price).replace(/[^0-9]/g, "")) || 299) : undefined;
+    const cleanCategory = (updatedFields.category || updatedFields.tag || "").trim() || undefined;
+    const cleanDesc = (updatedFields.description || updatedFields.desc || "").trim() || undefined;
+
+    const payload = {
+      ...updatedFields,
+      ...(cleanPrice !== undefined ? { price: cleanPrice } : {}),
+      ...(cleanCategory ? { category: cleanCategory, tag: cleanCategory } : {}),
+      ...(cleanDesc ? { description: cleanDesc, desc: cleanDesc } : {})
+    };
+
+    setServices(prev => prev.map(s => (s.id === id || s._id === id) ? { ...s, ...payload, price: typeof payload.price === 'number' ? `₹${payload.price}` : payload.price } : s));
 
     try {
       await fetch(`${API_BASE}/services/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedFields)
+        body: JSON.stringify(payload)
       });
     } catch (err) {
       console.warn("Backend updateService error:", err);

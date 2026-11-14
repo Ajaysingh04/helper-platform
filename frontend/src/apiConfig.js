@@ -1,27 +1,27 @@
-// Helper Platform API Configuration
-// Automatically connects to local Wi-Fi backend (192.168.1.8 / localhost) when testing on same network,
-// and falls back to live cloud backend in true public production environments.
+// Helper Platform Unified Cloud API Configuration
+// Connects the Web Admin Panel, Website, and Mobile Applications (Customer, Vendor, Worker)
+// to the exact same live 24/7 MongoDB Atlas database on Render.
+
+export const CLOUD_BACKEND_URL = "https://helper-backend-api-8878.onrender.com";
+export const LOCAL_BACKEND_URL = "http://localhost:5000";
 
 const getBackendUrl = () => {
+  // 1. Explicit env configuration takes top priority
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "");
   }
 
+  // 2. Allow optional manual override in browser localStorage for offline debugging
   if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    // Localhost, LAN IP (e.g. 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-    if (
-      host === "localhost" ||
-      host === "127.0.0.1" ||
-      /^192\.168\./.test(host) ||
-      /^10\./.test(host) ||
-      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host)
-    ) {
-      return `http://${host}:5000`;
-    }
+    try {
+      const explicit = localStorage.getItem("helper_backend_override");
+      if (explicit) return explicit.replace(/\/api\/?$/, "");
+    } catch (e) {}
   }
 
-  return "http://192.168.1.8:5000";
+  // 3. By default, ALWAYS connect to the live 24/7 cloud backend so Web Admin has full live control
+  // over all mobile apps (Android Customer, Vendor Partner, Worker Technician).
+  return CLOUD_BACKEND_URL;
 };
 
 export const BACKEND_URL = getBackendUrl();
