@@ -264,7 +264,7 @@ export default function BookingCheckoutScreen({ route, navigation }) {
     pro?.image ||
     'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600';
 
-  const basePrice = service?.price || pro?.price || 499;
+  const basePrice = Number(String(service?.price || pro?.price || 499).replace(/[^0-9]/g, '')) || 499;
   const hygieneFee = 29;
   const discount = couponApplied ? 50 : 0;
   const finalPrice = basePrice + hygieneFee - discount;
@@ -396,12 +396,18 @@ export default function BookingCheckoutScreen({ route, navigation }) {
 
     // Emit to backend non-blocking
     try {
-      axios.post('http://192.168.1.8:5000/api/bookings', payload, { timeout: 8000 })
-        .then(() => console.log('[Booking] Emitted to vendor radar via port 5000'))
-        .catch(err => {
-          console.warn('[Booking Direct Post Error]:', err.message);
-          client.post('/bookings', payload).catch(() => {});
-        });
+          // Emit booking immediately to live cloud backend so Vendor Partner Radar receives it instantly
+    const backendEndpoints = [
+      'https://helper-backend-api-8878.onrender.com/api/bookings',
+      'http://192.168.1.10:5000/api/bookings',
+      'http://192.168.1.8:5000/api/bookings',
+    ];
+    backendEndpoints.forEach((url) => {
+      axios.post(url, payload, { timeout: 5000 })
+        .then(() => console.log('[Booking] Dispatched to ' + url))
+        .catch(() => {});
+    });
+    client.post('/bookings', payload).catch(() => {});
     } catch(e) {
       client.post('/bookings', payload).catch(() => {});
     }

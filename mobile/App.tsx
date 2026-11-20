@@ -21,10 +21,16 @@ function MainApp(props: AppProps) {
   const { themeColors, appLogo, primaryColor } = useContext(AppContext);
   const [showSplash, setShowSplash] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
-  const isPartner = props?.appFlavor === 'partner';
-  const isWorker = props?.appFlavor === 'worker';
-  const isAdmin = props?.appFlavor === 'admin';
   const isDark = themeColors?.isDark !== false;
+
+  const [activeRole, setActiveRole] = useState<'customer' | 'partner' | 'worker' | 'admin'>(() => {
+    if (props?.appFlavor === 'partner') return 'partner';
+    if (props?.appFlavor === 'worker') return 'worker';
+    if (props?.appFlavor === 'admin') return 'admin';
+    return 'customer';
+  });
+
+  const isPartnerApp = props?.appFlavor === 'partner' || activeRole === 'partner';
 
   useEffect(() => {
     AsyncStorage.getItem('helper_app_lock_enabled').then((val) => {
@@ -41,12 +47,23 @@ function MainApp(props: AppProps) {
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <AnimatedSplashScreen
           onFinish={() => setShowSplash(false)}
+          isPartner={isPartnerApp}
           appLogo={appLogo}
-          primaryColor={primaryColor || '#FF4D2D'}
+          primaryColor={isPartnerApp ? '#10B981' : (primaryColor || '#FF4D2D')}
         />
       </View>
     );
   }
+
+  // Navigation proxy to seamlessly switch between Partner and Customer modes
+  const partnerNavProxy = {
+    goBack: () => setActiveRole('customer'),
+    navigate: (screen: string) => {
+      if (screen === 'MainTabs' || screen === 'Home' || screen === 'Customer' || screen === 'Explore') {
+        setActiveRole('customer');
+      }
+    },
+  };
 
   // 2. Main App Screen (revealed smoothly after splash completes)
   return (
@@ -55,12 +72,12 @@ function MainApp(props: AppProps) {
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={themeColors?.bg || (isDark ? '#070A12' : '#F8FAFC')}
       />
-      {isAdmin ? (
-        <AdminDashboardScreen navigation={{ goBack: () => {}, navigate: () => {} } as any} />
-      ) : isWorker ? (
-        <WorkerTechnicianScreen navigation={{ goBack: () => {}, navigate: () => {} } as any} />
-      ) : isPartner ? (
-        <VendorPartnerScreen navigation={{ goBack: () => {}, navigate: () => {} } as any} />
+      {activeRole === 'admin' ? (
+        <AdminDashboardScreen navigation={partnerNavProxy as any} />
+      ) : activeRole === 'worker' ? (
+        <WorkerTechnicianScreen navigation={partnerNavProxy as any} />
+      ) : activeRole === 'partner' ? (
+        <VendorPartnerScreen navigation={partnerNavProxy as any} />
       ) : (
         <AppNavigator />
       )}
@@ -69,7 +86,7 @@ function MainApp(props: AppProps) {
       {isLocked && (
         <AppLockOverlay
           onUnlock={() => setIsLocked(false)}
-          primaryColor={primaryColor || '#FF4D2D'}
+          primaryColor={isPartnerApp ? '#10B981' : (primaryColor || '#FF4D2D')}
         />
       )}
     </View>

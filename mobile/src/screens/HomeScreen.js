@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { AppContext } from '../context/AppContext';
+import client from '../api/client';
 import {
   View,
   Text,
@@ -592,7 +593,7 @@ const HUB_SERVICES_CATALOG = {
 };
 
 export default function HomeScreen({ navigation }) {
-  const { appName, appLogo, primaryColor, heroBanners, themeColors, t, language, showCustomAlert } = useContext(AppContext);
+  const { appName, appLogo, primaryColor, heroBanners, themeColors, t, language, showCustomAlert, fetchSettings } = useContext(AppContext);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const [couponCopied, setCouponCopied] = useState(false);
   const [liveCategories, setLiveCategories] = useState([]);
@@ -629,6 +630,41 @@ export default function HomeScreen({ navigation }) {
 
   const getHubServices = (hub) => {
     if (!hub) return [];
+    // 1. Direct custom services on the vendor profile
+    if (Array.isArray(hub.customServices) && hub.customServices.length > 0) {
+      return hub.customServices.map((cs) => ({
+        id: cs.id || `cs_${Math.random()}`,
+        title: cs.name || cs.title,
+        price: cs.price,
+        time: cs.duration || cs.time || '45 mins',
+        tag: 'VENDOR DIRECT',
+        desc: cs.description || cs.desc || 'Direct doorstep pro booking backed by satisfaction warranty.',
+        image: cs.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=400&q=80',
+      }));
+    }
+    // 2. Services from live backend matching this hub's category or shop name
+    const hubCat = (hub.category || '').toLowerCase().trim();
+    const hubShop = (hub.shopName || hub.name || '').toLowerCase().trim();
+    const matchedServices = (liveServices || []).filter((s) => {
+      const sCat = (s.category || '').toLowerCase().trim();
+      const sName = (s.name || '').toLowerCase().trim();
+      return (
+        (hubCat && (sCat.includes(hubCat) || hubCat.includes(sCat))) ||
+        (hubShop && (sName.includes(hubShop) || hubShop.includes(sName)))
+      );
+    });
+    if (matchedServices.length > 0) {
+      return matchedServices.map((ms) => ({
+        id: ms.id || ms._id,
+        title: ms.name,
+        price: ms.price,
+        time: ms.duration || '45 mins',
+        tag: ms.popular ? 'TOP RATED' : 'VERIFIED',
+        desc: ms.description || `${ms.name} doorstep service with satisfaction guarantee.`,
+        image: ms.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=400&q=80',
+      }));
+    }
+    // 3. Fallback to catalog
     const name = hub.shopName || hub.name || '';
     if (HUB_SERVICES_CATALOG[name]) {
       return HUB_SERVICES_CATALOG[name];
@@ -647,9 +683,10 @@ export default function HomeScreen({ navigation }) {
     closePartnerHubDetails();
     navigation.navigate('BookingCheckout', {
       service: {
-        name: service.title,
+        name: service.title || service.name,
         price: service.price,
-        category: service.category,
+        image: service.image,
+        category: hub?.category || service.category || 'Expert Service',
       },
       pro: {
         name: `${hub?.name || 'Workshop'} (${hub?.shopName || hub?.name || 'Authorized Hub'})`,
@@ -778,6 +815,7 @@ export default function HomeScreen({ navigation }) {
 
   const fetchHomeData = async () => {
     try {
+      if (fetchSettings) fetchSettings();
       const [cRes, sRes, vRes] = await Promise.allSettled([
         client.get('/categories'),
         client.get('/services'),
@@ -1060,7 +1098,11 @@ export default function HomeScreen({ navigation }) {
                       activeOpacity={0.85}
                       onPress={() =>
                         navigation.navigate('BookingCheckout', {
-                          service: { name: item.title, price: item.price, image: item.image },
+                          service: {
+                            name: item.serviceName || item.title || 'Home Care Service',
+                            price: Number(String(item.price || 499).replace(/[^0-9]/g, '')) || 499,
+                            image: item.image,
+                          },
                         })
                       }
                     >
@@ -1445,52 +1487,86 @@ export default function HomeScreen({ navigation }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 6 }}
         >
-          {TOP_SPECIALISTS.map((pro) => (
-            <TouchableOpacity
-              key={pro.id}
-              style={[styles.proCard, dyn.card]}
-              activeOpacity={0.85}
-              onPress={() =>
-                navigation.navigate('CategoryDetails', { category: pro.categoryRoute })
+          {TOP_SPECIALISTS.map((pro) => {
+            const handleBookSpecialist = () => {
+              try {
+                const targetCategory = pro.categoryRoute || { id: 'electricians', name: 'Electrician', icon: '⚡' };
+                navigation.navigate('BookingCheckout', {
+                  service: {
+                    name: `${pro.name} - ${pro.specialty}`,
+                    price: pro.price || 249,
+                    category: targetCategory.name || 'Electrician',
+                    image: typeof pro.avatar === 'string' ? pro.avatar : null,
+                  },
+                  pro: {
+                    id: pro.id,
+                    name: pro.name,
+                    specialty: pro.specialty,
+                    rating: pro.rating,
+                    reviews: pro.reviews,
+                    experience: pro.experience,
+                    distance: pro.distance,
+                    price: pro.price || 249,
+                    phone: '+91 9589310704',
+                  },
+                });
+              } catch (err) {
+                console.warn('Specialist booking navigation error:', err);
+                navigation.navigate('CategoryDetails', {
+                  category: pro.categoryRoute || { id: 'electricians', name: 'Electrician', icon: '⚡' }
+                });
               }
-            >
-              <View style={styles.proHeaderRow}>
-                <Image source={typeof pro.avatar === 'number' ? pro.avatar : resolveImageSource(pro.avatar, pro)} style={styles.proAvatar} />
-                <View style={styles.proBadgeVerified}>
-                  <Text style={styles.proVerifiedShield}>🛡️</Text>
-                </View>
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={[styles.proName, dyn.text]}>{pro.name}</Text>
-                  <Text style={[styles.proRole, dyn.textSecondary]}>{pro.specialty}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                    <Text style={styles.proStar}>★ {pro.rating}</Text>
-                    <Text style={[styles.proJobs, dyn.textSecondary]}>• {pro.reviews}</Text>
+            };
+
+            return (
+              <TouchableOpacity
+                key={pro.id}
+                style={[styles.proCard, dyn.card]}
+                activeOpacity={0.85}
+                onPress={handleBookSpecialist}
+              >
+                <View style={styles.proHeaderRow}>
+                  <Image source={typeof pro.avatar === 'number' ? pro.avatar : resolveImageSource(pro.avatar, pro)} style={styles.proAvatar} />
+                  <View style={styles.proBadgeVerified}>
+                    <Text style={styles.proVerifiedShield}>🛡️</Text>
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={[styles.proName, dyn.text]}>{pro.name}</Text>
+                    <Text style={[styles.proRole, dyn.textSecondary]}>{pro.specialty}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                      <Text style={styles.proStar}>★ {pro.rating}</Text>
+                      <Text style={[styles.proJobs, dyn.textSecondary]}>• {pro.reviews}</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
 
-              <View style={styles.proDetailsRow}>
-                <View style={styles.proDetailItem}>
-                  <Text style={styles.proDetailLabel}>EXPERIENCE</Text>
-                  <Text style={[styles.proDetailVal, dyn.text]}>{pro.experience}</Text>
+                <View style={styles.proDetailsRow}>
+                  <View style={styles.proDetailItem}>
+                    <Text style={styles.proDetailLabel}>EXPERIENCE</Text>
+                    <Text style={[styles.proDetailVal, dyn.text]}>{pro.experience}</Text>
+                  </View>
+                  <View style={styles.proDetailItem}>
+                    <Text style={styles.proDetailLabel}>ARRIVAL</Text>
+                    <Text style={[styles.proDetailVal, { color: '#10B981' }]}>⚡ {pro.distance}</Text>
+                  </View>
+                  <View style={styles.proDetailItem}>
+                    <Text style={styles.proDetailLabel}>VISIT FEE</Text>
+                    <Text style={[styles.proDetailVal, dyn.text]}>₹{pro.price}</Text>
+                  </View>
                 </View>
-                <View style={styles.proDetailItem}>
-                  <Text style={styles.proDetailLabel}>ARRIVAL</Text>
-                  <Text style={[styles.proDetailVal, { color: '#10B981' }]}>⚡ {pro.distance}</Text>
-                </View>
-                <View style={styles.proDetailItem}>
-                  <Text style={styles.proDetailLabel}>VISIT FEE</Text>
-                  <Text style={[styles.proDetailVal, dyn.text]}>₹{pro.price}</Text>
-                </View>
-              </View>
 
-              <View style={[styles.proActionBtn, { backgroundColor: `${primaryColor || '#FF4D2D'}26`, borderColor: `${primaryColor || '#FF4D2D'}59` }]}>
-                <Text style={[styles.proActionText, { color: primaryColor || '#FF4D2D' }]}>
-                  {language === 'hi' ? 'कारीगर बुक करें ➔' : 'Book Specialist ➔'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <TouchableOpacity
+                  style={[styles.proActionBtn, { backgroundColor: `${primaryColor || '#FF4D2D'}26`, borderColor: `${primaryColor || '#FF4D2D'}59` }]}
+                  activeOpacity={0.8}
+                  onPress={handleBookSpecialist}
+                >
+                  <Text style={[styles.proActionText, { color: primaryColor || '#FF4D2D' }]}>
+                    {language === 'hi' ? 'कारीगर बुक करें ➔' : 'Book Specialist ➔'}
+                  </Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* MOST BOOKED SERVICES */}

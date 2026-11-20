@@ -24,8 +24,7 @@ react {
     // debuggableVariants = ["liteDebug", "liteDebugOptimized", "prodDebug", "prodDebugOptimized"]
 
     /* Bundling */
-    //   A list containing the node command and its flags. Default is just 'node'.
-    // nodeExecutableAndArgs = ["node"]
+    nodeExecutableAndArgs = ["node", "--max-old-space-size=4096"]
     //
     //   The command to run when bundling. By default is 'bundle'
     // bundleCommand = "ram-bundle"
@@ -79,36 +78,13 @@ android {
 
     namespace "com.mobile"
     defaultConfig {
-        applicationId "com.mobile"
+        applicationId "com.helper.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 4
+        versionName "1.0.3"
     }
 
-    flavorDimensions "default"
-    productFlavors {
-        customer {
-            dimension "default"
-            applicationId "com.mobile"
-            resValue "string", "app_name", "Helper"
-        }
-        partner {
-            dimension "default"
-            applicationId "com.helper.partner"
-            resValue "string", "app_name", "Helper Partner"
-        }
-        worker {
-            dimension "default"
-            applicationId "com.helper.worker"
-            resValue "string", "app_name", "Helper Crew"
-        }
-        admin {
-            dimension "default"
-            applicationId "com.helper.admin"
-            resValue "string", "app_name", "Helper Admin"
-        }
-    }
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -116,15 +92,72 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (file('helper-partner.keystore').exists()) {
+                storeFile file('helper-partner.keystore')
+                storePassword 'HelperPartner@2026!'
+                keyAlias 'helper_partner_key'
+                keyPassword 'HelperPartner@2026!'
+            } else {
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
+        customerRelease {
+            if (file('helper-customer.keystore').exists()) {
+                storeFile file('helper-customer.keystore')
+                storePassword 'HelperCustomer@2026!'
+                keyAlias 'helper_customer_key'
+                keyPassword 'HelperCustomer@2026!'
+            } else {
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
+        partnerRelease {
+            if (file('helper-partner.keystore').exists()) {
+                storeFile file('helper-partner.keystore')
+                storePassword 'HelperPartner@2026!'
+                keyAlias 'helper_partner_key'
+                keyPassword 'HelperPartner@2026!'
+            } else {
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
+    }
+
+    flavorDimensions "default"
+    productFlavors {
+        customer {
+            dimension "default"
+            applicationId "com.helperindia.app"
+            resValue "string", "app_name", "Helper India"
+            versionCode 4
+            versionName "1.0.3"
+            signingConfig signingConfigs.customerRelease
+        }
+        partner {
+            dimension "default"
+            applicationId "com.helperindiapartner.app"
+            resValue "string", "app_name", "Helper India Partner"
+            versionCode 4
+            versionName "1.0.3"
+            signingConfig signingConfigs.partnerRelease
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
@@ -146,3 +179,5 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+apply plugin: "com.google.gms.google-services"

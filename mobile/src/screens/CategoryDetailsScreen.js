@@ -277,20 +277,24 @@ export default function CategoryDetailsScreen({ route, navigation }) {
   const { category = { id: 'ac-repair-services', name: 'Service', icon: '⚡' } } = route.params || {};
   const [activeFilter, setActiveFilter] = useState('All Experts');
   const [liveServices, setLiveServices] = useState([]);
+  const [liveProviders, setLiveProviders] = useState([]);
 
   useEffect(() => {
-    client.get('/services')
-      .then(res => {
-        if (res.data?.data) setLiveServices(res.data.data);
-      })
-      .catch(() => {});
-    const interval = setInterval(() => {
+    const fetchCatalog = () => {
       client.get('/services')
         .then(res => {
           if (res.data?.data) setLiveServices(res.data.data);
         })
         .catch(() => {});
-    }, 6000);
+      client.get('/providers')
+        .then(res => {
+          const list = res.data?.data || res.data;
+          if (Array.isArray(list)) setLiveProviders(list);
+        })
+        .catch(() => {});
+    };
+    fetchCatalog();
+    const interval = setInterval(fetchCatalog, 6000);
     return () => clearInterval(interval);
   }, []);
 
@@ -389,7 +393,38 @@ export default function CategoryDetailsScreen({ route, navigation }) {
     );
   });
 
-  const rawPros = PROS_BY_CATEGORY[categoryKey] || PROS_BY_CATEGORY['ac-repair-services'];
+  const matchedLivePros = (liveProviders || [])
+    .filter(p => {
+      const pCat = ((p.category || '') + ' ' + (p.serviceCategories || []).join(' ') + ' ' + (p.shopName || '')).toLowerCase();
+      const cName = (category.name || '').toLowerCase();
+      const cId = (category.id || '').toLowerCase();
+      return (
+        (cName && pCat.includes(cName)) ||
+        (cId && pCat.includes(cId)) ||
+        pCat.includes('multi')
+      );
+    })
+    .map(p => ({
+      id: p.id || p._id,
+      name: p.name,
+      shopName: p.shopName || `${p.name}'s Centre`,
+      rating: p.rating || 4.95,
+      reviews: p.totalReviewsCount || 45,
+      jobs: p.jobsCompleted || 50,
+      jobsDone: `${p.jobsCompleted || 50}+ jobs`,
+      price: parseInt(String(p.hourlyRate || '299').replace(/[^0-9]/g, '')) || 299,
+      originalPrice: Math.round((parseInt(String(p.hourlyRate || '299').replace(/[^0-9]/g, '')) || 299) * 1.3),
+      arrival: '15 mins',
+      experience: p.experience || `${p.experienceYears || 5} Yrs Exp`,
+      specialty: p.shopName || p.category || 'Certified Specialist',
+      verified: true,
+      image: p.avatar || p.image || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300',
+      skills: ['Police Verified', 'Doorstep Specialist', 'Indore Pro'],
+      badge: 'TOP RATED'
+    }));
+
+  const fallbackPros = PROS_BY_CATEGORY[categoryKey] || PROS_BY_CATEGORY['ac-repair-services'];
+  const rawPros = matchedLivePros.length > 0 ? [...matchedLivePros, ...fallbackPros] : fallbackPros;
 
   const filteredPros = rawPros.filter((pro) => {
     if (activeFilter === '⭐ 4.9+ Rated') return pro.rating >= 4.9;
@@ -404,15 +439,23 @@ export default function CategoryDetailsScreen({ route, navigation }) {
   });
 
   const handleBook = (pro) => {
-    navigation.navigate('BookingCheckout', {
-      service: {
-        name: `${category.name} Inspection & Repair`,
-        price: pro.price,
-        category: category.name,
-        image: pro.image,
-      },
-      pro,
-    });
+    try {
+      navigation.navigate('BookingCheckout', {
+        service: {
+          name: `${category?.name || 'Home Service'} Inspection & Repair`,
+          price: pro?.price || 249,
+          category: category?.name || 'Home Service',
+          image: typeof pro?.image === 'string' ? pro.image : null,
+        },
+        pro: {
+          ...pro,
+          name: pro?.name || 'Indore Verified Pro',
+          phone: pro?.phone || '+91 9589310704',
+        },
+      });
+    } catch (err) {
+      console.warn('Booking checkout navigation error:', err);
+    }
   };
 
   return (
@@ -599,7 +642,7 @@ export default function CategoryDetailsScreen({ route, navigation }) {
                   <Text style={styles.expDot}>•</Text>
                   <Text style={styles.expText}>{pro.experience}</Text>
                   <Text style={styles.expDot}>•</Text>
-                  <Text style={styles.jobsText}>{pro.jobsDone}</Text>
+                  <Text style={styles.jobsText}>{pro.jobsDone || (pro.jobs ? `${pro.jobs}+ jobs` : '50+ jobs')}</Text>
                 </View>
               </View>
             </View>
@@ -612,7 +655,7 @@ export default function CategoryDetailsScreen({ route, navigation }) {
 
             {/* Skills Chips */}
             <View style={styles.skillsRow}>
-              {pro.skills.map((skill, idx) => (
+              {(pro.skills || ['Police Verified', 'Doorstep Specialist', 'Indore Pro']).map((skill, idx) => (
                 <View key={idx} style={[styles.skillBadge, dyn.skillBadge]}>
                   <Text style={[styles.skillText, dyn.skillText]}>{skill}</Text>
                 </View>

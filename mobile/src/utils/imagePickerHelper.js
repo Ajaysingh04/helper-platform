@@ -114,10 +114,10 @@ export const pickFromGallery = async (onSuccess, options = {}) => {
 
     const safeOptions = {
       mediaType: 'photo',
-      includeBase64: true,
-      maxHeight: 600,
-      maxWidth: 600,
-      quality: 0.65,
+      includeBase64: false,
+      maxHeight: 1024,
+      maxWidth: 1024,
+      quality: 0.8,
       selectionLimit: 1,
     };
 
@@ -168,10 +168,10 @@ export const pickFromCamera = async (onSuccess, options = {}) => {
 
     const cameraOptions = {
       mediaType: 'photo',
-      includeBase64: true,
-      maxHeight: 600,
-      maxWidth: 600,
-      quality: 0.65,
+      includeBase64: false,
+      maxHeight: 1024,
+      maxWidth: 1024,
+      quality: 0.8,
       saveToPhotos: false,
     };
 

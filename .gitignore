@@ -48,3 +48,9 @@ screen_live_now.png
 explore_dump.xml
 window_dump.xml
 mobile/apks/
+
+# Mobile App Bundles & Firebase credentials
+*.aab
+backend/config/*.json
+backend/public/*.aab
+

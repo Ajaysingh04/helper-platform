@@ -119,7 +119,45 @@ router.get("/", async (req, res) => {
         providers = providers.filter(p => matchesCategory(p, category));
       }
 
-      return res.json({ success: true, count: providers.length, data: providers });
+      let allServices = [];
+      let allBookings = [];
+      try {
+        const Service = require("../models/Service");
+        allServices = await Service.find().lean().catch(() => []);
+        allBookings = await Booking.find().lean().catch(() => []);
+      } catch (e) {}
+
+      const enriched = providers.map(p => {
+        const pObj = p.toObject ? p.toObject() : p;
+        const pId = String(pObj.id || pObj._id);
+        const pName = String(pObj.name || "").toLowerCase();
+        const pShop = String(pObj.shopName || "").toLowerCase();
+
+        const myServices = (allServices || []).filter(s => {
+          return String(s.providerId) === pId ||
+                 (s.providerName && (s.providerName.toLowerCase().includes(pName) || s.providerName.toLowerCase().includes(pShop)));
+        });
+
+        const myCompletedBookings = (allBookings || []).filter(b => {
+          const isDone = ["completed", "paid", "work_completed"].includes((b.status || "").toLowerCase());
+          const matchProv = String(b.providerId) === pId || String(b.provider) === pId ||
+                            (b.assignedProvider && (b.assignedProvider.toLowerCase().includes(pName) || b.assignedProvider.toLowerCase().includes(pShop))) ||
+                            (b.assignedProviderName && (b.assignedProviderName.toLowerCase().includes(pName) || b.assignedProviderName.toLowerCase().includes(pShop)));
+          return isDone && matchProv;
+        });
+
+        return {
+          ...pObj,
+          source: pObj.source || (pObj.phone && pObj.email?.includes("gmail") ? "app" : "web"),
+          avatar: pObj.avatar || pObj.image || pObj.logo || "",
+          customServices: myServices,
+          servicesCount: myServices.length,
+          completedJobsCount: Math.max(myCompletedBookings.length, pObj.jobsDone || 0, pObj.jobsCompleted || 0),
+          completedBookings: myCompletedBookings,
+        };
+      });
+
+      return res.json({ success: true, count: enriched.length, data: enriched });
     }
 
     let providers = dbStore.getAll("providers");
@@ -129,7 +167,36 @@ router.get("/", async (req, res) => {
     if (verified !== undefined) {
       providers = providers.filter((p) => String(p.verified) === verified);
     }
-    const cleanProviders = providers.map(({ password, ...rest }) => rest);
+    const allServices = dbStore.getAll("services") || [];
+    const allBookings = dbStore.getAll("bookings") || [];
+    const cleanProviders = providers.map(({ password, ...rest }) => {
+      const pId = String(rest.id || rest._id);
+      const pName = String(rest.name || "").toLowerCase();
+      const pShop = String(rest.shopName || "").toLowerCase();
+
+      const myServices = (allServices || []).filter(s => {
+        return String(s.providerId) === pId ||
+               (s.providerName && (s.providerName.toLowerCase().includes(pName) || s.providerName.toLowerCase().includes(pShop)));
+      });
+
+      const myCompletedBookings = (allBookings || []).filter(b => {
+        const isDone = ["completed", "paid", "work_completed"].includes((b.status || "").toLowerCase());
+        const matchProv = String(b.providerId) === pId || String(b.provider) === pId ||
+                          (b.assignedProvider && (b.assignedProvider.toLowerCase().includes(pName) || b.assignedProvider.toLowerCase().includes(pShop))) ||
+                          (b.assignedProviderName && (b.assignedProviderName.toLowerCase().includes(pName) || b.assignedProviderName.toLowerCase().includes(pShop)));
+        return isDone && matchProv;
+      });
+
+      return {
+        ...rest,
+        source: rest.source || (rest.phone && rest.email?.includes("gmail") ? "app" : "web"),
+        avatar: rest.avatar || rest.image || rest.logo || "",
+        customServices: myServices,
+        servicesCount: myServices.length,
+        completedJobsCount: Math.max(myCompletedBookings.length, rest.jobsDone || 0, rest.jobsCompleted || 0),
+        completedBookings: myCompletedBookings,
+      };
+    });
     res.json({ success: true, count: cleanProviders.length, data: cleanProviders });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -536,11 +603,62 @@ router.put("/:id/verify-kyc", async (req, res) => {
   }
 });
 
+// PUT /api/providers/:id/block - Block/Unblock Partner Hub
+router.put("/:id/block", async (req, res) => {
+  try {
+    const { isBlocked, status } = req.body || {};
+    let target = null;
+    const mongoose = require("mongoose");
+    if (getStatus()) {
+      target = await Provider.findOne({
+        $or: [
+          { id: req.params.id },
+          ...(mongoose.Types.ObjectId.isValid(req.params.id) ? [{ _id: req.params.id }] : [])
+        ]
+      });
+    }
+    if (!target) {
+      target = dbStore.getById("providers", req.params.id);
+    }
+    if (!target) return res.status(404).json({ success: false, message: "Provider not found" });
+
+    const newBlocked = typeof isBlocked === "boolean" ? isBlocked : !(target.isBlocked || target.status === "Blocked" || target.status === "Suspended");
+    const newStatus = status || (newBlocked ? "Blocked" : "Active");
+    const updatePayload = { isBlocked: newBlocked, status: newStatus };
+
+    if (getStatus()) {
+      const filter = mongoose.Types.ObjectId.isValid(req.params.id)
+        ? { $or: [{ id: req.params.id }, { _id: req.params.id }] }
+        : { id: req.params.id };
+
+      let updatedMongo = await Provider.findOneAndUpdate(filter, { $set: updatePayload }, { new: true });
+      dbStore.update("providers", req.params.id, updatePayload);
+      return res.json({ success: true, message: `Partner Hub is now ${newStatus}`, data: updatedMongo });
+    }
+
+    const updatedDb = dbStore.update("providers", req.params.id, updatePayload);
+    res.json({ success: true, message: `Partner Hub is now ${newStatus}`, data: updatedDb });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // PUT /api/providers/:id - Update provider profile
 router.put("/:id", async (req, res) => {
   try {
     const updates = { ...req.body };
     delete updates._id;
+
+    if (updates.status) {
+      if (updates.status === "Blocked" || updates.status === "Suspended" || updates.status === "blocked") {
+        updates.isBlocked = true;
+      } else if (updates.status === "Active") {
+        updates.isBlocked = false;
+      }
+    }
+    if (typeof updates.isBlocked === "boolean") {
+      updates.status = updates.isBlocked ? "Blocked" : "Active";
+    }
 
     if (updates.hourlyRate && !String(updates.hourlyRate).startsWith("₹")) {
       updates.hourlyRate = `₹${updates.hourlyRate}/hr`;
@@ -552,6 +670,12 @@ router.put("/:id", async (req, res) => {
       updates.experience = `${updates.experience} Exp`;
     }
 
+    let customServiceToPush = null;
+    if (updates.customService) {
+      customServiceToPush = updates.customService;
+      delete updates.customService;
+    }
+
     let updatedMongo = null;
     if (getStatus()) {
       const mongoose = require("mongoose");
@@ -559,17 +683,23 @@ router.put("/:id", async (req, res) => {
         ? { $or: [{ id: req.params.id }, { _id: req.params.id }] }
         : { id: req.params.id };
 
+      const updateOps = {
+        $set: updates,
+        $setOnInsert: {
+          id: req.params.id,
+          name: updates.name || "Vendor Pro",
+          category: updates.category || "Plumber",
+          phone: updates.phone || "+91 98765 00001"
+        }
+      };
+
+      if (customServiceToPush) {
+        updateOps.$push = { customServices: customServiceToPush };
+      }
+
       updatedMongo = await Provider.findOneAndUpdate(
         filter,
-        { 
-          $set: updates,
-          $setOnInsert: {
-            id: req.params.id,
-            name: updates.name || "Vendor Pro",
-            category: updates.category || "Plumber",
-            phone: updates.phone || "+91 98765 00001"
-          }
-        },
+        updateOps,
         { new: true, upsert: true }
       ).select("-password").catch(err => {
         console.error("Mongo Provider update warning:", err.message);
@@ -590,14 +720,220 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// POST /api/providers/:id/purchase-franchise - Buy Franchise License (₹4,000/mo or ₹5,00,000/yr)
+// POST /api/providers/franchise/create-order - Create Razorpay order for franchise pack
+router.post("/franchise/create-order", async (req, res) => {
+  try {
+    const { plan = "monthly", providerId, phone, email } = req.body;
+    const amount = plan === "annual" ? 500000 : 4000;
+    const orderAmount = amount * 100; // in paise
+
+    // 1. Check duplicate active franchise
+    if (getStatus() && (phone || email || providerId)) {
+      const cleanPhone = phone ? phone.replace(/[\s-]/g, "") : "";
+      const cleanEmail = email ? email.toLowerCase().trim() : "";
+
+      const queryOr = [];
+      if (cleanPhone) queryOr.push({ phone: cleanPhone });
+      if (cleanEmail) queryOr.push({ email: cleanEmail });
+
+      if (queryOr.length > 0) {
+        const existing = await Provider.findOne({
+          $or: queryOr,
+          franchiseActive: true,
+          franchiseExpiry: { $gt: new Date() }
+        });
+
+        if (existing) {
+          const expStr = existing.franchiseExpiry ? new Date(existing.franchiseExpiry).toLocaleDateString("en-IN") : "";
+          return res.status(400).json({
+            success: false,
+            alreadyPurchased: true,
+            message: `⚠️ Active Franchise already exists for this mobile/email (${existing.franchisePlan.toUpperCase()} valid till ${expStr}). Duplicate purchase is not permitted.`
+          });
+        }
+      }
+    }
+
+    let orderId = `order_frn_${Date.now()}`;
+    let isRealOrder = false;
+    const rzpKey = process.env.RAZORPAY_KEY_ID || "rzp_test_TsU2gFuh1gMCsh";
+    const rzpSecret = process.env.RAZORPAY_KEY_SECRET || "UtP5T8MN4baDiI5LO1as7Xwi";
+
+    try {
+      const Razorpay = require("razorpay");
+      const rzp = new Razorpay({ key_id: rzpKey, key_secret: rzpSecret });
+      const rzpOrder = await rzp.orders.create({
+        amount: orderAmount,
+        currency: "INR",
+        receipt: `frn_${Date.now()}`,
+        payment_capture: 1,
+        notes: {
+          plan,
+          providerId: providerId || "NEW_VENDOR",
+          phone: phone || ""
+        }
+      });
+      orderId = rzpOrder.id;
+      isRealOrder = true;
+      console.log("💳 Razorpay Franchise Order created:", orderId, "Amount: ₹" + amount);
+    } catch (rzpErr) {
+      console.warn("⚠️ Razorpay Franchise Order Notice:", rzpErr.message);
+    }
+
+    res.json({
+      success: true,
+      orderId,
+      isRealOrder,
+      amount: orderAmount,
+      currency: "INR",
+      keyId: rzpKey,
+      plan,
+      planAmount: amount
+    });
+  } catch (err) {
+    console.error("Franchise Order Creation Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/providers/:id/franchise-status - Check live franchise validity & renewal requirements
+router.get("/:id/franchise-status", async (req, res) => {
+  try {
+    const mongoose = require("mongoose");
+    let provider = null;
+
+    if (getStatus()) {
+      const filter = mongoose.Types.ObjectId.isValid(req.params.id)
+        ? { $or: [{ id: req.params.id }, { _id: req.params.id }] }
+        : { id: req.params.id };
+      provider = await Provider.findOne(filter);
+    } else {
+      const allPros = dbStore.getAll("providers") || [];
+      provider = allPros.find(p => p.id === req.params.id || p._id === req.params.id);
+    }
+
+    if (!provider) {
+      return res.status(404).json({ success: false, message: "Provider not found" });
+    }
+
+    const now = new Date();
+    const expiry = provider.franchiseExpiry ? new Date(provider.franchiseExpiry) : null;
+    let isActive = Boolean(provider.franchiseActive);
+    let daysRemaining = 0;
+    let isExpired = false;
+    let isExpiringSoon = false;
+
+    if (expiry) {
+      const diffMs = expiry.getTime() - now.getTime();
+      daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffMs <= 0) {
+        isActive = false;
+        isExpired = true;
+        if (provider.franchiseActive) {
+          // Deactivate in DB
+          if (getStatus() && provider.save) {
+            provider.franchiseActive = false;
+            await provider.save();
+          } else {
+            dbStore.update("providers", provider.id || provider._id, { franchiseActive: false });
+          }
+        }
+      } else if (daysRemaining <= 3) {
+        isExpiringSoon = true;
+      }
+    } else {
+      isActive = false;
+    }
+
+    res.json({
+      success: true,
+      franchise: {
+        active: isActive,
+        plan: provider.franchisePlan || "none",
+        amount: provider.franchiseAmount || 0,
+        expiry: expiry,
+        daysRemaining: Math.max(0, daysRemaining),
+        isExpired,
+        isExpiringSoon,
+        mustRenew: !isActive,
+        kycStatus: provider.kycStatus || "pending",
+        aadhaarVerified: Boolean(provider.aadhaarNumber && provider.aadhaarFrontDoc),
+        phoneVerified: Boolean(provider.phoneVerified),
+        emailVerified: Boolean(provider.emailVerified)
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/providers/:id/purchase-franchise - Buy or Renew Franchise License
 router.post("/:id/purchase-franchise", async (req, res) => {
   try {
-    const { plan = "monthly", paymentMethod = "UPI" } = req.body;
+    const {
+      plan = "monthly",
+      paymentMethod = "Razorpay",
+      razorpayPaymentId,
+      razorpayOrderId,
+      aadhaarNumber,
+      aadhaarFrontDoc,
+      aadhaarBackDoc,
+      phoneVerified = true,
+      emailVerified = true
+    } = req.body;
+
     const amount = plan === "annual" ? 500000 : 4000;
     const durationDays = plan === "annual" ? 365 : 30;
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + durationDays);
+
+    const mongoose = require("mongoose");
+    let existingProv = null;
+
+    if (getStatus()) {
+      const filter = mongoose.Types.ObjectId.isValid(req.params.id)
+        ? { $or: [{ id: req.params.id }, { _id: req.params.id }] }
+        : { id: req.params.id };
+      existingProv = await Provider.findOne(filter);
+    } else {
+      const allPros = dbStore.getAll("providers") || [];
+      existingProv = allPros.find(p => p.id === req.params.id || p._id === req.params.id);
+    }
+
+    // 1. Prevent Duplicate Purchase: If this provider already has an ACTIVE and UNEXPIRED franchise, reject!
+    if (existingProv && existingProv.franchiseActive && existingProv.franchiseExpiry) {
+      const currentExpiry = new Date(existingProv.franchiseExpiry);
+      if (currentExpiry > new Date()) {
+        const expStr = currentExpiry.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+        return res.status(400).json({
+          success: false,
+          alreadyPurchased: true,
+          message: `⚠️ Your ${existingProv.franchisePlan.toUpperCase()} Franchise is already ACTIVE until ${expStr}. Duplicate purchase is disabled.`
+        });
+      }
+    }
+
+    // 2. Also ensure no other provider with the same phone or email has an active plan
+    if (getStatus() && existingProv && (existingProv.phone || existingProv.email)) {
+      const duplicateActive = await Provider.findOne({
+        _id: { $ne: existingProv._id },
+        $or: [
+          { phone: existingProv.phone },
+          { email: existingProv.email }
+        ],
+        franchiseActive: true,
+        franchiseExpiry: { $gt: new Date() }
+      });
+
+      if (duplicateActive) {
+        return res.status(400).json({
+          success: false,
+          alreadyPurchased: true,
+          message: `⚠️ Another account registered with this phone/email already holds an active Franchise pack.`
+        });
+      }
+    }
 
     const franchiseData = {
       franchiseActive: true,
@@ -605,12 +941,20 @@ router.post("/:id/purchase-franchise", async (req, res) => {
       franchiseAmount: amount,
       franchiseExpiry: expiryDate,
       verified: true,
-      status: "Active"
+      status: "Active",
+      kycStatus: "verified",
+      phoneVerified: Boolean(phoneVerified),
+      emailVerified: Boolean(emailVerified),
+      razorpayOrderId: razorpayOrderId || "",
+      razorpayPaymentId: razorpayPaymentId || `pay_sim_${Date.now()}`
     };
+
+    if (aadhaarNumber) franchiseData.aadhaarNumber = String(aadhaarNumber).trim();
+    if (aadhaarFrontDoc) franchiseData.aadhaarFrontDoc = aadhaarFrontDoc;
+    if (aadhaarBackDoc) franchiseData.aadhaarBackDoc = aadhaarBackDoc;
 
     let updated = null;
     if (getStatus()) {
-      const mongoose = require("mongoose");
       const filter = mongoose.Types.ObjectId.isValid(req.params.id)
         ? { $or: [{ id: req.params.id }, { _id: req.params.id }] }
         : { id: req.params.id };
@@ -623,7 +967,31 @@ router.post("/:id/purchase-franchise", async (req, res) => {
     }
 
     const updatedDb = dbStore.update("providers", req.params.id, franchiseData);
-    const result = updated ? updated ? updated.toObject() : updatedDb : updatedDb;
+    const result = updated ? (updated.toObject ? updated.toObject() : updated) : updatedDb;
+
+    // Send Real-Time Firebase Alert & Confirmation SMS
+    try {
+      const firebaseService = require("../services/firebaseService");
+      const smsService = require("../services/smsService");
+
+      firebaseService.sendToTopic(
+        "partners",
+        "🎉 Franchise Activated Successfully!",
+        `Congratulations! Helper ${plan === "annual" ? "Annual Elite Master" : "Monthly Pro"} Franchise is now live. Hub unlocked.`,
+        {
+          type: "FRANCHISE_ACTIVATED",
+          plan,
+          expiry: expiryDate.toISOString()
+        }
+      ).catch(() => {});
+
+      if (result?.phone) {
+        smsService.sendSMS(
+          result.phone,
+          `🎉 Congratulations! Your Helper ${plan === "annual" ? "Annual Elite" : "Monthly Pro"} Franchise (₹${amount.toLocaleString()}) has been activated. Welcome to Helper Partner Network!`
+        ).catch(() => {});
+      }
+    } catch (e) {}
 
     res.json({
       success: true,
@@ -633,11 +1001,13 @@ router.post("/:id/purchase-franchise", async (req, res) => {
         amount,
         expiry: expiryDate,
         maxMembers: 8,
-        active: true
+        active: true,
+        kycStatus: "verified"
       },
       provider: result || franchiseData
     });
   } catch (error) {
+    console.error("Franchise Purchase Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -765,6 +1135,7 @@ router.delete("/:id", async (req, res) => {
       if (!deleted) {
         deleted = await Provider.findByIdAndDelete(req.params.id).catch(() => null);
       }
+      dbStore.delete("providers", req.params.id);
       if (!deleted) return res.status(404).json({ success: false, message: "Provider not found" });
       return res.json({ success: true, message: "Provider deleted successfully" });
     }

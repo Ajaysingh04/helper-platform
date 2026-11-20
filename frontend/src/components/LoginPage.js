@@ -23,6 +23,10 @@ const SERVICE_WORK_CATEGORIES = [
 
 // Seeded Registered Users for customer authentication
 export const SEEDED_REGISTERED_USERS = [
+  { name: "Helper India Customer", email: "helperindia@gmail.com", phone: "9876500000", address: "Indore / Delhi NCR", password: "helper123" },
+  { name: "Helper User", email: "helper@gmail.com", phone: "9876500000", address: "Indore / Delhi NCR", password: "helper123" },
+  { name: "Helper Customer", email: "demo@helper.com", phone: "9876500000", address: "Indore / Delhi NCR", password: "helper123" },
+  { name: "Super Administrator", email: "admin@helper.com", phone: "9999999999", address: "Indore / Delhi NCR", password: "admin123" },
   { name: "Ajay Singh", email: "ajay@example.com", phone: "9876543210", address: "Indore / Delhi NCR", password: "password123" },
   { name: "Rahul Sharma", email: "rahul.sharma@example.com", phone: "9876500001", address: "Indore / Delhi NCR", password: "password123" },
   { name: "Pooja Patel", email: "pooja.patel@example.com", phone: "9876500002", address: "Indore / Delhi NCR", password: "password123" },

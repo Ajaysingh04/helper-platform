@@ -9,6 +9,7 @@ import AdminProviders from "./AdminProviders";
 import AdminUsers from "./AdminUsers";
 import AdminPromotions from "./AdminPromotions";
 import AdminHeroBanners from "./AdminHeroBanners";
+import AdminAppTheme from "./AdminAppTheme";
 import AdminSupport from "./AdminSupport";
 import AdminSettings from "./AdminSettings";
 import OtpInput from "../OtpInput";
@@ -271,6 +272,27 @@ function AdminLayout() {
           </button>
 
           <button 
+            className={`admin-nav-btn ${activeTab === "app_theme" ? "active" : ""}`}
+            onClick={() => {
+              setActiveTab("app_theme");
+              setSidebarOpen(false);
+            }}
+          >
+            <div className="nav-btn-content">
+              <span className="nav-icon">🎨</span>
+              <span style={{ fontWeight: "700" }}>App UI & Theme Studio</span>
+            </div>
+            <span style={{
+              background: "#FF4D2D",
+              color: "#FFFFFF",
+              fontSize: "10px",
+              fontWeight: "900",
+              padding: "2px 6px",
+              borderRadius: "6px"
+            }}>NEW</span>
+          </button>
+
+          <button 
             className={`admin-nav-btn ${activeTab === "support" ? "active" : ""}`}
             onClick={() => {
               setActiveTab("support");
@@ -406,6 +428,7 @@ function AdminLayout() {
           {activeTab === "users" && <AdminUsers />}
           {activeTab === "hero" && <AdminHeroBanners />}
           {activeTab === "promotions" && <AdminPromotions />}
+          {activeTab === "app_theme" && <AdminAppTheme />}
           {activeTab === "support" && <AdminSupport />}
           {activeTab === "settings" && <AdminSettings />}
         </div>

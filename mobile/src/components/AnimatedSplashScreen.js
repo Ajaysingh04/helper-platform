@@ -15,7 +15,10 @@ export default function AnimatedSplashScreen({
   onFinish,
   appLogo,
   primaryColor = '#FF4D2D',
+  isPartner = false,
 }) {
+  const themeColor = isPartner ? '#10B981' : primaryColor;
+
   // Animation Values
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -68,17 +71,17 @@ export default function AnimatedSplashScreen({
       ])
     ).start();
 
-    // 4. Smooth Fade-Out after ~3.2 seconds (Total duration ~3.6s)
+    // 4. Smooth Fade-Out after ~2.8 seconds
     const exitTimer = setTimeout(() => {
       Animated.timing(screenFade, {
         toValue: 0,
-        duration: 450,
+        duration: 400,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start(() => {
         if (onFinish) onFinish();
       });
-    }, 3200);
+    }, 2800);
 
     return () => clearTimeout(exitTimer);
   }, []);
@@ -92,8 +95,8 @@ export default function AnimatedSplashScreen({
     <Animated.View style={[styles.container, { opacity: screenFade }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Subtle Warm Radial Glow on White */}
-      <View style={[styles.softSpotlight, { backgroundColor: primaryColor }]} />
+      {/* Subtle Radial Glow on White Canvas */}
+      <View style={[styles.softSpotlight, { backgroundColor: themeColor }]} />
 
       {/* Main Animated Logo Card */}
       <Animated.View
@@ -108,16 +111,18 @@ export default function AnimatedSplashScreen({
         ]}
       >
         {/* Outer Aura Ring */}
-        <View style={[styles.outerGlowRing, { borderColor: `${primaryColor}22` }]} />
-        <View style={[styles.middleGlowRing, { borderColor: `${primaryColor}40` }]} />
+        <View style={[styles.outerGlowRing, { borderColor: `${themeColor}22` }]} />
+        <View style={[styles.middleGlowRing, { borderColor: `${themeColor}40` }]} />
 
         {/* Circular Logo Surface */}
-        <View style={[styles.logoCard, { borderColor: primaryColor }]}>
+        <View style={[styles.logoCard, { borderColor: themeColor, shadowColor: themeColor }]}>
           <Image
             source={
-              appLogo && !appLogo.includes('unsplash') && !appLogo.includes('photo-')
-                ? { uri: appLogo }
-                : require('../assets/logo.png')
+              isPartner
+                ? require('../assets/partner_logo.png')
+                : (appLogo && !appLogo.includes('unsplash') && !appLogo.includes('photo-')
+                    ? { uri: appLogo }
+                    : require('../assets/logo.png'))
             }
             style={styles.logoImage}
             resizeMode="cover"
@@ -152,7 +157,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    opacity: 0.08,
+    opacity: 0.12,
   },
   centerWrap: {
     width: 180,
@@ -185,7 +190,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 14,
-    shadowColor: '#FF4D2D',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.28,
     shadowRadius: 18,

@@ -1,17 +1,18 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Local Wi-Fi API (laptop and phone are on same Wi-Fi 192.168.1.8)
-export const LOCAL_API_URL = 'http://192.168.1.8:5000/api';
+// Local and Cloud API Candidates
+export const LOCAL_API_URL = 'http://192.168.1.10:5000/api';
+export const LOCAL_API_FALLBACK = 'http://192.168.1.8:5000/api';
 export const PRODUCTION_API_URL = 'https://helper-backend-api-8878.onrender.com/api';
 
-// Prioritize local Wi-Fi backend for live updates and new endpoints
-export const BASE_API_URL = LOCAL_API_URL;
-export const BASE_IMAGE_URL = 'http://192.168.1.8:5000';
+// Prioritize production cloud backend so customer app connects 24/7 on Wi-Fi or mobile data
+export const BASE_API_URL = PRODUCTION_API_URL;
+export const BASE_IMAGE_URL = 'https://helper-backend-api-8878.onrender.com';
 
 const client = axios.create({
   baseURL: BASE_API_URL,
-  timeout: 8000,
+  timeout: 7000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -43,11 +44,14 @@ client.interceptors.response.use(
 
     if (isFallbackEligible && originalRequest && !originalRequest._retried) {
       originalRequest._retried = true;
-      if (originalRequest.baseURL === LOCAL_API_URL) {
-        originalRequest.baseURL = PRODUCTION_API_URL;
-        return client(originalRequest).catch(() => Promise.reject(error));
-      } else {
+      if (originalRequest.baseURL === PRODUCTION_API_URL) {
         originalRequest.baseURL = LOCAL_API_URL;
+        return client(originalRequest).catch(() => {
+          originalRequest.baseURL = LOCAL_API_FALLBACK;
+          return client(originalRequest).catch(() => Promise.reject(error));
+        });
+      } else {
+        originalRequest.baseURL = PRODUCTION_API_URL;
         return client(originalRequest).catch(() => Promise.reject(error));
       }
     }

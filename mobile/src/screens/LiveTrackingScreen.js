@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TextInput,
   Image,
   Alert,
   Linking,
@@ -57,6 +58,104 @@ export default function LiveTrackingScreen({ route, navigation }) {
   const [startOtp, setStartOtp] = useState(
     initialBooking?.slotOtp || initialBooking?.doorOtp || initialBooking?.otp || initialBooking?.startOtp || initialBooking?.security?.startOtpPlainForCustomer || '3459'
   );
+  const scheduledDateStr = String(initialBooking?.scheduledDate || initialBooking?.date || '');
+  const scheduledTimeStr = String(initialBooking?.scheduledTime || initialBooking?.time || '');
+  const combinedScheduleStr = `${scheduledDateStr} ${scheduledTimeStr}`.trim();
+
+  // Smart Advance Booking Detection
+  const isAdvance = Boolean(
+    initialBooking?.isAdvanceBooking ||
+    initialBooking?.advanceScheduled ||
+    /tomorrow|kal|sat|sun|mon|tue|wed|thu|fri/i.test(combinedScheduleStr) ||
+    /\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(combinedScheduleStr) ||
+    (scheduledDateStr && scheduledDateStr.trim().length > 0 && !scheduledDateStr.toLowerCase().includes('today'))
+  );
+
+  const getAdvanceRemainingSeconds = () => {
+    try {
+      if (!isAdvance) return 0;
+      const now = Date.now();
+      if (initialBooking?.scheduledTimestamp && !isNaN(Number(initialBooking.scheduledTimestamp))) {
+        return Math.max(0, Math.floor((Number(initialBooking.scheduledTimestamp) - now) / 1000));
+      }
+      const lower = combinedScheduleStr.toLowerCase();
+      if (lower.includes('tomorrow') || lower.includes('kal')) {
+        const timeMatch = combinedScheduleStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + 1);
+        if (timeMatch) {
+          let hours = parseInt(timeMatch[1], 10);
+          const minutes = parseInt(timeMatch[2], 10);
+          const ampm = (timeMatch[3] || '').toUpperCase();
+          if (ampm === 'PM' && hours < 12) hours += 12;
+          if (ampm === 'AM' && hours === 12) hours = 0;
+          targetDate.setHours(hours, minutes, 0, 0);
+        } else {
+          targetDate.setHours(10, 0, 0, 0);
+        }
+        return Math.max(0, Math.floor((targetDate.getTime() - now) / 1000));
+      }
+
+      const monthMap = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+      const dateMatch = combinedScheduleStr.match(/(\d{1,2})\s+([A-Za-z]{3})/i) || combinedScheduleStr.match(/([A-Za-z]{3})\s+(\d{1,2})/i);
+      const timeMatch = combinedScheduleStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+
+      if (dateMatch && dateMatch[1] && dateMatch[2]) {
+        const currentYear = new Date().getFullYear();
+        let day, month;
+        if (!isNaN(parseInt(dateMatch[1], 10))) {
+          day = parseInt(dateMatch[1], 10);
+          month = monthMap[String(dateMatch[2]).toLowerCase().slice(0, 3)];
+        } else {
+          month = monthMap[String(dateMatch[1]).toLowerCase().slice(0, 3)];
+          day = parseInt(dateMatch[2], 10);
+        }
+        let hours = 10, minutes = 0;
+        if (timeMatch) {
+          hours = parseInt(timeMatch[1], 10);
+          minutes = parseInt(timeMatch[2], 10);
+          const ampm = (timeMatch[3] || '').toUpperCase();
+          if (ampm === 'PM' && hours < 12) hours += 12;
+          if (ampm === 'AM' && hours === 12) hours = 0;
+        }
+        if (month !== undefined && !isNaN(day)) {
+          const targetDate = new Date(currentYear, month, day, hours, minutes, 0, 0);
+          if (targetDate.getTime() < now - 24 * 60 * 60 * 1000) {
+            targetDate.setFullYear(currentYear + 1);
+          }
+          return Math.max(0, Math.floor((targetDate.getTime() - now) / 1000));
+        }
+      }
+
+      return 18 * 60 * 60;
+    } catch (e) {
+      return 18 * 60 * 60;
+    }
+  };
+
+  const [advanceSecRemaining, setAdvanceSecRemaining] = useState(getAdvanceRemainingSeconds);
+  const isAdvanceLocked = isAdvance && advanceSecRemaining > 3600;
+
+  useEffect(() => {
+    if (!isAdvance) return;
+    const interval = setInterval(() => {
+      setAdvanceSecRemaining(getAdvanceRemainingSeconds());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isAdvance, combinedScheduleStr]);
+
+  const formatAdvanceCountdown = (totalSec) => {
+    if (totalSec <= 0) return '00h 00m 00s';
+    const days = Math.floor(totalSec / (3600 * 24));
+    const hours = Math.floor((totalSec % (3600 * 24)) / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    if (days > 0) {
+      return `${days}d ${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+    }
+    return `${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+  };
+
   const [etaMinutes, setEtaMinutes] = useState(12);
   const [serviceTimeWorked, setServiceTimeWorked] = useState(0);
   const [billAmount, setBillAmount] = useState(
@@ -67,6 +166,14 @@ export default function LiveTrackingScreen({ route, navigation }) {
     initialBooking?.isPaid || initialBooking?.paymentStatus === 'paid' || false
   );
   const [copiedOtp, setCopiedOtp] = useState(false);
+
+  // Customer Star Rating & Feedback State
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [selectedFeedbackTags, setSelectedFeedbackTags] = useState(['On-Time Arrival ⏱️', 'Clean Work 🧼']);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   // Animations
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -120,16 +227,16 @@ export default function LiveTrackingScreen({ route, navigation }) {
     return () => clearInterval(timer);
   }, [status]);
 
-  // ETA Countdown when on_the_way
+  // ETA Countdown when on_the_way (only if not advance locked)
   useEffect(() => {
     let etaTimer;
-    if (status === 'on_the_way') {
+    if (status === 'on_the_way' && !isAdvanceLocked) {
       etaTimer = setInterval(() => {
         setEtaMinutes((prev) => (prev > 1 ? prev - 1 : 1));
       }, 60000);
     }
     return () => clearInterval(etaTimer);
-  }, [status]);
+  }, [status, isAdvanceLocked]);
 
   // Polling backend dispatch engine safely with client.get('/bookings')
   useEffect(() => {
@@ -255,6 +362,35 @@ export default function LiveTrackingScreen({ route, navigation }) {
     );
   };
 
+  const handleSubmitFeedback = async () => {
+    setIsSubmittingFeedback(true);
+    try {
+      await client.post(`/bookings/${bookingCode}/review`, {
+        rating: feedbackRating,
+        review: feedbackComment,
+        tags: selectedFeedbackTags,
+      });
+      setFeedbackSubmitted(true);
+      setShowFeedbackModal(false);
+      Alert.alert('Review Submitted! ⭐', 'Thank you for your valuable feedback. It helps us maintain top quality standards!');
+    } catch (e) {
+      setFeedbackSubmitted(true);
+      setShowFeedbackModal(false);
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
+
+  // Auto trigger feedback modal when service finishes
+  useEffect(() => {
+    if (['work_completed', 'completed', 'paid'].includes(status) && !feedbackSubmitted) {
+      const timer = setTimeout(() => {
+        setShowFeedbackModal(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, feedbackSubmitted]);
+
   // Safe OTP digits array
   const otpDigits = String(startOtp || '5421').padStart(4, '0').slice(0, 4).split('');
 
@@ -314,7 +450,14 @@ export default function LiveTrackingScreen({ route, navigation }) {
         showsVerticalScrollIndicator={false}
       >
         {/* ================= 2. INTERACTIVE GPS ROUTE CANVAS ================= */}
-        <View style={[styles.mapCanvasCard, { backgroundColor: isDark ? '#0B1120' : '#E2E8F0', borderColor: borderCol }]}>
+        <View style={[
+          styles.mapCanvasCard,
+          {
+            backgroundColor: isDark ? '#0B1120' : '#E2E8F0',
+            borderColor: borderCol,
+            height: isAdvanceLocked ? 285 : 230,
+          }
+        ]}>
           {/* Subtle Grid Map Visuals */}
           <View style={styles.mapGridPattern}>
             <View style={[styles.mapRoadH, { top: '35%' }]} />
@@ -367,7 +510,9 @@ export default function LiveTrackingScreen({ route, navigation }) {
                 <Text style={{ fontSize: 18 }}>🛵</Text>
               </View>
               <View style={styles.vehicleLabelPill}>
-                <Text style={styles.vehicleLabelText}>{workerName.split(' ')[0]}</Text>
+                <Text style={styles.vehicleLabelText} numberOfLines={1}>
+                  {String(workerName || 'Ramesh').split(' ')[0]}
+                </Text>
               </View>
             </Animated.View>
 
@@ -381,37 +526,82 @@ export default function LiveTrackingScreen({ route, navigation }) {
           </View>
 
           {/* Floating Glassmorphic ETA Banner on Map */}
-          <View style={styles.floatingEtaCard}>
+          <View style={[
+            styles.floatingEtaCard,
+            isAdvanceLocked && {
+              borderColor: '#3B82F6',
+              backgroundColor: isDark ? 'rgba(30, 58, 138, 0.95)' : 'rgba(239, 246, 255, 0.98)',
+              paddingVertical: 12,
+              paddingHorizontal: 14,
+            }
+          ]}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.floatingEtaIcon}>🛵</Text>
-                <Text style={styles.floatingEtaTitle}>
-                  {status === 'reached'
+                <Text style={styles.floatingEtaIcon}>{isAdvanceLocked ? '📅' : '🛵'}</Text>
+                <Text style={[styles.floatingEtaTitle, isAdvanceLocked && { color: isDark ? '#93C5FD' : '#1D4ED8' }]}>
+                  {isAdvanceLocked
+                    ? 'ADVANCE BOOKING CONFIRMED'
+                    : status === 'reached' || status === 'arrived'
                     ? 'AT YOUR DOORSTEP'
                     : status === 'in_progress'
                     ? 'WORKING AT DOORSTEP'
-                    : status === 'completed' || status === 'paid'
+                    : status === 'completed' || status === 'paid' || status === 'work_completed'
                     ? 'SERVICE COMPLETED'
                     : `${etaMinutes} MINS AWAY • 2.4 KM`}
                 </Text>
               </View>
-              <Text style={styles.floatingEtaSub}>
-                {status === 'reached'
+              <Text style={[styles.floatingEtaSub, isAdvanceLocked && { color: isDark ? '#E2E8F0' : '#1E40AF', fontWeight: '700' }]}>
+                {isAdvanceLocked
+                  ? `Appointment: ${combinedScheduleStr || 'Tomorrow'} • Starts in: -${formatAdvanceCountdown(advanceSecRemaining)}`
+                  : status === 'reached' || status === 'arrived'
                   ? 'Specialist has arrived outside your home'
                   : status === 'in_progress'
                   ? `Active work stopwatch: ${formatStopwatch(serviceTimeWorked)}`
+                  : ['completed', 'paid', 'work_completed'].includes(status)
+                  ? 'Service work completed successfully!'
                   : 'Speed: 28 km/h • Traffic: Smooth • On Schedule'}
               </Text>
+              {isAdvanceLocked && (
+                <Text style={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11, marginTop: 4, lineHeight: 15 }}>
+                  🔒 Live GPS navigation will activate 1 hour before scheduled appointment time.
+                </Text>
+              )}
             </View>
 
-            <TouchableOpacity style={styles.recenterBtn} onPress={handleCallSpecialist}>
+            <TouchableOpacity
+              style={[styles.recenterBtn, { alignSelf: 'center' }]}
+              onPress={handleCallSpecialist}
+              activeOpacity={0.8}
+            >
               <Text style={styles.recenterIcon}>📞</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* ================= 3. DYNAMIC STATUS HERO CARD ================= */}
-        {status === 'in_progress' ? (
+        {isAdvanceLocked ? (
+          <View style={[styles.statusHero, { borderColor: '#3B82F6', backgroundColor: isDark ? 'rgba(30, 58, 138, 0.15)' : '#EFF6FF' }]}>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 16 }}>📅</Text>
+                <Text style={[styles.statusHeroLabel, { color: '#2563EB' }]}>
+                  {language === 'hi' ? 'अग्रिम बुकिंग आरक्षित' : 'ADVANCE APPOINTMENT RESERVED'}
+                </Text>
+              </View>
+              <Text style={[styles.statusHeroMain, { color: textTitle }]}>
+                {combinedScheduleStr || 'Scheduled'}
+              </Text>
+              <Text style={[styles.statusHeroSub, { color: textSub }]}>
+                {language === 'hi'
+                  ? 'विशेषज्ञ की रवानगी निर्धारित समय से 1 घंटे पहले शुरू होगी'
+                  : 'Specialist departure scheduled 1 hour before appointment time'}
+              </Text>
+            </View>
+            <View style={[styles.statusHeroIconBox, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
+              <Text style={{ fontSize: 26 }}>⏳</Text>
+            </View>
+          </View>
+        ) : status === 'in_progress' ? (
           <View style={[styles.statusHero, { borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -425,7 +615,7 @@ export default function LiveTrackingScreen({ route, navigation }) {
               <Text style={{ fontSize: 26 }}>🛠️</Text>
             </View>
           </View>
-        ) : status === 'completed' || status === 'paid' ? (
+        ) : ['completed', 'paid', 'work_completed'].includes(status) ? (
           <View style={[styles.statusHero, { borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -439,16 +629,14 @@ export default function LiveTrackingScreen({ route, navigation }) {
                 {isPaid ? '30-Day Money-Back Warranty Activated' : 'Tap below to complete payment via UPI'}
               </Text>
             </View>
-            {!isPaid && (
-              <TouchableOpacity
-                style={styles.payNowSmallBtn}
-                onPress={() => setShowPaymentModal(true)}
-              >
-                <Text style={styles.payNowSmallBtnText}>Pay ₹{billAmount} ➔</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={styles.payNowSmallBtn}
+              onPress={() => setShowFeedbackModal(true)}
+            >
+              <Text style={styles.payNowSmallBtnText}>Rate 5★</Text>
+            </TouchableOpacity>
           </View>
-        ) : status === 'reached' ? (
+        ) : (status === 'reached' || status === 'arrived') ? (
           <View style={[styles.statusHero, { borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -805,6 +993,150 @@ export default function LiveTrackingScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+
+      {/* ================= MODAL: CUSTOMER SERVICE RATING & FEEDBACK ================= */}
+      <Modal visible={showFeedbackModal} transparent animationType="slide" onRequestClose={() => setShowFeedbackModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalSheet, { backgroundColor: isDark ? '#0C111E' : '#FFFFFF', paddingBottom: 24 + bottomInset }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.modalTitle, { color: textTitle }]}>Rate Your Experience ⭐</Text>
+                <Text style={[styles.modalSubtitle, { color: textSub }]}>Your feedback helps us maintain top quality standards</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowFeedbackModal(false)}>
+                <Text style={[styles.modalCloseText, { color: textSub }]}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ alignItems: 'center', marginVertical: 14 }}>
+              {/* Star Rating Row */}
+              <View style={{ flexDirection: 'row', gap: 12, marginBottom: 14 }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity
+                    key={star}
+                    activeOpacity={0.7}
+                    onPress={() => setFeedbackRating(star)}
+                    style={{ padding: 4 }}
+                  >
+                    <Text style={{ fontSize: 36, color: star <= feedbackRating ? '#F59E0B' : '#CBD5E1' }}>
+                      ★
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={{ color: '#F59E0B', fontSize: 16, fontWeight: '900', marginBottom: 12 }}>
+                {feedbackRating === 5 ? 'Excellent! 🌟🌟🌟🌟🌟' :
+                 feedbackRating === 4 ? 'Very Good! 👍' :
+                 feedbackRating === 3 ? 'Average Service 🙂' :
+                 feedbackRating === 2 ? 'Needs Improvement ⚠️' : 'Poor Experience ❌'}
+              </Text>
+
+              {/* Quick Feedback Tags */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
+                {[
+                  'On-Time Arrival ⏱️',
+                  'Clean & Hygienic 🧼',
+                  'Expert Workmanship 👔',
+                  'Polite Behavior 😊',
+                  'Pocket Friendly 💰',
+                  'Genuine Parts 🔩',
+                ].map((tag) => {
+                  const isSelected = selectedFeedbackTags.includes(tag);
+                  return (
+                    <TouchableOpacity
+                      key={tag}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 20,
+                        backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.15)' : (isDark ? '#1E293B' : '#F1F5F9'),
+                        borderWidth: 1,
+                        borderColor: isSelected ? '#10B981' : (isDark ? '#334155' : '#E2E8F0'),
+                      }}
+                      onPress={() => {
+                        if (isSelected) {
+                          setSelectedFeedbackTags((prev) => prev.filter((t) => t !== tag));
+                        } else {
+                          setSelectedFeedbackTags((prev) => [...prev, tag]);
+                        }
+                      }}
+                    >
+                      <Text style={{
+                        color: isSelected ? '#059669' : (isDark ? '#94A3B8' : '#64748B'),
+                        fontSize: 12,
+                        fontWeight: '700',
+                      }}>
+                        {tag}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Optional Comments Input */}
+              <TextInput
+                style={{
+                  width: '100%',
+                  height: 70,
+                  backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: isDark ? '#334155' : '#E2E8F0',
+                  padding: 10,
+                  color: textTitle,
+                  fontSize: 13,
+                  textAlignVertical: 'top',
+                  marginBottom: 16,
+                }}
+                placeholder="Write an optional review or suggestions for Helper..."
+                placeholderTextColor={textSub}
+                value={feedbackComment}
+                onChangeText={setFeedbackComment}
+                multiline
+              />
+
+              {/* Action Buttons */}
+              <View style={{ width: '100%', gap: 10 }}>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#10B981',
+                    paddingVertical: 14,
+                    borderRadius: 14,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    shadowColor: '#10B981',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                  activeOpacity={0.88}
+                  disabled={isSubmittingFeedback}
+                  onPress={handleSubmitFeedback}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900' }}>
+                    {isSubmittingFeedback ? 'Submitting...' : 'Submit Rating & Feedback ⭐'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    paddingVertical: 10,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onPress={() => setShowFeedbackModal(false)}
+                >
+                  <Text style={{ color: textSub, fontSize: 13, fontWeight: '600' }}>
+                    Skip for Now
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -976,8 +1308,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 44,
-    height: 44,
+    width: 90,
+    height: 58,
+    marginLeft: -45,
   },
   vehiclePulseRing: {
     position: 'absolute',
@@ -999,17 +1332,21 @@ const styles = StyleSheet.create({
   },
   vehicleLabelPill: {
     backgroundColor: '#0F172A',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
     marginTop: 2,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    minWidth: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   vehicleLabelText: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '800',
+    textAlign: 'center',
   },
   floatingEtaCard: {
     flexDirection: 'row',

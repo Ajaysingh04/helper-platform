@@ -1218,6 +1218,24 @@
   ],
   "providers": [
     {
+      "id": "VND-IND-01",
+      "_id": "VND-IND-01",
+      "franchiseActive": true,
+      "franchisePlan": "monthly",
+      "franchiseAmount": 4000,
+      "franchiseExpiry": "2026-12-18T08:29:20.554Z",
+      "verified": true,
+      "status": "Active",
+      "kycStatus": "verified",
+      "phoneVerified": true,
+      "emailVerified": true,
+      "razorpayOrderId": "",
+      "razorpayPaymentId": "pay_sim_1794990561392",
+      "aadhaarNumber": "543289012345",
+      "aadhaarFrontDoc": "https://example.com/front.jpg",
+      "aadhaarBackDoc": "https://example.com/back.jpg"
+    },
+    {
       "id": "6aead735c07f46c021e12d67",
       "_id": "6aead735c07f46c021e12d67",
       "name": "Arjuna",
@@ -2003,7 +2021,336 @@
       "status": "Active"
     }
   ],
-  "bookings": [],
+  "bookings": [
+    {
+      "bookingCode": "HLP-56508",
+      "bookingId": "HLP-56508",
+      "id": "HLP-56508",
+      "customerName": "Customer",
+      "customerPhone": "9876543210",
+      "customerEmail": "customer@gmail.com",
+      "phone": "9876543210",
+      "serviceName": "Expert Home Repair",
+      "service": "Expert Home Repair",
+      "serviceCategory": "Repairs",
+      "serviceAddress": {
+        "fullAddress": "Indore / Delhi NCR",
+        "coordinates": [
+          77.3653,
+          28.628
+        ]
+      },
+      "address": "Indore / Delhi NCR",
+      "customerAddress": "Indore / Delhi NCR",
+      "problemDescription": "",
+      "distance": "2.4 km away",
+      "distanceKm": 2.4,
+      "status": "pending",
+      "slotConfirmed": false,
+      "slotOtp": "2392",
+      "startOtp": "2392",
+      "doorOtp": "2392",
+      "otp": "2392",
+      "startQrCode": "QR-HLP-HLP-56508-2392",
+      "homeServiceCharge": 149,
+      "hourlyRate": 299,
+      "providerId": "vdr_1790596374123",
+      "assignedProvider": "Rakesh",
+      "assignedProviderName": "Rakesh",
+      "price": "₹299",
+      "totalAmount": 299,
+      "security": {
+        "startOtpHash": "$2b$10$edijeGugjj459kI6FSgSl.dHXACh7Dgu6BF9Y.BzsZNMnaEiSPSY6",
+        "startOtpPlainForCustomer": "2392"
+      },
+      "isEmergency": false,
+      "scheduledDate": "Today",
+      "scheduledTime": "11:00 AM",
+      "scheduledTimestamp": 1794807000000,
+      "pricing": {
+        "baseAmount": 299,
+        "distanceCharge": 0,
+        "emergencyCharge": 0,
+        "nightSurgeCharge": 0,
+        "platformFee": 29,
+        "discountAmount": 0,
+        "totalAmount": 299,
+        "adminCommissionAmount": 83,
+        "providerEarningsAmount": 254
+      },
+      "paymentMode": "cash_after_service",
+      "paymentStatus": "pending",
+      "liveTracking": {
+        "etaMinutes": 25,
+        "distanceRemainingKm": 3.2,
+        "lastLocationUpdateAt": "2026-11-16T06:50:05.177Z"
+      },
+      "assignedWorker": null,
+      "assignedWorkers": [],
+      "assignedWorkerName": null,
+      "assignedWorkerPhone": null,
+      "assignedWorkerEmail": null,
+      "assignedWorkerExperience": null,
+      "workerStatus": "unassigned"
+    },
+    {
+      "bookingCode": "HLP-27131",
+      "bookingId": "HLP-27131",
+      "id": "HLP-27131",
+      "customerName": "Audit Test Customer",
+      "customerPhone": "9876543210",
+      "customerEmail": "helper@gmail.com",
+      "phone": "9876543210",
+      "serviceName": "AC Deep Clean & Jet Wash",
+      "service": "AC Deep Clean & Jet Wash",
+      "serviceCategory": "Repairs",
+      "serviceAddress": {
+        "fullAddress": "Vijay Nagar, Indore, MP",
+        "coordinates": [
+          77.3653,
+          28.628
+        ]
+      },
+      "address": "Vijay Nagar, Indore, MP",
+      "customerAddress": "Vijay Nagar, Indore, MP",
+      "problemDescription": "",
+      "distance": "2.4 km away",
+      "distanceKm": 2.4,
+      "status": "completed",
+      "slotConfirmed": false,
+      "slotOtp": "4175",
+      "startOtp": "4175",
+      "doorOtp": "4175",
+      "otp": "4175",
+      "startQrCode": "QR-HLP-HLP-27131-4175",
+      "homeServiceCharge": 149,
+      "hourlyRate": 299,
+      "providerId": "vdr_1790596374123",
+      "assignedProvider": "Rakesh",
+      "assignedProviderName": "Rakesh",
+      "price": "₹499",
+      "totalAmount": 499,
+      "security": {
+        "startOtpHash": "$2b$10$ug0zUao6V2UWkUknwKpOsexqfxRb6Vh/mKxGUIwddOXXqvDhtqKnG",
+        "startOtpPlainForCustomer": "4175"
+      },
+      "isEmergency": false,
+      "scheduledDate": "Tomorrow",
+      "scheduledTime": "11:00 AM",
+      "scheduledTimestamp": 1794893400000,
+      "pricing": {
+        "baseAmount": 499,
+        "distanceCharge": 0,
+        "emergencyCharge": 0,
+        "nightSurgeCharge": 0,
+        "platformFee": 29,
+        "discountAmount": 0,
+        "totalAmount": 499,
+        "adminCommissionAmount": 119,
+        "providerEarningsAmount": 424
+      },
+      "paymentMode": "cash_after_service",
+      "paymentStatus": "captured",
+      "liveTracking": {
+        "etaMinutes": 25,
+        "distanceRemainingKm": 3.2,
+        "lastLocationUpdateAt": "2026-11-16T06:49:45.022Z"
+      },
+      "assignedWorker": {
+        "workerId": "WRK-104",
+        "name": "Imran Khan",
+        "phone": "9876500104",
+        "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=300",
+        "skills": [
+          "Deep Foam Jet Wash",
+          "Gas Leakage & Refill",
+          "Compressor Replacement",
+          "Cooling Coil Repair",
+          "Thermostat Fix"
+        ],
+        "rating": 4.92,
+        "role": "AC Repair & Refill",
+        "experience": "7 Years Exp",
+        "experienceYears": 7,
+        "assignedAt": "2026-11-16T06:49:55.059Z",
+        "email": "9876500104@worker.helper.com"
+      },
+      "assignedWorkers": [
+        {
+          "workerId": "WRK-104",
+          "name": "Imran Khan",
+          "phone": "9876500104",
+          "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=300",
+          "skills": [
+            "Deep Foam Jet Wash",
+            "Gas Leakage & Refill",
+            "Compressor Replacement",
+            "Cooling Coil Repair",
+            "Thermostat Fix"
+          ],
+          "rating": 4.92,
+          "role": "AC Repair & Refill",
+          "experience": "7 Years Exp",
+          "experienceYears": 7,
+          "assignedAt": "2026-11-16T06:49:55.059Z"
+        }
+      ],
+      "assignedWorkerName": "Imran Khan",
+      "assignedWorkerPhone": "9876500104",
+      "assignedWorkerEmail": "9876500104@worker.helper.com",
+      "assignedWorkerExperience": "7 Years Exp",
+      "workerStatus": "completed",
+      "vendorAccepted": true,
+      "vendorAcceptedAt": "2026-11-16T06:49:45.032Z",
+      "vendorEstimatedTime": "45 mins",
+      "vendorCustomPrice": "₹499",
+      "completedAt": "2026-11-16T06:49:55.063Z",
+      "workerRating": 5,
+      "workerReview": "Super fast and verified technician!"
+    },
+    {
+      "bookingCode": "HLP-44897",
+      "bookingId": "HLP-44897",
+      "id": "HLP-44897",
+      "customerName": "Customer",
+      "customerPhone": "9876543210",
+      "customerEmail": "customer@gmail.com",
+      "phone": "9876543210",
+      "serviceName": "Expert Home Repair",
+      "service": "Expert Home Repair",
+      "serviceCategory": "Repairs",
+      "serviceAddress": {
+        "fullAddress": "Indore / Delhi NCR",
+        "coordinates": [
+          77.3653,
+          28.628
+        ]
+      },
+      "address": "Indore / Delhi NCR",
+      "customerAddress": "Indore / Delhi NCR",
+      "problemDescription": "",
+      "distance": "2.4 km away",
+      "distanceKm": 2.4,
+      "status": "pending",
+      "slotConfirmed": false,
+      "slotOtp": "9323",
+      "startOtp": "9323",
+      "doorOtp": "9323",
+      "otp": "9323",
+      "startQrCode": "QR-HLP-HLP-44897-9323",
+      "homeServiceCharge": 149,
+      "hourlyRate": 299,
+      "providerId": "vdr_1790596374123",
+      "assignedProvider": "Rakesh",
+      "assignedProviderName": "Rakesh",
+      "price": "₹299",
+      "totalAmount": 299,
+      "security": {
+        "startOtpHash": "$2b$10$lt8yKEjZYOExjsAfWPV8DO7J95QssYS9j8yU6i15pUY4XRTeAt9XG",
+        "startOtpPlainForCustomer": "9323"
+      },
+      "isEmergency": false,
+      "scheduledDate": "Today",
+      "scheduledTime": "11:00 AM",
+      "scheduledTimestamp": 1794807000000,
+      "pricing": {
+        "baseAmount": 299,
+        "distanceCharge": 0,
+        "emergencyCharge": 0,
+        "nightSurgeCharge": 0,
+        "platformFee": 29,
+        "discountAmount": 0,
+        "totalAmount": 299,
+        "adminCommissionAmount": 83,
+        "providerEarningsAmount": 254
+      },
+      "paymentMode": "cash_after_service",
+      "paymentStatus": "pending",
+      "liveTracking": {
+        "etaMinutes": 25,
+        "distanceRemainingKm": 3.2,
+        "lastLocationUpdateAt": "2026-11-16T06:44:49.866Z"
+      },
+      "assignedWorker": null,
+      "assignedWorkers": [],
+      "assignedWorkerName": null,
+      "assignedWorkerPhone": null,
+      "assignedWorkerEmail": null,
+      "assignedWorkerExperience": null,
+      "workerStatus": "unassigned"
+    },
+    {
+      "bookingCode": "HLP-60110",
+      "bookingId": "HLP-60110",
+      "id": "HLP-60110",
+      "customerName": "Audit Test Customer",
+      "customerPhone": "9876543210",
+      "customerEmail": "helper@gmail.com",
+      "phone": "9876543210",
+      "serviceName": "AC Deep Clean & Jet Wash",
+      "service": "AC Deep Clean & Jet Wash",
+      "serviceCategory": "Repairs",
+      "serviceAddress": {
+        "fullAddress": "Vijay Nagar, Indore, MP",
+        "coordinates": [
+          77.3653,
+          28.628
+        ]
+      },
+      "address": "Vijay Nagar, Indore, MP",
+      "customerAddress": "Vijay Nagar, Indore, MP",
+      "problemDescription": "",
+      "distance": "2.4 km away",
+      "distanceKm": 2.4,
+      "status": "pending",
+      "slotConfirmed": false,
+      "slotOtp": "4538",
+      "startOtp": "4538",
+      "doorOtp": "4538",
+      "otp": "4538",
+      "startQrCode": "QR-HLP-HLP-60110-4538",
+      "homeServiceCharge": 149,
+      "hourlyRate": 299,
+      "providerId": "vdr_1790596374123",
+      "assignedProvider": "Rakesh",
+      "assignedProviderName": "Rakesh",
+      "price": "₹499",
+      "totalAmount": 499,
+      "security": {
+        "startOtpHash": "$2b$10$96Re2nnTzENPDLG5aCifVuqb6VT7KlRn8mhUXCbBvuH6BiBc/3bOK",
+        "startOtpPlainForCustomer": "4538"
+      },
+      "isEmergency": false,
+      "scheduledDate": "Tomorrow",
+      "scheduledTime": "11:00 AM",
+      "scheduledTimestamp": 1794893400000,
+      "pricing": {
+        "baseAmount": 499,
+        "distanceCharge": 0,
+        "emergencyCharge": 0,
+        "nightSurgeCharge": 0,
+        "platformFee": 29,
+        "discountAmount": 0,
+        "totalAmount": 499,
+        "adminCommissionAmount": 119,
+        "providerEarningsAmount": 424
+      },
+      "paymentMode": "cash_after_service",
+      "paymentStatus": "pending",
+      "liveTracking": {
+        "etaMinutes": 25,
+        "distanceRemainingKm": 3.2,
+        "lastLocationUpdateAt": "2026-11-16T06:44:49.337Z"
+      },
+      "assignedWorker": null,
+      "assignedWorkers": [],
+      "assignedWorkerName": null,
+      "assignedWorkerPhone": null,
+      "assignedWorkerEmail": null,
+      "assignedWorkerExperience": null,
+      "workerStatus": "unassigned"
+    }
+  ],
   "slides": [
     {
       "id": "sl1",
@@ -2043,6 +2390,56 @@
     }
   ],
   "users": [
+    {
+      "id": "helper_india_user_001",
+      "name": "Helper India Customer",
+      "email": "helperindia@gmail.com",
+      "phone": "9876500000",
+      "password": "$2b$10$1N.WslaINnQXPPEZcv9nuei3B/KzQfPxQ7VL8Xq2Tn80zisR1eV.C",
+      "address": "Indore / Delhi NCR, India",
+      "role": "customer",
+      "isPhoneVerified": true,
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250",
+      "createdAt": "2026-11-16T14:30:00.000Z"
+    },
+    {
+      "id": "u_1794811784916",
+      "name": "Quick Tester",
+      "email": "quick_test@helper.com",
+      "phone": "9687764235",
+      "password": "$2b$10$eGZD/dmkL03pn/gk.fZj0OFpVXIxE0CDca.j5cfesV1814a66aUrK",
+      "role": "customer",
+      "isEmailVerified": true,
+      "isPhoneVerified": true,
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200",
+      "activeSessionId": "sess_1794811784817_xu85qsz",
+      "createdAt": "2026-11-16T06:49:44.916Z"
+    },
+    {
+      "id": "u_1794811489221",
+      "name": "Audit Auto",
+      "email": "audit_auto@helper.com",
+      "phone": "9305049855",
+      "password": "$2b$10$Ha9HkTb/UKT7J5C6N.0iF.o1gwZSYk2nw3ZAdQ4/POMidAZhP.EBC",
+      "role": "customer",
+      "isEmailVerified": true,
+      "isPhoneVerified": true,
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200",
+      "activeSessionId": "sess_1794811489120_e0yjde3",
+      "createdAt": "2026-11-16T06:44:49.221Z"
+    },
+    {
+      "id": "helper_customer_001",
+      "name": "Helper User",
+      "email": "helper@gmail.com",
+      "phone": "9876500000",
+      "password": "$2b$10$1N.WslaINnQXPPEZcv9nuei3B/KzQfPxQ7VL8Xq2Tn80zisR1eV.C",
+      "address": "Indore / Delhi NCR, India",
+      "role": "customer",
+      "isPhoneVerified": true,
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250",
+      "createdAt": "2026-11-16T10:00:00.000Z"
+    },
     {
       "id": "admin_master_001",
       "name": "Super Administrator",
@@ -2361,6 +2758,154 @@
     "maintenanceMode": false
   },
   "workers": [
+    {
+      "workerId": "WRK-76710",
+      "id": "WRK-76710",
+      "vendorId": "VND-IND-01",
+      "vendorName": "Indore Multi-Specialist Hub",
+      "name": "Deepak Sharma",
+      "phone": "+91 98765 00188",
+      "email": "deepaksharma@helper.in",
+      "password": "worker123",
+      "avatar": "https://images.unsplash.com/photo-1535713875698?auto=format&fit=crop&w=300",
+      "address": "City Hub Sector",
+      "category": "Plumber",
+      "skills": [
+        "Plumber"
+      ],
+      "experienceYears": 3,
+      "status": "online",
+      "verificationStatus": "verified",
+      "documents": {
+        "aadhaarNumber": "XXXX-XXXX-0188",
+        "aadhaarDoc": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600",
+        "panNumber": "ABCDE0188F",
+        "panDoc": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600",
+        "certificates": [
+          {
+            "name": "Plumber Certified Technician",
+            "number": "SKILL-CERT-80558",
+            "status": "Verified",
+            "issuedBy": "National Skill Development Council (NSDC)"
+          }
+        ],
+        "policeVerificationDoc": "IND-POLICE-VERIFIED-1935",
+        "policeVerificationStatus": "Approved / Clean Record",
+        "drivingLicense": "DL-MP09-20221321118",
+        "verificationStatus": "Verified"
+      },
+      "availability": "Available for Immediate Dispatch",
+      "currentLocation": {
+        "coordinates": [
+          77.3653,
+          28.628
+        ],
+        "address": "Sector 18 Hub",
+        "lastUpdated": "2026-11-16T06:50:05.085Z"
+      },
+      "performance": {
+        "completedJobs": 0,
+        "rating": 4.9,
+        "totalReviews": 0,
+        "attendanceRate": 100,
+        "jobCompletionRate": 100,
+        "onTimeRate": 100
+      },
+      "earnings": {
+        "salaryType": "commission",
+        "commissionPercent": 90,
+        "fixedMonthlySalary": 0,
+        "hourlyRate": 249,
+        "totalEarned": 0,
+        "pendingPayout": 0,
+        "payoutHistory": []
+      },
+      "attendance": [
+        {
+          "id": "ATT-20497",
+          "date": "2026-11-16",
+          "checkIn": "09:00 AM",
+          "checkOut": "07:00 PM",
+          "status": "present",
+          "hours": 10,
+          "location": "Onboarding Station"
+        }
+      ]
+    },
+    {
+      "workerId": "WRK-49961",
+      "id": "WRK-49961",
+      "vendorId": "VND-IND-01",
+      "vendorName": "Indore Multi-Specialist Hub",
+      "name": "Deepak Sharma",
+      "phone": "+91 98765 00188",
+      "email": "deepaksharma@helper.in",
+      "password": "worker123",
+      "avatar": "https://images.unsplash.com/photo-1535713875329?auto=format&fit=crop&w=300",
+      "address": "City Hub Sector",
+      "category": "Plumber",
+      "skills": [
+        "Plumber"
+      ],
+      "experienceYears": 3,
+      "status": "online",
+      "verificationStatus": "verified",
+      "documents": {
+        "aadhaarNumber": "XXXX-XXXX-0188",
+        "aadhaarDoc": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600",
+        "panNumber": "ABCDE0188F",
+        "panDoc": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600",
+        "certificates": [
+          {
+            "name": "Plumber Certified Technician",
+            "number": "SKILL-CERT-52692",
+            "status": "Verified",
+            "issuedBy": "National Skill Development Council (NSDC)"
+          }
+        ],
+        "policeVerificationDoc": "IND-POLICE-VERIFIED-5952",
+        "policeVerificationStatus": "Approved / Clean Record",
+        "drivingLicense": "DL-MP09-20220556476",
+        "verificationStatus": "Verified"
+      },
+      "availability": "Available for Immediate Dispatch",
+      "currentLocation": {
+        "coordinates": [
+          77.3653,
+          28.628
+        ],
+        "address": "Sector 18 Hub",
+        "lastUpdated": "2026-11-16T06:44:49.361Z"
+      },
+      "performance": {
+        "completedJobs": 0,
+        "rating": 4.9,
+        "totalReviews": 0,
+        "attendanceRate": 100,
+        "jobCompletionRate": 100,
+        "onTimeRate": 100
+      },
+      "earnings": {
+        "salaryType": "commission",
+        "commissionPercent": 90,
+        "fixedMonthlySalary": 0,
+        "hourlyRate": 249,
+        "totalEarned": 0,
+        "pendingPayout": 0,
+        "payoutHistory": []
+      },
+      "attendance": [
+        {
+          "id": "ATT-41131",
+          "date": "2026-11-16",
+          "checkIn": "09:00 AM",
+          "checkOut": "07:00 PM",
+          "status": "present",
+          "hours": 10,
+          "location": "Onboarding Station"
+        }
+      ]
+    },
     {
       "id": "WRK-101",
       "_id": "WRK-101",
@@ -3153,6 +3698,62 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif_1794811805179_804",
+      "recipientId": "vdr_1790596374123",
+      "providerId": "vdr_1790596374123",
+      "title": "⚡ New Booking: Expert Home Repair",
+      "message": "Customer booked Expert Home Repair at Indore / Delhi NCR. Slot: Today 11:00 AM",
+      "bookingId": "HLP-56508",
+      "bookingCode": "HLP-56508",
+      "amount": 299,
+      "customerName": "Customer",
+      "customerPhone": "9876543210",
+      "read": false,
+      "createdAt": "2026-11-16T06:50:05.179Z"
+    },
+    {
+      "id": "notif_1794811785026_276",
+      "recipientId": "vdr_1790596374123",
+      "providerId": "vdr_1790596374123",
+      "title": "⚡ New Booking: AC Deep Clean & Jet Wash",
+      "message": "Audit Test Customer booked AC Deep Clean & Jet Wash at Vijay Nagar, Indore, MP. Slot: Tomorrow 11:00 AM",
+      "bookingId": "HLP-27131",
+      "bookingCode": "HLP-27131",
+      "amount": 499,
+      "customerName": "Audit Test Customer",
+      "customerPhone": "9876543210",
+      "read": false,
+      "createdAt": "2026-11-16T06:49:45.026Z"
+    },
+    {
+      "id": "notif_1794811489869_946",
+      "recipientId": "vdr_1790596374123",
+      "providerId": "vdr_1790596374123",
+      "title": "⚡ New Booking: Expert Home Repair",
+      "message": "Customer booked Expert Home Repair at Indore / Delhi NCR. Slot: Today 11:00 AM",
+      "bookingId": "HLP-44897",
+      "bookingCode": "HLP-44897",
+      "amount": 299,
+      "customerName": "Customer",
+      "customerPhone": "9876543210",
+      "read": false,
+      "createdAt": "2026-11-16T06:44:49.869Z"
+    },
+    {
+      "id": "notif_1794811489340_533",
+      "recipientId": "vdr_1790596374123",
+      "providerId": "vdr_1790596374123",
+      "title": "⚡ New Booking: AC Deep Clean & Jet Wash",
+      "message": "Audit Test Customer booked AC Deep Clean & Jet Wash at Vijay Nagar, Indore, MP. Slot: Tomorrow 11:00 AM",
+      "bookingId": "HLP-60110",
+      "bookingCode": "HLP-60110",
+      "amount": 499,
+      "customerName": "Audit Test Customer",
+      "customerPhone": "9876543210",
+      "read": false,
+      "createdAt": "2026-11-16T06:44:49.340Z"
+    },
     {
       "id": "notif_1793782608371_32",
       "recipientId": "vdr_1790596374123",

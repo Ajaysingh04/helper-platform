@@ -63,6 +63,7 @@ const FAQS_HI = [
 
 export default function HelpSupportScreen({ navigation }) {
   const { primaryColor, language, showCustomAlert, themeColors, isDark: ctxIsDark, themeMode } = useContext(AppContext);
+  const isHi = language === 'hi';
   const isDark = themeColors?.isDark !== undefined ? themeColors.isDark : (ctxIsDark !== undefined ? ctxIsDark : themeMode === 'dark');
   const activeColor = primaryColor || colors.primary;
   const styles = useMemo(() => createStyles(isDark, activeColor), [isDark, activeColor]);

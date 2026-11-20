@@ -137,6 +137,13 @@ export default function ProfileScreen({ navigation }) {
       onPress: () => navigation.navigate('EditProfile'),
     },
     {
+      id: '5',
+      title: 'Partner / Vendor Hub',
+      icon: '💼',
+      sub: 'Manage incoming orders, team & wallet earnings',
+      onPress: () => navigation.navigate('VendorPartner'),
+    },
+    {
       id: '6',
       title: t('helpTitle'),
       icon: '🎧',
@@ -299,6 +306,44 @@ export default function ProfileScreen({ navigation }) {
           </View>
 
 
+
+          {/* Admin Command Center Banner */}
+          <TouchableOpacity
+            style={styles.adminBanner}
+            activeOpacity={0.85}
+            onPress={() => {
+              if (isAdmin || currentUser?.role === 'superadmin' || currentUser?.role === 'admin') {
+                navigation.navigate('AdminDashboard');
+              } else {
+                Alert.alert(
+                  'Enter Admin Dashboard 🛡️',
+                  'Open the Helper India Master Admin Dashboard? (Full control over Offers, Vendors, Users & Services)',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Open Admin 🚀',
+                      onPress: () => navigation.navigate('AdminDashboard'),
+                    },
+                  ]
+                );
+              }
+            }}
+          >
+            <View style={styles.adminBannerIcon}>
+              <Text style={{ fontSize: 20 }}>🛡️</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.adminBannerTitle}>
+                {language === 'hi' ? 'एडमिन मास्टर कंट्रोल 🛡️' : 'ADMIN MASTER CONTROL 🛡️'}
+              </Text>
+              <Text style={styles.adminBannerSub}>
+                {language === 'hi'
+                  ? 'ऑफर, सर्विस इमेज/प्राइस, यूजर ब्लॉक व वेंडर मैनेजमेंट'
+                  : 'Manage Offers, Service Photos/Prices, Block Users & Vendors'}
+              </Text>
+            </View>
+            <Text style={styles.adminBannerArrow}>➔</Text>
+          </TouchableOpacity>
 
           {/* Menu Items */}
           <View style={[styles.menuSection, dynamic.menuSection]}>

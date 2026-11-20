@@ -5,11 +5,36 @@ import WeeklyActivityRevenueGraph from "./WeeklyActivityRevenueGraph";
 function AdminBookings() {
   const { bookings, updateBookingStatus, deleteBooking, addBooking, providers } = useContext(DataContext);
   const [filterStatus, setFilterStatus] = useState("All");
+  const [platformFilter, setPlatformFilter] = useState("All"); // "All" | "app" | "web"
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(8);
   const [showAddModal, setShowAddModal] = useState(false);
   const [hoveredBarIndex, setHoveredBarIndex] = useState(null);
+
+  const getBookingPlatform = (b) => {
+    if (b.source === "app" || b.source === "mobile" || b.platform === "app" || b.appSource === "mobile") return "app";
+    if (b.source === "web" || b.platform === "web") return "web";
+    if (b.id && String(b.id).startsWith("BK-")) return "app";
+    return "web";
+  };
+
+  const getBookingDateTime = (b) => {
+    let date = b.scheduledDate || b.date;
+    if (!date && b.createdAt) {
+      date = new Date(b.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    }
+    const time = b.scheduledTime || b.timeSlot || b.time || "15 Mins Superfast Doorstep";
+    const placedAt = b.createdAt ? new Date(b.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "";
+    return { date: date || "Today", time, placedAt };
+  };
+
+  const getBookingPriceDetails = (b) => {
+    const rawPrice = String(b.price || b.amount || "₹299").trim();
+    const formattedPrice = rawPrice.startsWith("₹") ? rawPrice : `₹${rawPrice}`;
+    const payMode = b.paymentMethod || b.paymentMode || (b.isPaid ? "Online / UPI" : "Cash on Door");
+    return { formattedPrice, payMode };
+  };
 
   // New booking state
   const [newCustName, setNewCustName] = useState("");
@@ -102,10 +127,19 @@ function AdminBookings() {
 
   const intakeArea = `${intakeSpline} L ${intakePoints[intakePoints.length - 1].x},${padY + graphH} L ${intakePoints[0].x},${padY + graphH} Z`;
 
+  const appBookingsCount = bookings.filter((b) => getBookingPlatform(b) === "app").length;
+  const webBookingsCount = bookings.filter((b) => getBookingPlatform(b) === "web").length;
+
   // Filter Bookings
   const filtered = useMemo(() => {
-    return bookings.filter(b => {
+    return bookings.filter((b) => {
       const matchStatus = filterStatus === "All" || b.status === filterStatus;
+      const bPlat = getBookingPlatform(b);
+      const matchPlatform =
+        platformFilter === "All" ||
+        (platformFilter === "app" && bPlat === "app") ||
+        (platformFilter === "web" && bPlat === "web");
+
       const q = searchQuery.toLowerCase().trim();
       const matchSearch =
         !q ||
@@ -114,9 +148,9 @@ function AdminBookings() {
         (b.service && b.service.toLowerCase().includes(q)) ||
         (b.provider && b.provider.toLowerCase().includes(q)) ||
         (b.phone && b.phone.toLowerCase().includes(q));
-      return matchStatus && matchSearch;
+      return matchStatus && matchPlatform && matchSearch;
     });
-  }, [bookings, filterStatus, searchQuery]);
+  }, [bookings, filterStatus, platformFilter, searchQuery]);
 
   // Pagination Calculations
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
@@ -579,8 +613,43 @@ function AdminBookings() {
             )}
           </div>
 
-          {/* Segmented Status Filter Tabs with Live Badges */}
-          <div className="filters-group">
+          {/* Segmented Status & Platform Filter Tabs */}
+          <div className="filters-group" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            {/* Platform Filter */}
+            <div className="segmented-control">
+              <button 
+                type="button"
+                className={`seg-all ${platformFilter === "All" ? "active" : ""}`}
+                onClick={() => {
+                  setPlatformFilter("All");
+                  setCurrentPage(1);
+                }}
+              >
+                <span>All Sources</span>
+              </button>
+              <button 
+                type="button"
+                className={`seg-active ${platformFilter === "app" ? "active" : ""}`}
+                onClick={() => {
+                  setPlatformFilter("app");
+                  setCurrentPage(1);
+                }}
+              >
+                <span>📱 App ({appBookingsCount})</span>
+              </button>
+              <button 
+                type="button"
+                className={`seg-inactive ${platformFilter === "web" ? "active" : ""}`}
+                onClick={() => {
+                  setPlatformFilter("web");
+                  setCurrentPage(1);
+                }}
+              >
+                <span>🌐 Web ({webBookingsCount})</span>
+              </button>
+            </div>
+
+            {/* Status Filter Tabs */}
             <div className="segmented-control">
               {[
                 { id: "All", label: "All Orders", count: totalCount, icon: "📦" },
@@ -626,6 +695,7 @@ function AdminBookings() {
               onClick={() => {
                 setSearchQuery("");
                 setFilterStatus("All");
+                setPlatformFilter("All");
                 setCurrentPage(1);
               }}
             >
@@ -639,79 +709,221 @@ function AdminBookings() {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th className="col-order-id">Order ID</th>
+                    <th className="col-order-id">Order ID & Source</th>
                     <th className="col-customer">Customer Details</th>
                     <th className="col-service">Service Requested</th>
                     <th className="col-provider">Assigned Provider</th>
+                    <th className="col-date">Scheduled Slot</th>
                     <th className="col-address">Location / Address</th>
-                    <th className="col-amount">Amount</th>
+                    <th className="col-amount">Amount & Mode</th>
                     <th className="col-status">Status</th>
-                    <th className="col-date">Date / Time</th>
-                    <th className="col-action">Action</th>
+                    <th className="col-action" style={{ textAlign: "right" }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedBookings.map((booking) => (
-                    <tr key={booking.id}>
-                      <td className="col-order-id">
-                        <div className="order-id-cell-box">
-                          <span className="booking-id-tag">{booking.id}</span>
-                          {booking.doorOtp && (
-                            <span className="door-otp-tag" title="Customer Door Security OTP">
-                              OTP: <strong>{booking.doorOtp}</strong>
+                  {paginatedBookings.map((booking) => {
+                    const plat = getBookingPlatform(booking);
+                    const { date, time, placedAt } = getBookingDateTime(booking);
+                    const { formattedPrice, payMode } = getBookingPriceDetails(booking);
+
+                    return (
+                      <tr key={booking.id}>
+                        <td className="col-order-id">
+                          <div className="order-id-cell-box" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span className="booking-id-tag">{booking.id}</span>
+                              <span className={`platform-pill ${plat === "app" ? "app" : "web"}`} style={{ fontSize: "10.5px", padding: "2px 7px" }}>
+                                {plat === "app" ? "📱 App" : "🌐 Web"}
+                              </span>
+                            </div>
+                            {booking.doorOtp && (
+                              <span className="door-otp-tag" title="Customer Door Security OTP" style={{ width: "fit-content" }}>
+                                OTP: <strong>{booking.doorOtp}</strong>
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="col-customer">
+                          <div className="booking-customer-cell">
+                            <strong className="booking-cust-name">{booking.customerName}</strong>
+                            <a href={`tel:${booking.phone}`} className="booking-cust-phone">
+                              📞 {booking.phone}
+                            </a>
+                            {booking.customerEmail && (
+                              <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>
+                                ✉️ {booking.customerEmail}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="col-service">
+                          <div className="booking-service-badge">
+                            <span>{booking.service}</span>
+                          </div>
+                        </td>
+                        <td className="col-provider">
+                          <select
+                            value={booking.provider || ""}
+                            onChange={(e) => updateBookingStatus(booking.id, booking.status, e.target.value)}
+                            className="booking-provider-select"
+                          >
+                            <option value="Auto Assigned">Auto Assigned</option>
+                            {providers.map((p) => (
+                              <option key={p.id} value={p.name}>{p.name}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="col-date">
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <span style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--text-main)" }}>
+                              📅 {date}
                             </span>
-                          )}
+                            <span style={{ fontSize: "11.5px", fontWeight: 600, color: "#4F46E5" }}>
+                              ⏰ {time}
+                            </span>
+                            {placedAt && (
+                              <span style={{ fontSize: "10.5px", color: "var(--text-muted)" }}>
+                                ⏱️ Placed: {placedAt}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="col-address">
+                          <div className="booking-address-text" title={booking.address}>
+                            📍 {booking.address}
+                          </div>
+                        </td>
+                        <td className="col-amount">
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <strong className="booking-price-tag">{formattedPrice}</strong>
+                            <span className="pay-mode-pill" style={{ width: "fit-content" }}>
+                              {payMode}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="col-status">
+                          <select
+                            value={booking.status}
+                            onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
+                            className={`status-select-pill ${getStatusBadgeClass(booking.status)}`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                        <td className="col-action" style={{ textAlign: "right" }}>
+                          <button 
+                            className="btn-card-action delete icon-only"
+                            onClick={() => {
+                              if (window.confirm(`Delete booking order "${booking.id}"?`)) {
+                                deleteBooking(booking.id);
+                              }
+                            }}
+                            title="Delete Record"
+                          >
+                            🗑️
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile & Tablet Card Grid View (Visible <= 992px) */}
+            <div className="admin-mobile-cards-view">
+              {paginatedBookings.map((booking) => {
+                const plat = getBookingPlatform(booking);
+                const { date, time } = getBookingDateTime(booking);
+                const { formattedPrice, payMode } = getBookingPriceDetails(booking);
+
+                return (
+                  <div key={`card-${booking.id}`} className="admin-order-card">
+                    {/* Card Header: ID, OTP & Status */}
+                    <div className="order-card-header">
+                      <div className="order-card-id-block" style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        <span className="booking-id-tag">{booking.id}</span>
+                        <span className={`platform-pill ${plat === "app" ? "app" : "web"}`} style={{ fontSize: "10px", padding: "2px 6px" }}>
+                          {plat === "app" ? "📱 App" : "🌐 Web"}
+                        </span>
+                        {booking.doorOtp && (
+                          <span className="order-card-otp" title="Customer Door Security OTP">
+                            OTP: {booking.doorOtp}
+                          </span>
+                        )}
+                      </div>
+                      <select
+                        value={booking.status}
+                        onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
+                        className={`status-select-pill ${getStatusBadgeClass(booking.status)}`}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </div>
+
+                    {/* Customer Info Row */}
+                    <div className="order-card-cust-row">
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div className="order-card-avatar">
+                          {(booking.customerName || "U").charAt(0).toUpperCase()}
                         </div>
-                      </td>
-                      <td className="col-customer">
-                        <div className="booking-customer-cell">
+                        <div>
                           <strong className="booking-cust-name">{booking.customerName}</strong>
-                          <a href={`tel:${booking.phone}`} className="booking-cust-phone">
+                          <a href={`tel:${booking.phone}`} className="booking-cust-phone" style={{ display: "block" }}>
                             📞 {booking.phone}
                           </a>
                         </div>
-                      </td>
-                      <td className="col-service">
-                        <div className="booking-service-badge">
-                          <span>{booking.service}</span>
-                        </div>
-                      </td>
-                      <td className="col-provider">
-                        <select
-                          value={booking.provider || ""}
-                          onChange={(e) => updateBookingStatus(booking.id, booking.status, e.target.value)}
-                          className="booking-provider-select"
-                        >
-                          <option value="Auto Assigned">Auto Assigned</option>
-                          {providers.map(p => (
-                            <option key={p.id} value={p.name}>{p.name}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="col-address">
-                        <div className="booking-address-text" title={booking.address}>
-                          📍 {booking.address}
-                        </div>
-                      </td>
-                      <td className="col-amount">
-                        <strong className="booking-price-tag">{booking.price}</strong>
-                      </td>
-                      <td className="col-status">
-                        <select
-                          value={booking.status}
-                          onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
-                          className={`status-select-pill ${getStatusBadgeClass(booking.status)}`}
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      </td>
-                      <td className="col-date">
-                        <span className="booking-date-text">{booking.date || "Today"}</span>
-                      </td>
-                      <td className="col-action">
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <strong className="booking-price-tag">{formattedPrice}</strong>
+                        <span className="pay-mode-pill" style={{ display: "inline-block", fontSize: "10px", marginTop: "2px" }}>
+                          {payMode}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Service & Slot */}
+                    <div className="order-card-service-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
+                      <div className="booking-service-badge" style={{ margin: 0 }}>
+                        <span>{booking.service}</span>
+                      </div>
+                      <span style={{ fontSize: "11.5px", color: "#4F46E5", fontWeight: 700 }}>
+                        📅 {date} • {time}
+                      </span>
+                    </div>
+
+                    {/* Provider Assignment */}
+                    <div className="order-card-pro-row">
+                      <span style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "600" }}>Provider:</span>
+                      <select
+                        value={booking.provider || ""}
+                        onChange={(e) => updateBookingStatus(booking.id, booking.status, e.target.value)}
+                        className="booking-provider-select"
+                        style={{ flex: 1, maxWidth: "none" }}
+                      >
+                        <option value="Auto Assigned">Auto Assigned</option>
+                        {providers.map((p) => (
+                          <option key={p.id} value={p.name}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Address */}
+                    <div className="order-card-address">
+                      <span>📍</span>
+                      <span>{booking.address}</span>
+                    </div>
+
+                    {/* Card Footer: Date & Delete Action */}
+                    <div className="order-card-footer">
+                      <span className="order-card-date">🕒 Slot: {time}</span>
+                      <div className="order-card-actions">
                         <button 
                           className="btn-card-action delete icon-only"
                           onClick={() => {
@@ -723,103 +935,11 @@ function AdminBookings() {
                         >
                           🗑️
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile & Tablet Card Grid View (Visible <= 992px) */}
-            <div className="admin-mobile-cards-view">
-              {paginatedBookings.map((booking) => (
-                <div key={`card-${booking.id}`} className="admin-order-card">
-                  {/* Card Header: ID, OTP & Status */}
-                  <div className="order-card-header">
-                    <div className="order-card-id-block">
-                      <span className="booking-id-tag">{booking.id}</span>
-                      {booking.doorOtp && (
-                        <span className="order-card-otp" title="Customer Door Security OTP">
-                          OTP: {booking.doorOtp}
-                        </span>
-                      )}
-                    </div>
-                    <select
-                      value={booking.status}
-                      onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
-                      className={`status-select-pill ${getStatusBadgeClass(booking.status)}`}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </div>
-
-                  {/* Customer Info Row */}
-                  <div className="order-card-cust-row">
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <div className="order-card-avatar">
-                        {(booking.customerName || "U").charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <strong className="booking-cust-name">{booking.customerName}</strong>
-                        <a href={`tel:${booking.phone}`} className="booking-cust-phone" style={{ display: "block" }}>
-                          📞 {booking.phone}
-                        </a>
                       </div>
                     </div>
-                    <strong className="booking-price-tag">{booking.price}</strong>
                   </div>
-
-                  {/* Service */}
-                  <div className="order-card-service-row">
-                    <div className="booking-service-badge" style={{ margin: 0 }}>
-                      <span>{booking.service}</span>
-                    </div>
-                  </div>
-
-                  {/* Provider Assignment */}
-                  <div className="order-card-pro-row">
-                    <span style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "600" }}>Provider:</span>
-                    <select
-                      value={booking.provider || ""}
-                      onChange={(e) => updateBookingStatus(booking.id, booking.status, e.target.value)}
-                      className="booking-provider-select"
-                      style={{ flex: 1, maxWidth: "none" }}
-                    >
-                      <option value="Auto Assigned">Auto Assigned</option>
-                      {providers.map(p => (
-                        <option key={p.id} value={p.name}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Address */}
-                  <div className="order-card-address">
-                    <span>📍</span>
-                    <span>{booking.address}</span>
-                  </div>
-
-                  {/* Card Footer: Date & Delete Action */}
-                  <div className="order-card-footer">
-                    <span className="order-card-date">🕒 {booking.date || "Today"}</span>
-                    <div className="order-card-actions">
-                      <button 
-                        className="btn-card-action delete icon-only"
-                        onClick={() => {
-                          if (window.confirm(`Delete booking order "${booking.id}"?`)) {
-                            deleteBooking(booking.id);
-                          }
-                        }}
-                        title="Delete Record"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Pagination Controls */}

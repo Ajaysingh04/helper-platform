@@ -7,6 +7,7 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 const config = {
+  maxWorkers: 2,
   resolver: {
     blockList: [/android\/.*\/build\/.*/, /android\/app\/build\/.*/],
   },

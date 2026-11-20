@@ -81,8 +81,14 @@ router.post("/", async (req, res) => {
           },
           { returnDocument: 'after' }
         );
+        try {
+          dbStore.update("services", existing.id || existing._id, newServiceData);
+        } catch (e) {}
       } else {
         saved = await Service.create(newServiceData);
+        try {
+          dbStore.insert("services", { ...newServiceData, _id: saved._id });
+        } catch (e) {}
       }
     } else {
       const all = dbStore.getAll("services") || [];

@@ -38,6 +38,12 @@ const ProviderSchema = new mongoose.Schema(
     franchisePlan: { type: String, default: "none" }, // "monthly" (₹4000/mo) or "annual" (₹500000/yr)
     franchiseExpiry: { type: Date },
     franchiseAmount: { type: Number, default: 0 },
+    lastExpiryWarningSentAt: { type: Date },
+    franchiseExpiredAt: { type: Date },
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
+    phoneVerified: { type: Boolean, default: false },
+    emailVerified: { type: Boolean, default: false },
     teamMembers: [
       {
         id: { type: String },
@@ -51,6 +57,8 @@ const ProviderSchema = new mongoose.Schema(
     age: { type: Number },
     aadhaarNumber: { type: String },
     aadhaarDoc: { type: String },
+    aadhaarFrontDoc: { type: String },
+    aadhaarBackDoc: { type: String },
     panNumber: { type: String },
     panDoc: { type: String },
     selfieDoc: { type: String },

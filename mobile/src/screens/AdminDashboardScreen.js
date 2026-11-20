@@ -328,6 +328,116 @@ export default function AdminDashboardScreen({ navigation }) {
     );
   };
 
+  const handleToggleBlockUser = (user) => {
+    const userId = user._id || user.id;
+    const isCurrentlyBlocked = user.isBlocked === true || user.status === 'Blocked' || user.status === 'Suspended';
+    const actionLabel = isCurrentlyBlocked ? 'Unblock' : 'Block';
+
+    Alert.alert(
+      `${actionLabel} User Account?`,
+      `Are you sure you want to ${actionLabel.toLowerCase()} ${user.name || user.phone}? ${isCurrentlyBlocked ? 'They will be allowed to log in and book services again.' : 'They will be immediately blocked from logging in or booking.'}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: `${actionLabel} User`,
+          style: isCurrentlyBlocked ? 'default' : 'destructive',
+          onPress: async () => {
+            try {
+              const newBlocked = !isCurrentlyBlocked;
+              const newStatus = newBlocked ? 'Blocked' : 'Active';
+              await client.put(`/users/${userId}/block`, { isBlocked: newBlocked, status: newStatus });
+              setUsers(prev =>
+                prev.map(u => ((u._id === userId || u.id === userId) ? { ...u, isBlocked: newBlocked, status: newStatus } : u))
+              );
+              Alert.alert('Success', `User is now ${newStatus}.`);
+            } catch (e) {
+              Alert.alert('Error', e.response?.data?.message || `Failed to ${actionLabel.toLowerCase()} user`);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteUser = (user) => {
+    const userId = user._id || user.id;
+    Alert.alert(
+      'Permanently Delete User?',
+      `Are you sure you want to delete ${user.name || user.phone}? All user records will be permanently removed.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Permanently',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await client.delete(`/users/${userId}`);
+              setUsers(prev => prev.filter(u => u._id !== userId && u.id !== userId));
+              Alert.alert('User Deleted', 'User account permanently removed from system.');
+            } catch (e) {
+              Alert.alert('Error', e.response?.data?.message || 'Failed to delete user');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleToggleBlockVendor = (vendor) => {
+    const vendorId = vendor._id || vendor.id;
+    const isCurrentlyBlocked = vendor.isBlocked === true || vendor.status === 'Blocked' || vendor.status === 'Suspended';
+    const actionLabel = isCurrentlyBlocked ? 'Unblock' : 'Block';
+
+    Alert.alert(
+      `${actionLabel} Partner Hub?`,
+      `Are you sure you want to ${actionLabel.toLowerCase()} ${vendor.shopName || vendor.name}? ${isCurrentlyBlocked ? 'Their partner account will be restored and allowed to take orders.' : 'Their partner account will be suspended and blocked from taking orders.'}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: `${actionLabel} Hub`,
+          style: isCurrentlyBlocked ? 'default' : 'destructive',
+          onPress: async () => {
+            try {
+              const newBlocked = !isCurrentlyBlocked;
+              const newStatus = newBlocked ? 'Blocked' : 'Active';
+              await client.put(`/providers/${vendorId}/block`, { isBlocked: newBlocked, status: newStatus });
+              setProviders(prev =>
+                prev.map(p => ((p._id === vendorId || p.id === vendorId) ? { ...p, isBlocked: newBlocked, status: newStatus } : p))
+              );
+              Alert.alert('Success', `Partner Hub is now ${newStatus}.`);
+            } catch (e) {
+              Alert.alert('Error', e.response?.data?.message || `Failed to ${actionLabel.toLowerCase()} partner hub`);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteVendor = (vendor) => {
+    const vendorId = vendor._id || vendor.id;
+    Alert.alert(
+      'Permanently Delete Partner Hub?',
+      `Are you sure you want to delete ${vendor.shopName || vendor.name}? This vendor and their hub records will be permanently removed.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Hub',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await client.delete(`/providers/${vendorId}`);
+              setProviders(prev => prev.filter(p => p._id !== vendorId && p.id !== vendorId));
+              Alert.alert('Vendor Deleted', 'Partner Hub successfully removed from system.');
+            } catch (e) {
+              Alert.alert('Error', e.response?.data?.message || 'Failed to delete partner hub');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // --- ACTIONS: BROADCAST ---
   const handleSendBroadcast = () => {
     if (!broadcastTitle.trim() || !broadcastMessage.trim()) {
@@ -826,6 +936,26 @@ export default function AdminDashboardScreen({ navigation }) {
                         <View style={{ flex: 1 }}>
                           <Text style={styles.orderServiceTitle}>{item.serviceName || item.service || 'Doorstep Emergency Repair'}</Text>
                           <Text style={styles.orderCategoryTag}>Category: {item.serviceCategory || item.category || 'Home Services'}</Text>
+                          {(item.scheduledDate || item.scheduledTime || item.isAdvanceBooking) && (
+                            <View style={{
+                              backgroundColor: '#EFF6FF',
+                              paddingHorizontal: 8,
+                              paddingVertical: 3,
+                              borderRadius: 6,
+                              borderWidth: 1,
+                              borderColor: '#BFDBFE',
+                              alignSelf: 'flex-start',
+                              marginTop: 6,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 5,
+                            }}>
+                              <Text style={{ fontSize: 11 }}>📅</Text>
+                              <Text style={{ color: '#1D4ED8', fontSize: 11, fontWeight: '800' }}>
+                                Slot: {item.scheduledDate || 'Today'} • {item.scheduledTime || '11:00 AM'}
+                              </Text>
+                            </View>
+                          )}
                         </View>
                         <View style={styles.orderPriceBox}>
                           <Text style={styles.orderPriceAmount}>₹{bookingAmount}</Text>
@@ -1184,64 +1314,89 @@ export default function AdminDashboardScreen({ navigation }) {
                 keyExtractor={(item, index) => item._id || item.id || String(index)}
                 contentContainerStyle={styles.listPadding}
                 showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <View style={styles.workerItemCard}>
-                    <View style={styles.workerHeaderRow}>
-                      <View style={[styles.workerAvatarCircle, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
-                        <Text style={{ fontSize: 20 }}>🏢</Text>
-                        <View style={[styles.workerLiveDot, { backgroundColor: '#10B981' }]} />
-                      </View>
-
-                      <View style={{ flex: 1, marginLeft: 12 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={styles.workerCardName}>{item.shopName || item.name}</Text>
-                          <View style={[styles.verifiedProBadge, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
-                            <Text style={[styles.verifiedProBadgeText, { color: '#60A5FA' }]}>✓ PARTNER</Text>
-                          </View>
+                renderItem={({ item }) => {
+                  const isBlocked = item?.isBlocked === true || item?.status === 'Blocked' || item?.status === 'Suspended';
+                  return (
+                    <View style={styles.workerItemCard}>
+                      <View style={styles.workerHeaderRow}>
+                        <View style={[styles.workerAvatarCircle, { backgroundColor: isBlocked ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)' }]}>
+                          <Text style={{ fontSize: 20 }}>🏢</Text>
+                          <View style={[styles.workerLiveDot, { backgroundColor: isBlocked ? '#EF4444' : '#10B981' }]} />
                         </View>
-                        <Text style={styles.workerTrade}>👤 Contact: {item.name || 'Enterprise Partner'}</Text>
-                        <Text style={styles.workerPhoneText}>📞 {item.phone || 'Phone not listed'} {item.email ? `• ✉️ ${item.email}` : ''}</Text>
-                        <Text style={[styles.workerPhoneText, { color: '#94A3B8', marginTop: 2 }]}>
-                          📍 {item.address || item.location || 'Indore, MP'}
-                        </Text>
-                      </View>
-                    </View>
 
-                    <View style={styles.workerMetricsRow}>
-                      <View style={styles.workerMetricBlock}>
-                        <Text style={styles.workerMetricLabel}>CATEGORY</Text>
-                        <Text style={[styles.workerMetricVal, { fontSize: 11 }]} numberOfLines={1}>
-                          {item.category || 'Multi-Trade Hub'}
-                        </Text>
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={styles.workerCardName}>{item.shopName || item.name}</Text>
+                            <View style={[styles.verifiedProBadge, { backgroundColor: isBlocked ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)' }]}>
+                              <Text style={[styles.verifiedProBadgeText, { color: isBlocked ? '#EF4444' : '#60A5FA' }]}>
+                                {isBlocked ? '🔴 BLOCKED' : '✓ PARTNER'}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text style={styles.workerTrade}>👤 Contact: {item.name || 'Enterprise Partner'}</Text>
+                          <Text style={styles.workerPhoneText}>📞 {item.phone || 'Phone not listed'} {item.email ? `• ✉️ ${item.email}` : ''}</Text>
+                          <Text style={[styles.workerPhoneText, { color: '#94A3B8', marginTop: 2 }]}>
+                            📍 {item.address || item.location || 'Indore, MP'}
+                          </Text>
+                        </View>
                       </View>
-                      <View style={styles.workerMetricBlock}>
-                        <Text style={styles.workerMetricLabel}>RATING</Text>
-                        <Text style={styles.workerMetricVal}>⭐ {item.rating || '4.95'}</Text>
-                      </View>
-                      <View style={styles.workerMetricBlock}>
-                        <Text style={styles.workerMetricLabel}>BASE RATE</Text>
-                        <Text style={[styles.workerMetricVal, { color: '#10B981' }]}>
-                          {item.hourlyRate || '₹299/hr'}
-                        </Text>
-                      </View>
-                    </View>
 
-                    <View style={[styles.workerActionsRow, { marginTop: 8 }]}>
-                      <TouchableOpacity
-                        style={styles.workerActionBtn}
-                        onPress={() => handleMakeCall(item.phone)}
-                      >
-                        <Text style={styles.workerActionBtnText}>📞 Call Hub</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.workerActionBtn, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}
-                        onPress={() => handleOpenWhatsApp(item.phone)}
-                      >
-                        <Text style={[styles.workerActionBtnText, { color: '#22C55E' }]}>💬 WhatsApp</Text>
-                      </TouchableOpacity>
+                      <View style={styles.workerMetricsRow}>
+                        <View style={styles.workerMetricBlock}>
+                          <Text style={styles.workerMetricLabel}>CATEGORY</Text>
+                          <Text style={[styles.workerMetricVal, { fontSize: 11 }]} numberOfLines={1}>
+                            {item.category || 'Multi-Trade Hub'}
+                          </Text>
+                        </View>
+                        <View style={styles.workerMetricBlock}>
+                          <Text style={styles.workerMetricLabel}>RATING</Text>
+                          <Text style={styles.workerMetricVal}>⭐ {item.rating || '4.95'}</Text>
+                        </View>
+                        <View style={styles.workerMetricBlock}>
+                          <Text style={styles.workerMetricLabel}>BASE RATE</Text>
+                          <Text style={[styles.workerMetricVal, { color: '#10B981' }]}>
+                            {item.hourlyRate || '₹299/hr'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={[styles.workerActionsRow, { marginTop: 8 }]}>
+                        <TouchableOpacity
+                          style={styles.workerActionBtn}
+                          onPress={() => handleMakeCall(item.phone)}
+                        >
+                          <Text style={styles.workerActionBtnText}>📞 Call Hub</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.workerActionBtn, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}
+                          onPress={() => handleOpenWhatsApp(item.phone)}
+                        >
+                          <Text style={[styles.workerActionBtnText, { color: '#22C55E' }]}>💬 WhatsApp</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                        <TouchableOpacity
+                          style={{ flex: 1, backgroundColor: isBlocked ? '#10B981' : '#F59E0B', paddingVertical: 7, borderRadius: 6, alignItems: 'center' }}
+                          onPress={() => handleToggleBlockVendor(item)}
+                        >
+                          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>
+                            {isBlocked ? '✅ Unblock Hub' : '🚫 Block Vendor ID'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={{ flex: 1, backgroundColor: '#EF4444', paddingVertical: 7, borderRadius: 6, alignItems: 'center' }}
+                          onPress={() => handleDeleteVendor(item)}
+                        >
+                          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>
+                            🗑️ Delete Hub
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
-                )}
+                  );
+                }}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
                     <Text style={styles.emptyIcon}>🏢</Text>
@@ -1502,15 +1657,23 @@ export default function AdminDashboardScreen({ navigation }) {
                 renderItem={({ item }) => {
                   const isSuper = String(item?.role || '').toLowerCase() === 'superadmin';
                   const initials = item?.name ? String(item.name).slice(0, 2).toUpperCase() : 'US';
+                  const isBlocked = item?.isBlocked === true || item?.status === 'Blocked' || item?.status === 'Suspended';
                   return (
                     <View style={styles.userCardItem}>
                       <View style={styles.userCardHeader}>
-                        <View style={styles.userInitialCircle}>
+                        <View style={[styles.userInitialCircle, isBlocked && { backgroundColor: '#EF4444' }]}>
                           <Text style={styles.userInitialText}>{initials}</Text>
                         </View>
 
                         <View style={{ flex: 1, marginLeft: 12 }}>
-                          <Text style={styles.userFullName}>{item.name || 'Helper User'}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={styles.userFullName}>{item.name || 'Helper User'}</Text>
+                            <View style={{ backgroundColor: isBlocked ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                              <Text style={{ fontSize: 10, fontWeight: '800', color: isBlocked ? '#EF4444' : '#10B981' }}>
+                                {isBlocked ? '🔴 BLOCKED' : '🟢 ACTIVE'}
+                              </Text>
+                            </View>
+                          </View>
                           <Text style={styles.userContactInfo}>📞 {item.phone} • ✉️ {item.email || 'No email'}</Text>
                           <View style={styles.userBadgeRow}>
                             <View style={[styles.rolePill, isSuper && styles.superPill]}>
@@ -1543,6 +1706,28 @@ export default function AdminDashboardScreen({ navigation }) {
                           <Text style={styles.userCallLink}>📞 Call Customer</Text>
                         </TouchableOpacity>
                       </View>
+
+                      {!isSuper && (
+                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#334155' }}>
+                          <TouchableOpacity
+                            style={{ flex: 1, backgroundColor: isBlocked ? '#10B981' : '#F59E0B', paddingVertical: 7, borderRadius: 6, alignItems: 'center' }}
+                            onPress={() => handleToggleBlockUser(item)}
+                          >
+                            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>
+                              {isBlocked ? '✅ Unblock User' : '🚫 Block User ID'}
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={{ flex: 1, backgroundColor: '#EF4444', paddingVertical: 7, borderRadius: 6, alignItems: 'center' }}
+                            onPress={() => handleDeleteUser(item)}
+                          >
+                            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>
+                              🗑️ Delete User
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
                   );
                 }}

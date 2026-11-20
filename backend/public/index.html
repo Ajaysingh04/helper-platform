@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Helper Mobile Apps - Direct Phone Install</title>
+  <style>
+    :root {
+      --primary: #FF4D2D;
+      --partner: #0284C7;
+      --dark: #0F172A;
+      --card-bg: #1E293B;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body {
+      background: #090D16;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #22C55E;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    p.sub {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .app-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+    .app-meta h2 {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .app-meta p {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      color: #fff;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+    .btn:active {
+      transform: scale(0.98);
+      filter: brightness(0.9);
+    }
+    .btn-customer {
+      background: linear-gradient(135deg, #FF4D2D 0%, #EA580C 100%);
+      box-shadow: 0 8px 24px rgba(255, 77, 45, 0.35);
+    }
+    .btn-partner {
+      background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
+    }
+    .info-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+    .info-title {
+      font-weight: 700;
+      color: #F8FAFC;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .steps {
+      color: var(--muted);
+      padding-left: 18px;
+    }
+    .steps li { margin-bottom: 4px; }
+    .creds {
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid #22C55E;
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #E2E8F0;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="badge">● WI-FI SERVER ACTIVE (192.168.1.8)</div>
+    <h1>Helper Mobile Apps</h1>
+    <p class="sub">Download & Install on your Android Phone</p>
+  </div>
+
+  <div class="container">
+    
+    <!-- Customer App Card -->
+    <div class="card">
+      <div class="card-top">
+        <img class="app-icon" src="/playstore-customer-icon-fullbleed-512.png" alt="Customer App Icon" onerror="this.src='/playstore-customer-icon-512.png'">
+        <div class="app-meta">
+          <h2>Helper India (Customer)</h2>
+          <p>Package: com.helperindia.app • 81.5 MB</p>
+        </div>
+      </div>
+      <a class="btn btn-customer" href="/helper-customer.apk" download>
+        <span>📥 Download Customer APK</span>
+      </a>
+      <div class="info-box">
+        <div class="info-title">🔑 Review / Test Login:</div>
+        <div class="creds">
+          Email: helperindia@gmail.com<br>
+          Pass: Helper@123<br>
+          OTP: 123456
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendor Partner App Card -->
+    <div class="card">
+      <div class="card-top">
+        <img class="app-icon" src="/playstore-partner-icon-fullbleed-512.png" alt="Partner App Icon" onerror="this.src='/playstore-partner-icon-512.png'">
+        <div class="app-meta">
+          <h2>Helper Partner India (Vendor)</h2>
+          <p>Package: com.helperindia.partner • 81.5 MB</p>
+        </div>
+      </div>
+      <a class="btn btn-partner" href="/helper-partner.apk" download>
+        <span>📥 Download Partner APK</span>
+      </a>
+      <div class="info-box">
+        <div class="info-title">🔑 Vendor Hub Login:</div>
+        <div class="creds">
+          Mobile: 9876543210 (or helperindia@gmail.com)<br>
+          Pass: vendor123 (or Helper@123)
+        </div>
+      </div>
+    </div>
+
+    <!-- Installation Instructions -->
+    <div class="info-box" style="margin-top: 8px;">
+      <div class="info-title">📲 Installation Instructions:</div>
+      <ol class="steps">
+        <li>Tap the download button above for the app you want.</li>
+        <li>Chrome might ask <i>"File might be harmful"</i> &rarr; Tap <b>"Download anyway"</b>.</li>
+        <li>Once downloaded, tap <b>Open</b> &rarr; Tap <b>Install</b>.</li>
+        <li>If prompted for <i>"Install unknown apps"</i>, toggle <b>Allow from this source</b>.</li>
+      </ol>
+    </div>
+
+  </div>
+
+</body>
+</html>

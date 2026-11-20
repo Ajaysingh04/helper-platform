@@ -11,6 +11,7 @@ const dbStore = require("../data/dbStore");
 const { calculateBookingPrice } = require("../services/pricingEngine");
 const { findAndRankNearbyProviders, generateSecureStartOtp } = require("../services/dispatchEngine");
 const { getIO } = require("../services/socketService");
+const firebaseService = require("../services/firebaseService");
 
 /**
  * Robust Target Timestamp Calculator
@@ -93,6 +94,7 @@ router.post("/quote", (req, res) => {
       baseServicePrice: basePrice,
       distanceKm,
       isEmergency,
+      source: req.body.source || (String(bookingCode).startsWith("BK-") ? "app" : "web"),
       couponDiscount
     });
 
@@ -122,17 +124,36 @@ router.get("/", async (req, res) => {
       if (providerId) {
         filter.provider = providerId;
       }
-      const bookings = await Booking.find(filter).sort({ createdAt: -1 }).limit(100);
+      const rawBookings = await Booking.find(filter).sort({ createdAt: -1 }).limit(100);
+      const bookings = rawBookings.map(b => {
+        const bObj = b.toObject ? b.toObject() : b;
+        const code = String(bObj.bookingCode || bObj.id || "");
+        return {
+          ...bObj,
+          source: bObj.source || (code.startsWith("BK-") ? "app" : "web"),
+          scheduledDate: bObj.scheduledDate || "Today",
+          scheduledTime: bObj.scheduledTime || "11:00 AM",
+        };
+      });
       return res.json({ success: true, count: bookings.length, data: bookings });
     }
 
-    let bookings = dbStore.getAll("bookings");
+    let rawBookings = dbStore.getAll("bookings") || [];
     if (status) {
-      bookings = bookings.filter((b) => b.status && b.status.toLowerCase() === status.toLowerCase());
+      rawBookings = rawBookings.filter((b) => b.status && b.status.toLowerCase() === status.toLowerCase());
     }
     if (customerPhone) {
-      bookings = bookings.filter((b) => b.customerPhone === customerPhone || b.phone === customerPhone);
+      rawBookings = rawBookings.filter((b) => b.customerPhone === customerPhone || b.phone === customerPhone);
     }
+    const bookings = rawBookings.map(b => {
+      const code = String(b.bookingCode || b.id || "");
+      return {
+        ...b,
+        source: b.source || (code.startsWith("BK-") ? "app" : "web"),
+        scheduledDate: b.scheduledDate || "Today",
+        scheduledTime: b.scheduledTime || "11:00 AM",
+      };
+    });
     res.json({ success: true, count: bookings.length, data: bookings });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -202,11 +223,39 @@ router.post("/", async (req, res) => {
     const finalAddress = fullAddress || address || customerAddress || "Indore / Delhi NCR";
     const finalPriceNum = parseInt(String(totalAmount || price || basePrice || 299).replace(/[^0-9]/g, "")) || 299;
 
+    // Check if Customer account is blocked by Administrator
+    const cleanPhoneDigits = finalPhone.replace(/\D/g, "").slice(-10);
+    const User = require("../models/User");
+    let custRecord = null;
+    if (getStatus()) {
+      custRecord = await User.findOne({
+        $or: [
+          ...(cleanPhoneDigits ? [{ phone: { $regex: cleanPhoneDigits + "$" } }] : []),
+          { email: finalEmail.toLowerCase() }
+        ]
+      }).catch(() => null);
+    }
+    if (!custRecord) {
+      const allUsers = dbStore.getAll("users") || [];
+      custRecord = allUsers.find(u =>
+        (cleanPhoneDigits && u.phone && u.phone.replace(/\D/g, "").slice(-10) === cleanPhoneDigits) ||
+        (u.email && u.email.toLowerCase() === finalEmail.toLowerCase())
+      );
+    }
+    if (custRecord && (custRecord.isBlocked || custRecord.status === "Blocked" || custRecord.status === "Suspended" || custRecord.status === "blocked")) {
+      return res.status(403).json({
+        success: false,
+        isBlocked: true,
+        message: "Aapka account suspended/blocked hai. Aap new service booking nahi kar sakte. Kripya admin support se contact karein."
+      });
+    }
+
     // 1. Calculate Algorithmic Pricing
     const pricing = calculateBookingPrice({
       baseServicePrice: finalPriceNum,
       distanceKm: 2.8,
       isEmergency,
+      source: req.body.source || (String(bookingCode).startsWith("BK-") ? "app" : "web"),
       couponDiscount
     });
 
@@ -380,6 +429,7 @@ router.post("/", async (req, res) => {
         startOtpPlainForCustomer: finalStartOtp
       },
       isEmergency,
+      source: req.body.source || (String(bookingCode).startsWith("BK-") ? "app" : "web"),
       scheduledDate: finalSchedDate,
       scheduledTime: finalSchedTime,
       scheduledTimestamp,
@@ -440,6 +490,7 @@ router.post("/", async (req, res) => {
       doorOtp: finalStartOtp,
       otp: finalStartOtp,
       isEmergency,
+      source: req.body.source || (String(bookingCode).startsWith("BK-") ? "app" : "web"),
       scheduledDate: bookingData.scheduledDate,
       scheduledTime: bookingData.scheduledTime,
       scheduledTimestamp,
@@ -484,6 +535,13 @@ router.post("/", async (req, res) => {
         createdAt: new Date().toISOString()
       };
       dbStore.insert("notifications", newNotification);
+    } catch (e) { }
+
+    // Send Real Firebase FCM Push Notification to all active Vendors / Partners
+    try {
+      firebaseService.notifyNewBooking(savedBooking).catch(err => {
+        console.warn("[FCM] Push notification send error:", err.message);
+      });
     } catch (e) { }
 
     res.status(201).json({
@@ -626,6 +684,10 @@ router.post("/:id/accept", async (req, res) => {
       io.emit("booking:updated", updateData);
       io.emit("booking:status_changed", updateData);
     }
+
+    try {
+      firebaseService.notifyBookingStatus(booking, "accepted").catch(() => { });
+    } catch (_) { }
 
     res.json({
       success: true,
@@ -893,6 +955,59 @@ router.post("/:id/stop-work", async (req, res) => {
 });
 
 /**
+ * @route   POST /api/bookings/:id/review
+ * @desc    Submit customer star rating and review feedback
+ */
+router.post(["/:id/review", "/:id/feedback"], async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { rating, review, tags } = req.body;
+    const numericRating = Math.max(1, Math.min(5, Number(rating) || 5));
+
+    let booking = null;
+    if (getStatus()) {
+      booking = await Booking.findOne({
+        $or: [{ bookingCode: id }, { bookingId: id }, { id: id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }]
+      }).catch(() => null);
+
+      if (booking) {
+        booking.customerRating = numericRating;
+        booking.customerReview = review || "";
+        booking.reviewTags = tags || [];
+        booking.reviewedAt = new Date();
+        await booking.save();
+      }
+    }
+
+    dbStore.update("bookings", id, {
+      customerRating: numericRating,
+      customerReview: review || "",
+      reviewTags: tags || [],
+      reviewedAt: new Date()
+    });
+
+    const io = getIO();
+    if (io) {
+      io.emit("booking:reviewed", {
+        bookingId: id,
+        rating: numericRating,
+        review,
+        tags
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Thank you for your rating & feedback! ⭐",
+      rating: numericRating,
+      review: review || ""
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
  * @route   POST /api/bookings/:id/verify-start-otp
  * @desc    Verify customer OTP to start work
  */
@@ -1094,6 +1209,10 @@ router.post(["/:id/complete", "/:id/vendor-complete"], async (req, res) => {
         paymentStatus: "captured"
       });
     }
+
+    try {
+      firebaseService.notifyBookingStatus(booking || bookingLocal, "completed").catch(() => { });
+    } catch (_) { }
 
     res.json({
       success: true,
@@ -1763,8 +1882,8 @@ router.post("/:id/worker-complete", async (req, res) => {
   }
 });
 
-// 8. Customer Rates Worker & Submits Review
-router.post("/:id/rate-worker", async (req, res) => {
+// 8. Customer Rates Worker & Submits Review (Supports both /rate and /rate-worker)
+router.post(["/:id/rate-worker", "/:id/rate"], async (req, res) => {
   try {
     const { rating, review } = req.body;
     const Worker = require("../models/Worker");
