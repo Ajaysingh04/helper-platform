@@ -38,6 +38,14 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Serve static images (Helper uniform photos, banners & assets)
+app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
+app.get("/uploads/:filename", (req, res) => {
+  const filePath = path.join(__dirname, "public", "uploads", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  return res.status(404).json({ success: false, error: "Uploaded file not found" });
+});
 app.use("/images", express.static(path.join(__dirname, "public", "images")));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -133,6 +141,7 @@ app.use("/api/settings", require("./routes/settingsRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/payments", require("./routes/paymentsRoutes"));
 app.use("/api/workers", require("./routes/workersRoutes"));
+app.use("/api/upload", require("./routes/uploadRoutes"));
 
 // 404 Route handler
 app.use("/api/*", (req, res) => {
@@ -151,7 +160,7 @@ app.use((err, req, res, next) => {
 
 // Client-side React SPA fallback for Web & Super Admin Portal
 app.get("*", (req, res, next) => {
-  if (req.url.startsWith("/api") || req.url.startsWith("/download") || req.url.startsWith("/images") || req.url.startsWith("/socket.io")) {
+  if (req.url.startsWith("/api") || req.url.startsWith("/download") || req.url.startsWith("/images") || req.url.startsWith("/uploads") || req.url.startsWith("/socket.io")) {
     return next();
   }
   const indexPath = path.join(__dirname, "..", "frontend", "build", "index.html");

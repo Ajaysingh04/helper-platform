@@ -1,5 +1,6 @@
 import React, { useContext, useState, useMemo } from "react";
 import { DataContext } from "../../context/DataContext";
+import AdminImageUpload from "./AdminImageUpload";
 
 const AVAILABLE_TAGS = ["All", "Repairs", "Cleaning", "Daily Help", "Appliances", "Home Decor", "Kitchen"];
 
@@ -514,26 +515,13 @@ function AdminServices() {
                 ></textarea>
               </div>
 
-              <div className="admin-form-group">
-                <label>Service Image URL (Displays on Website & Mobile Apps) 🖼️</label>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <input
-                    type="url"
-                    placeholder="https://images.unsplash.com/... or direct image link"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    style={{ flex: 1 }}
-                  />
-                  {image && (
-                    <img
-                      src={image}
-                      alt="Preview"
-                      style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--border)" }}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                  )}
-                </div>
-              </div>
+              <AdminImageUpload
+                label="Service Image (Folder / Device Upload or Web Link) 🖼️"
+                value={image}
+                onChange={setImage}
+                placeholder="https://images.unsplash.com/... or direct image link"
+                helperText="Upload service photo from your folder, or paste a direct image URL."
+              />
 
               <div className="admin-checkbox-group">
                 <input

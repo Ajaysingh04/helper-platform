@@ -49,7 +49,8 @@ explore_dump.xml
 window_dump.xml
 mobile/apks/
 
-# Mobile App Bundles & Firebase credentials
+# Uploads & User Generated Content
+backend/public/uploads/
 *.aab
 backend/config/*.json
 backend/public/*.aab

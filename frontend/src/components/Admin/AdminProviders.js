@@ -1,6 +1,7 @@
 import React, { useContext, useState, useMemo, useEffect } from "react";
 import { DataContext } from "../../context/DataContext";
 import { API_BASE } from "../../apiConfig";
+import AdminImageUpload from "./AdminImageUpload";
 
 const DEFAULT_WORKERS = [
   {
@@ -1674,28 +1675,13 @@ function AdminProviders() {
                 </div>
               </div>
 
-              <div className="admin-form-group">
-                <label>Photo / Avatar URL (Unsplash or CDN)</label>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                />
-              </div>
-
-              {/* Photo Preview */}
-              {image && (
-                <div className="modal-image-preview-box">
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Avatar Preview</span>
-                  <img
-                    src={image}
-                    alt="Preview"
-                    style={{ width: "64px", height: "64px", borderRadius: "14px", objectFit: "cover", marginTop: "6px" }}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                </div>
-              )}
+              <AdminImageUpload
+                label="Partner / Specialist Photo (Device Upload or Web URL)"
+                value={image}
+                onChange={setImage}
+                placeholder="https://images.unsplash.com/photo-..."
+                helperText="Upload partner headshot from your phone/computer, or paste an image link."
+              />
 
               {/* Verification & Franchise Toggles */}
               <div className="admin-checkbox-group" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>

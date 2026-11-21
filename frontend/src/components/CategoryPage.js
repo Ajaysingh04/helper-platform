@@ -1061,7 +1061,7 @@ function CategoryPage() {
       } catch (e) {}
       setConfirmedBookingInfo(newBookingData);
       setEnquirySent(true);
-      showToast(`🎉 Scheduled for ${bookingDate} at ${bookingTime}! Plumber will call to confirm. 📞`);
+      showToast(`🎉 Scheduled for ${bookingDate} at ${bookingTime}! ${categoryTitle || "Specialist"} will call to confirm. 📞`);
     } catch (err) {
       try {
         const existing = JSON.parse(localStorage.getItem("helper_user_bookings") || "[]");
@@ -2066,7 +2066,7 @@ function CategoryPage() {
                       <div className="technician-call-card">
                         <div className="call-card-icon">📞</div>
                         <div className="call-card-content">
-                          <h4 className="call-card-title">Plumber will call you shortly</h4>
+                          <h4 className="call-card-title">{categoryTitle || "Specialist"} will call you shortly</h4>
                           <p className="call-card-desc">
                             <strong>{enquiryItem.name}</strong> will call on <strong>{confirmedBookingInfo?.customerPhone}</strong> to verify location &amp; requirements.
                           </p>
@@ -2124,7 +2124,7 @@ function CategoryPage() {
                       <div className="telemetry-countdown-box compact-countdown">
                         <div className="telemetry-countdown-label">
                           <span>⏳</span>
-                          <span>Plumber Arrival Countdown</span>
+                          <span>{categoryTitle || "Specialist"} Arrival Countdown</span>
                         </div>
 
                         <div className="countdown-digits-grid">
@@ -2151,7 +2151,7 @@ function CategoryPage() {
 
                         <div style={{ fontSize: "11px", color: "#94A3B8", marginTop: "4px" }}>
                           {cdData.isArrived
-                            ? "🚨 Scheduled appointment time arrived! Plumber is at doorstep."
+                            ? `🚨 Scheduled appointment time arrived! ${categoryTitle || "Specialist"} is at doorstep.`
                             : `${confirmedBookingInfo?.scheduledDate || "Today"} at ${confirmedBookingInfo?.scheduledTime || "slot"}`}
                         </div>
                       </div>

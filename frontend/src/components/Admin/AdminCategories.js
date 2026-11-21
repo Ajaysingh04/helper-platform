@@ -1,6 +1,7 @@
 import React, { useContext, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { DataContext } from "../../context/DataContext";
+import AdminImageUpload from "./AdminImageUpload";
 
 function AdminCategories() {
   const { categories, addCategory, updateCategory, deleteCategory } = useContext(DataContext);
@@ -482,28 +483,13 @@ function AdminCategories() {
                 </div>
               </div>
 
-              <div className="admin-form-group">
-                <label>Banner Image URL (Unsplash or CDN)</label>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                />
-              </div>
-
-              {/* Live Image Preview */}
-              {image && (
-                <div className="modal-image-preview-box">
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Image Preview</span>
-                  <img
-                    src={image}
-                    alt="Preview"
-                    style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "10px", marginTop: "6px" }}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                </div>
-              )}
+              <AdminImageUpload
+                label="Banner Image (Folder / Device Upload or Web URL)"
+                value={image}
+                onChange={setImage}
+                placeholder="https://images.unsplash.com/photo-..."
+                helperText="Upload any shop/category photo from your device, or paste a direct image URL."
+              />
 
               <div className="modal-actions-group">
                 <button type="button" className="btn-modal-cancel" onClick={() => setShowModal(false)}>

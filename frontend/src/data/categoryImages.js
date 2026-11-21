@@ -156,11 +156,67 @@ export const CATEGORY_IMAGE_REGISTRY = {
     "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600"  // Luxury residence consultant
   ],
 
-  // Default Verified Expert fallback (Indian Service Pro in uniform, NOT spa stones!)
+  // Gift Shops, Boutiques, Hampers & Crafts
+  gifts: [
+    "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=600", // Luxury gift boxes with silk ribbon & boutique packaging
+    "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&q=80&w=600", // Gift shop display with festive boxes & ribbons
+    "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=600"  // Handcrafted gift boutique & festive hampers
+  ],
+
+  // Shopping, Retail Stores & Malls
+  shopping: [
+    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=600", // Modern premium retail store interior
+    "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&q=80&w=600", // Retail shop counter with boutique products
+    "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&q=80&w=600"  // Lifestyle shopping centre display
+  ],
+
+  // Jewellery Showrooms & Goldsmiths
+  jewellery: [
+    "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=600", // Gold & diamond jewellery craftsmanship
+    "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=600", // Luxury jewellery showroom display
+    "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&q=80&w=600"  // Handcrafted rings & precious ornaments
+  ],
+
+  // Florists, Flowers & Bouquets
+  flowers: [
+    "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&q=80&w=600", // Fresh flower boutique & bouquet arrangement
+    "https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?auto=format&fit=crop&q=80&w=600", // Florist crafting fresh floral bouquet
+    "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&q=80&w=600"  // Colorful florist shop display
+  ],
+
+  // Book Shops, Stationery & Libraries
+  books: [
+    "https://images.unsplash.com/photo-1507842229451-7f01be7fe7ab?auto=format&fit=crop&q=80&w=600", // Cozy book shop aisles & literature
+    "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=600", // Modern bookstore with curated titles
+    "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&q=80&w=600"  // Educational books & stationery store
+  ],
+
+  // Cinema Halls, Theatres & Multiplexes
+  cinema: [
+    "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=600", // Cinema auditorium & movie theatre screen
+    "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&q=80&w=600", // Theatre seating with cinematic lighting
+    "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&q=80&w=600"  // Movie reel projector & entertainment centre
+  ],
+
+  // Hotels, Stays, Dharamshalas & Banquet Halls
+  hotels: [
+    "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=600", // Luxury hotel lobby & hospitality suite
+    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=600", // Premium boutique stay room
+    "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&q=80&w=600"  // Elegant banquet venue & reception
+  ],
+
+  // Clothing, Tailors & Fashion Boutiques
+  clothing: [
+    "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&q=80&w=600", // Fashion apparel showroom racks
+    "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=600", // Tailor measurement & bespoke apparel pro
+    "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=600"  // Designer boutique garment collection
+  ],
+
+  // Default Verified Expert fallback (Universal Verified Store/Expert Photography)
   default: [
-    "/images/banner_painter.png", // Painter pro in uniform
-    "/images/banner_plumber.png", // Plumber pro with pipe setup
-    "/images/banner_electrician.png"  // Electrician pro in hardhat
+    "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600", // Professional verified merchant & hub advisor
+    "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=600", // Certified senior specialist in uniform
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600"  // Verified customer service specialist
   ]
 };
 
@@ -302,6 +358,46 @@ export function getServicemanImagesForCategory(categoryName = "") {
   // Estate Agents & Living
   if (text.includes("estate") || text.includes("broker") || text.includes("property") || text.includes("hostel") || text.includes("pg") || text.includes("dharamshala") || text.includes("banquet")) {
     return CATEGORY_IMAGE_REGISTRY.realestate;
+  }
+
+  // Gifts, Gift Shops, Boutiques & Hampers
+  if (text.includes("gift") || text.includes("hamper") || text.includes("souvenir") || text.includes("present") || text.includes("handicraft") || text.includes("craft")) {
+    return CATEGORY_IMAGE_REGISTRY.gifts;
+  }
+
+  // Jewellery & Goldsmiths
+  if (text.includes("jewel") || text.includes("gold") || text.includes("silver") || text.includes("diamond")) {
+    return CATEGORY_IMAGE_REGISTRY.jewellery;
+  }
+
+  // Flowers, Florists & Bouquets
+  if (text.includes("flower") || text.includes("florist") || text.includes("bouquet") || text.includes("plant")) {
+    return CATEGORY_IMAGE_REGISTRY.flowers;
+  }
+
+  // Book Shops & Stationery
+  if (text.includes("book") || text.includes("stationer") || text.includes("library") || text.includes("print")) {
+    return CATEGORY_IMAGE_REGISTRY.books;
+  }
+
+  // Clothing, Boutiques & Tailors
+  if (text.includes("cloth") || text.includes("tailor") || text.includes("boutique") || text.includes("wear") || text.includes("fashion") || text.includes("dress")) {
+    return CATEGORY_IMAGE_REGISTRY.clothing;
+  }
+
+  // Cinema, Theatres & Multiplexes
+  if (text.includes("cinema") || text.includes("theatre") || text.includes("theater") || text.includes("movie") || text.includes("film")) {
+    return CATEGORY_IMAGE_REGISTRY.cinema;
+  }
+
+  // Hotels, Stays & Banquets
+  if (text.includes("hotel") || text.includes("stay") || text.includes("dharamshala") || text.includes("resort") || text.includes("lodge") || text.includes("banquet")) {
+    return CATEGORY_IMAGE_REGISTRY.hotels;
+  }
+
+  // General Shopping, Retail, Malls & Stores
+  if (text.includes("shop") || text.includes("mall") || text.includes("retail") || text.includes("bazaar") || text.includes("market") || text.includes("store")) {
+    return CATEGORY_IMAGE_REGISTRY.shopping;
   }
 
   // Default fallback (Safe verified pro photography)

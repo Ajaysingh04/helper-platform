@@ -5051,3 +5051,173 @@ body.dark .admin-table.providers-table tbody tr:hover td {
   color: #FFFFFF;
   box-shadow: 0 4px 12px rgba(255, 77, 45, 0.28);
 }
+
+/* ==========================================================================
+   Admin Image Upload & Device File Browser Styles
+   ========================================================================== */
+.admin-image-upload-wrapper {
+  margin-top: 14px;
+  margin-bottom: 14px;
+}
+.admin-image-upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.admin-image-upload-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main, #0F172A);
+}
+.admin-image-upload-tabs {
+  display: flex;
+  background: var(--surface-input, #F1F5F9);
+  padding: 3px;
+  border-radius: 8px;
+  gap: 3px;
+}
+.admin-image-tab-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-muted, #64748B);
+  transition: all 0.15s ease;
+}
+.admin-image-tab-btn.active {
+  background: #FFFFFF;
+  color: #FF4D2D;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.admin-image-dropzone {
+  border: 2px dashed #CBD5E1;
+  background: #F8FAFC;
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.admin-image-dropzone:hover,
+.admin-image-dropzone.drag-active {
+  border-color: #FF4D2D;
+  background: rgba(255, 77, 45, 0.04);
+}
+.admin-image-dropzone.has-file {
+  border-style: solid;
+  border-color: #E2E8F0;
+  background: #FFFFFF;
+  padding: 10px 14px;
+}
+.admin-dropzone-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.dropzone-icon {
+  font-size: 32px;
+}
+.dropzone-text {
+  font-size: 13.5px;
+  color: #334155;
+}
+.dropzone-text strong {
+  color: #FF4D2D;
+}
+.dropzone-sub {
+  font-size: 11.5px;
+  color: #94A3B8;
+}
+.admin-dropzone-loading {
+  padding: 18px;
+  font-size: 13px;
+  color: #FF4D2D;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.admin-dropzone-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+.admin-dropzone-img {
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.admin-dropzone-info {
+  flex: 1;
+}
+.admin-dropzone-tag {
+  display: inline-block;
+  background: #DCFCE7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.admin-dropzone-hint {
+  font-size: 12px;
+  color: #64748B;
+  margin: 2px 0 8px 0;
+}
+.btn-remove-photo {
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-remove-photo:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+}
+.admin-image-url-box {
+  width: 100%;
+}
+.admin-image-url-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-color, #E2E8F0);
+  border-radius: 10px;
+  font-size: 13.5px;
+  outline: none;
+  background: var(--surface-card, #FFFFFF);
+  color: var(--text-main, #0F172A);
+  transition: border-color 0.2s ease;
+}
+.admin-image-url-input:focus {
+  border-color: #FF4D2D;
+}
+.btn-clear-url {
+  background: var(--surface-input, #F1F5F9);
+  border: 1px solid var(--border-color, #E2E8F0);
+  color: var(--text-muted, #64748B);
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.btn-clear-url:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
