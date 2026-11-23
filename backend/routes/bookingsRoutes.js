@@ -89,12 +89,13 @@ function calculateScheduledTimestamp(scheduledDate, scheduledTime) {
 router.post("/quote", (req, res) => {
   try {
     const { basePrice = 299, distanceKm = 2.5, isEmergency = false, couponDiscount = 0 } = req.body;
+    const reqCode = String(req.body.id || req.body.bookingCode || "");
 
     const breakdown = calculateBookingPrice({
       baseServicePrice: basePrice,
       distanceKm,
       isEmergency,
-      source: req.body.source || (String(bookingCode).startsWith("BK-") ? "app" : "web"),
+      source: req.body.source || (reqCode.startsWith("BK-") ? "app" : "web"),
       couponDiscount
     });
 
@@ -216,6 +217,7 @@ router.post("/", async (req, res) => {
       doorOtp
     } = req.body;
 
+    const bookingCode = req.body.id || req.body.bookingCode || ("HLP-" + Math.floor(10000 + Math.random() * 90000));
     const finalName = customerName || req.body.name || "Customer";
     const finalPhone = customerPhone || phone || "9876543210";
     const finalEmail = req.body.customerEmail || req.body.email || req.body.userEmail || (finalName ? `${finalName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@gmail.com` : "customer@helper.com");
@@ -331,8 +333,6 @@ router.post("/", async (req, res) => {
     }
 
     // 4. Create Booking in Database
-    const bookingCode = req.body.id || req.body.bookingCode || ("HLP-" + Math.floor(10000 + Math.random() * 90000));
-
     const finalAssignedName = targetPro
       ? (targetPro.shopName ? `${targetPro.shopName} • ${targetPro.name}` : targetPro.name)
       : (nearestPro ? nearestPro.name : "Ramesh Express Plumbing & Home Care");
