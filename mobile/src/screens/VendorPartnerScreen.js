@@ -1299,9 +1299,9 @@ export default function VendorPartnerScreen({ navigation }) {
     const fetchLatestBookings = () => {
       if (!isLoggedIn || !isDutyOn) return;
 
-      axios
-        .get('https://helper-backend-api-8878.onrender.com/api/bookings')
+      makeApiRequest('get', '/bookings')
         .then((res) => {
+          if (!res || !res.data) return;
           const allBookings = res.data?.data || [];
           if (!allBookings || allBookings.length === 0) return;
 
@@ -2178,7 +2178,7 @@ export default function VendorPartnerScreen({ navigation }) {
     }
 
     try {
-      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/accept`, {
+      await makeApiRequest('post', `/bookings/${orderId}/accept`, {
         providerId: vendorProfile?.id || 'VND-IND-01',
         providerName: shopName || 'Indore Multi-Specialist Hub',
         workerId: vendorProfile?.id || 'VND-IND-01',
@@ -2302,7 +2302,7 @@ export default function VendorPartnerScreen({ navigation }) {
     }
 
     try {
-      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/accept`, {
+      await makeApiRequest('post', `/bookings/${orderId}/accept`, {
         providerId: vendorProfile?.id || 'VND-IND-01',
         providerName: shopName || 'Indore Multi-Specialist Hub',
       });
@@ -2325,7 +2325,7 @@ export default function VendorPartnerScreen({ navigation }) {
     const orderId = incomingOrder?.bookingCode || incomingOrder?.id || incomingOrder?.mongoId || 'HLP-ORD';
 
     try {
-      await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/assign-worker`, {
+      await makeApiRequest('post', `/bookings/${orderId}/assign-worker`, {
         workerId: chosenWorker.workerId || chosenWorker.id,
         workerName: chosenWorker.name,
         workerPhone: chosenWorker.phone,
@@ -2435,7 +2435,7 @@ export default function VendorPartnerScreen({ navigation }) {
     const orderId = acceptedOrder?.bookingCode || acceptedOrder?.id || acceptedOrder?.mongoId;
     if (inputOtp === requiredOtp || inputOtp === '1234' || inputOtp === '3459' || inputOtp === '5421') {
       try {
-        await axios.post(`https://helper-backend-api-8878.onrender.com/api/bookings/${orderId}/verify-start-otp`, { otp: inputOtp });
+        await makeApiRequest('post', `/bookings/${orderId}/verify-start-otp`, { otp: inputOtp });
       } catch (e) {}
       setOtpVerified(true);
       setJobStage('in_progress');
