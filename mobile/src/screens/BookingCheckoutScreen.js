@@ -365,6 +365,9 @@ export default function BookingCheckoutScreen({ route, navigation }) {
     const finalPaymentId = paymentData?.razorpayPaymentId || '';
 
     // Send real-time booking to live Backend dispatch engine
+    const isAdv = Boolean(bookingDetails.isAdvanceBooking);
+    const schedTimestamp = bookingDetails.scheduledTimestamp || (Date.now() + (isAdv ? 24 * 3600 * 1000 : 2 * 3600 * 1000));
+
     const payload = {
       id: bookingDetails.bookingId,
       bookingCode: bookingDetails.bookingId,
@@ -380,6 +383,9 @@ export default function BookingCheckoutScreen({ route, navigation }) {
       customerAddress: bookingDetails.address,
       scheduledDate: effectiveDate,
       scheduledTime: effectiveTime,
+      isAdvanceBooking: isAdv,
+      advanceScheduled: isAdv,
+      scheduledTimestamp: schedTimestamp,
       totalAmount: bookingDetails.finalPrice,
       doorOtp: bookingDetails.otp,
       slotOtp: bookingDetails.otp,
@@ -480,6 +486,53 @@ export default function BookingCheckoutScreen({ route, navigation }) {
     const activeCustomerName = activeUser?.name || currentUser?.name || bookingAddress?.name || 'Ajay Singh';
     const activeCustomerPhone = activeUser?.phone || currentUser?.phone || bookingAddress?.phone || '+91 7389451349';
 
+    // Compute Advance Booking status and scheduled timestamp
+    const now = new Date();
+    let targetDate = new Date();
+    const dLower = String(effectiveDate || '').toLowerCase();
+    let isAdvanceOrder = false;
+
+    if (dLower.includes('tomorrow') || dLower.includes('kal')) {
+      targetDate.setDate(targetDate.getDate() + 1);
+      isAdvanceOrder = true;
+    } else if (isCustomDate || (!dLower.includes('today') && dLower.trim().length > 0)) {
+      const monthMap = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+      const dateMatch = effectiveDate.match(/(\d{1,2})\s+([A-Za-z]{3})/i) || effectiveDate.match(/([A-Za-z]{3})\s+(\d{1,2})/i);
+      if (dateMatch && dateMatch[1] && dateMatch[2]) {
+        let day, month;
+        if (!isNaN(parseInt(dateMatch[1], 10))) {
+          day = parseInt(dateMatch[1], 10);
+          month = monthMap[String(dateMatch[2]).toLowerCase().slice(0, 3)];
+        } else {
+          month = monthMap[String(dateMatch[1]).toLowerCase().slice(0, 3)];
+          day = parseInt(dateMatch[2], 10);
+        }
+        if (month !== undefined && !isNaN(day)) {
+          targetDate.setMonth(month, day);
+          if (targetDate.getTime() < now.getTime() - 86400000) {
+            targetDate.setFullYear(now.getFullYear() + 1);
+          }
+          isAdvanceOrder = true;
+        }
+      } else {
+        targetDate.setDate(targetDate.getDate() + 1);
+        isAdvanceOrder = true;
+      }
+    }
+
+    let hours = 11, minutes = 0;
+    const timeMatch = String(effectiveTime || '').match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    if (timeMatch) {
+      hours = parseInt(timeMatch[1], 10);
+      minutes = parseInt(timeMatch[2], 10);
+      const ampm = (timeMatch[3] || '').toUpperCase();
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+    }
+    targetDate.setHours(hours, minutes, 0, 0);
+
+    const calculatedTimestamp = targetDate.getTime();
+
     const bookingDetails = {
       bookingId: 'BK-' + Math.floor(10000 + Math.random() * 90000),
       customerName: activeCustomerName,
@@ -489,6 +542,11 @@ export default function BookingCheckoutScreen({ route, navigation }) {
       proName: '',
       proPhone: '',
       date: `${effectiveDate} • ${effectiveTime}`,
+      scheduledDate: effectiveDate,
+      scheduledTime: effectiveTime,
+      isAdvanceBooking: isAdvanceOrder,
+      advanceScheduled: isAdvanceOrder,
+      scheduledTimestamp: calculatedTimestamp,
       address: finalAddressStr,
       distance: service?.distance || pro?.distance || '2.4 km away',
       finalPrice: finalPrice,

@@ -1009,19 +1009,24 @@ export default function VendorPartnerScreen({ navigation }) {
   // Advance Booking Lock Evaluation Logic
   const getAdvanceBookingLockState = (order) => {
     if (!order) return { isAdvance: false, isLocked: false, remainingSeconds: 0 };
-    const dateStr = String(order.scheduledDate || '');
-    const timeStr = String(order.scheduledTime || '');
-    const combinedStr = `${dateStr} ${timeStr}`.trim();
+    if (order.isAdvanceBooking === false || order.isEmergency === true) {
+      return { isAdvance: false, isLocked: false, remainingSeconds: 0 };
+    }
+    const dateStr = String(order.scheduledDate || '').trim();
+    const timeStr = String(order.scheduledTime || '').trim();
+    const combinedStr = `${dateStr} ${timeStr}`.trim().toLowerCase();
 
-    // Check if advance booking keywords exist anywhere
+    const isToday = combinedStr.includes('today') && !combinedStr.includes('tomorrow') && !combinedStr.includes('kal');
+
+    // Check if advance booking keywords exist anywhere (strictly excluding today)
     const isAdvanceFlag = Boolean(
       order.isAdvanceBooking ||
       order.advanceScheduled ||
-      combinedStr.toLowerCase().includes('tomorrow') ||
-      combinedStr.toLowerCase().includes('kal') ||
-      /mon|tue|wed|thu|fri|sat|sun/i.test(combinedStr) ||
-      /\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(combinedStr) ||
-      (dateStr && dateStr.trim().length > 0)
+      combinedStr.includes('tomorrow') ||
+      combinedStr.includes('kal') ||
+      (/mon|tue|wed|thu|fri|sat|sun/i.test(combinedStr) && !isToday) ||
+      (/\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(combinedStr) && !isToday) ||
+      (dateStr && dateStr.length > 0 && !isToday)
     );
 
     if (!isAdvanceFlag) {
@@ -1109,7 +1114,7 @@ export default function VendorPartnerScreen({ navigation }) {
       setAdvanceRemainingSec(st.remainingSeconds);
 
       // Trigger 1-hour prior alert if entering the 1 hour window
-      if (st.isAdvance && st.remainingSeconds <= 3600 && st.remainingSeconds > 3540 && !hasAlertedOneHour) {
+      if (st.isAdvance && st.remainingSeconds <= 3600 && st.remainingSeconds > 0 && !hasAlertedOneHour) {
         setHasAlertedOneHour(true);
         triggerBookingBell(acceptedOrder);
         if (BellSound?.showSystemNotification) {
@@ -1121,8 +1126,9 @@ export default function VendorPartnerScreen({ navigation }) {
         }
         showPopup({
           title: 'Location Unlocked! 🔔',
-          message: `Your advance appointment with ${acceptedOrder.customerName} is in 1 hour!\n\nDoorstep address and GPS navigation are now unlocked. You may start your journey.`,
+          message: `Your advance appointment with ${acceptedOrder.customerName} is coming up in less than 1 hour!\n\nCustomer doorstep address and GPS navigation are now UNLOCKED. You may start your journey!`,
           icon: '🔓',
+          type: 'advance',
           confirmText: 'View Location & Start ➔',
         });
       }
@@ -2220,12 +2226,22 @@ export default function VendorPartnerScreen({ navigation }) {
       });
     }
 
-    showPopup({
-      title: 'Order Accepted for Direct Delivery! 🛵',
-      message: `You are fulfilling this service directly.\n\nCustomer: ${orderToAccept.customerName}\nAddress: ${orderToAccept.address}\n\nClick "Start Journey" when leaving for customer address.`,
-      icon: '🛵',
-      confirmText: 'Open Active Job ➔',
-    });
+    if (isAdv) {
+      showPopup({
+        title: 'Advance Booking Accepted & Locked! 🔒',
+        message: `Appointment scheduled for ${orderToAccept.scheduledDate} at ${orderToAccept.scheduledTime || '11:00 AM'}.\n\nThis booking is locked. Exactly 1 hour before scheduled time, you will receive an alert notification and customer's live GPS navigation will unlock!`,
+        icon: '🔒',
+        type: 'advance',
+        confirmText: 'View Locked Schedule ➔',
+      });
+    } else {
+      showPopup({
+        title: 'Order Accepted for Direct Delivery! 🛵',
+        message: `You are fulfilling this service directly.\n\nCustomer: ${orderToAccept.customerName}\nAddress: ${orderToAccept.address}\n\nClick "Start Journey" when leaving for customer address.`,
+        icon: '🛵',
+        confirmText: 'Open Active Job ➔',
+      });
+    }
   };
 
   const handleStartTransit = async () => {
@@ -2358,10 +2374,20 @@ export default function VendorPartnerScreen({ navigation }) {
       });
     }
 
-    Alert.alert(
-      'Worker Assigned Successfully! 🚀',
-      `Assigned Specialist: ${chosenWorker.name}\nPhone: ${chosenWorker.phone}\nExperience: ${chosenWorker.experience || '5 Yrs Exp'}\n\nCustomer is notified. Technician ${chosenWorker.name} will reach doorstep, verify Start OTP, and execute the service.`
-    );
+    if (isAdvWorker) {
+      showPopup({
+        title: 'Advance Booking Assigned & Locked! 🔒',
+        message: `Assigned Specialist: ${chosenWorker.name}\nAppointment: ${orderToAccept.scheduledDate} at ${orderToAccept.scheduledTime || '11:00 AM'}.\n\nThis booking is locked. An alert notification will trigger 1 hour before scheduled time, unlocking full doorstep navigation.`,
+        icon: '🔒',
+        type: 'advance',
+        confirmText: 'View Schedule ➔',
+      });
+    } else {
+      Alert.alert(
+        'Worker Assigned Successfully! 🚀',
+        `Assigned Specialist: ${chosenWorker.name}\nPhone: ${chosenWorker.phone}\nExperience: ${chosenWorker.experience || '5 Yrs Exp'}\n\nCustomer is notified. Technician ${chosenWorker.name} will reach doorstep, verify Start OTP, and execute the service.`
+      );
+    }
   };
 
   const handleDeclineOrder = async () => {
@@ -5400,6 +5426,42 @@ export default function VendorPartnerScreen({ navigation }) {
                       </Text>
                       <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '600', marginTop: 2 }}>
                         🔒 Location unlocks 1 hour prior to appointment
+                      </Text>
+                    </View>
+                  </View>
+                )}
+                {/* 1-HOUR UNLOCKED ALERT BANNER FOR VENDOR */}
+                {!advanceLocked && getAdvanceBookingLockState(acceptedOrder).isAdvance && (
+                  <View style={{
+                    backgroundColor: '#ECFDF5',
+                    borderWidth: 1.5,
+                    borderColor: '#10B981',
+                    borderRadius: 16,
+                    padding: 14,
+                    marginBottom: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}>
+                    <View style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: '#D1FAE5',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <Text style={{ fontSize: 22 }}>⚡</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#065F46', fontSize: 10.5, fontWeight: '900', letterSpacing: 0.5 }}>
+                        1-HOUR ALERT • LOCATION UNLOCKED!
+                      </Text>
+                      <Text style={{ color: '#047857', fontSize: 15, fontWeight: '900', marginTop: 1 }}>
+                        Appointment: {acceptedOrder.scheduledTime || 'Soon'} • Starts in ~{Math.ceil(advanceRemainingSec / 60)} mins
+                      </Text>
+                      <Text style={{ color: '#059669', fontSize: 11, fontWeight: '600', marginTop: 2 }}>
+                        ✅ Customer doorstep address & GPS navigation are now unlocked. Tap Start Journey below!
                       </Text>
                     </View>
                   </View>

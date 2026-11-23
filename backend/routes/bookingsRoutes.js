@@ -433,6 +433,8 @@ router.post("/", async (req, res) => {
       scheduledDate: finalSchedDate,
       scheduledTime: finalSchedTime,
       scheduledTimestamp,
+      isAdvanceBooking: Boolean(req.body.isAdvanceBooking ?? (finalSchedDate && !finalSchedDate.toLowerCase().includes("today"))),
+      advanceScheduled: Boolean(req.body.advanceScheduled ?? (finalSchedDate && !finalSchedDate.toLowerCase().includes("today"))),
       pricing: {
         ...pricing,
         totalAmount: finalPriceNum,

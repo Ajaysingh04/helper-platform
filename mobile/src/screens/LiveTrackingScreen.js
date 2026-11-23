@@ -134,15 +134,27 @@ export default function LiveTrackingScreen({ route, navigation }) {
   };
 
   const [advanceSecRemaining, setAdvanceSecRemaining] = useState(getAdvanceRemainingSeconds);
+  const [hasAlertedComingSoon, setHasAlertedComingSoon] = useState(false);
   const isAdvanceLocked = isAdvance && advanceSecRemaining > 3600;
+  const isComingSoon = isAdvance && advanceSecRemaining <= 3600 && advanceSecRemaining > 0;
 
   useEffect(() => {
     if (!isAdvance) return;
     const interval = setInterval(() => {
-      setAdvanceSecRemaining(getAdvanceRemainingSeconds());
+      const remaining = getAdvanceRemainingSeconds();
+      setAdvanceSecRemaining(remaining);
+      if (remaining <= 3600 && remaining > 0 && !hasAlertedComingSoon) {
+        setHasAlertedComingSoon(true);
+        Alert.alert(
+          language === 'hi' ? 'आपकी बुकिंग जल्द शुरू होने वाली है! ⚡' : 'Your Booking is Coming Soon! ⚡',
+          language === 'hi'
+            ? `विशेषज्ञ 1 घंटे से कम समय में आपके पते पर पहुंचने की तैयारी कर रहे हैं।\n\nअपॉइंटमेंट: ${combinedScheduleStr || 'Scheduled'}\nअपना 4-अंकों का स्टार्ट OTP तैयार रखें।`
+            : `Our specialist is preparing to arrive at your doorstep in less than 1 hour.\n\nAppointment: ${combinedScheduleStr || 'Scheduled'}\nPlease keep your 4-digit Start OTP ready.`
+        );
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, [isAdvance, combinedScheduleStr]);
+  }, [isAdvance, combinedScheduleStr, hasAlertedComingSoon, language]);
 
   const formatAdvanceCountdown = (totalSec) => {
     if (totalSec <= 0) return '00h 00m 00s';
@@ -449,6 +461,47 @@ export default function LiveTrackingScreen({ route, navigation }) {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 + bottomInset }]}
         showsVerticalScrollIndicator={false}
       >
+        {/* ================= 1.5 1-HOUR ADVANCE ALERT BANNER ================= */}
+        {isComingSoon && (
+          <View style={{
+            backgroundColor: isDark ? 'rgba(245, 158, 11, 0.16)' : '#FFFBEB',
+            borderColor: '#F59E0B',
+            borderWidth: 1.5,
+            borderRadius: 16,
+            padding: 14,
+            marginBottom: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: '#FEF3C7',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Text style={{ fontSize: 22 }}>⚡</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ color: '#D97706', fontSize: 10.5, fontWeight: '900', letterSpacing: 0.5 }}>
+                  1-HOUR REMINDER • COMING SOON
+                </Text>
+              </View>
+              <Text style={{ color: isDark ? '#FCD34D' : '#B45309', fontSize: 14.5, fontWeight: '900', marginTop: 1 }}>
+                {language === 'hi' ? 'आपकी बुकिंग जल्द शुरू होने वाली है' : 'Your booking is coming soon'}
+              </Text>
+              <Text style={{ color: isDark ? '#E2E8F0' : '#78350F', fontSize: 11, fontWeight: '600', marginTop: 2 }}>
+                {language === 'hi'
+                  ? `अपॉइंटमेंट: ${combinedScheduleStr} • शेष समय: -${formatAdvanceCountdown(advanceSecRemaining)}`
+                  : `Appointment: ${combinedScheduleStr} • Starts in: -${formatAdvanceCountdown(advanceSecRemaining)}`}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* ================= 2. INTERACTIVE GPS ROUTE CANVAS ================= */}
         <View style={[
           styles.mapCanvasCard,
@@ -537,10 +590,16 @@ export default function LiveTrackingScreen({ route, navigation }) {
           ]}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.floatingEtaIcon}>{isAdvanceLocked ? '📅' : '🛵'}</Text>
-                <Text style={[styles.floatingEtaTitle, isAdvanceLocked && { color: isDark ? '#93C5FD' : '#1D4ED8' }]}>
+                <Text style={styles.floatingEtaIcon}>{isAdvanceLocked ? '📅' : isComingSoon ? '⚡' : '🛵'}</Text>
+                <Text style={[
+                  styles.floatingEtaTitle,
+                  isAdvanceLocked && { color: isDark ? '#93C5FD' : '#1D4ED8' },
+                  isComingSoon && { color: isDark ? '#FCD34D' : '#D97706' },
+                ]}>
                   {isAdvanceLocked
-                    ? 'ADVANCE BOOKING CONFIRMED'
+                    ? (language === 'hi' ? 'अग्रिम बुकिंग आरक्षित' : 'ADVANCE BOOKING CONFIRMED')
+                    : isComingSoon
+                    ? (language === 'hi' ? 'आपकी बुकिंग जल्द आ रही है' : 'YOUR BOOKING IS COMING SOON')
                     : status === 'reached' || status === 'arrived'
                     ? 'AT YOUR DOORSTEP'
                     : status === 'in_progress'
@@ -550,9 +609,15 @@ export default function LiveTrackingScreen({ route, navigation }) {
                     : `${etaMinutes} MINS AWAY • 2.4 KM`}
                 </Text>
               </View>
-              <Text style={[styles.floatingEtaSub, isAdvanceLocked && { color: isDark ? '#E2E8F0' : '#1E40AF', fontWeight: '700' }]}>
+              <Text style={[
+                styles.floatingEtaSub,
+                isAdvanceLocked && { color: isDark ? '#E2E8F0' : '#1E40AF', fontWeight: '700' },
+                isComingSoon && { color: isDark ? '#FDE68A' : '#92400E', fontWeight: '700' },
+              ]}>
                 {isAdvanceLocked
                   ? `Appointment: ${combinedScheduleStr || 'Tomorrow'} • Starts in: -${formatAdvanceCountdown(advanceSecRemaining)}`
+                  : isComingSoon
+                  ? `Appointment: ${combinedScheduleStr || 'Scheduled Soon'} • Starts in: -${formatAdvanceCountdown(advanceSecRemaining)}`
                   : status === 'reached' || status === 'arrived'
                   ? 'Specialist has arrived outside your home'
                   : status === 'in_progress'
@@ -564,6 +629,11 @@ export default function LiveTrackingScreen({ route, navigation }) {
               {isAdvanceLocked && (
                 <Text style={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11, marginTop: 4, lineHeight: 15 }}>
                   🔒 Live GPS navigation will activate 1 hour before scheduled appointment time.
+                </Text>
+              )}
+              {isComingSoon && (
+                <Text style={{ color: isDark ? '#FDE68A' : '#B45309', fontSize: 11, marginTop: 4, lineHeight: 15, fontWeight: '700' }}>
+                  ⚡ Specialist is preparing for arrival. Your location is unlocked!
                 </Text>
               )}
             </View>
@@ -599,6 +669,28 @@ export default function LiveTrackingScreen({ route, navigation }) {
             </View>
             <View style={[styles.statusHeroIconBox, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
               <Text style={{ fontSize: 26 }}>⏳</Text>
+            </View>
+          </View>
+        ) : isComingSoon ? (
+          <View style={[styles.statusHero, { borderColor: '#F59E0B', backgroundColor: isDark ? 'rgba(245, 158, 11, 0.16)' : '#FFFBEB' }]}>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 16 }}>⚡</Text>
+                <Text style={[styles.statusHeroLabel, { color: '#D97706' }]}>
+                  {language === 'hi' ? 'आपकी बुकिंग जल्द आ रही है' : 'YOUR BOOKING IS COMING SOON'}
+                </Text>
+              </View>
+              <Text style={[styles.statusHeroMain, { color: textTitle }]}>
+                {combinedScheduleStr || 'Starting Soon'}
+              </Text>
+              <Text style={[styles.statusHeroSub, { color: textSub }]}>
+                {language === 'hi'
+                  ? `विशेषज्ञ 1 घंटे से कम समय में निकल रहे हैं। स्टार्ट OTP तैयार रखें।`
+                  : `Starting in ~${Math.ceil(advanceSecRemaining / 60)} mins. Specialist preparing for arrival.`}
+              </Text>
+            </View>
+            <View style={[styles.statusHeroIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.2)' }]}>
+              <Text style={{ fontSize: 26 }}>⚡</Text>
             </View>
           </View>
         ) : status === 'in_progress' ? (
